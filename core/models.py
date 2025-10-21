@@ -27,8 +27,8 @@ class Categoria(models.Model):
     def __str__(self):
         return self.nombre
 
-class Producto(models.Model):
-    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT) 
+class ProductoBase(models.Model):
+    categoria = models.ForeignKey('Categoria', on_delete=models.PROTECT) 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField()
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -36,34 +36,68 @@ class Producto(models.Model):
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
 
     class Meta:
-        abstract = True 
+        verbose_name = "Producto Base"
 
     def __str__(self):
         return f"[{self.categoria.nombre}] {self.nombre}"
 
-# --- Modelos Específicos (Heredan de Producto) ---
+# --- Modelos Específicos (Heredan de ProductoBase) ---
 
-class Procesador(Producto):
+class Procesador(ProductoBase):
     socket = models.CharField(max_length=20)
     nucleos = models.IntegerField()
     frecuencia_base = models.DecimalField(max_digits=4, decimal_places=2)
 
-class TarjetaGrafica(Producto):
+class TarjetaGrafica(ProductoBase):
     vram_gb = models.IntegerField()
     tipo_memoria = models.CharField(max_length=10) 
     interfaz = models.CharField(max_length=20) 
 
-class MemoriaRam(Producto):
+class MemoriaRam(ProductoBase):
     capacidad_gb = models.IntegerField()
     tipo_ddr = models.CharField(max_length=5) 
     velocidad_mhz = models.IntegerField()
 
+class PlacaMadre(ProductoBase):
+    socket_cpu = models.CharField(max_length=20)
+    chipset = models.CharField(max_length=30)
+    formato = models.CharField(max_length=30) 
+    ranuras_ram = models.IntegerField(verbose_name="Slots RAM")
 
+class AlmacenamientoSSD(ProductoBase):
+    capacidad_gb = models.IntegerField()
+    interfaz = models.CharField(max_length=20) 
+    formato = models.CharField(max_length=10) 
+
+class AlmacenamientoHDD(ProductoBase):
+    capacidad_gb = models.IntegerField()
+    velocidad_rpm = models.IntegerField(verbose_name="Velocidad (RPM)")
+    cache_mb = models.IntegerField(verbose_name="Cache (MB)")
+    
+class Gabinete(ProductoBase):
+    formato_soporte = models.CharField(max_length=50, verbose_name="Soporte Placa") 
+    ventiladores_incluidos = models.IntegerField()
+    material = models.CharField(max_length=50) 
+
+class FuenteDePoder(ProductoBase):
+    potencia_watts = models.IntegerField(verbose_name="Potencia (W)")
+    certificacion = models.CharField(max_length=20) 
+    modular = models.BooleanField(default=False)
+    
+class RefrigeracionCooler(ProductoBase):
+    tipo = models.CharField(max_length=20) 
+    socket_compatibles = models.CharField(max_length=150)
+    tamanho_radiador_mm = models.IntegerField(null=True, blank=True) 
+
+class Ventilador(ProductoBase):
+    tamanho_mm = models.IntegerField(verbose_name="Tamaño (mm)")
+    velocidad_rpm = models.IntegerField(verbose_name="Velocidad (RPM)")
+    rgb = models.BooleanField(default=False)
 
 # --- 3. COMENTARIOS Y RESEÑAS ---
 
 class Comentario(models.Model):
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='comentarios')
+    producto = models.ForeignKey(ProductoBase, on_delete=models.CASCADE, related_name='comentarios')
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     titulo = models.CharField(max_length=100)
     texto = models.TextField()
@@ -90,7 +124,7 @@ class Carrito(models.Model):
 
 class ItemCarrito(models.Model):
     carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE, related_name='items')
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    producto = models.ForeignKey(ProductoBase, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     
     def get_total(self):
