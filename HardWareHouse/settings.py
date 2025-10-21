@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -121,3 +122,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Ruta absoluta al directorio donde Django almacenará los archivos subidos por el usuario (imágenes de productos).
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# URL pública que se utilizará para acceder a los archivos multimedia.
+# Por ejemplo, una imagen subida irá a http://127.0.0.1:8000/media/productos/imagen.jpg
+MEDIA_URL = '/media/'

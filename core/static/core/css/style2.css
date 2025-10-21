@@ -1,0 +1,189 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.login-container {
+    max-width: 450px;
+    margin: 80px auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.login-container h2 {
+    color: #28a745;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.btn-success {
+    width: 100%;
+}
+
+#back {
+    width: 3%;
+}
+
+/* Popup */
+#popup-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+#popup {
+    background: #fff;
+    border-radius: 15px;
+    padding: 40px 60px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    animation: zoomIn 0.4s ease;
+}
+
+#popup i {
+    font-size: 60px;
+    color: #28a745;
+    margin-bottom: 15px;
+    animation: pop 0.6s ease;
+}
+
+#popup h4 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+#popup button {
+    background: #28a745;
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.register-container {
+    max-width: 500px;
+    margin: 80px auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.register-container h2 {
+    color: #28a745;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.component-card {
+    transition: transform .12s ease;
+}
+
+.component-card:hover {
+    transform: translateY(-6px);
+}
+
+.component-img {
+    height: 140px;
+    object-fit: contain;
+    background: #fff;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.price {
+    font-weight: 700;
+    color: #00C853;
+}
+
+thead {
+    background-color: #e9f5eb;
+}
+
+.cart-summary {
+    border-radius: 8px;
+    background: #f8f9fa;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary-box {
+    background: #f7f9f7;
+    border: 1px solid #e6f4ea;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.badge-brand {
+    font-size: 12px;
+    background: #e8f9ec;
+    color: #0b6b2e;
+    border-radius: 6px;
+    padding: 4px 6px;
+}
+
+.btn-success {
+    background-color: #00C853;
+    border-color: #00C853;
+}
+
+.btn-success:hover {
+    background-color: #1B5E20;
+    border-color: #1B5E20;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.alert-custom {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050;
+    display: none;
+    width: 90%;
+    max-width: 500px;
+}
+
+#ofertas_pc_gamer_text {
+    color: white;
+}

@@ -1,0 +1,62 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block tittle %} Detalle {% endblock %}
+
+{% block navbarBaja %} {% endblock %}
+
+{% block subNavbar %} {% endblock %}
+
+{% block principal %}
+<!-- Alerta -->
+<div class="alert alert-success alert-custom" role="alert" id="cartAlert">
+    ✅ Producto agregado al carrito correctamente.
+</div>
+
+<!-- Contenido principal -->
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-5 mb-4">
+            <img src="{% static 'core/img/rtx4070.webp' %}" class="img-fluid border rounded" alt="RTX 4070 Ti">
+        </div>
+        <div class="col-lg-7">
+            <h3 class="font-weight-bold">Tarjeta Gráfica NVIDIA GeForce RTX 4070 Ti 12GB GDDR6X</h3>
+            <p class="text-muted">Marca: ASUS | Modelo: TUF Gaming RTX 4070 Ti OC Edition</p>
+            <div class="d-flex mb-3">
+                <div class="text-success mr-2">
+                    <small class="fas fa-star"></small>
+                    <small class="fas fa-star"></small>
+                    <small class="fas fa-star"></small>
+                    <small class="fas fa-star"></small>
+                    <small class="far fa-star"></small>
+                </div>
+                <small>(124 reseñas)</small>
+            </div>
+            <h3 class="text-success font-weight-bold mb-4">$999.990 CLP</h3>
+            <p>La GeForce RTX 4070 Ti ofrece rendimiento de nueva generación gracias a la arquitectura Ada Lovelace de
+                NVIDIA. Ideal para gaming 4K, renderizado profesional y creación de contenido. Incluye DLSS 3 y Ray
+                Tracing avanzado.</p>
+
+            <div class="d-flex align-items-center mb-4">
+                <div class="input-group quantity mr-4" style="width:130px;">
+                    <div class="input-group-prepend">
+                        <button class="btn btn-success btn-minus"><i class="fa fa-minus"></i></button>
+                    </div>
+                    <input type="text" class="form-control text-center bg-light" value="1">
+                    <div class="input-group-append">
+                        <button class="btn btn-success btn-plus"><i class="fa fa-plus"></i></button>
+                    </div>
+                </div>
+                <button id="addCart" class="btn btn-success px-3 mr-2"><i class="fa fa-shopping-cart mr-1"></i>Agregar
+                    al carrito</button>
+                <a href="{% url 'checkout' %}" class="btn btn-outline-success px-3">
+                    <i class="fa fa-credit-card mr-1"></i>Comprar ahora
+                </a>
+            </div>
+
+            <p><strong>Disponibilidad:</strong> En stock</p>
+            <p><strong>Garantía:</strong> 1 año por fabricante</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

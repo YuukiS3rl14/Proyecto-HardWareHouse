@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block tittle %} Contacto {% endblock %}
+
+{% block subNavbar %} {% endblock %}
+
+{% block principal %}
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <h2 class="section-title text-success font-weight-bold">Contáctanos</h2>
+        <p>¿Tienes dudas o necesitas asesoría? Escríbenos y te responderemos a la brevedad.</p>
+    </div>
+    <div class="row">
+        <div class="col-lg-7 mb-5">
+            <form id="contactForm">
+                <div class="form-group">
+                    <input type="text" id="name" class="form-control" placeholder="Tu nombre" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" class="form-control" placeholder="Tu correo" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="phone" class="form-control" placeholder="Tu teléfono">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="subject" class="form-control" placeholder="Asunto" required>
+                </div>
+                <div class="form-group">
+                    <textarea id="message" class="form-control" rows="5" placeholder="Tu mensaje" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success px-4 py-2">Contactar ahora</button>
+            </form>
+        </div>
+        <div class="col-lg-5">
+            <h5 class="font-weight-bold mb-3 text-success">Información de contacto</h5>
+            <p><i class="fa fa-map-marker-alt text-success mr-2"></i>Av. Tecnología 123, Santiago, Chile</p>
+            <p><i class="fa fa-envelope text-success mr-2"></i>contacto@hardwarehouse.cl</p>
+            <p><i class="fa fa-phone-alt text-success mr-2"></i>+56 9 1234 5678</p>
+            <div class="mt-4">
+                <iframe src="https://www.google.com/maps?q=santiago%20chile&output=embed" width="100%" height="250" style="border:0;" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup -->
+<div id="popup-bg">
+    <div id="popup">
+        <i class="fas fa-check-circle"></i>
+        <h4 id="popup-msg"></h4>
+        <button onclick="closePopup()">Volver al formulario</button>
+    </div>
+</div>
+{% endblock %}

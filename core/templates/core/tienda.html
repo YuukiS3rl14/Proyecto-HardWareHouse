@@ -1,0 +1,129 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block tittle %} Tienda {% endblock %}
+
+{% block subNavbar %} {% endblock %}
+
+{% block principal %}
+<!-- Shop Start -->
+<div class="container-fluid pt-5">
+    <div class="row px-xl-5">
+        <!-- Sidebar -->
+        <div class="col-lg-3 col-md-12 mb-5">
+            <h5 class="font-weight-semi-bold mb-4">Filtrar por categoría</h5>
+            <form>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="cat1"><label class="custom-control-label" for="cat1">Procesadores</label>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="cat2"><label class="custom-control-label" for="cat2">Tarjetas Gráficas</label>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="cat3"><label class="custom-control-label" for="cat3">Memorias RAM</label>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="cat4"><label class="custom-control-label" for="cat4">Almacenamiento</label>
+                </div>
+            </form>
+
+            <h5 class="font-weight-semi-bold mt-4 mb-4">Filtrar por marca</h5>
+            <form>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="m1"><label class="custom-control-label" for="m1">ASUS</label>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="m2"><label class="custom-control-label" for="m2">MSI</label>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="m3"><label class="custom-control-label" for="m3">Gigabyte</label>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="m4"><label class="custom-control-label" for="m4">Corsair</label>
+                </div>
+            </form>
+
+            <h5 class="font-weight-semi-bold mt-4 mb-4">Filtrar por precio</h5>
+            <form>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="p1"><label class="custom-control-label" for="p1">$0 - $100.000</label>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="p2"><label class="custom-control-label" for="p2">$100.000 - $300.000</label>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="p3"><label class="custom-control-label" for="p3">$300.000 - $600.000</label>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="p4"><label class="custom-control-label" for="p4">$600.000+</label>
+                </div>
+            </form>
+        </div>
+
+        <!-- Productos -->
+        <div class="col-lg-9 col-md-12">
+            <div class="row pb-3">
+                <div class="col-lg-4 col-md-6 col-sm-12 pb-1">
+                    <div class="card product-item border-0 mb-4">
+                        <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
+                            <a href="{% url 'detalle' %}">
+                                <img class="img-fluid w-100" src="{% static 'core/img/cpu.webp' %}" alt="Ryzen 7 5800X">
+                            </a>
+                        </div>
+                        <div class="card-body text-center p-0 pt-4 pb-3">
+                            <h6 class="text-truncate mb-3">AMD Ryzen 7 5800X</h6>
+                            <div class="d-flex justify-content-center">
+                                <h6>$289.990</h6>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between bg-light border">
+                            <a href="{% url 'detalle' %}" class="btn btn-sm text-dark p-0"><i class="fas fa-eye text-success mr-1"></i>Ver</a>
+                            <a href="#" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart text-success mr-1"></i>Agregar</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 col-sm-12 pb-1">
+                    <div class="card product-item border-0 mb-4">
+                        <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
+                            <a href="{% url 'detalle' %}">
+                                <img class="img-fluid w-100" src="{% static 'core/img/rtx4070.webp' %}" alt="RTX 4070">
+                            </a>
+                        </div>
+                        <div class="card-body text-center p-0 pt-4 pb-3">
+                            <h6 class="text-truncate mb-3">NVIDIA RTX 4070 Ti 12GB</h6>
+                            <div class="d-flex justify-content-center">
+                                <h6>$749.990</h6>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between bg-light border">
+                            <a href="{% url 'detalle' %}" class="btn btn-sm text-dark p-0"><i class="fas fa-eye text-success mr-1"></i>Ver</a>
+                            <a href="#" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart text-success mr-1"></i>Agregar</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 col-sm-12 pb-1">
+                    <div class="card product-item border-0 mb-4">
+                        <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
+                            <a href="{% url 'detalle' %}">
+                                <img class="img-fluid w-100" src="{% static 'core/img/ram.webp' %}" alt="Corsair Vengeance 16GB">
+                            </a>
+                        </div>
+                        <div class="card-body text-center p-0 pt-4 pb-3">
+                            <h6 class="text-truncate mb-3">Corsair Vengeance 16GB DDR4</h6>
+                            <div class="d-flex justify-content-center">
+                                <h6>$69.990</h6>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between bg-light border">
+                            <a href="{% url 'detalle' %}" class="btn btn-sm text-dark p-0"><i class="fas fa-eye text-success mr-1"></i>Ver</a>
+                            <a href="#" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart text-success mr-1"></i>Agregar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

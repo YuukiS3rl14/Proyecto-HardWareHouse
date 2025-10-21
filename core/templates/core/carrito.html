@@ -1,0 +1,89 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block tittle %} Carrito de Compras {% endblock %}
+
+{% block navbarBaja %} {% endblock %}
+
+{% block subNavbar %} {% endblock %}
+
+{% block principal %}
+<div class="container-fluid bg-success text-white text-center py-5 mb-4">
+    <h1 class="font-weight-bold">Tu Carrito de Compras</h1>
+    <p>Revisa los componentes seleccionados antes de pagar</p>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <table class="table table-bordered text-center">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-body">
+                    <tr>
+                        <td><img src="{% static 'core/img/gpu.jpg' %}" width="60"> Tarjeta Gráfica ASUS RTX 4070</td>
+                        <td>$650.000</td>
+                        <td>
+                            <div class="input-group quantity mx-auto" style="width: 100px;">
+                                <div class="input-group-btn">
+                                    <button class="btn btn-sm btn-success btn-minus"><i class="fa fa-minus"></i></button>
+                                </div>
+                                <input type="text" class="form-control form-control-sm text-center" value="1">
+                                <div class="input-group-btn">
+                                    <button class="btn btn-sm btn-success btn-plus"><i class="fa fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="item-total">$650.000</td>
+                        <td><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td><img src="{% static 'core/img/ram.jpg' %}" width="60"> Memoria RAM Corsair 16GB DDR5</td>
+                        <td>$85.000</td>
+                        <td>
+                            <div class="input-group quantity mx-auto" style="width: 100px;">
+                                <div class="input-group-btn">
+                                    <button class="btn btn-sm btn-success btn-minus"><i class="fa fa-minus"></i></button>
+                                </div>
+                                <input type="text" class="form-control form-control-sm text-center" value="1">
+                                <div class="input-group-btn">
+                                    <button class="btn btn-sm btn-success btn-plus"><i class="fa fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="item-total">$85.000</td>
+                        <td><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="cart-summary p-4">
+                <h4 class="font-weight-bold mb-4">Resumen del Carrito</h4>
+                <div class="d-flex justify-content-between">
+                    <span>Subtotal:</span>
+                    <strong id="subtotal">$735.000</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Envío:</span>
+                    <strong>$10.000</strong>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Total:</h5>
+                    <h5 id="total">$745.000</h5>
+                </div>
+                <a href="{% url 'checkout' %}" class="btn btn-success btn-block py-2">Proceder al Pago</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

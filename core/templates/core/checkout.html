@@ -1,0 +1,121 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block tittle %} Informacion de facturación {% endblock %}
+
+{% block navbarBaja %} {% endblock %}
+
+{% block subNavbar %} {% endblock %}
+
+{% block principal %}
+<div class="container-fluid bg-light mb-5">
+    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 250px">
+        <h1 class="font-weight-semi-bold text-uppercase mb-3">Finalizar compra</h1>
+        <p class="text-muted">Completa tus datos para realizar el pedido</p>
+    </div>
+</div>
+
+<!-- Alerta -->
+<div class="alert alert-success alert-custom" role="alert" id="checkoutAlert">
+    ✅ ¡Compra realizada con éxito! Gracias por confiar en <strong>Hardware House</strong>.
+</div>
+
+<!-- Checkout -->
+<div class="container-fluid pt-5">
+    <div class="row px-xl-5">
+        <div class="col-lg-8">
+            <div class="mb-4">
+                <h4 class="font-weight-semi-bold mb-4">Datos de facturación</h4>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label>Nombre</label>
+                        <input class="form-control" type="text" placeholder="Ej: Jorge">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Apellido</label>
+                        <input class="form-control" type="text" placeholder="Ej: Olivares">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Correo electrónico</label>
+                        <input class="form-control" type="email" placeholder="correo@ejemplo.cl">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Teléfono</label>
+                        <input class="form-control" type="text" placeholder="+56 9 1234 5678">
+                    </div>
+                    <div class="col-md-12 form-group">
+                        <label>Dirección</label>
+                        <input class="form-control" type="text" placeholder="Ej: Av. Tecnología 123, Santiago">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Ciudad</label>
+                        <input class="form-control" type="text" placeholder="Ej: Santiago">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Región</label>
+                        <input class="form-control" type="text" placeholder="Ej: Metropolitana">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen del pedido -->
+        <div class="col-lg-4">
+            <div class="card border-success mb-5">
+                <div class="card-header bg-success text-white border-0">
+                    <h4 class="font-weight-semi-bold m-0">Resumen del pedido</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="font-weight-medium mb-3">Productos</h5>
+                    <div class="d-flex justify-content-between">
+                        <p>Tarjeta Gráfica RTX 4070 Ti</p>
+                        <p>$999.990</p>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <p>Memoria RAM DDR5 32GB</p>
+                        <p>$169.990</p>
+                    </div>
+                    <hr class="mt-0">
+                    <div class="d-flex justify-content-between mb-3 pt-1">
+                        <h6 class="font-weight-medium">Subtotal</h6>
+                        <h6 class="font-weight-medium">$1.169.980</h6>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <h6 class="font-weight-medium">Envío</h6>
+                        <h6 class="font-weight-medium">$4.990</h6>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-success">
+                    <div class="d-flex justify-content-between mt-2">
+                        <h5 class="font-weight-bold">Total</h5>
+                        <h5 class="font-weight-bold text-success">$1.174.970 CLP</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-success">
+                <div class="card-header bg-success text-white border-0">
+                    <h4 class="font-weight-semi-bold m-0">Método de pago</h4>
+                </div>
+                <div class="card-body">
+                    <div class="custom-control custom-radio">
+                        <input type="radio" class="custom-control-input" id="transferencia" name="pago">
+                        <label class="custom-control-label" for="transferencia">Transferencia bancaria</label>
+                    </div>
+                    <div class="custom-control custom-radio">
+                        <input type="radio" class="custom-control-input" id="debito" name="pago">
+                        <label class="custom-control-label" for="debito">Tarjeta de débito/crédito</label>
+                    </div>
+                    <div class="custom-control custom-radio">
+                        <input type="radio" class="custom-control-input" id="webpay" name="pago">
+                        <label class="custom-control-label" for="webpay">Webpay / MercadoPago</label>
+                    </div>
+                </div>
+                <div class="card-footer border-success bg-transparent">
+                    <button id="placeOrder" class="btn btn-success btn-block font-weight-bold my-3 py-3">Realizar pedido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

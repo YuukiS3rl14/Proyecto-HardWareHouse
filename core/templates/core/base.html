@@ -1,0 +1,216 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <title>{% block tittle %} {% endblock%}</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Hardware, PC, Componentes, Armado de PC, Tienda" name="keywords">
+    <meta content="Tienda online de piezas de computador y armado personalizado de PC." name="description">
+
+    <link href="{% static 'core/img/favicon.ico' %}" rel="icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'core/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/style2.css' %}" rel="stylesheet">
+</head>
+
+<body>
+
+    {% block topbar %}
+    <div class="container-fluid">
+        <div class="row bg-dark text-light py-2 px-xl-5">
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="d-inline-flex align-items-center">
+                    <span class="text-muted px-2">|</span>
+                    <a class="text-light" href="{% url 'contacto' %}">Contacto</a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center text-lg-right">
+                <div class="d-inline-flex align-items-center">
+                    <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-facebook-f"></i></a>
+                    <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-twitter"></i></a>
+                    <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block navbar %}
+    <div class="container-fluid">
+        <div class="row py-3 px-xl-5 align-items-center bg-light">
+            <div class="col-lg-3 col-6 d-flex align-items-center">
+                <a href="{% url 'index' %}" class="text-decoration-none">
+                    <h1 class="m-0 display-5 font-weight-semi-bold">
+                        <span class="text-success font-weight-bold border px-3 mr-1">H</span>ardware House
+                    </h1>
+                </a>
+            </div>
+
+            <div class="col-lg-6 d-none d-lg-block">
+                <nav class="navbar navbar-expand-lg bg-light navbar-light py-3 py-lg-0 px-0">
+                    <div class="navbar-nav mr-auto py-0">
+                        <a href="{% url 'index' %}" class="nav-item nav-link active">Inicio</a>
+                        <a href="{% url 'tienda' %}" class="nav-item nav-link">Tienda</a>
+                        <a href="{% url 'armado' %}" class="nav-item nav-link">Armado de PC</a>
+                        <a href="{% url 'contacto' %}" class="nav-item nav-link">Contacto</a>
+                    </div>
+                </nav>
+            </div>
+            
+            <div class="col-lg-3 col-6 text-right d-none d-lg-block">
+                <div class="d-inline-flex align-items-center">
+                    <a href="{% url 'login' %}" class="nav-item nav-link py-0 px-2 text-dark">Login</a>
+                    <span class="text-muted">|</span>
+                    <a href="{% url 'registro' %}" class="nav-item nav-link py-0 px-2 text-dark">Registro</a>
+                </div>
+            </div>
+        </div>
+
+        {% block navbarBaja %}
+        <div class="row border-top border-bottom px-xl-5 py-3 align-items-center">
+            <div class="col-lg-9 col-md-9 offset-lg-1">
+                <form action="">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Buscar productos">
+                        <div class="input-group-append">
+                            <a href="{% url 'tienda' %}" class="input-group-text bg-success text-white">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-lg-2 col-md-3 text-right">
+                <a href="" class="btn border"><i class="fas fa-heart text-success"></i><span class="badge">0</span></a>
+                <a href="{% url 'carrito' %}" class="btn border"><i class="fas fa-shopping-cart text-success"></i><span
+                        class="badge">0</span></a>
+            </div>
+        </div>
+        {% endblock %}
+
+    </div>
+    {% endblock %}
+
+    {% block subNavbar %}
+    <div class="container-fluid pt-5">
+        <div class="row px-xl-5">
+
+            {% block categorias %}
+            <div class="col-lg-3 d-none d-lg-block">
+                <a class="btn shadow-none d-flex align-items-center justify-content-between bg-success text-white w-100"
+                    data-toggle="collapse" href="#navbar-vertical"
+                    style="height: 65px; margin-top: -1px; padding: 0 30px;">
+                    <h6 class="m-0">Categorías</h6>
+                    <i class="fa fa-angle-down text-dark"></i>
+                </a>
+                <nav class="collapse show navbar navbar-vertical navbar-light align-items-start p-0 border border-top-0 border-bottom-0"
+                    id="navbar-vertical" style="z-index: 9;">
+                    <div class="navbar-nav w-100 overflow-hidden" style="height: 410px">
+                        <a href="{% url 'index' %}" class="nav-item nav-link">Procesadores</a>
+                        <a href="{% url 'index' %}" class="nav-item nav-link">Placas Madre</a>
+                        <a href="{% url 'index' %}" class="nav-item nav-link">Tarjetas Gráficas</a>
+                        <a href="{% url 'index' %}" class="nav-item nav-link">Memorias RAM</a>
+                        <a href="{% url 'index' %}" class="nav-item nav-link">Almacenamiento SSD/HDD</a>
+                        <a href="{% url 'index' %}" class="nav-item nav-link">Fuentes de Poder</a>
+                        <a href="{% url 'index' %}" class="nav-item nav-link">Gabinetes</a>
+                        <a href="{% url 'index' %}" class="nav-item nav-link">Refrigeración</a>
+                        <a href="{% url 'index' %}" class="nav-item nav-link">Periféricos</a>
+                    </div>
+                </nav>
+            </div>
+            {% endblock %}
+
+            {% block carrusel %}
+            <div class="col-lg-9">
+                <div id="header-carousel" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active" style="height: 475px;"> <img class="img-fluid"
+                                src="{% static 'core/img/carrusel_armado.webp' %}" alt="PC Gamer">
+                            <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                                <div class="p-3" style="max-width: 700px;">
+                                    <h4 class="text-light text-uppercase font-weight-medium mb-3">¡Arma tu PC
+                                        personalizada!</h4>
+                                    <h3 class="display-4 text-white font-weight-semi-bold mb-4">Rendimiento a tu medida
+                                    </h3>
+                                    <a href="{% url 'armado' %}" class="btn btn-success py-2 px-3">Comenzar</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-item" style="height: 475px;">
+                            <img class="img-fluid" src="{% static 'core/img/carrusel_ofertas.webp' %}" alt="Hardware">
+                            <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                                <div class="p-3" style="max-width: 700px;">
+                                    <h4 class="text-light text-uppercase font-weight-medium mb-3">Ofertas semanales</h4>
+                                    <h3 class="display-4 text-white font-weight-semi-bold mb-4">Componentes de última
+                                        generación</h3>
+                                    <a href="{% url 'tienda' %}" class="btn btn-success py-2 px-3">Ver Tienda</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endblock %}
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block principal %}
+    {% endblock %}
+
+    {% block footer %}
+    <div class="container-fluid bg-dark text-light mt-5 pt-5 pb-3">
+        <div class="row px-xl-5">
+            <div class="col-lg-4 mb-5">
+                <h5 class="font-weight-bold text-success mb-4">HardWareHouse</h5>
+                <p>Tu tienda de confianza en hardware de computador. Ofrecemos calidad, asesoría y armado personalizado.
+                </p>
+                <p><i class="fa fa-map-marker-alt text-success mr-2"></i>Av. Tecnología 123, Santiago, Chile</p>
+                <p><i class="fa fa-envelope text-success mr-2"></i>contacto@techparts.cl</p>
+                <p><i class="fa fa-phone-alt text-success mr-2"></i>+56 9 1234 5678</p>
+            </div>
+            <div class="col-lg-4 mb-5">
+                <h5 class="font-weight-bold text-success mb-4">Enlaces rápidos</h5>
+                <div class="d-flex flex-column">
+                    <a class="text-light mb-2" href="{% url 'index' %}"><i class="fa fa-angle-right mr-2"></i>Inicio</a>
+                    <a class="text-light mb-2" href="{% url 'tienda' %}"><i
+                            class="fa fa-angle-right mr-2"></i>Tienda</a>
+                    <a class="text-light mb-2" href="{% url 'armado' %}"><i class="fa fa-angle-right mr-2"></i>Armado de
+                        PC</a>
+                    <a class="text-light" href="{% url 'contacto' %}"><i class="fa fa-angle-right mr-2"></i>Contacto</a>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-5">
+                <h5 class="font-weight-bold text-success mb-4">Suscríbete</h5>
+                <form>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="Tu correo">
+                        <div class="input-group-append">
+                            <button class="btn btn-success">Enviar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block volver %}
+    <a href="#" class="btn btn-success back-to-top" id="back"><i class="fa fa-angle-double-up"></i></a>
+    {% endblock %}
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'core/lib/owlcarousel/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'core/js/main.js' %}"></script>
+    <script src="{% static 'core/js/login-registro.js' %}"></script>
+    <script src="{% static 'core/js/armado.js' %}"></script>
+    <script src="{% static 'core/js/carrito.js' %}"></script>
+    <script src="{% static 'core/js/checkout.js' %}"></script>
+</body>
+
+</html>

@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block tittle %} Inicio de Sesion {% endblock %}
+
+{% block navbar %} 
+<!-- Navbar -->
+<div class="container-fluid py-3 px-xl-5 bg-light">
+    <div class="text-center">
+        <a href="{% url 'index' %}" class="text-decoration-none">
+            <h1 class="m-0 display-5 font-weight-semi-bold">
+                <span class="text-success font-weight-bold border px-3 mr-1">H</span>ardware House
+            </h1>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block subNavbar %} {% endblock %}
+
+{% block principal %}
+<!-- Formulario -->
+<div class="login-container">
+    <h2 class="text-center">Iniciar Sesión</h2>
+    <form id="loginForm">
+        <div class="form-group mb-3">
+            <label>Correo electrónico</label>
+            <input type="email" id="email" class="form-control" required>
+        </div>
+        <div class="form-group mb-4">
+            <label>Contraseña</label>
+            <input type="password" id="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-success py-2">Ingresar</button>
+    </form>
+    <div class="text-center mt-3">
+        <p>¿No tienes cuenta? <a href="{% url 'registro' %}" class="text-success">Regístrate aquí</a></p>
+    </div>
+</div>
+
+<!-- Popup -->
+<div id="popup-bg">
+    <div id="popup">
+        <i class="fas fa-check-circle"></i>
+        <h4 id="popup-msg"></h4>
+        <button onclick="closePopup()">Volver</button>
+    </div>
+</div>
+{% endblock %}
