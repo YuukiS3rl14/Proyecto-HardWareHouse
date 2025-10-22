@@ -38,8 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core'
+    'core',
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -138,5 +141,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # URL pública que se utilizará para acceder a los archivos multimedia.
-# Por ejemplo, una imagen subida irá a http://127.0.0.1:8000/media/productos/imagen.jpg
 MEDIA_URL = '/media/'
+
+LOGIN_REDIRECT_URL = '/'  
+LOGOUT_REDIRECT_URL = '/'  
+LOGIN_URL = '/login/' 
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'

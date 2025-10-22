@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
 ]
 
 # SOLO para modo desarrollo: permite a Django servir los archivos multimedia (imágenes)

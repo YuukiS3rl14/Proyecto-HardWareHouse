@@ -1,0 +1,66 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+
+{% block tittle %} Iniciar Sesión {% endblock %}
+
+{% block navbar %}
+<div class="container-fluid py-3 px-xl-5 bg-light">
+    <div class="text-center">
+        <a href="{% url 'index' %}" class="text-decoration-none">
+            <h1 class="m-0 display-5 font-weight-semi-bold">
+                <span class="text-success font-weight-bold border px-3 mr-1">H</span>ardware House
+            </h1>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block subNavbar %} {% endblock %}
+
+{% block principal %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-success text-white">
+                    <h3 class="text-center font-weight-light my-4">Iniciar Sesión</h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        <div class="messages mb-3">
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    {% if form.errors and not form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            Tu nombre de usuario o contraseña es incorrecto. Inténtalo de nuevo.
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {{ form }}
+                        
+                        <div class="form-group d-flex align-items-center justify-content-between mt-4 mb-0">
+                            <button type="submit" class="btn btn-success btn-block">Ingresar</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small">¿No tienes cuenta? 
+                        <a href="{% url 'registro' %}">¡Regístrate aquí!</a>
+                    </div>
+                    <div class="small">
+                        <a href="{% url 'index' %}">Volver al Inicio</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

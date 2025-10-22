@@ -181,3 +181,6 @@ class PagoBoleta(models.Model):
     
     def __str__(self):
         return f"Boleta/Pago Transacción {self.transaccion_id}"
+    
+
+
