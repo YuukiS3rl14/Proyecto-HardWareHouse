@@ -1,5 +1,6 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load bootstrap5 %} 
 
 {% block tittle %}Mi Perfil{% endblock %}
 
@@ -8,7 +9,7 @@
     <div class="text-center">
         <a href="{% url 'index' %}" class="text-decoration-none">
             <h1 class="m-0 display-5 font-weight-semi-bold">
-                <span class="text-success font-weight-bold border px-3 mr-1">H</span>ardware House
+                <span class="text-success font-weight-bold border px-3 me-1">H</span>ardware House
             </h1>
         </a>
     </div>
@@ -22,14 +23,24 @@
 <div class="container-fluid pt-5 pb-3">
     <div class="row px-xl-5">
         <div class="col-lg-8 offset-lg-2">
-            <h2 class="font-weight-semi-bold text-success mb-4">Perfil de Usuario
-                {% if not edit_mode %}
-                    <a href="{% url 'perfil' %}?edit=true" class="btn btn-outline-success btn-sm ml-3">
-                        <i class="fa fa-edit mr-1"></i> Editar Perfil
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">->
+                <h2 id="main-profile-heading" class="font-weight-semi-bold text-success m-0">
+                    Perfil de Usuario
+                </h2>
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'index' %}" class="btn btn-outline-success btn-sm me-2 rounded-3">
+                        <i class="fa fa-home me-1"></i> Volver al Inicio
                     </a>
-                {% endif %}
-            </h2>
-
+                    
+                    {% if not edit_mode %}
+                        <a href="{% url 'perfil' %}?edit=true#main-profile-heading" class="btn btn-outline-success btn-sm rounded-3">
+                            <i class="fa fa-edit me-1"></i> Editar Perfil
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
             {% if messages %}
                 {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -39,96 +50,94 @@
                 {% endfor %}
             {% endif %}
 
-            <div class="bg-light p-30 mb-5 border rounded">
-                <h4 class="mb-4">Información de la Cuenta</h4>
-                
-                <div class="d-flex align-items-center mb-4">
-                    <img src="{% static default_profile_pic %}" 
-                         alt="{{ user.username }}" 
-                         class="rounded-circle me-3 border border-success" 
-                         style="width: 80px; height: 80px; object-fit: cover;">
-                    <div>
-                        <p class="mb-0 font-weight-bold">{{ user.username }}</p>
-                        <small class="text-muted">{{ user.email }}</small>
-                    </div>
+            <div class="bg-light mb-5 border rounded-3 shadow-sm">
+                <div class="p-4"> 
+                    <h4 class="mb-4">Información de la Cuenta</h4>
                 </div>
-
-                {% if edit_mode %}
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="update_info" value="1"> 
-
-                        <div class="row">
-                            {% for field in user_form.visible_fields %}
-                                <div class="col-md-6 form-group mb-3">
-                                    {{ field.label_tag }}
-                                    {{ field }}
-                                    {% if field.help_text %}
-                                        <small class="text-muted d-block">{{ field.help_text }}</small>
-                                    {% endif %}
-                                    {% for error in field.errors %}
-                                        <div class="text-danger small">{{ error }}</div>
-                                    {% endfor %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                        
-                        {% if user_form.non_field_errors %}
-                            <div class="alert alert-danger small">{{ user_form.non_field_errors }}</div>
-                        {% endif %}
-
-                        <button type="submit" class="btn btn-success px-4 mt-3">Guardar Cambios</button>
-                        <a href="{% url 'perfil' %}" class="btn btn-danger px-4 mt-3 ml-2">Cancelar</a>
-                    </form>
-                {% else %}
-                    <div class="row pt-2">
-                        <div class="col-md-6 mb-3">
-                            <p class="mb-1 text-muted">Nombre:</p>
-                            <p class="font-weight-bold">{{ user.first_name|default:"-" }}</p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <p class="mb-1 text-muted">Apellido:</p>
-                            <p class="font-weight-bold">{{ user.last_name|default:"-" }}</p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <p class="mb-1 text-muted">Usuario:</p>
-                            <p class="font-weight-bold">{{ user.username }}</p>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <p class="mb-1 text-muted">Email:</p>
-                            <p class="font-weight-bold">{{ user.email }}</p>
+                
+                <div class="p-4 pt-0"> 
+                    <div class="d-flex align-items-center mb-4">
+                        <img src="{% static default_profile_pic %}" 
+                             alt="{{ user.username }}" 
+                             class="rounded-circle me-3 border border-success" 
+                             style="width: 80px; height: 80px; object-fit: cover;">
+                        <div>
+                            <p class="mb-0 font-weight-bold">{{ user.username }}</p>
+                            <small class="text-muted">{{ user.email }}</small>
                         </div>
                     </div>
-                {% endif %}
+
+                    {% if edit_mode %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="update_info" value="1"> 
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% bootstrap_field user_form.first_name %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% bootstrap_field user_form.last_name %}
+                                </div>
+                            </div>
+                            
+                            {% bootstrap_field user_form.username %}
+                            {% bootstrap_field user_form.email %}
+                            
+                            {% if user_form.non_field_errors %}
+                                <div class="alert alert-danger small">{{ user_form.non_field_errors }}</div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-center mt-4">
+                                <a href="{% url 'perfil' %}#main-profile-heading" class="btn btn-outline-danger px-4 rounded-3 me-3">Cancelar</a>
+                                <button type="submit" id="save_changes" class="btn btn-success px-4 rounded-3">Guardar Cambios</button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="row pt-2">
+                            <div class="col-md-6 mb-3">
+                                <p class="mb-1 text-muted">Nombre:</p>
+                                <p class="font-weight-bold">{{ user.first_name|default:"No Ingresado" }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <p class="mb-1 text-muted">Apellido:</p>
+                                <p class="font-weight-bold">{{ user.last_name|default:"No Ingresado" }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <p class="mb-1 text-muted">Usuario:</p>
+                                <p class="font-weight-bold">{{ user.username }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <p class="mb-1 text-muted">Email:</p>
+                                <p class="font-weight-bold">{{ user.email }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
 
             {% if edit_mode %}
-                <div class="bg-light p-30 mb-5 border rounded">
-                    <h4 class="mb-4">Cambiar Contraseña</h4>
-                    
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="change_password" value="1"> 
-                        
-                        {% for field in password_form %}
-                            <div class="form-group mb-3">
-                                {{ field.label_tag }}
-                                {{ field }}
-                                {% if field.help_text %}
-                                    <small class="text-muted d-block">{{ field.help_text }}</small>
-                                {% endif %}
-                                {% for error in field.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                        {% endfor %}
+                <div class="bg-light mb-5 border rounded-3 shadow-sm">
+                    <div class="p-4"> 
+                        <h4 class="mb-4">Cambiar Contraseña</h4>
+                    </div>
 
-                        {% if password_form.non_field_errors %}
-                            <div class="alert alert-danger small">{{ password_form.non_field_errors }}</div>
-                        {% endif %}
-                        
-                        <button type="submit" class="btn btn-danger px-4 mt-3">Cambiar Contraseña</button>
-                    </form>
+                    <div class="p-4 pt-0"> 
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="change_password" value="1"> 
+                            
+                            {% bootstrap_form password_form %}
+                            
+                            {% if password_form.non_field_errors %}
+                                <div class="alert alert-danger small">{{ password_form.non_field_errors }}</div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-center mt-4">
+                                <button type="submit" class="btn btn-danger px-4 rounded-3">Cambiar Contraseña</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             {% endif %}
 

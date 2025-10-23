@@ -82,9 +82,8 @@ def verPerfil(request):
             password_form = PasswordChangeForm(request.user, request.POST)
             if password_form.is_valid():
                 user = password_form.save()
-                update_session_auth_hash(request, user) 
                 messages.success(request, '¡Tu contraseña ha sido cambiada con éxito! Por seguridad, te recomendamos iniciar sesión nuevamente.')
-                return redirect('perfil')
+                return redirect('login')
             else:
                 messages.error(request, 'Error al cambiar la contraseña. Revisa la contraseña actual y la nueva.')
                 edit_mode = True 
