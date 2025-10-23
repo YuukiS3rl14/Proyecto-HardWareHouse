@@ -116,9 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-cl' 
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Santiago'
 
 USE_I18N = True
 
@@ -146,3 +146,13 @@ LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/' 
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# ----------------------------------------------------
+# CONFIGURACIÓN DEL PANEL DE ADMINISTRACIÓN
+# ----------------------------------------------------
+
+ADMIN_SITE_TITLE = 'Panel de Administración HardWareHouse' 
+
+ADMIN_HEADER_TITLE = 'Administración de la Tienda' 
+
+ADMIN_SITE_HEADER = 'HardWareHouse'

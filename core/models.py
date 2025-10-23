@@ -2,6 +2,16 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+
+# --- FUNCIÓN DE UTILIDAD ---
+
+def get_categoria_by_name(name):
+    try:
+        return Categoria.objects.get(nombre__iexact=name)
+    except Categoria.DoesNotExist:
+        return None 
 
 # --- 1. UBICACIÓN (Región y Comuna) ---
 
@@ -24,11 +34,14 @@ class Comuna(models.Model):
 class Categoria(models.Model):
     nombre = models.CharField(max_length=50, unique=True)
     
+    class Meta:
+        verbose_name_plural = "Categorías"
+
     def __str__(self):
         return self.nombre
 
 class ProductoBase(models.Model):
-    categoria = models.ForeignKey('Categoria', on_delete=models.PROTECT) 
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT) 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField()
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -37,63 +50,104 @@ class ProductoBase(models.Model):
 
     class Meta:
         verbose_name = "Producto Base"
+        abstract = False 
 
     def __str__(self):
         return f"[{self.categoria.nombre}] {self.nombre}"
 
-# --- Modelos Específicos (Heredan de ProductoBase) ---
+# --- MODELOS ESPECÍFICOS (Heredan de ProductoBase) ---
 
 class Procesador(ProductoBase):
     socket = models.CharField(max_length=20)
     nucleos = models.IntegerField()
     frecuencia_base = models.DecimalField(max_digits=4, decimal_places=2)
 
+@receiver(pre_save, sender=Procesador)
+def set_procesador_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("CPU")
+
 class TarjetaGrafica(ProductoBase):
-    vram_gb = models.IntegerField()
-    tipo_memoria = models.CharField(max_length=10) 
-    interfaz = models.CharField(max_length=20) 
+    vram_gb = models.IntegerField(verbose_name="VRAM (GB)")
+    tipo_memoria = models.CharField(max_length=10, verbose_name="Tipo Memoria") 
+    interfaz = models.CharField(max_length=20, verbose_name="Interfaz Bus") 
+
+@receiver(pre_save, sender=TarjetaGrafica)
+def set_gpu_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("GPU")
 
 class MemoriaRam(ProductoBase):
-    capacidad_gb = models.IntegerField()
-    tipo_ddr = models.CharField(max_length=5) 
-    velocidad_mhz = models.IntegerField()
+    capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
+    tipo_ddr = models.CharField(max_length=5, verbose_name="Tipo DDR") 
+    velocidad_mhz = models.IntegerField(verbose_name="Velocidad (MHz)")
+
+@receiver(pre_save, sender=MemoriaRam)
+def set_ram_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("RAM")
 
 class PlacaMadre(ProductoBase):
-    socket_cpu = models.CharField(max_length=20)
+    socket_cpu = models.CharField(max_length=20, verbose_name="Socket CPU")
     chipset = models.CharField(max_length=30)
     formato = models.CharField(max_length=30) 
     ranuras_ram = models.IntegerField(verbose_name="Slots RAM")
 
+@receiver(pre_save, sender=PlacaMadre)
+def set_placamadre_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("Placa Madre")
+
 class AlmacenamientoSSD(ProductoBase):
-    capacidad_gb = models.IntegerField()
+    capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
     interfaz = models.CharField(max_length=20) 
     formato = models.CharField(max_length=10) 
 
+@receiver(pre_save, sender=AlmacenamientoSSD)
+def set_ssd_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("SSD") 
+
 class AlmacenamientoHDD(ProductoBase):
-    capacidad_gb = models.IntegerField()
+    capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
     velocidad_rpm = models.IntegerField(verbose_name="Velocidad (RPM)")
     cache_mb = models.IntegerField(verbose_name="Cache (MB)")
     
+@receiver(pre_save, sender=AlmacenamientoHDD)
+def set_hdd_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("HDD")
+
 class Gabinete(ProductoBase):
     formato_soporte = models.CharField(max_length=50, verbose_name="Soporte Placa") 
     ventiladores_incluidos = models.IntegerField()
     material = models.CharField(max_length=50) 
 
+@receiver(pre_save, sender=Gabinete)
+def set_gabinete_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("Gabinete")
+
 class FuenteDePoder(ProductoBase):
     potencia_watts = models.IntegerField(verbose_name="Potencia (W)")
     certificacion = models.CharField(max_length=20) 
     modular = models.BooleanField(default=False)
+
+@receiver(pre_save, sender=FuenteDePoder)
+def set_psu_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("PSU")
     
 class RefrigeracionCooler(ProductoBase):
-    tipo = models.CharField(max_length=20) 
-    socket_compatibles = models.CharField(max_length=150)
-    tamanho_radiador_mm = models.IntegerField(null=True, blank=True) 
+    tipo = models.CharField(max_length=20, verbose_name="Tipo (Aire/Líquida)") 
+    socket_compatibles = models.CharField(max_length=150, verbose_name="Sockets Comp.")
+    tamanho_radiador_mm = models.IntegerField(null=True, blank=True, verbose_name="Radiador (mm)") 
+
+@receiver(pre_save, sender=RefrigeracionCooler)
+def set_cooler_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("Cooler")
 
 class Ventilador(ProductoBase):
     tamanho_mm = models.IntegerField(verbose_name="Tamaño (mm)")
     velocidad_rpm = models.IntegerField(verbose_name="Velocidad (RPM)")
     rgb = models.BooleanField(default=False)
 
+@receiver(pre_save, sender=Ventilador)
+def set_ventilador_category(sender, instance, **kwargs):
+    instance.categoria = get_categoria_by_name("Ventilador")
+    
 # --- 3. COMENTARIOS Y RESEÑAS ---
 
 class Comentario(models.Model):
@@ -147,7 +201,6 @@ class Pedido(models.Model):
     fecha_pedido = models.DateTimeField(default=timezone.now)
     total_monto = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # Datos de Envío/Facturación (simulación de Boleta)
     direccion_envio = models.CharField(max_length=255)
     comuna_envio = models.ForeignKey(Comuna, on_delete=models.PROTECT, null=True)
     
@@ -175,12 +228,8 @@ class PagoBoleta(models.Model):
     metodo_pago = models.CharField(max_length=50) 
     transaccion_id = models.CharField(max_length=100, unique=True)
     
-    # Datos del Usuario (tomados del Pedido)
     nombre_comprador = models.CharField(max_length=200)
     email_comprador = models.EmailField()
     
     def __str__(self):
         return f"Boleta/Pago Transacción {self.transaccion_id}"
-    
-
-

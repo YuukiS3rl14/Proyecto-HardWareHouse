@@ -38,6 +38,13 @@
             </div>
             <div class="col-lg-6 text-center text-lg-right">
                 <div class="d-inline-flex align-items-center">
+                    {% if user.is_superuser %}
+                    <a class="text-light px-2" href="/admin/" title="Panel de Administración">
+                        <i class="fas fa-tools"></i>
+                    </a>
+                    <span class="text-muted px-2">|</span>
+                    {% endif %}
+                    
                     <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-facebook-f"></i></a>
                     <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-twitter"></i></a>
                     <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-instagram"></i></a>
