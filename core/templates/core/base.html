@@ -102,14 +102,11 @@
 
         {% block navbarBaja %}
         <div class="row border-top border-bottom px-xl-5 py-3 align-items-center">
-            <!-- El buscador ocupará 7 columnas del total de 12, alineado a la izquierda -->
             <div class="col-lg-7">
                 <form action="{% url 'tienda' %}" method="GET">
                     <div class="input-group">
-                        <!-- Campo de texto (ocupa la mayor parte del input-group) -->
                         <input type="text" class="form-control" name="q" placeholder="Buscar productos">
 
-                        <!-- Botón de búsqueda (al lado del campo de texto) -->
                         <div class="input-group-append">
                             <button type="submit" class="input-group-text bg-success text-white border-0">
                                 <i class="fa fa-search"></i>
@@ -119,17 +116,16 @@
                 </form>
             </div>
 
-            <!-- Íconos de utilidad (Favoritos y Carrito) alineados a la derecha -->
             <div class="col-lg-5 text-right">
                 {% if user.is_authenticated %}
-                <a href="{% url 'perfil' %}" class="btn border"><i class="fas fa-heart text-success"></i><span
-                        class="badge">0</span></a>
+                <a href="{% url 'favoritos' %}" class="btn border" title="Mis Favoritos"><i class="fas fa-heart text-success"></i><span
+                        class="badge">{{ favorite_item_count }}</span></a>
                 {% else %}
-                <a href="{% url 'login' %}" class="btn border"><i class="fas fa-heart text-success"></i><span
+                <a href="{% url 'login' %}" class="btn border" title="Inicia sesión para ver tus favoritos"><i class="fas fa-heart text-success"></i><span
                         class="badge">0</span></a>
                 {% endif %}
-                <a href="{% url 'carrito' %}" class="btn border"><i class="fas fa-shopping-cart text-success"></i><span
-                        class="badge">0</span></a>
+                <a href="{% url 'carrito' %}" class="btn border" title="Mi Carrito"><i class="fas fa-shopping-cart text-success"></i><span
+                        class="badge">{{ cart_item_count }}</span></a>
             </div>
         </div>
         {% endblock %}
@@ -137,7 +133,6 @@
     </div>
     {% endblock %}
 
-    {% comment %} --- INICIO: Bloque para mostrar mensajes de Django --- {% endcomment %}
     <div class="container pt-4">
         {% if messages %}
             {% for message in messages %}
@@ -150,7 +145,6 @@
             {% endfor %}
         {% endif %}
     </div>
-    {% comment %} --- FIN: Bloque para mostrar mensajes de Django --- {% endcomment %}
 
     {% block principal %}
     {% endblock %}

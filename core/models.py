@@ -358,3 +358,47 @@ class PagoBoleta(models.Model):
     
     def __str__(self):
         return f"Boleta/Pago Transacción {self.transaccion_id}"
+
+
+# --- 6. FAVORITOS DE USUARIO ---
+
+class Favorito(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favoritos')
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+
+    # Claves Foráneas Múltiples para enlazar a CUALQUIER producto
+    procesador = models.ForeignKey(Procesador, on_delete=models.CASCADE, null=True, blank=True)
+    tarjeta_grafica = models.ForeignKey(TarjetaGrafica, on_delete=models.CASCADE, null=True, blank=True)
+    memoria_ram = models.ForeignKey(MemoriaRam, on_delete=models.CASCADE, null=True, blank=True)
+    placa_madre = models.ForeignKey(PlacaMadre, on_delete=models.CASCADE, null=True, blank=True)
+    almacenamiento_ssd = models.ForeignKey(AlmacenamientoSSD, on_delete=models.CASCADE, null=True, blank=True)
+    almacenamiento_hdd = models.ForeignKey(AlmacenamientoHDD, on_delete=models.CASCADE, null=True, blank=True)
+    gabinete = models.ForeignKey(Gabinete, on_delete=models.CASCADE, null=True, blank=True)
+    fuente_de_poder = models.ForeignKey(FuenteDePoder, on_delete=models.CASCADE, null=True, blank=True)
+    refrigeracion = models.ForeignKey(RefrigeracionCooler, on_delete=models.CASCADE, null=True, blank=True)
+    ventilador = models.ForeignKey(Ventilador, on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Favorito"
+        verbose_name_plural = "Favoritos"
+        # Restricción para que un usuario no pueda añadir el mismo producto a favoritos más de una vez.
+        constraints = [
+            models.UniqueConstraint(fields=['usuario', 'procesador'], name='unique_fav_procesador'),
+            models.UniqueConstraint(fields=['usuario', 'tarjeta_grafica'], name='unique_fav_tarjeta_grafica'),
+            models.UniqueConstraint(fields=['usuario', 'memoria_ram'], name='unique_fav_memoria_ram'),
+            models.UniqueConstraint(fields=['usuario', 'placa_madre'], name='unique_fav_placa_madre'),
+            models.UniqueConstraint(fields=['usuario', 'almacenamiento_ssd'], name='unique_fav_almacenamiento_ssd'),
+            models.UniqueConstraint(fields=['usuario', 'almacenamiento_hdd'], name='unique_fav_almacenamiento_hdd'),
+            models.UniqueConstraint(fields=['usuario', 'gabinete'], name='unique_fav_gabinete'),
+            models.UniqueConstraint(fields=['usuario', 'fuente_de_poder'], name='unique_fav_fuente_de_poder'),
+            models.UniqueConstraint(fields=['usuario', 'refrigeracion'], name='unique_fav_refrigeracion'),
+            models.UniqueConstraint(fields=['usuario', 'ventilador'], name='unique_fav_ventilador'),
+        ]
+
+    def get_related_product(self):
+        """Método helper para obtener el producto real al que apunta el favorito."""
+        product_fields = ['procesador', 'tarjeta_grafica', 'memoria_ram', 'placa_madre', 'almacenamiento_ssd', 'almacenamiento_hdd', 'gabinete', 'fuente_de_poder', 'refrigeracion', 'ventilador']
+        for field in product_fields:
+            if getattr(self, field):
+                return getattr(self, field)
+        return None

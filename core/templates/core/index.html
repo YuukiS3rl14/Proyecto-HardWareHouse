@@ -65,28 +65,24 @@
     </div>
 </div>
 
-<!-- Offertas (MODIFICADO: Centrado y Título Cambiado) -->
+<!-- Offertas -->
 <div class="container-fluid offer pt-5">
     <div class="row px-xl-5 justify-content-center">
-        <!-- Oferta Componentes Gamer (Ahora ocupa 6 columnas y está centrado) -->
-        <div class="col-md-8 pb-4"> <!-- Aumentamos el ancho a 8 columnas para darle más presencia y centrar -->
-            <div
-                class="position-relative bg-dark text-center text-white mb-2 py-5 px-5 rounded-lg overflow-hidden">
+        <div class="col-md-8 pb-4"> 
+            <div class="position-relative bg-dark text-center text-white mb-2 py-5 px-5 rounded-lg overflow-hidden">
                 <img src="{% static 'core/img/ofertas_pc_gamer.webp' %}" alt="PC Gamer" class="position-absolute w-100 h-100"
                     style="object-fit: cover; opacity: 0.5; top: 0; left: 0;">
                 <div class="position-relative" style="z-index: 1;">
                     <h5 class="text-uppercase text-success mb-3">Hasta 20% OFF</h5>
-                    <!-- TÍTULO MODIFICADO -->
                     <h1 class="mb-4 font-weight-semi-bold text-white">Componentes Gamer Listos</h1> 
                     <a href="{% url 'tienda' %}" class="btn btn-outline-success py-md-2 px-md-3">Ver Ofertas</a>
                 </div>    
             </div>
         </div>
-        <!-- El bloque de Oferta Accesorios fue eliminado -->
     </div>
 </div>
 
-<!-- Categorias (MODIFICADO: Carrusel y Estructura Uniforme) -->
+<!-- Categorias -->
 <div class="container-fluid pt-5">
     <div class="text-center mb-4">
         <h2 class="section-title px-5">
@@ -95,10 +91,8 @@
     </div>
     <div class="row px-xl-5 pb-3">
         <div class="col">
-            <!-- Usamos owl-carousel para el carrusel de categorías -->
             <div class="owl-carousel vendor-carousel"> 
                 
-                <!-- Estructura de Tarjeta Uniforme -->
                 <div class="cat-item d-flex flex-column border mb-4" style="height: 300px; padding: 20px;">
                     <a href="{% url 'tienda' %}?q=Procesador" class="cat-img position-relative overflow-hidden mb-3 text-center d-flex justify-content-center align-items-center" style="flex-grow: 1; height: 100%;">
                         <img class="img-fluid" src="{% static 'core/img/cpu.webp' %}" alt="Procesadores" style="max-height: 150px; width: auto; object-fit: contain;" />
@@ -108,7 +102,6 @@
                 
                 <div class="cat-item d-flex flex-column border mb-4" style="height: 300px; padding: 20px;">
                     <a href="{% url 'tienda' %}?q=Tarjeta Gráfica" class="cat-img position-relative overflow-hidden mb-3 text-center d-flex justify-content-center align-items-center" style="flex-grow: 1; height: 100%;">
-                    <!-- Nota: Cambié el nombre del archivo para que coincida con el contexto de GPU -->
                         <img class="img-fluid" src="{% static 'core/img/gpu.webp' %}" alt="Tarjetas Gráficas" style="max-height: 150px; width: auto; object-fit: contain;" />
                     </a>
                     <h5 class="font-weight-semi-bold m-0 text-center">Tarjetas Gráficas (GPU)</h5>
@@ -147,7 +140,7 @@
     </div>
 </div>
 
-<!-- Marcas o Proveedores (MODIFICADO: Se añade estilo de tamaño fijo) -->
+<!-- Marcas o Proveedores  -->
 <div class="container-fluid py-5">
   <div class="text-center mb-4">
         <h2 class="section-title px-5">

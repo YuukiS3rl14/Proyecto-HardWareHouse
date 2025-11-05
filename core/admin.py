@@ -162,6 +162,11 @@ class CarritoAdmin(admin.ModelAdmin):
 admin.site.register(Carrito, CarritoAdmin)
 admin.site.register(ItemCarrito) 
 admin.site.register(Pedido, PedidoAdmin)
+
+class FavoritoAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'get_related_product', 'fecha_agregado')
+    list_filter = ('usuario',)
+admin.site.register(Favorito, FavoritoAdmin)
 admin.site.register(PagoBoleta)
 
 # 5. Sobrescribir títulos del Admin Site

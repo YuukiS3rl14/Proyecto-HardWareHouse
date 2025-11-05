@@ -8,15 +8,9 @@
 <!-- Shop Start -->
 <div class="container-fluid pt-5">
     <div class="row px-xl-5">
-        
-        <!-- Sidebar (Filtros Estáticos) -->
         <div class="col-lg-3 col-md-12 mb-5">
-            <!-- Título de la barra lateral -->
             <h5 class="font-weight-semi-bold mb-4">Filtros</h5>
-            
-            <!-- Formulario de Filtros -->
             <form action="{% url 'tienda' %}" method="GET">
-                <!-- Filtro por Categoría (Dinámico) -->
                 <h5 class="font-weight-semi-bold mb-3">Categoría</h5>
                 {% for cat in categorias %}
                     <div class="custom-control custom-checkbox mb-2">
@@ -25,7 +19,6 @@
                     </div>
                 {% endfor %}
 
-                <!-- Filtro por Marca/Proveedor (Dinámico) -->
                 <h5 class="font-weight-semi-bold mt-4 mb-3">Marca</h5>
                 {% for prov in proveedores %}
                     <div class="custom-control custom-checkbox mb-2">
@@ -34,7 +27,6 @@
                     </div>
                 {% endfor %}
 
-                <!-- Filtro por Precio (Radio buttons) -->
                 <h5 class="font-weight-semi-bold mt-4 mb-3">Precio</h5>
                 <div class="custom-control custom-radio mb-2">
                     <input type="radio" class="custom-control-input" name="precio" value="p1" id="p1" {% if selected_precio == 'p1' %}checked{% endif %}>
@@ -53,16 +45,13 @@
                     <label class="custom-control-label" for="p4">$600.000+</label>
                 </div>
 
-                <!-- Botones de acción -->
                 <button type="submit" class="btn btn-success btn-block mt-4">Aplicar Filtros</button>
                 <a href="{% url 'tienda' %}" class="btn btn-outline-dark btn-block mt-2">Limpiar Filtros</a>
             </form>
         </div>
 
-        <!-- Productos Dinámicos -->
         <div class="col-lg-9 col-md-12">
             <div class="row pb-3">
-                <!-- Título de Búsqueda (Muestra el término buscado) -->
                 <div class="col-12 pb-1">
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div>
@@ -79,53 +68,56 @@
                 
                 {% if productos %}
                     {% for producto, model_name in productos %}
-                    <!-- INICIO: Tarjeta de Producto Dinámica -->
                     <div class="col-lg-4 col-md-6 col-sm-12 pb-1">
                         <div class="card product-item border-0 mb-4 h-100 d-flex flex-column">
                             <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0" style="height: 250px;">
-                                <!-- Enlace y Carga de Imagen -->
-                                <!-- CORRECCIÓN: Usamos la variable 'model_name' que viene de la vista -->
                                 <a href="{% url 'detalle' model_name producto.id %}"> 
                                     {% if producto.imagen %}
-                                        <!-- Usamos {{ producto.imagen.url }} para la ruta dinámica de Django Media -->
                                         <img class="img-fluid w-100 h-100" src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="object-fit: contain;">
                                     {% else %}
-                                        <!-- Placeholder si no hay imagen -->
                                         <img class="img-fluid w-100" src="{% static 'core/img/placeholder_product.webp' %}" alt="Producto Sin Imagen">
                                     {% endif %}
                                 </a>
                             </div>
                             <div class="card-body text-center p-0 pt-4 pb-3 flex-grow-1 d-flex flex-column justify-content-between">
-                                <!-- Nombre del Producto y Proveedor -->
                                 <h6 class="text-truncate mb-3">{{ producto.proveedor.nombre }} {{ producto.nombre }}</h6>
                                 <div class="d-flex justify-content-center">
-                                    <!-- Precio formateado con humanize -->
                                     <h6>${{ producto.precio|floatformat:"0"|intcomma }}</h6>
                                 </div>
                                 <small class="text-muted d-block mt-1">{{ producto.categoria }}</small>
                             </div>
                             <div class="card-footer d-flex justify-content-between bg-light border">
-                                <!-- Botón Ver Detalle -->
-                                <!-- CORRECCIÓN: Usamos la variable 'model_name' que viene de la vista -->
-                                <a href="{% url 'detalle' model_name producto.id %}" class="btn btn-sm text-dark p-0">
+                                <a href="{% url 'detalle' model_name producto.id %}" class="btn btn-sm text-dark p-0" title="Ver detalle">
                                     <i class="fas fa-eye text-success mr-1"></i>Ver
                                 </a>
-                                <!-- Formulario para agregar al carrito con AJAX -->
+                                
+                                <!-- Construimos la clave para buscar en favoritos -->
+                                {% with fav_key=model_name|add:"-"|add:producto.id|stringformat:"s" %}
+                                <!-- Botón de Favoritos -->
+                                <button class="btn btn-sm text-dark p-0 border-0 bg-transparent toggle-favorite-btn"
+                                        data-product-id="{{ producto.id }}"
+                                        data-model-name="{{ model_name }}"
+                                        data-url="{% url 'toggle_favorito' %}"
+                                        data-is-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"
+                                        data-login-url="{% url 'login' %}"
+                                        title="{% if fav_key in favoritos_ids %}Quitar de favoritos{% else %}Agregar a favoritos{% endif %}">
+                                    <i class="{% if fav_key in favoritos_ids %}fas{% else %}far{% endif %} fa-heart text-danger"></i>
+                                </button>
+                                {% endwith %}
+
                                 <form action="{% url 'agregar_al_carrito' %}" method="POST" class="add-to-cart-form" style="display: inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="product_id" value="{{ producto.id }}">
                                     <input type="hidden" name="model_name" value="{{ model_name }}">
                                     <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="btn btn-sm text-dark p-0 border-0 bg-transparent" style="cursor: pointer;"><i class="fas fa-shopping-cart text-success mr-1"></i>Agregar</button>
+                                    <button type="submit" class="btn btn-sm text-dark p-0 border-0 bg-transparent" style="cursor: pointer;" title="Agregar al carrito"><i class="fas fa-shopping-cart text-success mr-1"></i>Agregar</button>
                                 </form>
                             </div>
                         </div>
                     </div>
-                    <!-- FIN: Tarjeta de Producto Dinámica -->
                     {% endfor %}
 
                 {% else %}
-                    <!-- Mensaje si no se encuentran productos -->
                     <div class="col-12 pt-5 text-center">
                         <h4 class="text-muted">No se encontraron productos</h4>
                         <p class="text-muted mt-3">
@@ -141,7 +133,8 @@
         </div>
     </div>
 </div>
-<!-- Enlazamos el script para el carrito AJAX -->
+
 <script src="{% static 'core/js/ajax-cart.js' %}"></script>
+<script src="{% static 'core/js/ajax-favorites.js' %}"></script>
 
 {% endblock %}

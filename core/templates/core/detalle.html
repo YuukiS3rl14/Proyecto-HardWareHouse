@@ -4,8 +4,6 @@
 
 {% block tittle %}{{ producto.nombre }} - Detalle{% endblock %}
 
-{% block navbarBaja %} {% endblock %}
-
 {% block principal %}
 <!-- Contenido principal -->
 <div class="container py-5">
@@ -124,16 +122,23 @@
                         <i class="fa fa-shopping-cart mr-1"></i>Agregar al carrito
                     </button>
                 </form>
-                <a href="{% url 'carrito' %}" class="btn btn-outline-primary px-3 ml-3">
-                    <i class="fas fa-shopping-bag mr-1"></i>Ver Carrito
-                </a>
+                <!-- Botón de Favoritos -->
+                <button class="btn btn-outline-danger px-3 ml-3 toggle-favorite-btn"
+                        data-product-id="{{ producto.id }}"
+                        data-model-name="{{ model_name }}"
+                        data-url="{% url 'toggle_favorito' %}"
+                        data-is-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"
+                        data-login-url="{% url 'login' %}"
+                        title="{% if is_favorito %}Quitar de favoritos{% else %}Agregar a favoritos{% endif %}">
+                    <i class="{% if is_favorito %}fas{% else %}far{% endif %} fa-heart mr-1"></i>
+                </button>
             </div>
 
             <p><strong>Garantía:</strong> 1 año por fabricante</p>
         </div>
     </div>
 </div>
-<!-- Enlazamos el script para el carrito AJAX -->
 <script src="{% static 'core/js/ajax-cart.js' %}"></script>
+<script src="{% static 'core/js/ajax-favorites.js' %}"></script>
 
 {% endblock %}

@@ -31,7 +31,6 @@
                         </td>
                         <td class="align-middle">${{ item.precio_unitario|floatformat:"0"|intcomma }}</td>
                         <td class="align-middle">
-                            <!-- El formulario ahora tiene un ID único para ser manejado por JS -->
                             <form action="{% url 'actualizar_carrito' item.id %}" method="POST" id="form-{{ item.id }}" class="d-inline">
                                 {% csrf_token %}
                                 <div class="input-group quantity mx-auto" style="width: 100px;">
@@ -97,7 +96,6 @@
 </div>
 <!-- Cart End -->
 
-<!-- Enlazamos el script externo para la lógica del carrito -->
 <script src="{% static 'core/js/cart.js' %}"></script>
 
 {% endblock %}

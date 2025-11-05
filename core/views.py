@@ -9,7 +9,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash 
 from django.db import transaction 
 from django.db.models import Q
-from .models import *
+from .models import Favorito, Proveedor, Carrito, ItemCarrito, Procesador, TarjetaGrafica, MemoriaRam, PlacaMadre, AlmacenamientoSSD, AlmacenamientoHDD, Gabinete, FuenteDePoder, RefrigeracionCooler, Ventilador
 
 # Create your views here.
 
@@ -76,9 +76,16 @@ def mostrarDetalle(request, model_name, pk):
     # 2. Obtener el objeto específico
     producto = get_object_or_404(ModelClass, pk=pk)
     
+    # 3. Verificar si el producto está en favoritos (si el usuario está logueado)
+    is_favorito = False
+    if request.user.is_authenticated:
+        lookup_kwargs = {f'{model_name_lower}__id': pk, 'usuario': request.user}
+        is_favorito = Favorito.objects.filter(**lookup_kwargs).exists()
+
     context = {
         'producto': producto,
         'model_name': model_name_lower, # Pasamos el nombre del modelo a la plantilla
+        'is_favorito': is_favorito,
     }
     return render(request, 'core/detalle.html', context)
 
@@ -147,6 +154,16 @@ def mostrarTienda(request):
             for producto in qs:
                 productos_con_modelo.append((producto, model_name))
 
+    # --- 3. Obtener IDs de productos favoritos del usuario ---
+    favoritos_ids = {}
+    if request.user.is_authenticated:
+        user_favoritos = Favorito.objects.filter(usuario=request.user).select_related('procesador', 'tarjeta_grafica', 'memoria_ram', 'placa_madre', 'almacenamiento_ssd', 'almacenamiento_hdd', 'gabinete', 'fuente_de_poder', 'refrigeracion', 'ventilador')
+        for fav in user_favoritos:
+            prod = fav.get_related_product()
+            if prod:
+                model_name_template = prod._meta.model_name.replace('_', '')
+                favoritos_ids[f"{model_name_template}-{prod.id}"] = True
+
     # --- 3. Preparar contexto para la plantilla ---
     # Obtenemos todas las categorías y proveedores para mostrarlos en los filtros
     categorias_disponibles = sorted(list(set(m._meta.get_field('categoria').default for m in modelos)))
@@ -154,6 +171,7 @@ def mostrarTienda(request):
         
     context = {
         'productos': productos_con_modelo,
+        'favoritos_ids': favoritos_ids,
         'query': query,
         'categorias': categorias_disponibles,
         'proveedores': proveedores_disponibles,
@@ -300,3 +318,57 @@ def actualizar_carrito(request, item_id):
             return eliminar_del_carrito(request, item_id)
             
     return redirect('carrito')
+
+# --- VISTAS DE FAVORITOS ---
+
+@login_required
+def mostrar_favoritos(request):
+    favoritos = Favorito.objects.filter(usuario=request.user).order_by('-fecha_agregado')
+    
+    productos_favoritos = []
+    for fav in favoritos:
+        producto = fav.get_related_product()
+        if producto:
+            model_name = producto._meta.model_name
+            productos_favoritos.append({'producto': producto, 'model_name': model_name, 'fav_id': fav.id})
+
+    context = {
+        'productos_favoritos': productos_favoritos
+    }
+    return render(request, 'core/favoritos.html', context)
+
+@login_required
+def toggle_favorito(request):
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        product_id = request.POST.get('product_id')
+        model_name = request.POST.get('model_name')
+
+        ModelClass = PRODUCT_MODEL_MAP.get(model_name)
+        if not ModelClass or not product_id:
+            return JsonResponse({'status': 'error', 'message': 'Datos inválidos.'}, status=400)
+
+        lookup_kwargs = {f'{model_name}__id': product_id, 'usuario': request.user}
+        
+        try:
+            favorito, created = Favorito.objects.get_or_create(**lookup_kwargs)
+            if created:
+                # Se acaba de crear, así que se agregó a favoritos
+                producto = get_object_or_404(ModelClass, id=product_id)
+                setattr(favorito, model_name, producto)
+                favorito.save()
+                return JsonResponse({'status': 'added', 'message': '¡Agregado a favoritos!'})
+            else:
+                # Ya existía, así que lo eliminamos
+                favorito.delete()
+                return JsonResponse({'status': 'removed', 'message': 'Eliminado de favoritos.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Petición no válida.'}, status=400)
+
+@login_required
+def eliminar_favorito(request, fav_id):
+    favorito = get_object_or_404(Favorito, id=fav_id, usuario=request.user)
+    favorito.delete()
+    messages.success(request, "Producto eliminado de tus favoritos.")
+    return redirect('favoritos')
