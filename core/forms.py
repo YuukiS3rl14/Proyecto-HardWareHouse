@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserChangeForm
+from .models import *
 
 class RegistroForm(UserCreationForm):
     email = forms.EmailField(
@@ -45,3 +46,27 @@ class UserEditForm(UserChangeForm):
         if User.objects.exclude(pk=self.instance.pk).filter(email__iexact=email).exists():
             raise forms.ValidationError("Este correo electrónico ya está en uso por otra cuenta.")
         return email
+
+class ComentarioForm(forms.ModelForm):
+    class Meta:
+        model = Comentario
+        fields = ['titulo', 'texto', 'calificacion']
+        widgets = {
+            'titulo': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: ¡Excelente producto!'
+            }),
+            'texto': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Escribe tu reseña aquí...'
+            }),
+            'calificacion': forms.Select(choices=[(i, f'{i} estrellas') for i in range(1, 6)], attrs={
+                'class': 'form-control'
+            })
+        }
+        labels = {
+            'titulo': 'Título de tu reseña',
+            'texto': 'Tu opinión',
+            'calificacion': 'Calificación'
+        }

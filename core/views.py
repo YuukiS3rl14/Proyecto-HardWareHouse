@@ -9,8 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash 
 from django.db import transaction 
-from django.db.models import Q
-from .models import Favorito, Proveedor, Carrito, ItemCarrito, Procesador, TarjetaGrafica, MemoriaRam, PlacaMadre, AlmacenamientoSSD, AlmacenamientoHDD, Gabinete, FuenteDePoder, RefrigeracionCooler, Ventilador
+from django.db.models import Q, Avg, Count
+from .models import *
 
 # Create your views here.
 
@@ -105,10 +105,25 @@ def mostrarDetalle(request, model_name, pk):
         lookup_kwargs = {f'{model_name_lower}__id': pk, 'usuario': request.user}
         is_favorito = Favorito.objects.filter(**lookup_kwargs).exists()
 
+    # 4. Obtener comentarios, promedio de calificación y total de comentarios
+    comment_lookup = {f'{model_name_lower}_id': pk}
+    comentarios = Comentario.objects.filter(**comment_lookup).order_by('-fecha_creacion')
+    
+    stats_comentarios = comentarios.aggregate(
+        promedio=Avg('calificacion'),
+        total=Count('id')
+    )
+    promedio_calificacion = stats_comentarios['promedio'] or 0
+    total_comentarios = stats_comentarios['total']
+
     context = {
         'producto': producto,
         'model_name': model_name_lower, # Pasamos el nombre del modelo a la plantilla
         'is_favorito': is_favorito,
+        'comentarios': comentarios,
+        'promedio_calificacion': promedio_calificacion,
+        'total_comentarios': total_comentarios,
+        'comentario_form': ComentarioForm(),
     }
     return render(request, 'core/detalle.html', context)
 
@@ -395,3 +410,27 @@ def eliminar_favorito(request, fav_id):
     favorito.delete()
     messages.success(request, "Producto eliminado de tus favoritos.")
     return redirect('favoritos')
+
+# --- VISTA DE COMENTARIOS ---
+
+@login_required
+def agregar_comentario(request, model_name, pk):
+    if request.method == 'POST':
+        form = ComentarioForm(request.POST)
+        ModelClass = PRODUCT_MODEL_MAP.get(model_name)
+        
+        if not ModelClass:
+            raise Http404("Tipo de producto no encontrado.")
+        
+        producto = get_object_or_404(ModelClass, pk=pk)
+
+        if form.is_valid():
+            comentario = form.save(commit=False)
+            comentario.usuario = request.user
+            setattr(comentario, model_name, producto) # Asocia el comentario con el producto correcto
+            comentario.save()
+            messages.success(request, "¡Gracias por tu reseña! Tu comentario ha sido publicado.")
+        else:
+            messages.error(request, "Hubo un error al publicar tu comentario. Por favor, revisa los campos.")
+
+    return redirect('detalle', model_name=model_name, pk=pk)

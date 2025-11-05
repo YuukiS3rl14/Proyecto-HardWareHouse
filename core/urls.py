@@ -21,4 +21,7 @@ urlpatterns = [
     path('favoritos/', mostrar_favoritos, name='favoritos'),
     path('favoritos/toggle/', toggle_favorito, name='toggle_favorito'),
     path('favoritos/eliminar/<int:fav_id>/', eliminar_favorito, name='eliminar_favorito'),
+
+    # URL de Comentarios
+    path('comentario/agregar/<str:model_name>/<int:pk>/', agregar_comentario, name='agregar_comentario'),
 ]

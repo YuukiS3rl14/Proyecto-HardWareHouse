@@ -1,4 +1,4 @@
-from .models import Carrito, Favorito
+from .models import *
 
 def extras_context(request):
     """

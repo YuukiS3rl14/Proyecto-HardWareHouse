@@ -23,16 +23,18 @@
             <p class="text-muted">Marca: {{ producto.proveedor.nombre }} | Categoría: {{ producto.categoria }}</p>
             
             <div class="d-flex mb-3">
-                <div class="text-success mr-2">
-                    <!-- Stars Placeholder -->
-                    <small class="fas fa-star"></small>
-                    <small class="fas fa-star"></small>
-                    <small class="fas fa-star"></small>
-                    <small class="fas fa-star"></small>
-                    <small class="far fa-star"></small>
+                <div class="text-success mr-2" title="{{ promedio_calificacion|floatformat:1 }} de 5 estrellas">
+                    {% with promedio_entero=promedio_calificacion|floatformat:"0" %}
+                        {% for i in "12345" %}
+                            {% if i <= promedio_entero %}
+                                <small class="fas fa-star"></small>
+                            {% else %}
+                                <small class="far fa-star"></small>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
                 </div>
-                <!-- Aquí se mostraría el número de comentarios/reseñas reales -->
-                <small>(0 reseñas)</small> 
+                <small class="pt-1">({{ total_comentarios }} reseña{{ total_comentarios|pluralize:"s" }})</small> 
             </div>
             
             <!-- Precio Formateado -->
@@ -138,6 +140,72 @@
         </div>
     </div>
 </div>
+
+<!-- Pestañas de Reseñas y Descripción -->
+<div class="container mt-5">
+    <div class="row">
+        <div class="col">
+            <div class="bg-light p-4 rounded">
+                <h4 class="mb-4">Reseñas de Usuarios ({{ total_comentarios }})</h4>
+                <hr>
+
+                {% for comentario in comentarios %}
+                <div class="media mb-4">
+                    <img src="{% static 'core/img/default_perfil.webp' %}" alt="Usuario" class="img-fluid mr-3 mt-1" style="width: 45px;">
+                    <div class="media-body">
+                        <h6>{{ comentario.usuario.username }}<small> - <i>{{ comentario.fecha_creacion|date:"d M, Y" }}</i></small></h6>
+                        <div class="text-success mb-2">
+                            {% for i in "12345" %}
+                                {% if i <= comentario.calificacion|stringformat:"s" %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <h5 class="font-weight-bold">{{ comentario.titulo }}</h5>
+                        <p>{{ comentario.texto }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">Este producto aún no tiene reseñas. ¡Sé el primero en opinar!</p>
+                {% endfor %}
+
+                <hr>
+
+                <!-- Formulario para dejar una reseña -->
+                <div class="mt-4">
+                    <h4 class="mb-4">Deja tu reseña</h4>
+                    {% if user.is_authenticated %}
+                    <form action="{% url 'agregar_comentario' model_name=model_name pk=producto.id %}" method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="{{ comentario_form.calificacion.id_for_label }}">{{ comentario_form.calificacion.label }}</label>
+                            {{ comentario_form.calificacion }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ comentario_form.titulo.id_for_label }}">{{ comentario_form.titulo.label }}</label>
+                            {{ comentario_form.titulo }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ comentario_form.texto.id_for_label }}">{{ comentario_form.texto.label }}</label>
+                            {{ comentario_form.texto }}
+                        </div>
+                        <button type="submit" class="btn btn-success px-3">Publicar Reseña</button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-warning" role="alert">
+                        Debes <a href="{% url 'login' %}?next={{ request.path }}" class="alert-link">iniciar sesión</a> para poder dejar una reseña.
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script src="{% static 'core/js/ajax-cart.js' %}"></script>
 <script src="{% static 'core/js/ajax-favorites.js' %}"></script>
 
