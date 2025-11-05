@@ -1,89 +1,103 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load humanize %}
 
-{% block tittle %} Carrito de Compras {% endblock %}
+{% block tittle %} Carrito {% endblock %}
 
 {% block navbarBaja %} {% endblock %}
 
-{% block subNavbar %} {% endblock %}
-
 {% block principal %}
-<div class="container-fluid bg-success text-white text-center py-5 mb-4">
-    <h1 class="font-weight-bold">Tu Carrito de Compras</h1>
-    <p>Revisa los componentes seleccionados antes de pagar</p>
-</div>
-
-<div class="container pb-5">
-    <div class="row">
-        <div class="col-lg-8 mb-4">
-            <table class="table table-bordered text-center">
-                <thead>
+<!-- Cart Start -->
+<div class="container-fluid pt-5">
+    <div class="row px-xl-5">
+        {% if items %}
+        <div class="col-lg-8 table-responsive mb-5">
+            <table class="table table-bordered text-center mb-0">
+                <thead class="bg-secondary text-dark">
                     <tr>
                         <th>Producto</th>
                         <th>Precio</th>
                         <th>Cantidad</th>
                         <th>Total</th>
-                        <th>Eliminar</th>
+                        <th>Quitar</th>
                     </tr>
                 </thead>
-                <tbody id="cart-body">
+                <tbody class="align-middle">
+                    {% for item in items %}
+                    {% with producto=item.get_related_product %}
                     <tr>
-                        <td><img src="{% static 'core/img/gpu.jpg' %}" width="60"> Tarjeta Gráfica ASUS RTX 4070</td>
-                        <td>$650.000</td>
-                        <td>
-                            <div class="input-group quantity mx-auto" style="width: 100px;">
-                                <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-success btn-minus"><i class="fa fa-minus"></i></button>
-                                </div>
-                                <input type="text" class="form-control form-control-sm text-center" value="1">
-                                <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-success btn-plus"><i class="fa fa-plus"></i></button>
-                                </div>
-                            </div>
+                        <td class="align-middle text-left">
+                            <img src="{{ producto.imagen.url }}" alt="" style="width: 50px;"> {{ producto.nombre }}
                         </td>
-                        <td class="item-total">$650.000</td>
-                        <td><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></td>
-                    </tr>
-                    <tr>
-                        <td><img src="{% static 'core/img/ram.jpg' %}" width="60"> Memoria RAM Corsair 16GB DDR5</td>
-                        <td>$85.000</td>
-                        <td>
-                            <div class="input-group quantity mx-auto" style="width: 100px;">
-                                <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-success btn-minus"><i class="fa fa-minus"></i></button>
+                        <td class="align-middle">${{ item.precio_unitario|floatformat:"0"|intcomma }}</td>
+                        <td class="align-middle">
+                            <!-- El formulario ahora tiene un ID único para ser manejado por JS -->
+                            <form action="{% url 'actualizar_carrito' item.id %}" method="POST" id="form-{{ item.id }}" class="d-inline">
+                                {% csrf_token %}
+                                <div class="input-group quantity mx-auto" style="width: 100px;">
+                                    <div class="input-group-btn">
+                                        <button type="button" class="btn btn-sm btn-success btn-minus">
+                                        <i class="fa fa-minus"></i>
+                                        </button>
+                                    </div>
+                                    <input type="text" name="quantity" class="form-control form-control-sm bg-light text-center" value="{{ item.cantidad }}">
+                                    <div class="input-group-btn">
+                                        <button type="button" class="btn btn-sm btn-success btn-plus">
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <input type="text" class="form-control form-control-sm text-center" value="1">
-                                <div class="input-group-btn">
-                                    <button class="btn btn-sm btn-success btn-plus"><i class="fa fa-plus"></i></button>
-                                </div>
-                            </div>
+                            </form>
                         </td>
-                        <td class="item-total">$85.000</td>
-                        <td><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></td>
+                        <td class="align-middle">${{ item.get_total|floatformat:"0"|intcomma }}</td>
+                        <td class="align-middle">
+                            <a href="{% url 'eliminar_del_carrito' item.id %}" class="btn btn-sm btn-danger"><i class="fa fa-times"></i></a>
+                        </td>
                     </tr>
+                    {% endwith %}
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
-
         <div class="col-lg-4">
-            <div class="cart-summary p-4">
-                <h4 class="font-weight-bold mb-4">Resumen del Carrito</h4>
-                <div class="d-flex justify-content-between">
-                    <span>Subtotal:</span>
-                    <strong id="subtotal">$735.000</strong>
+            <div class="card border-secondary mb-5">
+                <div class="card-header bg-secondary border-0">
+                    <h4 class="font-weight-semi-bold m-0">Resumen del Carrito</h4>
                 </div>
-                <div class="d-flex justify-content-between">
-                    <span>Envío:</span>
-                    <strong>$10.000</strong>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3 pt-1">
+                        <h6 class="font-weight-medium">Subtotal</h6>
+                        <h6 class="font-weight-medium">${{ total_carrito|floatformat:"0"|intcomma }}</h6>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <h6 class="font-weight-medium">Envío</h6>
+                        <h6 class="font-weight-medium">Gratis</h6>
+                    </div>
                 </div>
-                <hr>
-                <div class="d-flex justify-content-between mb-3">
-                    <h5>Total:</h5>
-                    <h5 id="total">$745.000</h5>
+                <div class="card-footer border-secondary bg-transparent">
+                    <div class="d-flex justify-content-between mt-2">
+                        <h5 class="font-weight-bold">Total</h5>
+                        <h5 class="font-weight-bold">${{ total_carrito|floatformat:"0"|intcomma }}</h5>
+                    </div>
+                    <a href="{% url 'checkout' %}" class="btn btn-block btn-success my-3 py-3">Proceder al Pago</a>
                 </div>
-                <a href="{% url 'checkout' %}" class="btn btn-success btn-block py-2">Proceder al Pago</a>
             </div>
         </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+            <h3 class="font-weight-bold">Tu carrito está vacío</h3>
+            <p class="text-muted">Parece que aún no has agregado productos a tu carrito.</p>
+            <a href="{% url 'tienda' %}" class="btn btn-success mt-3">
+                <i class="fas fa-store mr-2"></i>Ir a la Tienda
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
+<!-- Cart End -->
+
+<!-- Enlazamos el script externo para la lógica del carrito -->
+<script src="{% static 'core/js/cart.js' %}"></script>
+
 {% endblock %}

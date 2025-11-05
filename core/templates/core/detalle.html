@@ -1,62 +1,139 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load humanize %}
 
-{% block tittle %} Detalle {% endblock %}
+{% block tittle %}{{ producto.nombre }} - Detalle{% endblock %}
 
 {% block navbarBaja %} {% endblock %}
 
-{% block subNavbar %} {% endblock %}
-
 {% block principal %}
-<!-- Alerta -->
-<div class="alert alert-success alert-custom" role="alert" id="cartAlert">
-    ✅ Producto agregado al carrito correctamente.
-</div>
-
 <!-- Contenido principal -->
 <div class="container py-5">
     <div class="row">
+        <!-- Columna de Imagen -->
         <div class="col-lg-5 mb-4">
-            <img src="{% static 'core/img/rtx4070.webp' %}" class="img-fluid border rounded" alt="RTX 4070 Ti">
+            {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" class="img-fluid border rounded" alt="{{ producto.nombre }}">
+            {% else %}
+                <img src="{% static 'core/img/placeholder_detail.webp' %}" class="img-fluid border rounded" alt="Producto Sin Imagen">
+            {% endif %}
         </div>
+        
+        <!-- Columna de Información -->
         <div class="col-lg-7">
-            <h3 class="font-weight-bold">Tarjeta Gráfica NVIDIA GeForce RTX 4070 Ti 12GB GDDR6X</h3>
-            <p class="text-muted">Marca: ASUS | Modelo: TUF Gaming RTX 4070 Ti OC Edition</p>
+            <h3 class="font-weight-bold">{{ producto.nombre }}</h3>
+            <p class="text-muted">Marca: {{ producto.proveedor.nombre }} | Categoría: {{ producto.categoria }}</p>
+            
             <div class="d-flex mb-3">
                 <div class="text-success mr-2">
+                    <!-- Stars Placeholder -->
                     <small class="fas fa-star"></small>
                     <small class="fas fa-star"></small>
                     <small class="fas fa-star"></small>
                     <small class="fas fa-star"></small>
                     <small class="far fa-star"></small>
                 </div>
-                <small>(124 reseñas)</small>
+                <!-- Aquí se mostraría el número de comentarios/reseñas reales -->
+                <small>(0 reseñas)</small> 
             </div>
-            <h3 class="text-success font-weight-bold mb-4">$999.990 CLP</h3>
-            <p>La GeForce RTX 4070 Ti ofrece rendimiento de nueva generación gracias a la arquitectura Ada Lovelace de
-                NVIDIA. Ideal para gaming 4K, renderizado profesional y creación de contenido. Incluye DLSS 3 y Ray
-                Tracing avanzado.</p>
+            
+            <!-- Precio Formateado -->
+            <h3 class="text-success font-weight-bold mb-4">${{ producto.precio|floatformat:"0"|intcomma }} CLP</h3>
+            
+            <!-- Descripción -->
+            <p>{{ producto.descripcion|default:"Descripción no disponible." }}</p>
+            
+            <!-- Especificaciones Adicionales (Ejemplo de acceso) -->
+            <hr>
+            <h5>Especificaciones Clave</h5>
+            <ul class="list-unstyled">
+                {# Atributos de Procesador #}
+                {% if producto.socket %} <li><strong>Socket:</strong> {{ producto.socket }}</li> {% endif %}
+                {% if producto.nucleos %} <li><strong>Núcleos:</strong> {{ producto.nucleos }}</li> {% endif %}
+                {% if producto.frecuencia_base %} <li><strong>Frecuencia Base:</strong> {{ producto.frecuencia_base }} GHz</li> {% endif %}
 
-            <div class="d-flex align-items-center mb-4">
-                <div class="input-group quantity mr-4" style="width:130px;">
-                    <div class="input-group-prepend">
-                        <button class="btn btn-success btn-minus"><i class="fa fa-minus"></i></button>
+                {# Atributos de Tarjeta Gráfica #}
+                {% if producto.vram_gb %} <li><strong>VRAM:</strong> {{ producto.vram_gb }} GB</li> {% endif %}
+                {% if producto.tipo_memoria %} <li><strong>Tipo de Memoria:</strong> {{ producto.tipo_memoria }}</li> {% endif %}
+                {% if producto.interfaz %} <li><strong>Interfaz:</strong> {{ producto.interfaz }}</li> {% endif %}
+
+                {# Atributos de Memoria RAM #}
+                {% if producto.capacidad_gb and producto.tipo_ddr and producto.velocidad_mhz %}
+                    <li><strong>Capacidad:</strong> {{ producto.capacidad_gb }} GB</li>
+                    <li><strong>Tipo DDR:</strong> {{ producto.tipo_ddr }}</li>
+                    <li><strong>Velocidad:</strong> {{ producto.velocidad_mhz }} MHz</li>
+                {% elif producto.capacidad_gb %} {# Para SSD/HDD que también tienen capacidad_gb #}
+                    <li><strong>Capacidad:</strong> {{ producto.capacidad_gb }} GB</li>
+                {% endif %}
+
+                {# Atributos de Placa Madre #}
+                {% if producto.socket_cpu %} <li><strong>Socket CPU:</strong> {{ producto.socket_cpu }}</li> {% endif %}
+                {% if producto.chipset %} <li><strong>Chipset:</strong> {{ producto.chipset }}</li> {% endif %}
+                {% if producto.formato %} <li><strong>Formato:</strong> {{ producto.formato }}</li> {% endif %}
+                {% if producto.ranuras_ram %} <li><strong>Ranuras RAM:</strong> {{ producto.ranuras_ram }}</li> {% endif %}
+
+                {# Atributos de Almacenamiento (SSD/HDD) #}
+                {% if producto.interfaz and producto.formato and producto.categoria != 'Memoria RAM' %} {# Evitar duplicar interfaz/formato si ya se mostró para GPU/MB #}
+                    <li><strong>Interfaz:</strong> {{ producto.interfaz }}</li>
+                    <li><strong>Formato:</strong> {{ producto.formato }}</li>
+                {% endif %}
+                {% if producto.velocidad_rpm %} <li><strong>Velocidad:</strong> {{ producto.velocidad_rpm }} RPM</li> {% endif %}
+                {% if producto.cache_mb %} <li><strong>Caché:</strong> {{ producto.cache_mb }} MB</li> {% endif %}
+
+                {# Atributos de Gabinete #}
+                {% if producto.formato_soporte %} <li><strong>Soporte Placa:</strong> {{ producto.formato_soporte }}</li> {% endif %}
+                {% if producto.ventiladores_incluidos is not None %} <li><strong>Ventiladores Incluidos:</strong> {% if producto.ventiladores_incluidos %}Sí{% else %}No{% endif %}</li> {% endif %}
+                {% if producto.material %} <li><strong>Material:</strong> {{ producto.material }}</li> {% endif %}
+
+                {# Atributos de Fuente de Poder #}
+                {% if producto.potencia_watts %} <li><strong>Potencia:</strong> {{ producto.potencia_watts }} W</li> {% endif %}
+                {% if producto.certificacion %} <li><strong>Certificación:</strong> {{ producto.certificacion }}</li> {% endif %}
+                {% if producto.modular is not None %} <li><strong>Modular:</strong> {% if producto.modular %}Sí{% else %}No{% endif %}</li> {% endif %}
+
+                {# Atributos de Refrigeración y Ventilador #}
+                {% if producto.tipo %} <li><strong>Tipo:</strong> {{ producto.tipo }}</li> {% endif %}
+                {% if producto.socket_compatibles %} <li><strong>Sockets Compatibles:</strong> {{ producto.socket_compatibles }}</li> {% endif %}
+                {% if producto.tamanho_radiador_mm %} <li><strong>Tamaño Radiador:</strong> {{ producto.tamanho_radiador_mm }} mm</li> {% endif %}
+                {% if producto.tamanho_mm %} <li><strong>Tamaño:</strong> {{ producto.tamanho_mm }} mm</li> {% endif %}
+                {% if producto.rgb is not None %} <li><strong>RGB:</strong> {% if producto.rgb %}Sí{% else %}No{% endif %}</li> {% endif %}
+
+                {# Stock siempre al final #}
+                <li><strong>Stock:</strong> 
+                    <strong class="{% if producto.stock > 0 %}text-success{% else %}text-danger{% endif %}">
+                        {% if producto.stock > 0 %}En stock ({{ producto.stock }} unidades){% else %}Agotado{% endif %}
+                    </strong>
+                </li>
+            </ul>
+            <!-- Controles de Compra y Navegación -->
+            <div class="d-flex align-items-center mb-4 mt-4">
+                <form action="{% url 'agregar_al_carrito' %}" method="POST" class="add-to-cart-form d-flex align-items-center">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ producto.id }}">
+                    <input type="hidden" name="model_name" value="{{ model_name }}">
+    
+                    <div class="input-group quantity mr-3" style="width: 130px;">
+                        <div class="input-group-btn">
+                            <button type="button" class="btn btn-success btn-minus"><i class="fa fa-minus"></i></button>
+                        </div>
+                        <input type="text" name="quantity" class="form-control bg-light text-center" value="1">
+                        <div class="input-group-btn">
+                            <button type="button" class="btn btn-success btn-plus"><i class="fa fa-plus"></i></button>
+                        </div>
                     </div>
-                    <input type="text" class="form-control text-center bg-light" value="1">
-                    <div class="input-group-append">
-                        <button class="btn btn-success btn-plus"><i class="fa fa-plus"></i></button>
-                    </div>
-                </div>
-                <button id="addCart" class="btn btn-success px-3 mr-2"><i class="fa fa-shopping-cart mr-1"></i>Agregar
-                    al carrito</button>
-                <a href="{% url 'checkout' %}" class="btn btn-outline-success px-3">
-                    <i class="fa fa-credit-card mr-1"></i>Comprar ahora
+                    <button type="submit" class="btn btn-success px-3">
+                        <i class="fa fa-shopping-cart mr-1"></i>Agregar al carrito
+                    </button>
+                </form>
+                <a href="{% url 'carrito' %}" class="btn btn-outline-primary px-3 ml-3">
+                    <i class="fas fa-shopping-bag mr-1"></i>Ver Carrito
                 </a>
             </div>
 
-            <p><strong>Disponibilidad:</strong> En stock</p>
             <p><strong>Garantía:</strong> 1 año por fabricante</p>
         </div>
     </div>
 </div>
+<!-- Enlazamos el script para el carrito AJAX -->
+<script src="{% static 'core/js/ajax-cart.js' %}"></script>
+
 {% endblock %}

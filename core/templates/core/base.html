@@ -12,13 +12,14 @@
     <!-- Favicon -->
     <link href="{% static 'core/img/favicon.ico' %}" rel="icon">
     <!-- Google Web Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-    
+
     <!-- Bootstrap 5 CDN (CSS) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Librerías de la Plantilla -->
     <link href="{% static 'core/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style.css' %}" rel="stylesheet">
@@ -44,7 +45,7 @@
                     </a>
                     <span class="text-muted px-2">|</span>
                     {% endif %}
-                    
+
                     <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-facebook-f"></i></a>
                     <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-twitter"></i></a>
                     <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-instagram"></i></a>
@@ -75,25 +76,25 @@
                     </div>
                 </nav>
             </div>
-            
+
             <div class="col-lg-3 col-6 text-right d-none d-lg-block">
                 <div class="d-inline-flex align-items-center">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'perfil' %}" class="nav-item nav-link py-0 px-2 text-dark">
-                            <i class="fas fa-user-circle text-success mr-1"></i> {{ user.username }}
-                        </a>
-                        <span class="text-muted">|</span>
-                        <form method="post" action="{% url 'logout' %}" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="nav-item nav-link py-0 px-2 text-dark border-0 bg-transparent" 
-                                    style="cursor: pointer;">
-                                Cerrar Sesión
-                            </button>
-                        </form>
+                    <a href="{% url 'perfil' %}" class="nav-item nav-link py-0 px-2 text-dark">
+                        <i class="fas fa-user-circle text-success mr-1"></i> {{ user.username }}
+                    </a>
+                    <span class="text-muted">|</span>
+                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-item nav-link py-0 px-2 text-dark border-0 bg-transparent"
+                            style="cursor: pointer;">
+                            Cerrar Sesión
+                        </button>
+                    </form>
                     {% else %}
-                        <a href="{% url 'login' %}" class="nav-item nav-link py-0 px-2 text-dark">Login</a>
-                        <span class="text-muted">|</span>
-                        <a href="{% url 'registro' %}" class="nav-item nav-link py-0 px-2 text-dark">Registro</a>
+                    <a href="{% url 'login' %}" class="nav-item nav-link py-0 px-2 text-dark">Login</a>
+                    <span class="text-muted">|</span>
+                    <a href="{% url 'registro' %}" class="nav-item nav-link py-0 px-2 text-dark">Registro</a>
                     {% endif %}
                 </div>
             </div>
@@ -101,23 +102,31 @@
 
         {% block navbarBaja %}
         <div class="row border-top border-bottom px-xl-5 py-3 align-items-center">
-            <div class="col-lg-9 col-md-9 offset-lg-1">
-                <form action="">
+            <!-- El buscador ocupará 7 columnas del total de 12, alineado a la izquierda -->
+            <div class="col-lg-7">
+                <form action="{% url 'tienda' %}" method="GET">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Buscar productos">
+                        <!-- Campo de texto (ocupa la mayor parte del input-group) -->
+                        <input type="text" class="form-control" name="q" placeholder="Buscar productos">
+
+                        <!-- Botón de búsqueda (al lado del campo de texto) -->
                         <div class="input-group-append">
-                            <a href="{% url 'tienda' %}" class="input-group-text bg-success text-white">
+                            <button type="submit" class="input-group-text bg-success text-white border-0">
                                 <i class="fa fa-search"></i>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="col-lg-2 col-md-3 text-right">
+
+            <!-- Íconos de utilidad (Favoritos y Carrito) alineados a la derecha -->
+            <div class="col-lg-5 text-right">
                 {% if user.is_authenticated %}
-                <a href="{% url 'perfil' %}" class="btn border"><i class="fas fa-heart text-success"></i><span class="badge">0</span></a>
+                <a href="{% url 'perfil' %}" class="btn border"><i class="fas fa-heart text-success"></i><span
+                        class="badge">0</span></a>
                 {% else %}
-                <a href="{% url 'login' %}" class="btn border"><i class="fas fa-heart text-success"></i><span class="badge">0</span></a>
+                <a href="{% url 'login' %}" class="btn border"><i class="fas fa-heart text-success"></i><span
+                        class="badge">0</span></a>
                 {% endif %}
                 <a href="{% url 'carrito' %}" class="btn border"><i class="fas fa-shopping-cart text-success"></i><span
                         class="badge">0</span></a>
@@ -128,69 +137,20 @@
     </div>
     {% endblock %}
 
-    {% block subNavbar %}
-    <div class="container-fluid pt-5">
-        <div class="row px-xl-5">
-
-            {% block categorias %}
-            <div class="col-lg-3 d-none d-lg-block">
-                <a class="btn shadow-none d-flex align-items-center justify-content-between bg-success text-white w-100"
-                    data-toggle="collapse" href="#navbar-vertical"
-                    style="height: 65px; margin-top: -1px; padding: 0 30px;">
-                    <h6 class="m-0">Categorías</h6>
-                    <i class="fa fa-angle-down text-dark"></i>
-                </a>
-                <nav class="collapse show navbar navbar-vertical navbar-light align-items-start p-0 border border-top-0 border-bottom-0"
-                    id="navbar-vertical" style="z-index: 9;">
-                    <div class="navbar-nav w-100 overflow-hidden" style="height: 410px">
-                        <a href="{% url 'index' %}" class="nav-item nav-link">Procesadores</a>
-                        <a href="{% url 'index' %}" class="nav-item nav-link">Placas Madre</a>
-                        <a href="{% url 'index' %}" class="nav-item nav-link">Tarjetas Gráficas</a>
-                        <a href="{% url 'index' %}" class="nav-item nav-link">Memorias RAM</a>
-                        <a href="{% url 'index' %}" class="nav-item nav-link">Almacenamiento SSD/HDD</a>
-                        <a href="{% url 'index' %}" class="nav-item nav-link">Fuentes de Poder</a>
-                        <a href="{% url 'index' %}" class="nav-item nav-link">Gabinetes</a>
-                        <a href="{% url 'index' %}" class="nav-item nav-link">Refrigeración</a>
-                        <a href="{% url 'index' %}" class="nav-item nav-link">Periféricos</a>
-                    </div>
-                </nav>
-            </div>
-            {% endblock %}
-
-            {% block carrusel %}
-            <div class="col-lg-9">
-                <div id="header-carousel" class="carousel slide" data-ride="carousel">
-                    <div class="carousel-inner">
-                        <div class="carousel-item active" style="height: 475px;"> <img class="img-fluid"
-                                src="{% static 'core/img/carrusel_armado.webp' %}" alt="PC Gamer">
-                            <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                                <div class="p-3" style="max-width: 700px;">
-                                    <h4 class="text-light text-uppercase font-weight-medium mb-3">¡Arma tu PC
-                                        personalizada!</h4>
-                                    <h3 class="display-4 text-white font-weight-semi-bold mb-4">Rendimiento a tu medida
-                                    </h3>
-                                    <a href="{% url 'armado' %}" class="btn btn-success py-2 px-3">Comenzar</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="carousel-item" style="height: 475px;">
-                            <img class="img-fluid" src="{% static 'core/img/carrusel_ofertas.webp' %}" alt="Hardware">
-                            <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                                <div class="p-3" style="max-width: 700px;">
-                                    <h4 class="text-light text-uppercase font-weight-medium mb-3">Ofertas semanales</h4>
-                                    <h3 class="display-4 text-white font-weight-semi-bold mb-4">Componentes de última
-                                        generación</h3>
-                                    <a href="{% url 'tienda' %}" class="btn btn-success py-2 px-3">Ver Tienda</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    {% comment %} --- INICIO: Bloque para mostrar mensajes de Django --- {% endcomment %}
+    <div class="container pt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-            </div>
-            {% endblock %}
-        </div>
+            {% endfor %}
+        {% endif %}
     </div>
-    {% endblock %}
+    {% comment %} --- FIN: Bloque para mostrar mensajes de Django --- {% endcomment %}
 
     {% block principal %}
     {% endblock %}
@@ -239,13 +199,12 @@
     <!-- JS LIBRARIES -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Librerías de la Plantilla -->
     <script src="{% static 'core/lib/owlcarousel/owl.carousel.min.js' %}"></script>
     <script src="{% static 'core/js/main.js' %}"></script>
     <script src="{% static 'core/js/login-registro.js' %}"></script>
     <script src="{% static 'core/js/armado.js' %}"></script>
-    <script src="{% static 'core/js/carrito.js' %}"></script>
     <script src="{% static 'core/js/checkout.js' %}"></script>
 </body>
 

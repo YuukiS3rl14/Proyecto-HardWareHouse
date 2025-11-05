@@ -2,182 +2,171 @@
 {% load static %} {% block tittle %} Home {%endblock %}
 
 {% block principal %}
-<!-- Caracteristicas -->
 <div class="container-fluid pt-5">
-  <div class="row px-xl-5 pb-3">
-    <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-      <div class="d-flex align-items-center border mb-4" style="padding: 30px">
-        <h1 class="fa fa-check text-success m-0 mr-3"></h1>
-        <h5 class="font-weight-semi-bold m-0">Componentes de calidad</h5>
-      </div>
+    <div class="row px-xl-5">
+        <div class="col-lg-12">
+            <div id="header-carousel" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active" style="height: 475px;"> <img class="img-fluid"
+                            src="{% static 'core/img/carrusel_armado.webp' %}" alt="PC Gamer">
+                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                            <div class="p-3" style="max-width: 700px;">
+                                <h4 class="text-light text-uppercase font-weight-medium mb-3">¡Arma tu PC
+                                    personalizada!</h4>
+                                <h3 class="display-4 text-white font-weight-semi-bold mb-4">Rendimiento a tu medida
+                                </h3>
+                                <a href="{% url 'armado' %}" class="btn btn-success py-2 px-3">Comenzar</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item" style="height: 475px;">
+                        <img class="img-fluid" src="{% static 'core/img/carrusel_ofertas.webp' %}" alt="Hardware">
+                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                            <div class="p-3" style="max-width: 700px;">
+                                <h4 class="text-light text-uppercase font-weight-medium mb-3">Ofertas semanales</h4>
+                                <h3 class="display-4 text-white font-weight-semi-bold mb-4">Componentes de última
+                                    generación</h3>
+                                <a href="{% url 'tienda' %}" class="btn btn-success py-2 px-3">Ver Tienda</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-      <div class="d-flex align-items-center border mb-4" style="padding: 30px">
-        <h1 class="fa fa-shipping-fast text-success m-0 mr-3"></h1>
-        <h5 class="font-weight-semi-bold m-0">Envíos a todo Chile</h5>
-      </div>
+</div>
+<!-- Caracteristicas (Mantenido) -->
+<div class="container-fluid pt-5">
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
+            <div class="d-flex align-items-center border mb-4" style="padding: 30px">
+                <h1 class="fa fa-check text-success m-0 mr-3"></h1>
+                <h5 class="font-weight-semi-bold m-0">Componentes de calidad</h5>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
+            <div class="d-flex align-items-center border mb-4" style="padding: 30px">
+                <h1 class="fa fa-shipping-fast text-success m-0 mr-3"></h1>
+                <h5 class="font-weight-semi-bold m-0">Envíos a todo Chile</h5>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
+            <div class="d-flex align-items-center border mb-4" style="padding: 30px">
+                <h1 class="fas fa-exchange-alt text-success m-0 mr-3"></h1>
+                <h5 class="font-weight-semi-bold m-0">Garantía y devolución</h5>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
+            <div class="d-flex align-items-center border mb-4" style="padding: 30px">
+                <h1 class="fa fa-headset text-success m-0 mr-3"></h1>
+                <h5 class="font-weight-semi-bold m-0">Soporte técnico 24/7</h5>
+            </div>
+        </div>
     </div>
-    <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-      <div class="d-flex align-items-center border mb-4" style="padding: 30px">
-        <h1 class="fas fa-exchange-alt text-success m-0 mr-3"></h1>
-        <h5 class="font-weight-semi-bold m-0">Garantía y devolución</h5>
-      </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-      <div class="d-flex align-items-center border mb-4" style="padding: 30px">
-        <h1 class="fa fa-headset text-success m-0 mr-3"></h1>
-        <h5 class="font-weight-semi-bold m-0">Soporte técnico 24/7</h5>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- Offertas -->
+<!-- Offertas (MODIFICADO: Centrado y Título Cambiado) -->
 <div class="container-fluid offer pt-5">
-   <div class="row px-xl-5">
-
-    <!-- Oferta PC Gamer -->
-    <div class="col-md-6 pb-4">
-      <div
-        class="position-relative bg-dark text-center text-md-right text-white mb-2 py-5 px-5 rounded-lg overflow-hidden">
-        <img src="{% static 'core/img/ofertas_pc_gamer.webp' %}" alt="PC Gamer" class="position-absolute w-100 h-100"
-          style="object-fit: cover; opacity: 0.5; top: 0; left: 0;">
-        <div class="position-relative" style="z-index: 1;">
-          <h5 class="text-uppercase text-success mb-3">Hasta 20% OFF</h5>
-          <h1 id="ofertas_pc_gamer_text" class="mb-4 font-weight-semi-bold">Equipos Gamer Listos</h1>
-          <a href="{% url 'tienda' %}" class="btn btn-outline-success py-md-2 px-md-3">Ver Ofertas</a>
-        </div>    
-      </div>
-    </div>
-
-    <!-- Oferta Accesorios -->
-    <div class="col-md-6 pb-4">
-      <div
-        class="position-relative bg-dark text-center text-md-left text-white mb-2 py-5 px-5 rounded-lg overflow-hidden">
-        <img src="{% static 'core/img/ofertas_perifericos.webp' %}" alt="Periféricos"
-          class="position-absolute w-100 h-100" style="object-fit: cover; opacity: 0.25; top: 0; left: 0;">
-        <div class="position-relative" style="z-index: 1;">
-          <h5 class="text-uppercase text-success mb-3">Descuentos exclusivos</h5>
-          <h1 id="ofertas_pc_gamer_text" class="mb-4 font-weight-semi-bold">Accesorios & Periféricos</h1>
-          <a href="{% url 'tienda' %}" class="btn btn-outline-success py-md-2 px-md-3">Comprar Ahora</a>
+    <div class="row px-xl-5 justify-content-center">
+        <!-- Oferta Componentes Gamer (Ahora ocupa 6 columnas y está centrado) -->
+        <div class="col-md-8 pb-4"> <!-- Aumentamos el ancho a 8 columnas para darle más presencia y centrar -->
+            <div
+                class="position-relative bg-dark text-center text-white mb-2 py-5 px-5 rounded-lg overflow-hidden">
+                <img src="{% static 'core/img/ofertas_pc_gamer.webp' %}" alt="PC Gamer" class="position-absolute w-100 h-100"
+                    style="object-fit: cover; opacity: 0.5; top: 0; left: 0;">
+                <div class="position-relative" style="z-index: 1;">
+                    <h5 class="text-uppercase text-success mb-3">Hasta 20% OFF</h5>
+                    <!-- TÍTULO MODIFICADO -->
+                    <h1 class="mb-4 font-weight-semi-bold text-white">Componentes Gamer Listos</h1> 
+                    <a href="{% url 'tienda' %}" class="btn btn-outline-success py-md-2 px-md-3">Ver Ofertas</a>
+                </div>    
+            </div>
         </div>
-      </div>
+        <!-- El bloque de Oferta Accesorios fue eliminado -->
     </div>
-  </div>
 </div>
 
-<!-- Categorias -->
+<!-- Categorias (MODIFICADO: Carrusel y Estructura Uniforme) -->
 <div class="container-fluid pt-5">
-  <div class="text-center mb-4">
-    <h2 class="section-title px-5">
-      <span class="px-2">Categorías principales</span>
-    </h2>
-  </div>
-  <div class="row px-xl-5 pb-3">
-    <div class="col-lg-4 col-md-6 pb-1">
-      <div class="cat-item d-flex flex-column border mb-4" style="padding: 30px">
-        <a href="#" class="cat-img position-relative overflow-hidden mb-3">
-          <img class="img-fluid" src="{% static 'core/img/cpu.webp' %}" alt="Procesadores" />
-        </a>
-        <h5 class="font-weight-semi-bold m-0">Procesadores (CPU)</h5>
-      </div>
+    <div class="text-center mb-4">
+        <h2 class="section-title px-5">
+            <span class="px-2">Categorías Principales</span>
+        </h2>
     </div>
-    <div class="col-lg-4 col-md-6 pb-1">
-      <div class="cat-item d-flex flex-column border mb-4" style="padding: 30px">
-        <a href="#" class="cat-img position-relative overflow-hidden mb-3">
-          <img class="img-fluid"  
-            src="{% static 'core/img/Cómo-entender-las-especificaciones-de-la-tarjeta-gráfica-3.jpg' %}"
-            alt="Tarjetas Gráficas" />
-        </a>
-        <h5 class="font-weight-semi-bold m-0">Tarjetas Gráficas (GPU)</h5>
-      </div>
+    <div class="row px-xl-5 pb-3">
+        <div class="col">
+            <!-- Usamos owl-carousel para el carrusel de categorías -->
+            <div class="owl-carousel vendor-carousel"> 
+                
+                <!-- Estructura de Tarjeta Uniforme -->
+                <div class="cat-item d-flex flex-column border mb-4" style="height: 300px; padding: 20px;">
+                    <a href="{% url 'tienda' %}?q=Procesador" class="cat-img position-relative overflow-hidden mb-3 text-center d-flex justify-content-center align-items-center" style="flex-grow: 1; height: 100%;">
+                        <img class="img-fluid" src="{% static 'core/img/cpu.webp' %}" alt="Procesadores" style="max-height: 150px; width: auto; object-fit: contain;" />
+                    </a>
+                    <h5 class="font-weight-semi-bold m-0 text-center">Procesadores (CPU)</h5>
+                </div>
+                
+                <div class="cat-item d-flex flex-column border mb-4" style="height: 300px; padding: 20px;">
+                    <a href="{% url 'tienda' %}?q=Tarjeta Gráfica" class="cat-img position-relative overflow-hidden mb-3 text-center d-flex justify-content-center align-items-center" style="flex-grow: 1; height: 100%;">
+                    <!-- Nota: Cambié el nombre del archivo para que coincida con el contexto de GPU -->
+                        <img class="img-fluid" src="{% static 'core/img/gpu.webp' %}" alt="Tarjetas Gráficas" style="max-height: 150px; width: auto; object-fit: contain;" />
+                    </a>
+                    <h5 class="font-weight-semi-bold m-0 text-center">Tarjetas Gráficas (GPU)</h5>
+                </div>
+                
+                <div class="cat-item d-flex flex-column border mb-4" style="height: 300px; padding: 20px;">
+                    <a href="{% url 'tienda' %}?q=Placa Madre" class="cat-img position-relative overflow-hidden mb-3 text-center d-flex justify-content-center align-items-center" style="flex-grow: 1; height: 100%;">
+                        <img class="img-fluid" src="{% static 'core/img/placa_madre.webp' %}" alt="Placas Madre" style="max-height: 150px; width: auto; object-fit: contain;" />
+                    </a>
+                    <h5 class="font-weight-semi-bold m-0 text-center">Placas Madre</h5>
+                </div>
+                
+                <div class="cat-item d-flex flex-column border mb-4" style="height: 300px; padding: 20px;">
+                    <a href="{% url 'tienda' %}?q=Memoria RAM" class="cat-img position-relative overflow-hidden mb-3 text-center d-flex justify-content-center align-items-center" style="flex-grow: 1; height: 100%;">
+                        <img class="img-fluid" src="{% static 'core/img/ram.webp' %}" alt="RAM" style="max-height: 150px; width: auto; object-fit: contain;" />
+                    </a>
+                    <h5 class="font-weight-semi-bold m-0 text-center">Memoria RAM</h5>
+                </div>
+                
+                <div class="cat-item d-flex flex-column border mb-4" style="height: 300px; padding: 20px;">
+                    <a href="{% url 'tienda' %}?q=Almacenamiento" class="cat-img position-relative overflow-hidden mb-3 text-center d-flex justify-content-center align-items-center" style="flex-grow: 1; height: 100%;">
+                        <img class="img-fluid" src="{% static 'core/img/samsung_ssd.webp' %}" alt="SSD / HDD" style="max-height: 150px; width: auto; object-fit: contain;" />
+                    </a>
+                    <h5 class="font-weight-semi-bold m-0 text-center">Almacenamiento</h5>
+                </div>
+                
+                <div class="cat-item d-flex flex-column border mb-4" style="height: 300px; padding: 20px;">
+                    <a href="{% url 'tienda' %}?q=Fuente de Poder" class="cat-img position-relative overflow-hidden mb-3 text-center d-flex justify-content-center align-items-center" style="flex-grow: 1; height: 100%;">
+                        <img class="img-fluid" src="{% static 'core/img/psg105071011690914311_480x480.webp' %}" alt="Fuentes de poder" style="max-height: 150px; width: auto; object-fit: contain;" />
+                    </a>
+                    <h5 class="font-weight-semi-bold m-0 text-center">Fuentes de Poder</h5>
+                </div>
+
+            </div>
+        </div>
     </div>
-    <div class="col-lg-4 col-md-6 pb-1">
-      <div class="cat-item d-flex flex-column border mb-4" style="padding: 30px">
-        <a href="#" class="cat-img position-relative overflow-hidden mb-3">
-          <img class="img-fluid"
-            src="{% static 'core/img/placa-base-caracteristicas-funciones-variantes_gxmiph.webp' %}"
-            alt="Placas Madre" />
-        </a>
-        <h5 class="font-weight-semi-bold m-0">Placas Madre</h5>
-      </div>
-    </div>
-    <div class="col-lg-4 col-md-6 pb-1">
-      <div class="cat-item d-flex flex-column border mb-4" style="padding: 30px">
-        <a href="#" class="cat-img position-relative overflow-hidden mb-3">
-          <img class="img-fluid" src="{% static 'core/img/ram.webp' %}" alt="RAM" />
-        </a>
-        <h5 class="font-weight-semi-bold m-0">Memoria RAM</h5>
-      </div>
-    </div>
-    <div class="col-lg-4 col-md-6 pb-1">
-      <div class="cat-item d-flex flex-column border mb-4" style="padding: 30px">
-        <a href="#" class="cat-img position-relative overflow-hidden mb-3">
-          <img class="img-fluid" src="{% static 'core/img/samsung_ssd.webp' %}"
-            alt="SSD / HDD" />
-        </a>
-        <h5 class="font-weight-semi-bold m-0">Almacenamiento</h5>
-      </div>
-    </div>
-    <div class="col-lg-4 col-md-6 pb-1">
-      <div class="cat-item d-flex flex-column border mb-4" style="padding: 30px">
-        <a href="#" class="cat-img position-relative overflow-hidden mb-3">
-          <img class="img-fluid" src="{% static 'core/img/psg105071011690914311_480x480.webp' %}"
-            alt="Fuentes de poder" />
-        </a>
-        <h5 class="font-weight-semi-bold m-0">Fuentes de Poder</h5>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- Marcas o Proveedores -->
+<!-- Marcas o Proveedores (MODIFICADO: Se añade estilo de tamaño fijo) -->
 <div class="container-fluid py-5">
-  <div class="row px-xl-5">
-    <div class="col">
-      <div class="owl-carousel vendor-carousel">
-        <div class="vendor-item border p-4 h-100 d-flex align-items-center justify-content-center"
-          style="height: 100px;">
-          <img src="{% static 'core/img/asus_logo.webp' %}" alt="ASUS" class="img-fluid"
-            style="max-height: 100%; max-width: 100%; width: auto; object-fit: contain;" />
-        </div>
-        <div class="vendor-item border p-4 h-100 d-flex align-items-center justify-content-center"
-          style="height: 100px;">
-          <img src="{% static 'core/img/msi_logo.webp' %}" alt="MSI" class="img-fluid"
-            style="max-height: 100%; max-width: 100%; width: auto; object-fit: contain;" />
-        </div>
-        <div class="vendor-item border p-4 h-100 d-flex align-items-center justify-content-center"
-          style="height: 100px;">
-          <img src="{% static 'core/img/gigabyte_logo.webp' %}" alt="Gigabyte" class="img-fluid"
-            style="max-height: 100%; max-width: 100%; width: auto; object-fit: contain;" />
-        </div>
-        <div class="vendor-item border p-4 h-100 d-flex align-items-center justify-content-center"
-          style="height: 100px;">
-          <img src="{% static 'core/img/corsair_logo.webp' %}" alt="Corsair" class="img-fluid"
-            style="max-height: 100%; max-width: 100%; width: auto; object-fit: contain;" />
-        </div>
-        <div class="vendor-item border p-4 h-100 d-flex align-items-center justify-content-center"
-          style="height: 100px;">
-          <img src="{% static 'core/img/kingston_logo.webp' %}" alt="Kingston" class="img-fluid"
-            style="max-height: 100%; max-width: 100%; width: auto; object-fit: contain;" />
-        </div>
-        <div class="vendor-item border p-4 h-100 d-flex align-items-center justify-content-center"
-          style="height: 100px;">
-          <img src="{% static 'core/img/nvidia_logo.webp' %}" alt="NVIDIA" class="img-fluid"
-            style="max-height: 100%; max-width: 100%; width: auto; object-fit: contain;" />
-        </div>
-        <div class="vendor-item border p-4 h-100 d-flex align-items-center justify-content-center"
-          style="height: 100px;">
-          <img src="{% static 'core/img/intel_logo.webp' %}" alt="Intel" class="img-fluid"
-            style="max-height: 100%; max-width: 100%; width: auto; object-fit: contain;" />
-        </div>
-        <div class="vendor-item border p-4 h-100 d-flex align-items-center justify-content-center"
-          style="height: 100px;">
-          <img src="{% static 'core/img/amd_logo.webp' %}" alt="AMD" class="img-fluid"
-            style="max-height: 100%; max-width: 100%; width: auto; object-fit: contain;" />
-        </div>
-      </div>
+  <div class="text-center mb-4">
+        <h2 class="section-title px-5">
+            <span class="px-2">Proveedores</span>
+        </h2>
     </div>
-  </div>
+    <div class="row px-xl-5">
+        <div class="col">
+            <div class="owl-carousel vendor-carousel">
+                {% for proveedor in proveedores %}
+                    <div class="vendor-item border p-4 d-flex align-items-center justify-content-center" style="height: 100px;">
+                        <a href="{% url 'tienda' %}?proveedor={{ proveedor.id }}">
+                            <img src="{{ proveedor.logo.url }}" alt="{{ proveedor.nombre }}" class="img-fluid"
+                                style="max-height: 100%; max-width: 100%; object-fit: contain;" />
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

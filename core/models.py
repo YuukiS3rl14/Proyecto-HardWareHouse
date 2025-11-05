@@ -2,18 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
 
-# --- FUNCIÓN DE UTILIDAD ---
 
-def get_categoria_by_name(name):
-    try:
-        return Categoria.objects.get(nombre__iexact=name)
-    except Categoria.DoesNotExist:
-        return None 
-
-# --- 1. UBICACIÓN (Región y Comuna) ---
+# --- 1. MODELOS BASE DE REFERENCIA (Geografía y Proveedor) ---
 
 class Region(models.Model):
     numero = models.IntegerField(unique=True)
@@ -29,129 +20,197 @@ class Comuna(models.Model):
     def __str__(self):
         return f"{self.nombre} ({self.region.nombre})"
 
-# --- 2. PRODUCTOS Y CATEGORÍAS (Herencia) ---
+class Proveedor(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    logo = models.ImageField(upload_to='proveedores/', blank=True, null=True)
 
-class Categoria(models.Model):
-    nombre = models.CharField(max_length=50, unique=True)
-    
     class Meta:
-        verbose_name_plural = "Categorías"
+        verbose_name_plural = "Proveedores / Marcas"
 
     def __str__(self):
         return self.nombre
 
-class ProductoBase(models.Model):
-    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT) 
+
+# --- 2. MODELOS DE PRODUCTOS INDEPENDIENTES ---
+
+# Nota: El campo proveedor ahora es obligatorio y no tiene default.
+# La categoría es un CharField estático.
+
+class Procesador(models.Model):
+    categoria = models.CharField(max_length=50, default='CPU', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField()
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
-
-    class Meta:
-        verbose_name = "Producto Base"
-        abstract = False 
-
-    def __str__(self):
-        return f"[{self.categoria.nombre}] {self.nombre}"
-
-# --- MODELOS ESPECÍFICOS (Heredan de ProductoBase) ---
-
-class Procesador(ProductoBase):
     socket = models.CharField(max_length=20)
     nucleos = models.IntegerField()
     frecuencia_base = models.DecimalField(max_digits=4, decimal_places=2)
 
-@receiver(pre_save, sender=Procesador)
-def set_procesador_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("CPU")
+    class Meta:
+        verbose_name_plural = "Procesadores (CPU)"
+    def __str__(self):
+        return f"[CPU | {self.proveedor.nombre}] {self.nombre}"
 
-class TarjetaGrafica(ProductoBase):
+class TarjetaGrafica(models.Model):
+    categoria = models.CharField(max_length=50, default='Tarjeta Gráfica', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     vram_gb = models.IntegerField(verbose_name="VRAM (GB)")
     tipo_memoria = models.CharField(max_length=10, verbose_name="Tipo Memoria") 
     interfaz = models.CharField(max_length=20, verbose_name="Interfaz Bus") 
 
-@receiver(pre_save, sender=TarjetaGrafica)
-def set_gpu_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("GPU")
+    class Meta:
+        verbose_name_plural = "Tarjetas Gráficas (GPU)"
+    def __str__(self):
+        return f"[GPU | {self.proveedor.nombre}] {self.nombre}"
 
-class MemoriaRam(ProductoBase):
+class MemoriaRam(models.Model):
+    categoria = models.CharField(max_length=50, default='Memoria RAM', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
     tipo_ddr = models.CharField(max_length=5, verbose_name="Tipo DDR") 
     velocidad_mhz = models.IntegerField(verbose_name="Velocidad (MHz)")
+    
+    class Meta:
+        verbose_name_plural = "Memorias RAM"
+    def __str__(self):
+        return f"[RAM | {self.proveedor.nombre}] {self.nombre}"
 
-@receiver(pre_save, sender=MemoriaRam)
-def set_ram_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("RAM")
-
-class PlacaMadre(ProductoBase):
+class PlacaMadre(models.Model):
+    categoria = models.CharField(max_length=50, default='Placa Madre', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     socket_cpu = models.CharField(max_length=20, verbose_name="Socket CPU")
     chipset = models.CharField(max_length=30)
     formato = models.CharField(max_length=30) 
     ranuras_ram = models.IntegerField(verbose_name="Slots RAM")
 
-@receiver(pre_save, sender=PlacaMadre)
-def set_placamadre_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("Placa Madre")
+    class Meta:
+        verbose_name_plural = "Placas Madre"
+    def __str__(self):
+        return f"[MB | {self.proveedor.nombre}] {self.nombre}"
 
-class AlmacenamientoSSD(ProductoBase):
+class AlmacenamientoSSD(models.Model):
+    categoria = models.CharField(max_length=50, default='SSD', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
     interfaz = models.CharField(max_length=20) 
     formato = models.CharField(max_length=10) 
 
-@receiver(pre_save, sender=AlmacenamientoSSD)
-def set_ssd_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("SSD") 
+    class Meta:
+        verbose_name_plural = "Almacenamiento SSD"
+    def __str__(self):
+        return f"[SSD | {self.proveedor.nombre}] {self.nombre}"
 
-class AlmacenamientoHDD(ProductoBase):
+class AlmacenamientoHDD(models.Model):
+    categoria = models.CharField(max_length=50, default='Disco Duro HDD', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
     velocidad_rpm = models.IntegerField(verbose_name="Velocidad (RPM)")
     cache_mb = models.IntegerField(verbose_name="Cache (MB)")
     
-@receiver(pre_save, sender=AlmacenamientoHDD)
-def set_hdd_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("HDD")
+    class Meta:
+        verbose_name_plural = "Almacenamiento HDD"
+    def __str__(self):
+        return f"[HDD | {self.proveedor.nombre}] {self.nombre}"
 
-class Gabinete(ProductoBase):
+class Gabinete(models.Model):
+    categoria = models.CharField(max_length=50, default='Gabinete', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     formato_soporte = models.CharField(max_length=50, verbose_name="Soporte Placa") 
-    ventiladores_incluidos = models.IntegerField()
+    ventiladores_incluidos = models.BooleanField(default=False)
     material = models.CharField(max_length=50) 
 
-@receiver(pre_save, sender=Gabinete)
-def set_gabinete_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("Gabinete")
+    class Meta:
+        verbose_name_plural = "Gabinetes"
+    def __str__(self):
+        return f"[Case | {self.proveedor.nombre}] {self.nombre}"
 
-class FuenteDePoder(ProductoBase):
+class FuenteDePoder(models.Model):
+    categoria = models.CharField(max_length=50, default='Fuente de Poder', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     potencia_watts = models.IntegerField(verbose_name="Potencia (W)")
     certificacion = models.CharField(max_length=20) 
     modular = models.BooleanField(default=False)
-
-@receiver(pre_save, sender=FuenteDePoder)
-def set_psu_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("PSU")
     
-class RefrigeracionCooler(ProductoBase):
+    class Meta:
+        verbose_name_plural = "Fuentes de Poder (PSU)"
+    def __str__(self):
+        return f"[PSU | {self.proveedor.nombre}] {self.nombre}"
+    
+class RefrigeracionCooler(models.Model):
+    categoria = models.CharField(max_length=50, default='Refrigeración', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     tipo = models.CharField(max_length=20, verbose_name="Tipo (Aire/Líquida)") 
     socket_compatibles = models.CharField(max_length=150, verbose_name="Sockets Comp.")
     tamanho_radiador_mm = models.IntegerField(null=True, blank=True, verbose_name="Radiador (mm)") 
 
-@receiver(pre_save, sender=RefrigeracionCooler)
-def set_cooler_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("Cooler")
+    class Meta:
+        verbose_name_plural = "Refrigeración (Cooler)"
+    def __str__(self):
+        return f"[Cooler | {self.proveedor.nombre}] {self.nombre}"
 
-class Ventilador(ProductoBase):
+class Ventilador(models.Model):
+    categoria = models.CharField(max_length=50, default='Ventilador', editable=False)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     tamanho_mm = models.IntegerField(verbose_name="Tamaño (mm)")
     velocidad_rpm = models.IntegerField(verbose_name="Velocidad (RPM)")
     rgb = models.BooleanField(default=False)
 
-@receiver(pre_save, sender=Ventilador)
-def set_ventilador_category(sender, instance, **kwargs):
-    instance.categoria = get_categoria_by_name("Ventilador")
+    class Meta:
+        verbose_name_plural = "Ventiladores"
+    def __str__(self):
+        return f"[Fan | {self.proveedor.nombre}] {self.nombre}"
+
     
-# --- 3. COMENTARIOS Y RESEÑAS ---
+# --- 3. COMENTARIOS Y RESEÑAS (CLAVES FORÁNEAS MÚLTIPLES) ---
 
 class Comentario(models.Model):
-    producto = models.ForeignKey(ProductoBase, on_delete=models.CASCADE, related_name='comentarios')
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     titulo = models.CharField(max_length=100)
     texto = models.TextField()
@@ -161,10 +220,39 @@ class Comentario(models.Model):
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
-    def __str__(self):
-        return f"{self.titulo} por {self.usuario.username}"
+    # Claves Foráneas Múltiples para enlazar a CUALQUIER producto
+    procesador = models.ForeignKey(Procesador, on_delete=models.CASCADE, null=True, blank=True)
+    tarjeta_grafica = models.ForeignKey(TarjetaGrafica, on_delete=models.CASCADE, null=True, blank=True)
+    memoria_ram = models.ForeignKey(MemoriaRam, on_delete=models.CASCADE, null=True, blank=True)
+    placa_madre = models.ForeignKey(PlacaMadre, on_delete=models.CASCADE, null=True, blank=True)
+    almacenamiento_ssd = models.ForeignKey(AlmacenamientoSSD, on_delete=models.CASCADE, null=True, blank=True)
+    almacenamiento_hdd = models.ForeignKey(AlmacenamientoHDD, on_delete=models.CASCADE, null=True, blank=True)
+    gabinete = models.ForeignKey(Gabinete, on_delete=models.CASCADE, null=True, blank=True)
+    fuente_de_poder = models.ForeignKey(FuenteDePoder, on_delete=models.CASCADE, null=True, blank=True)
+    refrigeracion = models.ForeignKey(RefrigeracionCooler, on_delete=models.CASCADE, null=True, blank=True)
+    ventilador = models.ForeignKey(Ventilador, on_delete=models.CASCADE, null=True, blank=True)
+    
+    def get_related_product(self):
+        """Método helper para obtener el producto real al que apunta el comentario."""
+        if self.procesador_id: return self.procesador
+        if self.tarjeta_grafica_id: return self.tarjeta_grafica
+        if self.memoria_ram_id: return self.memoria_ram
+        if self.placa_madre_id: return self.placa_madre
+        if self.almacenamiento_ssd_id: return self.almacenamiento_ssd
+        if self.almacenamiento_hdd_id: return self.almacenamiento_hdd
+        if self.gabinete_id: return self.gabinete
+        if self.fuente_de_poder_id: return self.fuente_de_poder
+        if self.refrigeracion_id: return self.refrigeracion
+        if self.ventilador_id: return self.ventilador
+        return None
 
-# --- 4. CARRITO DE COMPRAS (Pre-orden) ---
+    def __str__(self):
+        producto = self.get_related_product()
+        nombre_producto = producto.nombre if producto else "Producto Eliminado/Desconocido"
+        return f"{self.titulo} sobre {nombre_producto} por {self.usuario.username}"
+
+
+# --- 4. CARRITO DE COMPRAS (Pre-orden, CLAVES FORÁNEAS MÚLTIPLES) ---
 
 class Carrito(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='carrito')
@@ -178,14 +266,46 @@ class Carrito(models.Model):
 
 class ItemCarrito(models.Model):
     carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE, related_name='items')
-    producto = models.ForeignKey(ProductoBase, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     
+    # Claves Foráneas Múltiples para enlazar a CUALQUIER producto
+    procesador = models.ForeignKey(Procesador, on_delete=models.CASCADE, null=True, blank=True)
+    tarjeta_grafica = models.ForeignKey(TarjetaGrafica, on_delete=models.CASCADE, null=True, blank=True)
+    memoria_ram = models.ForeignKey(MemoriaRam, on_delete=models.CASCADE, null=True, blank=True)
+    placa_madre = models.ForeignKey(PlacaMadre, on_delete=models.CASCADE, null=True, blank=True)
+    almacenamiento_ssd = models.ForeignKey(AlmacenamientoSSD, on_delete=models.CASCADE, null=True, blank=True)
+    almacenamiento_hdd = models.ForeignKey(AlmacenamientoHDD, on_delete=models.CASCADE, null=True, blank=True)
+    gabinete = models.ForeignKey(Gabinete, on_delete=models.CASCADE, null=True, blank=True)
+    fuente_de_poder = models.ForeignKey(FuenteDePoder, on_delete=models.CASCADE, null=True, blank=True)
+    refrigeracion = models.ForeignKey(RefrigeracionCooler, on_delete=models.CASCADE, null=True, blank=True)
+    ventilador = models.ForeignKey(Ventilador, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Campo para almacenar el precio del producto en el momento en que fue añadido al carrito
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], default=0)
+
+    def get_related_product(self):
+        """Método helper para obtener el producto real al que apunta el ítem."""
+        if self.procesador_id: return self.procesador
+        if self.tarjeta_grafica_id: return self.tarjeta_grafica
+        if self.memoria_ram_id: return self.memoria_ram
+        if self.placa_madre_id: return self.placa_madre
+        if self.almacenamiento_ssd_id: return self.almacenamiento_ssd
+        if self.almacenamiento_hdd_id: return self.almacenamiento_hdd
+        if self.gabinete_id: return self.gabinete
+        if self.fuente_de_poder_id: return self.fuente_de_poder
+        if self.refrigeracion_id: return self.refrigeracion
+        if self.ventilador_id: return self.ventilador
+        return None
+
     def get_total(self):
-        return self.producto.precio * self.cantidad
+        # Usamos el precio almacenado
+        return self.precio_unitario * self.cantidad
         
     def __str__(self):
-        return f"{self.cantidad} x {self.producto.nombre} en carrito de {self.carrito.usuario.username}"
+        producto = self.get_related_product()
+        nombre_producto = producto.nombre if producto else "Producto Desconocido"
+        return f"{self.cantidad} x {nombre_producto} en carrito de {self.carrito.usuario.username}"
+
 
 # --- 5. PEDIDOS Y BOLETAS (Post-Pago) ---
 
@@ -201,6 +321,7 @@ class Pedido(models.Model):
     fecha_pedido = models.DateTimeField(default=timezone.now)
     total_monto = models.DecimalField(max_digits=10, decimal_places=2)
     
+    # Datos de Envío/Facturación (simulación de Boleta)
     direccion_envio = models.CharField(max_length=255)
     comuna_envio = models.ForeignKey(Comuna, on_delete=models.PROTECT, null=True)
     
@@ -211,7 +332,10 @@ class Pedido(models.Model):
 
 class ItemPedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='items_pedido')
-    producto = models.CharField(max_length=200)
+    
+    # Datos Estáticos del Producto al momento de la compra
+    producto_nombre = models.CharField(max_length=200, verbose_name="Producto")
+    producto_tipo = models.CharField(max_length=50, verbose_name="Tipo") # Ej: Procesador, SSD
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2) 
     cantidad = models.PositiveIntegerField()
     
@@ -219,7 +343,7 @@ class ItemPedido(models.Model):
         return self.precio_unitario * self.cantidad
         
     def __str__(self):
-        return f"{self.cantidad} x {self.producto} en Pedido #{self.pedido.id}"
+        return f"{self.cantidad} x {self.producto_nombre} en Pedido #{self.pedido.id}"
 
 class PagoBoleta(models.Model):
     pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE, related_name='pago_boleta')
@@ -228,6 +352,7 @@ class PagoBoleta(models.Model):
     metodo_pago = models.CharField(max_length=50) 
     transaccion_id = models.CharField(max_length=100, unique=True)
     
+    # Datos del Usuario (tomados del Pedido)
     nombre_comprador = models.CharField(max_length=200)
     email_comprador = models.EmailField()
     
