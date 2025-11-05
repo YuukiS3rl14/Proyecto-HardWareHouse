@@ -367,7 +367,12 @@ def mostrar_favoritos(request):
     for fav in favoritos:
         producto = fav.get_related_product()
         if producto:
-            model_name = producto._meta.model_name
+            # Buscamos la clave correcta en el PRODUCT_MODEL_MAP que corresponde a la clase del producto
+            model_name = None
+            for key, model_class in PRODUCT_MODEL_MAP.items():
+                if isinstance(producto, model_class):
+                    model_name = key
+                    break
             productos_favoritos.append({'producto': producto, 'model_name': model_name, 'fav_id': fav.id})
 
     context = {
