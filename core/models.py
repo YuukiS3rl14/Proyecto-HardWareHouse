@@ -40,13 +40,20 @@ class Procesador(models.Model):
     categoria = models.CharField(max_length=50, default='CPU', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
-    socket = models.CharField(max_length=20)
+    
+    SOCKET_CHOICES = [
+        ('AM4', 'AM4'), ('AM5', 'AM5'), 
+        ('LGA1200', 'LGA1200'), ('LGA1700', 'LGA1700'),
+        ('Otro', 'Otro (Especificar)')
+    ]
+    socket = models.CharField(max_length=20, choices=SOCKET_CHOICES, help_text="Socket del procesador")
+    
     nucleos = models.IntegerField()
-    frecuencia_base = models.DecimalField(max_digits=4, decimal_places=2)
+    frecuencia_base = models.DecimalField(max_digits=4, decimal_places=2, help_text="En GHz. Ej: 3.70")
 
     class Meta:
         verbose_name_plural = "Procesadores (CPU)"
@@ -57,13 +64,21 @@ class TarjetaGrafica(models.Model):
     categoria = models.CharField(max_length=50, default='Tarjeta Gráfica', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
+    
     vram_gb = models.IntegerField(verbose_name="VRAM (GB)")
-    tipo_memoria = models.CharField(max_length=10, verbose_name="Tipo Memoria") 
-    interfaz = models.CharField(max_length=20, verbose_name="Interfaz Bus") 
+    
+    TIPO_MEMORIA_CHOICES = [('GDDR6X', 'GDDR6X'), ('GDDR6', 'GDDR6'), ('GDDR5', 'GDDR5'), ('Otro', 'Otro')]
+    tipo_memoria = models.CharField(max_length=10, choices=TIPO_MEMORIA_CHOICES, verbose_name="Tipo Memoria") 
+    
+    INTERFAZ_CHOICES = [
+        ('PCIe 4.0', 'PCIe 4.0'), ('PCIe 5.0', 'PCIe 5.0'), 
+        ('PCIe 3.0', 'PCIe 3.0'), ('Otro', 'Otro')
+    ]
+    interfaz = models.CharField(max_length=20, choices=INTERFAZ_CHOICES, verbose_name="Interfaz Bus") 
 
     class Meta:
         verbose_name_plural = "Tarjetas Gráficas (GPU)"
@@ -74,13 +89,16 @@ class MemoriaRam(models.Model):
     categoria = models.CharField(max_length=50, default='Memoria RAM', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
-    tipo_ddr = models.CharField(max_length=5, verbose_name="Tipo DDR") 
-    velocidad_mhz = models.IntegerField(verbose_name="Velocidad (MHz)")
+    
+    TIPO_DDR_CHOICES = [('DDR5', 'DDR5'), ('DDR4', 'DDR4'), ('DDR3', 'DDR3')]
+    tipo_ddr = models.CharField(max_length=5, choices=TIPO_DDR_CHOICES, verbose_name="Tipo DDR") 
+    
+    velocidad_mhz = models.IntegerField(verbose_name="Velocidad (MHz)", help_text="Ej: 3200, 5600")
     
     class Meta:
         verbose_name_plural = "Memorias RAM"
@@ -91,14 +109,25 @@ class PlacaMadre(models.Model):
     categoria = models.CharField(max_length=50, default='Placa Madre', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
-    socket_cpu = models.CharField(max_length=20, verbose_name="Socket CPU")
-    chipset = models.CharField(max_length=30)
-    formato = models.CharField(max_length=30) 
+    
+    SOCKET_CHOICES = [
+        ('AM4', 'AM4'), ('AM5', 'AM5'), 
+        ('LGA1200', 'LGA1200'), ('LGA1700', 'LGA1700'),
+        ('Otro', 'Otro')
+    ]
+    socket_cpu = models.CharField(max_length=20, choices=SOCKET_CHOICES, verbose_name="Socket CPU")
+    
+    CHIPSET_CHOICES = [('B550', 'B550'), ('B650', 'B650'), ('Z790', 'Z790'), ('X670', 'X670'), ('Otro', 'Otro')]
+    chipset = models.CharField(max_length=30, choices=CHIPSET_CHOICES)
+    
+    FORMATO_CHOICES = [('ATX', 'ATX'), ('Micro-ATX', 'Micro-ATX'), ('Mini-ITX', 'Mini-ITX')]
+    formato = models.CharField(max_length=30, choices=FORMATO_CHOICES) 
     ranuras_ram = models.IntegerField(verbose_name="Slots RAM")
+    tipo_ram_soportado = models.CharField(max_length=10, choices=MemoriaRam.TIPO_DDR_CHOICES, default='DDR4', verbose_name="Tipo RAM Soportado")
 
     class Meta:
         verbose_name_plural = "Placas Madre"
@@ -109,14 +138,18 @@ class AlmacenamientoSSD(models.Model):
     categoria = models.CharField(max_length=50, default='SSD', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
-    interfaz = models.CharField(max_length=20) 
-    formato = models.CharField(max_length=10) 
-
+    
+    INTERFAZ_SSD_CHOICES = [('NVMe PCIe 4.0', 'NVMe PCIe 4.0'), ('NVMe PCIe 3.0', 'NVMe PCIe 3.0'), ('SATA III', 'SATA III')]
+    interfaz = models.CharField(max_length=20, choices=INTERFAZ_SSD_CHOICES) 
+    
+    FORMATO_SSD_CHOICES = [('M.2 2280', 'M.2 2280'), ('2.5"', '2.5"')]
+    formato = models.CharField(max_length=10, choices=FORMATO_SSD_CHOICES) 
+    
     class Meta:
         verbose_name_plural = "Almacenamiento SSD"
     def __str__(self):
@@ -126,7 +159,7 @@ class AlmacenamientoHDD(models.Model):
     categoria = models.CharField(max_length=50, default='Disco Duro HDD', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
@@ -143,13 +176,18 @@ class Gabinete(models.Model):
     categoria = models.CharField(max_length=50, default='Gabinete', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
-    formato_soporte = models.CharField(max_length=50, verbose_name="Soporte Placa") 
+    
+    FORMATO_GABINETE_CHOICES = [('ATX', 'ATX'), ('Micro-ATX', 'Micro-ATX'), ('Mini-ITX', 'Mini-ITX')]
+    formato_soporte = models.CharField(max_length=50, choices=FORMATO_GABINETE_CHOICES, verbose_name="Soporte Placa") 
+    
     ventiladores_incluidos = models.BooleanField(default=False)
-    material = models.CharField(max_length=50) 
+    
+    MATERIAL_CHOICES = [('Acero', 'Acero'), ('Aluminio', 'Aluminio'), ('Plástico', 'Plástico'), ('Vidrio Templado', 'Vidrio Templado')]
+    material = models.CharField(max_length=50, choices=MATERIAL_CHOICES) 
 
     class Meta:
         verbose_name_plural = "Gabinetes"
@@ -160,12 +198,17 @@ class FuenteDePoder(models.Model):
     categoria = models.CharField(max_length=50, default='Fuente de Poder', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     potencia_watts = models.IntegerField(verbose_name="Potencia (W)")
-    certificacion = models.CharField(max_length=20) 
+    
+    CERTIFICACION_CHOICES = [
+        ('80+ White', '80+ White'), ('80+ Bronze', '80+ Bronze'), ('80+ Silver', '80+ Silver'),
+        ('80+ Gold', '80+ Gold'), ('80+ Platinum', '80+ Platinum'), ('80+ Titanium', '80+ Titanium')
+    ]
+    certificacion = models.CharField(max_length=20, choices=CERTIFICACION_CHOICES) 
     modular = models.BooleanField(default=False)
     
     class Meta:
@@ -177,12 +220,15 @@ class RefrigeracionCooler(models.Model):
     categoria = models.CharField(max_length=50, default='Refrigeración', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
-    tipo = models.CharField(max_length=20, verbose_name="Tipo (Aire/Líquida)") 
-    socket_compatibles = models.CharField(max_length=150, verbose_name="Sockets Comp.")
+    
+    TIPO_REFRIGERACION_CHOICES = [('Aire', 'Aire'), ('Líquida', 'Líquida (AIO)')]
+    tipo = models.CharField(max_length=20, choices=TIPO_REFRIGERACION_CHOICES, verbose_name="Tipo (Aire/Líquida)") 
+    
+    socket_compatibles = models.CharField(max_length=150, verbose_name="Sockets Comp.", help_text="Separar por comas. Ej: AM4, AM5, LGA1700")
     tamanho_radiador_mm = models.IntegerField(null=True, blank=True, verbose_name="Radiador (mm)") 
 
     class Meta:
@@ -194,7 +240,7 @@ class Ventilador(models.Model):
     categoria = models.CharField(max_length=50, default='Ventilador', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
     nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
+    descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)

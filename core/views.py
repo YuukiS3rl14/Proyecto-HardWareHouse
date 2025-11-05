@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+import json
 from django.http import Http404, JsonResponse
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
@@ -22,8 +23,30 @@ def mostrarIndex(request):
     }
     return render(request, 'core/index.html', context)
 
-def mostrarArmado(request):
-    return render(request, 'core/armado.html')
+def mostrarArmado(request):    
+    # Diccionario para almacenar todos los componentes que se pasarán a la plantilla
+    componentes = {
+        'procesador': list(Procesador.objects.values('id', 'nombre', 'precio', 'socket', 'stock')),
+        'placa_madre': list(PlacaMadre.objects.values('id', 'nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'stock')),
+        'memoria_ram': list(MemoriaRam.objects.values('id', 'nombre', 'precio', 'tipo_ddr', 'stock')),
+        # DEBUG: Imprimir las placas madre recuperadas
+        # print(f"DEBUG: Placas Madre recuperadas: {list(PlacaMadre.objects.values('id', 'nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'stock'))}")
+        'tarjeta_grafica': list(TarjetaGrafica.objects.values('id', 'nombre', 'precio', 'stock')),
+        'almacenamiento': list(AlmacenamientoSSD.objects.values('id', 'nombre', 'precio', 'stock')) + list(AlmacenamientoHDD.objects.values('id', 'nombre', 'precio', 'stock')),
+        'fuente_de_poder': list(FuenteDePoder.objects.values('id', 'nombre', 'precio', 'stock')),
+        'gabinete': list(Gabinete.objects.values('id', 'nombre', 'precio', 'formato_soporte', 'stock')),
+        'refrigeracion_cooler': list(RefrigeracionCooler.objects.values('id', 'nombre', 'precio', 'socket_compatibles', 'stock')),
+    }
+
+    # Convertimos los precios a string para que el JSON no tenga problemas con el tipo Decimal
+    for categoria in componentes:
+        for componente in componentes[categoria]:
+            componente['precio'] = str(componente['precio'])
+
+    context = {
+        'componentes_json': json.dumps(componentes)
+    }
+    return render(request, 'core/armado.html', context)
 
 @login_required
 def mostrarCarrito(request):

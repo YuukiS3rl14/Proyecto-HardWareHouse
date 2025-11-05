@@ -3,276 +3,98 @@
 
 {% block tittle %} Armado de PC {% endblock %}
 
-{% block subNavbar %} {% endblock %}
+{% block extra_head %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<style>
+    .component-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .component-label {
+        width: 150px;
+        font-weight: bold;
+    }
+    .component-select {
+        flex-grow: 1;
+    }
+    .component-price {
+        width: 120px;
+        text-align: right;
+        font-weight: bold;
+    }
+    .compatibility-warning {
+        color: #ffc107; /* Amarillo advertencia */
+        font-weight: bold;
+    }
+    .select2-results__option[aria-disabled='true'] {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
 
 {% block principal %}
-<!-- Encabezado -->
-<div class="container-fluid bg-success text-white mb-4">
-    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height:160px;">
-        <h1 class="font-weight-semi-bold mb-1">Armador de PC — Configurador Avanzado</h1>
-        <small>Selecciona tus componentes por marca y modelo. El precio se actualizará automáticamente en CLP.</small>
+<!-- Page Header Start -->
+<div class="container-fluid bg-light mb-5">
+    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 250px">
+        <h1 class="font-weight-semi-bold text-uppercase mb-3">Arma tu PC</h1>
+        <p class="text-muted">Selecciona los componentes y obtén un presupuesto al instante.</p>
     </div>
 </div>
+<!-- Page Header End -->
 
-<!-- Configurador -->
-<div class="container-fluid">
+<div class="container">
     <div class="row px-xl-5">
+        <!-- Columna de Selección de Componentes -->
         <div class="col-lg-8">
-            <div class="row">
-                
-                <!-- CPU Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="card component-card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img id="img-cpu" src="{% static 'core/img/amd_cpu.webp' %}" alt="CPU" class="component-img mr-3">
-                                <div>
-                                    <h5 class="mb-1">CPU</h5>
-                                    <div class="badge-brand">Marcas: AMD / Intel</div>
-                                </div>
-                            </div>
-
-                            <select id="select-cpu" class="form-control mb-2">
-                                <option value="" data-price="0" data-img="{% static 'core/img/placeholder.webp' %}">-- Selecciona CPU --
-                                </option>
-                                <option value="AMD Ryzen 5 5600X" data-price="179990" data-img="{% static 'core/img/amd_cpu.webp' %}">AMD
-                                    Ryzen 5 5600X — $179.990</option>
-                                <option value="AMD Ryzen 7 5800X" data-price="289990" data-img="{% static 'core/img/amd_cpu.webp' %}">AMD
-                                    Ryzen 7 5800X — $289.990</option>
-                                <option value="Intel Core i5-12400F" data-price="139990" data-img="{% static 'core/img/intel_cpu.webp' %}">
-                                    Intel i5-12400F — $139.990</option>
-                                <option value="Intel Core i7-12700K" data-price="329990" data-img="{% static 'core/img/intel_cpu.webp' %}">
-                                    Intel i7-12700K — $329.990</option>
-                            </select>
-                            <div>Precio: <span id="price-cpu" class="price">—</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- GPU Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="card component-card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img id="img-gpu" src="{% static 'core/img/gigabyte_gpu.webp' %}" alt="GPU" class="component-img mr-3">
-                                <div>
-                                    <h5 class="mb-1">Tarjeta Gráfica</h5>
-                                    <div class="badge-brand">Marcas: NVIDIA / ASUS / Gigabyte</div>
-                                </div>
-                            </div>
-
-                            <select id="select-gpu" class="form-control mb-2">
-                                <option value="" data-price="0" data-img="{% static 'core/img/placeholder.webp' %}">-- Selecciona GPU --
-                                </option>
-                                <option value="NVIDIA RTX 3060" data-price="399990" data-img="{% static 'core/img/gigabyte_gpu.webp' %}">RTX
-                                    3060 — $399.990</option>
-                                <option value="NVIDIA RTX 4070 Ti" data-price="749990" data-img="{% static 'core/img/gigabyte_gpu.webp' %}">RTX
-                                    4070 Ti — $749.990</option>
-                                <option value="NVIDIA RTX 4080" data-price="1199990" data-img="{% static 'core/img/gigabyte_gpu.webp' %}">RTX
-                                    4080 — $1.199.990</option>
-                            </select>
-                            <div>Precio: <span id="price-gpu" class="price">—</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RAM Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="card component-card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img id="img-ram" src="{% static 'core/img/corsair_ram.webp' %}" alt="RAM" class="component-img mr-3">
-                                <div>
-                                    <h5 class="mb-1">Memoria RAM</h5>
-                                    <div class="badge-brand">Marcas: Corsair / Kingston</div>
-                                </div>
-                            </div>
-
-                            <select id="select-ram" class="form-control mb-2">
-                                <option value="" data-price="0" data-img="{% static 'core/img/placeholder.webp' %}">-- Selecciona RAM --
-                                </option>
-                                <option value="Corsair Vengeance 16GB (2x8) DDR4 3200" data-price="69990" data-img="{% static 'core/img/corsair_ram.webp' %}">Corsair 16GB — $69.990</option>
-                                <option value="Corsair Vengeance 32GB (2x16) DDR4 3600" data-price="129990" data-img="{% static 'core/img/corsair_ram.webp' %}">Corsair 32GB — $129.990</option>
-                                <option value="Kingston Fury 16GB (2x8) DDR5 5200" data-price="149990" data-img="{% static 'core/img/corsair_ram.webp' %}">Kingston 16GB DDR5 — $149.990</option>
-                            </select>
-                            <div>Precio: <span id="price-ram" class="price">—</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Storage Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="card component-card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img id="img-storage" src="{% static 'core/img/samsung_ssd.webp' %}" alt="Almacenamiento"
-                                    class="component-img mr-3">
-                                <div>
-                                    <h5 class="mb-1">Almacenamiento</h5>
-                                    <div class="badge-brand">Marcas: Samsung / Seagate</div>
-                                </div>
-                            </div>
-
-                            <select id="select-storage" class="form-control mb-2">
-                                <option value="" data-price="0" data-img="{% static 'core/img/placeholder.webp' %}">-- Selecciona almacenamiento --</option>
-                                <option value="Samsung 970 EVO Plus 1TB NVMe" data-price="89990" data-img="{% static 'core/img/samsung_ssd.webp' %}">Samsung 970 EVO 1TB — $89.990</option>
-                                <option value="Samsung 980 Pro 2TB NVMe" data-price="199990" data-img="{% static 'core/img/samsung_ssd.webp' %}">Samsung 980 Pro 2TB — $199.990</option>
-                                <option value="Seagate 2TB HDD" data-price="39990" data-img="{% static 'core/img/samsung_ssd.webp' %}"> Seagate 2TB HDD — $39.990</option>
-                            </select>
-                            <div>Precio: <span id="price-storage" class="price">—</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PSU Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="card component-card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img id="img-psu" src="{% static 'core/img/evga_psu.webp' %}" alt="Fuente" class="component-img mr-3">
-                                <div>
-                                    <h5 class="mb-1">Fuente de Poder</h5>
-                                    <div class="badge-brand">Marcas: EVGA / Corsair</div>
-                                </div>
-                            </div>
-
-                            <select id="select-psu" class="form-control mb-2">
-                                <option value="" data-price="0" data-img="{% static 'core/img/placeholder.webp' %}">-- Selecciona fuente --
-                                </option>
-                                <option value="EVGA 650W 80+ Gold" data-price="79990" data-img="{% static 'core/img/evga_psu.webp' %}">EVGA 650W Gold — $79.990</option>
-                                <option value="Corsair RM750x 750W" data-price="119990" data-img="{% static 'core/img/evga_psu.webp' %}"> Corsair RM750x — $119.990</option>
-                            </select>
-                            <div>Precio: <span id="price-psu" class="price">—</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Case Card -->
-                <div class="col-md-6 mb-4">
-                    <div class="card component-card h-100">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img id="img-case" src="{% static 'core/img/coolermaster_case.webp' %}" alt="Gabinete" class="component-img mr-3">
-                                <div>
-                                    <h5 class="mb-1">Gabinete</h5>
-                                    <div class="badge-brand">Marcas: Cooler Master / NZXT</div>
-                                </div>
-                            </div>
-
-                            <select id="select-case" class="form-control mb-2">
-                                <option value="" data-price="0" data-img="{% static 'core/img/placeholder.webp' %}">-- Selecciona gabinete --</option>
-                                <option value="Cooler Master MB511 ARGB" data-price="69990" data-img="{% static 'core/img/coolermaster_case.webp' %}">Cooler Master MB511 — $69.990</option>
-                                <option value="NZXT H510" data-price="89990" data-img="{% static 'core/img/coolermaster_case.webp' %}">NZXT H510 — $89.990</option>
-                            </select>
-                            <div>Precio: <span id="price-case" class="price">—</span></div>
-                        </div>
-                    </div>
-                </div>
-
+            <div id="pc-builder">
+                <!-- Las filas de componentes se generarán aquí con JS -->
             </div>
         </div>
 
-        <!-- Column derecha: resumen y acciones -->
+        <!-- Columna de Resumen y Presupuesto -->
         <div class="col-lg-4">
-            <div class="summary-box mb-4">
-                <h5>Resumen de configuración</h5>
-                <p class="mb-1">Total parcial (suma de componentes):</p>
-                <h3 id="total-clp" class="price">—</h3>
-
-                <div class="mt-3">
-                    <button id="btn-generate" class="btn btn-success btn-block mb-2">Generar resumen</button>
-                    <button id="btn-reset" class="btn btn-outline-secondary btn-block">Resetear selección</button>
+            <div class="card border-success mb-5">
+                <div class="card-header bg-success border-success">
+                    <h4 class="font-weight-semi-bold m-0 text-white">Resumen del Presupuesto</h4>
                 </div>
-            </div>
-
-            <div class="card">
                 <div class="card-body">
-                    <h6 class="mb-3">Vista rápida</h6>
-                    <div class="d-flex align-items-center mb-2">
-                        <img id="thumb-cpu" src="{% static 'core/img/cpu_icono.webp' %}" alt=""
-                            style="width:55px;height:55px;object-fit:contain;margin-right:10px;">
-                        <div>
-                            <small class="text-muted">CPU</small>
-                            <div id="thumb-cpu-txt">—</div>
-                        </div>
+                    <div id="summary-list">
+                        <!-- El resumen de componentes se generará aquí -->
                     </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <img id="thumb-gpu" src="{% static 'core/img/gpu_icono.webp' %}" alt=""
-                            style="width:55px;height:55px;object-fit:contain;margin-right:10px;">
-                        <div>
-                            <small class="text-muted">GPU</small>
-                            <div id="thumb-gpu-txt">—</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <img id="thumb-ram" src="{% static 'core/img/ram_icono.webp' %}" alt=""
-                            style="width:55px;height:55px;object-fit:contain;margin-right:10px;">
-                        <div>
-                            <small class="text-muted">RAM</small>
-                            <div id="thumb-ram-txt">—</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <img id="thumb-storage" src="{% static 'core/img/ssd_icono.webp' %}" alt=""
-                            style="width:55px;height:55px;object-fit:contain;margin-right:10px;">
-                        <div>
-                            <small class="text-muted">Almacenamiento</small>
-                            <div id="thumb-storage-txt">—</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center mb-2">
-                        <img id="thumb-psu" src="{% static 'core/img/psu_icono.webp' %}" alt=""
-                            style="width:55px;height:55px;object-fit:contain;margin-right:10px;">
-                        <div>
-                            <small class="text-muted">Fuente</small>
-                            <div id="thumb-psu-txt">—</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <img id="thumb-case" src="{% static 'core/img/case_icono.webp' %}" alt=""
-                            style="width:55px;height:55px;object-fit:contain;margin-right:10px;">
-                        <div>
-                            <small class="text-muted">Gabinete</small>
-                            <div id="thumb-case-txt">—</div>
-                        </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mt-2">
+                        <h5 class="font-weight-bold">Total</h5>
+                        <h5 class="font-weight-bold" id="total-price">$0</h5>
                     </div>
                 </div>
-            </div>
-
-        </div> 
-    </div> 
-</div> 
-
-<!-- Resumen generado -->
-<div class="container mt-4" id="result-container" style="display:none;">
-    <div class="card">
-        <div class="card-body">
-            <h4>Resumen de la cotización</h4>
-            <div class="table-responsive">
-                <table class="table table-bordered mt-3">
-                    <thead>
-                        <tr>
-                            <th>Componente</th>
-                            <th>Selección</th>
-                            <th>Precio (CLP)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="summary-body">
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th colspan="2" class="text-right">Total</th>
-                            <th id="summary-total">—</th>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <div class="d-flex justify-content-end">
-                <button id="btn-download" class="btn btn-outline-success mr-2">Descargar resumen (CSV)</button>
-                <button id="btn-close-summary" class="btn btn-success">Cerrar</button>
+                <div class="card-footer border-secondary bg-transparent">
+                    <button class="btn btn-block btn-success my-3 py-3" disabled>Añadir al Carrito (Próximamente)</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Pasamos los datos de Django a JavaScript -->
+{{ componentes_json|json_script:"componentes-data" }}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const data = JSON.parse(document.getElementById('componentes-data').textContent);
+        console.log("DEBUG JS: Componentes data recibida:", data);
+        console.log("DEBUG JS: Placas Madre recibidas:", data.placas_madre);
+    });
+</script>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Nuestro script para el constructor -->
+<script src="{% static 'core/js/pc-builder.js' %}"></script>
 {% endblock %}

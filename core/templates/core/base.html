@@ -24,6 +24,8 @@
     <link href="{% static 'core/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style2.css' %}" rel="stylesheet">
+
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body>
@@ -201,5 +203,7 @@
     <script src="{% static 'core/js/armado.js' %}"></script>
     <script src="{% static 'core/js/checkout.js' %}"></script>
 </body>
+
+{% block extra_scripts %}{% endblock %}
 
 </html>

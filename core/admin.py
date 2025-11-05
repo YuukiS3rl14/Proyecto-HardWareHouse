@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django import forms
 from django.contrib.auth.models import User
 from django.utils.html import format_html 
 
@@ -58,22 +59,60 @@ class PlacaMadreAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': ('socket_cpu', 'chipset', 'formato', 'ranuras_ram')}),
     )
 
+# --- Formularios personalizados para capacidad ---
+class AlmacenamientoAdminForm(forms.ModelForm):
+    capacidad_valor = forms.IntegerField(label="Capacidad (Valor)", help_text="Ej: 512, 1, 2")
+    capacidad_unidad = forms.ChoiceField(label="Unidad", choices=[('GB', 'GB'), ('TB', 'TB')])
+
+    class Meta:
+        model = AlmacenamientoSSD # Se puede reusar para HDD
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Si estamos editando, poblamos los campos de capacidad
+        if self.instance and self.instance.pk:
+            capacidad_gb = self.instance.capacidad_gb
+            if capacidad_gb >= 1000:
+                self.fields['capacidad_valor'].initial = capacidad_gb / 1024
+                self.fields['capacidad_unidad'].initial = 'TB'
+            else:
+                self.fields['capacidad_valor'].initial = capacidad_gb
+                self.fields['capacidad_unidad'].initial = 'GB'
+
+    def save(self, commit=True):
+        # Obtenemos los valores de los campos personalizados
+        valor = self.cleaned_data.get('capacidad_valor')
+        unidad = self.cleaned_data.get('capacidad_unidad')
+
+        # Calculamos y asignamos el valor al campo real del modelo
+        if valor is not None and unidad:
+            if unidad == 'TB':
+                self.instance.capacidad_gb = valor * 1024
+            else: # Es 'GB'
+                self.instance.capacidad_gb = valor
+        
+        # Llamamos al método save original para que guarde la instancia
+        return super().save(commit=commit)
+
 class AlmacenamientoSSDAdmin(admin.ModelAdmin):
+    form = AlmacenamientoAdminForm
     list_display = PRODUCTO_LIST_DISPLAY + ('capacidad_gb', 'interfaz', 'formato')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('capacidad_gb', 'interfaz', 'formato')}),
+        ('Especificaciones Técnicas', {'fields': (('capacidad_valor', 'capacidad_unidad'), 'interfaz', 'formato')}),
     )
 
 class AlmacenamientoHDDAdmin(admin.ModelAdmin):
+    form = AlmacenamientoAdminForm
     list_display = PRODUCTO_LIST_DISPLAY + ('capacidad_gb', 'velocidad_rpm', 'cache_mb')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('capacidad_gb', 'velocidad_rpm', 'cache_mb')}),
+        ('Especificaciones Técnicas', {'fields': (('capacidad_valor', 'capacidad_unidad'), 'velocidad_rpm', 'cache_mb')}),
     )
     
 class GabineteAdmin(admin.ModelAdmin):
