@@ -25,17 +25,25 @@ def mostrarIndex(request):
 
 def mostrarArmado(request):    
     # Diccionario para almacenar todos los componentes que se pasarán a la plantilla
+    def get_component_data(model, fields):
+        components = []
+        for item in model.objects.all():
+            data = {'id': item.id}
+            for field in fields:
+                data[field] = getattr(item, field)
+            data['imagen'] = item.imagen.url if item.imagen else None
+            components.append(data)
+        return components
+
     componentes = {
-        'procesador': list(Procesador.objects.values('id', 'nombre', 'precio', 'socket', 'stock')),
-        'placa_madre': list(PlacaMadre.objects.values('id', 'nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'stock')),
-        'memoria_ram': list(MemoriaRam.objects.values('id', 'nombre', 'precio', 'tipo_ddr', 'stock')),
-        # DEBUG: Imprimir las placas madre recuperadas
-        # print(f"DEBUG: Placas Madre recuperadas: {list(PlacaMadre.objects.values('id', 'nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'stock'))}")
-        'tarjeta_grafica': list(TarjetaGrafica.objects.values('id', 'nombre', 'precio', 'stock')),
-        'almacenamiento': list(AlmacenamientoSSD.objects.values('id', 'nombre', 'precio', 'stock')) + list(AlmacenamientoHDD.objects.values('id', 'nombre', 'precio', 'stock')),
-        'fuente_de_poder': list(FuenteDePoder.objects.values('id', 'nombre', 'precio', 'stock')),
-        'gabinete': list(Gabinete.objects.values('id', 'nombre', 'precio', 'formato_soporte', 'stock')),
-        'refrigeracion_cooler': list(RefrigeracionCooler.objects.values('id', 'nombre', 'precio', 'socket_compatibles', 'stock')),
+        'placa_madre': get_component_data(PlacaMadre, ['nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'chipset', 'ranuras_ram', 'stock']),
+        'procesador': get_component_data(Procesador, ['nombre', 'precio', 'socket', 'nucleos', 'frecuencia_base', 'stock']),
+        'memoria_ram': get_component_data(MemoriaRam, ['nombre', 'precio', 'tipo_ddr', 'capacidad_gb', 'velocidad_mhz', 'stock']),
+        'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'stock']),
+        'almacenamiento': get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'formato', 'stock']) + get_component_data(AlmacenamientoHDD, ['nombre', 'precio', 'capacidad_gb', 'stock']),
+        'gabinete': get_component_data(Gabinete, ['nombre', 'precio', 'formato_soporte', 'stock']),
+        'fuente_de_poder': get_component_data(FuenteDePoder, ['nombre', 'precio', 'potencia_watts', 'stock']),
+        'refrigeracion_cooler': get_component_data(RefrigeracionCooler, ['nombre', 'precio', 'socket_compatibles', 'tipo', 'tamanho_radiador_mm', 'stock']),
     }
 
     # Convertimos los precios a string para que el JSON no tenga problemas con el tipo Decimal
@@ -43,9 +51,7 @@ def mostrarArmado(request):
         for componente in componentes[categoria]:
             componente['precio'] = str(componente['precio'])
 
-    context = {
-        'componentes_json': json.dumps(componentes)
-    }
+    context = {'componentes': componentes}
     return render(request, 'core/armado.html', context)
 
 @login_required
