@@ -1,16 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
-import json
 from django.http import Http404, JsonResponse
-from django.contrib.auth import login, authenticate
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
+from django.contrib.auth import login, authenticate, update_session_auth_hash 
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from .forms import *
-from django.contrib import messages
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash 
+import json
+import uuid
+
+from django.conf import settings
 from django.db import transaction 
 from django.db.models import Q, Avg, Count
 from .models import *
+from paypal.standard.forms import PayPalPaymentsForm
+from django.urls import reverse
+from decimal import Decimal
 
 # Create your views here.
 
@@ -73,7 +77,98 @@ def mostrarCarrito(request):
 
 @login_required
 def mostrarCheckout(request):
-    return render(request, 'core/checkout.html')
+    carrito = get_object_or_404(Carrito, usuario=request.user)
+    items_carrito = carrito.items.all()
+
+    if not items_carrito.exists():
+        messages.warning(request, "Tu carrito está vacío. Agrega productos antes de proceder al pago.")
+        return redirect('carrito')
+
+    # Verificación de stock antes de proceder
+    for item_carrito in items_carrito:
+        producto = item_carrito.get_related_product()
+        if producto.stock < item_carrito.cantidad:
+            messages.error(request, f"No hay suficiente stock para '{producto.nombre}'. Solo quedan {producto.stock} unidades. Por favor, ajusta tu carrito.")
+            return redirect('carrito')
+
+
+    total_clp = carrito.get_total_precio()
+    # Convertimos el total a USD para PayPal, redondeando a 2 decimales
+    total_usd = (total_clp / Decimal(settings.CLP_TO_USD_RATE)).quantize(Decimal('0.01'))
+
+    # Creamos un pedido PENDIENTE
+    # Usamos transaction.atomic para asegurar que la creación del pedido y sus items sea una operación única
+    with transaction.atomic():
+        pedido, created = Pedido.objects.get_or_create(
+            usuario=request.user,
+            estado='PENDIENTE',
+            defaults={'total_monto': total_clp}
+        )
+        # Si el pedido ya existía, lo actualizamos. Si es nuevo, lo llenamos.
+        if not created:
+            pedido.items_pedido.all().delete() # Limpiamos items antiguos
+            pedido.total_monto = total_clp
+            pedido.save()
+
+        for item_carrito in items_carrito:
+            producto = item_carrito.get_related_product()
+            model_name = item_carrito.get_model_name() # Necesitamos un método para obtener el nombre del modelo
+
+            item_pedido = ItemPedido.objects.create(
+                pedido=pedido,
+                producto_nombre=producto.nombre,
+                producto_tipo=producto.categoria,
+                precio_unitario=item_carrito.precio_unitario,
+                cantidad=item_carrito.cantidad
+            )
+            # Guardamos la referencia al producto original en el ItemPedido
+            if model_name:
+                setattr(item_pedido, model_name, producto)
+                item_pedido.save()
+
+
+
+
+    # Diccionario para el botón de PayPal
+    paypal_dict = {
+        "business": settings.PAYPAL_RECEIVER_EMAIL,
+        "amount": f"{total_usd:.2f}",
+        "item_name": f"Pedido #{pedido.id} - HardWareHouse",
+        "invoice": str(pedido.id), # ID único de la factura/pedido
+        "currency_code": "USD",
+        "notify_url": request.build_absolute_uri(reverse('paypal-ipn')),
+        "return_url": request.build_absolute_uri(reverse('payment_success')),
+        "cancel_return": request.build_absolute_uri(reverse('payment_failed')),
+    }
+
+    form_paypal = PayPalPaymentsForm(initial=paypal_dict)
+
+    context = {
+        'pedido': pedido,
+        'items_pedido': pedido.items_pedido.all(),
+        'total_clp': total_clp,
+        'total_usd': total_usd,
+        'clp_to_usd_rate': settings.CLP_TO_USD_RATE,
+        'form_paypal': form_paypal,
+    }
+    return render(request, 'core/checkout.html', context)
+
+@login_required
+def paymentSuccess(request):
+    # Aquí es donde PayPal redirige al usuario después de un pago exitoso.
+    # La lógica de actualización del pedido se maneja mejor con la señal de IPN de django-paypal.
+    # Por ahora, solo vaciamos el carrito y mostramos un mensaje.
+    carrito = Carrito.objects.filter(usuario=request.user).first()
+    if carrito:
+        carrito.items.all().delete()
+    
+    messages.success(request, "¡Tu pago ha sido procesado con éxito! Tu pedido está siendo preparado.")
+    return render(request, 'core/payment_success.html')
+
+@login_required
+def paymentFailed(request):
+    messages.error(request, "El pago falló o fue cancelado. Puedes intentarlo de nuevo desde 'Mis Pedidos'.")
+    return render(request, 'core/payment_failed.html')
 
 def mostrarContacto(request):
     return render(request, 'core/contacto.html')
@@ -310,6 +405,12 @@ def agregar_al_carrito(request):
             return redirect(request.META.get('HTTP_REFERER', 'tienda'))
 
         producto = get_object_or_404(ModelClass, id=product_id)
+
+        # --- VALIDACIÓN DE STOCK ---
+        if producto.stock <= 0:
+            messages.error(request, f"Lo sentimos, '{producto.nombre}' está agotado y no se puede agregar al carrito.")
+            return redirect(request.META.get('HTTP_REFERER', 'tienda'))
+
         carrito, created = Carrito.objects.get_or_create(usuario=request.user)
 
         # Construimos el filtro para buscar el item en el carrito
@@ -445,3 +546,67 @@ def agregar_comentario(request, model_name, pk):
             messages.error(request, "Hubo un error al publicar tu comentario. Por favor, revisa los campos.")
 
     return redirect('detalle', model_name=model_name, pk=pk)
+
+# --- VISTAS DE PEDIDOS ---
+
+@login_required
+def mis_pedidos(request):
+    pedidos = Pedido.objects.filter(usuario=request.user).order_by('-fecha_pedido')
+    context = {
+        'pedidos': pedidos
+    }
+    return render(request, 'core/mis_pedidos.html', context)
+
+@login_required
+def detalle_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
+    
+    # Si el pedido está pendiente, generamos un nuevo botón de pago
+    form_paypal = None
+    if pedido.estado == 'PENDIENTE':
+        total_usd = (pedido.total_monto / Decimal(settings.CLP_TO_USD_RATE)).quantize(Decimal('0.01'))
+        paypal_dict = {
+            "business": settings.PAYPAL_RECEIVER_EMAIL,
+            "amount": f"{total_usd:.2f}",
+            "item_name": f"Pedido #{pedido.id} - HardWareHouse",
+            "invoice": str(pedido.id),
+            "currency_code": "USD",
+            "notify_url": request.build_absolute_uri(reverse('paypal-ipn')),
+            "return_url": request.build_absolute_uri(reverse('payment_success')),
+            "cancel_return": request.build_absolute_uri(reverse('payment_failed')),
+        }
+        form_paypal = PayPalPaymentsForm(initial=paypal_dict)
+
+    context = {
+        'pedido': pedido,
+        'form_paypal': form_paypal,
+    }
+    return render(request, 'core/detalle_pedido.html', context)
+
+@login_required
+@transaction.atomic # Usamos una transacción para asegurar la consistencia de los datos
+def cancelar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
+
+    if pedido.estado != 'PENDIENTE':
+        messages.error(request, "Solo se pueden cancelar pedidos pendientes de pago.")
+        return redirect('detalle_pedido', pedido_id=pedido.id)
+
+    # Cambiar el estado del pedido a CANCELADO
+    pedido.estado = 'CANCELADO'
+    pedido.save()
+
+    messages.success(request, f"El Pedido #{pedido.id} ha sido cancelado correctamente.")
+    return redirect('mis_pedidos')
+
+@login_required
+def ver_boleta(request, pedido_id):
+    # Buscamos un pedido que esté PAGADO y que pertenezca al usuario
+    pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user, estado='PAGADO')
+    
+    context = {
+        'pedido': pedido,
+        'items_pedido': pedido.items_pedido.all(),
+    }
+    
+    return render(request, 'core/boleta.html', context)

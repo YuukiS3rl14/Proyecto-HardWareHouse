@@ -3,6 +3,7 @@ from .views import *
 
 urlpatterns = [
     path('', mostrarIndex, name='index'),
+    path('index/', mostrarIndex, name='index'),
     path('armado/', mostrarArmado, name='armado'),
     path('carrito/', mostrarCarrito, name='carrito'),
     path('checkout/', mostrarCheckout, name='checkout'),
@@ -24,4 +25,13 @@ urlpatterns = [
 
     # URL de Comentarios
     path('comentario/agregar/<str:model_name>/<int:pk>/', agregar_comentario, name='agregar_comentario'),
+
+    # URLs de Pedidos
+    path('pedidos/', mis_pedidos, name='mis_pedidos'),
+    path('pedidos/<int:pedido_id>/', detalle_pedido, name='detalle_pedido'),
+    path('pedidos/cancelar/<int:pedido_id>/', cancelar_pedido, name='cancelar_pedido'),
+    path('pedidos/boleta/<int:pedido_id>/', ver_boleta, name='ver_boleta'),
+
+    path('payment/success/', paymentSuccess, name='payment_success'),
+    path('payment/failed/', paymentFailed, name='payment_failed'),
 ]

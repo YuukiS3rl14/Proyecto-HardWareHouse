@@ -1,21 +1,14 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block tittle %} Informacion de facturación {% endblock %}
-
-{% block navbarBaja %} {% endblock %}
 
 {% block principal %}
 <div class="container-fluid bg-light mb-5">
     <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 250px">
         <h1 class="font-weight-semi-bold text-uppercase mb-3">Finalizar compra</h1>
         <p class="text-muted">Completa tus datos para realizar el pedido</p>
-    </div>
-</div>
-
-<!-- Alerta -->
-<div class="alert alert-success alert-custom" role="alert" id="checkoutAlert">
-    ✅ ¡Compra realizada con éxito! Gracias por confiar en <strong>Hardware House</strong>.
 </div>
 
 <!-- Checkout -->
@@ -26,28 +19,28 @@
                 <h4 class="font-weight-semi-bold mb-4">Datos de facturación</h4>
                 <div class="row">
                     <div class="col-md-6 form-group">
-                        <label>Nombre</label>
-                        <input class="form-control" type="text" placeholder="Ej: Jorge">
+                        <label>Nombre(s)</label>
+                        <input class="form-control" type="text" value="{{ user.first_name }}" placeholder="Ej: Jorge">
                     </div>
                     <div class="col-md-6 form-group">
                         <label>Apellido</label>
-                        <input class="form-control" type="text" placeholder="Ej: Olivares">
+                        <input class="form-control" type="text" value="{{ user.last_name }}" placeholder="Ej: Olivares">
                     </div>
                     <div class="col-md-6 form-group">
                         <label>Correo electrónico</label>
-                        <input class="form-control" type="email" placeholder="correo@ejemplo.cl">
+                        <input class="form-control" type="email" value="{{ user.email }}" placeholder="correo@ejemplo.cl" readonly>
                     </div>
                     <div class="col-md-6 form-group">
                         <label>Teléfono</label>
-                        <input class="form-control" type="text" placeholder="+56 9 1234 5678">
+                        <input class="form-control" type="text" placeholder="+56 9 1234 5678" required>
                     </div>
                     <div class="col-md-12 form-group">
                         <label>Dirección</label>
-                        <input class="form-control" type="text" placeholder="Ej: Av. Tecnología 123, Santiago">
+                        <input class="form-control" type="text" placeholder="Ej: Av. Tecnología 123, Depto 45" required>
                     </div>
                     <div class="col-md-6 form-group">
                         <label>Ciudad</label>
-                        <input class="form-control" type="text" placeholder="Ej: Santiago">
+                        <input class="form-control" type="text" placeholder="Ej: Santiago" required>
                     </div>
                     <div class="col-md-6 form-group">
                         <label>Región</label>
@@ -65,52 +58,40 @@
                 </div>
                 <div class="card-body">
                     <h5 class="font-weight-medium mb-3">Productos</h5>
+                    {% for item in items_pedido %}
                     <div class="d-flex justify-content-between">
-                        <p>Tarjeta Gráfica RTX 4070 Ti</p>
-                        <p>$999.990</p>
+                        <p>{{ item.cantidad }} x {{ item.producto_nombre }}</p>
+                        <p>${{ item.get_subtotal|floatformat:"0"|intcomma }}</p>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <p>Memoria RAM DDR5 32GB</p>
-                        <p>$169.990</p>
-                    </div>
+                    {% endfor %}
                     <hr class="mt-0">
                     <div class="d-flex justify-content-between mb-3 pt-1">
                         <h6 class="font-weight-medium">Subtotal</h6>
-                        <h6 class="font-weight-medium">$1.169.980</h6>
+                        <h6 class="font-weight-medium">${{ total_clp|floatformat:"0"|intcomma }}</h6>
                     </div>
                     <div class="d-flex justify-content-between">
                         <h6 class="font-weight-medium">Envío</h6>
-                        <h6 class="font-weight-medium">$4.990</h6>
+                        <h6 class="font-weight-medium">A calcular</h6>
                     </div>
                 </div>
                 <div class="card-footer bg-light border-success">
                     <div class="d-flex justify-content-between mt-2">
                         <h5 class="font-weight-bold">Total</h5>
-                        <h5 class="font-weight-bold text-success">$1.174.970 CLP</h5>
+                        <h5 class="font-weight-bold text-success">${{ total_clp|floatformat:"0"|intcomma }} CLP</h5>
                     </div>
                 </div>
             </div>
 
             <div class="card border-success">
                 <div class="card-header bg-success text-white border-0">
-                    <h4 class="font-weight-semi-bold m-0">Método de pago</h4>
+                    <h4 class="font-weight-semi-bold m-0">Pagar con PayPal</h4>
                 </div>
                 <div class="card-body">
-                    <div class="custom-control custom-radio">
-                        <input type="radio" class="custom-control-input" id="transferencia" name="pago">
-                        <label class="custom-control-label" for="transferencia">Transferencia bancaria</label>
-                    </div>
-                    <div class="custom-control custom-radio">
-                        <input type="radio" class="custom-control-input" id="debito" name="pago">
-                        <label class="custom-control-label" for="debito">Tarjeta de débito/crédito</label>
-                    </div>
-                    <div class="custom-control custom-radio">
-                        <input type="radio" class="custom-control-input" id="webpay" name="pago">
-                        <label class="custom-control-label" for="webpay">Webpay / MercadoPago</label>
-                    </div>
+                    <p class="text-muted">Serás redirigido a PayPal para completar tu pago de forma segura. El monto se convertirá a USD.</p>
+                    <p><strong>Total a pagar: ${{ total_usd|floatformat:2 }} USD</strong> <small>(Tasa de cambio: 1 USD ≈ {{ clp_to_usd_rate }} CLP)</small></p>
                 </div>
                 <div class="card-footer border-success bg-transparent">
-                    <button id="placeOrder" class="btn btn-success btn-block font-weight-bold my-3 py-3">Realizar pedido</button>
+                    {{ form_paypal.render }}
                 </div>
             </div>
         </div>

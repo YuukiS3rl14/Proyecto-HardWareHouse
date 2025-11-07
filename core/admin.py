@@ -163,12 +163,12 @@ class ItemPedidoInline(admin.TabularInline):
     extra = 0
 
 class PedidoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'usuario', 'fecha_pedido', 'total_monto', 'estado')
+    list_display = ('id', 'usuario', 'fecha_pedido', 'total_monto', 'estado', 'paypal_transaccion_id')
     list_filter = ('estado', 'fecha_pedido')
     list_per_page = 20
     search_fields = ('usuario__username', 'id')
     inlines = [ItemPedidoInline]
-    readonly_fields = ('usuario', 'total_monto', 'fecha_pedido')
+    readonly_fields = ('usuario', 'total_monto', 'fecha_pedido', 'paypal_transaccion_id')
 
 # ----------------------------------------------------------------------
 # 4. REGISTRO DE MODELOS (Usando clases específicas)

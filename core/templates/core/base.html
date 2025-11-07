@@ -10,7 +10,7 @@
     <meta content="Tienda online de piezas de computador y armado personalizado de PC." name="description">
 
     <!-- Favicon -->
-    <link href="{% static 'core/img/favicon.ico' %}" rel="icon">
+    <link href="{% static 'core/img/logo.ico' %}" rel="icon">
     <!-- Google Web Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -120,6 +120,7 @@
 
             <div class="col-lg-5 text-right">
                 {% if user.is_authenticated %}
+                <a href="{% url 'mis_pedidos' %}" class="btn border" title="Mis Pedidos"><i class="fas fa-box-open text-success"></i></a>
                 <a href="{% url 'favoritos' %}" class="btn border" title="Mis Favoritos"><i class="fas fa-heart text-success"></i><span
                         class="badge">{{ favorite_item_count }}</span></a>
                 {% else %}

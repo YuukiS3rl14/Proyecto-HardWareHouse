@@ -26,21 +26,26 @@ SECRET_KEY = 'django-insecure-n9n94jsyf$j7qayj9!l84pcltxt13vvan@5$vyq1qqqb)nov05
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Añade aquí el dominio que te da ngrok, sin el 'https://'
+# Ejemplo: 't1u-n3l-al3at0r10.ngrok-free.app'
+# El '*' es para desarrollo, pero es mejor ser específico.
+ALLOWED_HOSTS = ['starred-hypocoristically-jaxson.ngrok-free.dev', '127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core',
+    'core.apps.CoreConfig', # <-- CAMBIO CLAVE: Usar AppConfig para registrar las señales
     'bootstrap5',
     'django.contrib.humanize',
+    'paypal.standard.ipn',
 ]
 
 MIDDLEWARE = [
@@ -158,3 +163,12 @@ ADMIN_SITE_TITLE = 'Panel de Administración HardWareHouse'
 ADMIN_HEADER_TITLE = 'Administración de la Tienda' 
 
 ADMIN_SITE_HEADER = 'HardWareHouse'
+
+PAYPAL_RECEIVER_EMAIL = 'sb-j1cpn47385379@business.example.com'
+PAYPAL_TEST = True
+
+# Tasa de cambio de ejemplo (CLP a USD). En un proyecto real, esto debería obtenerse de una API.
+CLP_TO_USD_RATE = 950 
+
+# Actualiza esta URL con la que te dio ngrok (con https)
+SITE_URL = 'https://t1u-n3l-al3at0r10.ngrok-free.app' # URL base de tu sitio de desarrollo

@@ -343,6 +343,20 @@ class ItemCarrito(models.Model):
         if self.ventilador_id: return self.ventilador
         return None
 
+    def get_model_name(self):
+        """Devuelve el nombre del campo del modelo que está siendo usado."""
+        if self.procesador_id: return 'procesador'
+        if self.tarjeta_grafica_id: return 'tarjeta_grafica'
+        if self.memoria_ram_id: return 'memoria_ram'
+        if self.placa_madre_id: return 'placa_madre'
+        if self.almacenamiento_ssd_id: return 'almacenamiento_ssd'
+        if self.almacenamiento_hdd_id: return 'almacenamiento_hdd'
+        if self.gabinete_id: return 'gabinete'
+        if self.fuente_de_poder_id: return 'fuente_de_poder'
+        if self.refrigeracion_id: return 'refrigeracion'
+        if self.ventilador_id: return 'ventilador'
+        return None
+
     def get_total(self):
         # Usamos el precio almacenado
         return self.precio_unitario * self.cantidad
@@ -372,6 +386,7 @@ class Pedido(models.Model):
     comuna_envio = models.ForeignKey(Comuna, on_delete=models.PROTECT, null=True)
     
     estado = models.CharField(max_length=20, choices=ESTADOS, default='PENDIENTE')
+    paypal_transaccion_id = models.CharField(max_length=100, blank=True, null=True, verbose_name="ID Transacción PayPal")
     
     def __str__(self):
         return f"Pedido #{self.id} de {self.usuario.username} - {self.estado}"

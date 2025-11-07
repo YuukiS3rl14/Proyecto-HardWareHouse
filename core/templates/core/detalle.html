@@ -106,24 +106,28 @@
             </ul>
             <!-- Controles de Compra y Navegación -->
             <div class="d-flex align-items-center mb-4 mt-4">
-                <form action="{% url 'agregar_al_carrito' %}" method="POST" class="add-to-cart-form d-flex align-items-center">
-                    {% csrf_token %}
-                    <input type="hidden" name="product_id" value="{{ producto.id }}">
-                    <input type="hidden" name="model_name" value="{{ model_name }}">
-    
-                    <div class="input-group quantity mr-3" style="width: 130px;">
-                        <div class="input-group-btn">
-                            <button type="button" class="btn btn-success btn-minus"><i class="fa fa-minus"></i></button>
+                {% if producto.stock > 0 %}
+                    <form action="{% url 'agregar_al_carrito' %}" method="POST" class="add-to-cart-form d-flex align-items-center">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ producto.id }}">
+                        <input type="hidden" name="model_name" value="{{ model_name }}">
+        
+                        <div class="input-group quantity mr-3" style="width: 130px;">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-success btn-minus"><i class="fa fa-minus"></i></button>
+                            </div>
+                            <input type="text" name="quantity" class="form-control bg-light text-center" value="1">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-success btn-plus"><i class="fa fa-plus"></i></button>
+                            </div>
                         </div>
-                        <input type="text" name="quantity" class="form-control bg-light text-center" value="1">
-                        <div class="input-group-btn">
-                            <button type="button" class="btn btn-success btn-plus"><i class="fa fa-plus"></i></button>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-success px-3">
-                        <i class="fa fa-shopping-cart mr-1"></i>Agregar al carrito
-                    </button>
-                </form>
+                        <button type="submit" class="btn btn-success px-3">
+                            <i class="fa fa-shopping-cart mr-1"></i>Agregar al carrito
+                        </button>
+                    </form>
+                {% else %}
+                    <button class="btn btn-secondary px-3" disabled><i class="fa fa-times-circle mr-1"></i>Agotado</button>
+                {% endif %}
                 <!-- Botón de Favoritos -->
                 <button class="btn btn-outline-danger px-3 ml-3 toggle-favorite-btn"
                         data-product-id="{{ producto.id }}"
