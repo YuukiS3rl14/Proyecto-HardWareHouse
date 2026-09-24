@@ -33,12 +33,9 @@ class Proveedor(models.Model):
 
 # --- 2. MODELOS DE PRODUCTOS INDEPENDIENTES ---
 
-# Nota: El campo proveedor ahora es obligatorio y no tiene default.
-# La categoría es un CharField estático.
-
 class Procesador(models.Model):
     categoria = models.CharField(max_length=50, default='CPU', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -62,7 +59,7 @@ class Procesador(models.Model):
 
 class TarjetaGrafica(models.Model):
     categoria = models.CharField(max_length=50, default='Tarjeta Gráfica', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -87,7 +84,7 @@ class TarjetaGrafica(models.Model):
 
 class MemoriaRam(models.Model):
     categoria = models.CharField(max_length=50, default='Memoria RAM', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -107,7 +104,7 @@ class MemoriaRam(models.Model):
 
 class PlacaMadre(models.Model):
     categoria = models.CharField(max_length=50, default='Placa Madre', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -136,7 +133,7 @@ class PlacaMadre(models.Model):
 
 class AlmacenamientoSSD(models.Model):
     categoria = models.CharField(max_length=50, default='SSD', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -157,7 +154,7 @@ class AlmacenamientoSSD(models.Model):
 
 class AlmacenamientoHDD(models.Model):
     categoria = models.CharField(max_length=50, default='Disco Duro HDD', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -174,7 +171,7 @@ class AlmacenamientoHDD(models.Model):
 
 class Gabinete(models.Model):
     categoria = models.CharField(max_length=50, default='Gabinete', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -196,7 +193,7 @@ class Gabinete(models.Model):
 
 class FuenteDePoder(models.Model):
     categoria = models.CharField(max_length=50, default='Fuente de Poder', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -218,7 +215,7 @@ class FuenteDePoder(models.Model):
     
 class RefrigeracionCooler(models.Model):
     categoria = models.CharField(max_length=50, default='Refrigeración', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -238,7 +235,7 @@ class RefrigeracionCooler(models.Model):
 
 class Ventilador(models.Model):
     categoria = models.CharField(max_length=50, default='Ventilador', editable=False)
-    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") # Ya no usa default=
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor") 
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -266,7 +263,6 @@ class Comentario(models.Model):
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
-    # Claves Foráneas Múltiples para enlazar a CUALQUIER producto
     procesador = models.ForeignKey(Procesador, on_delete=models.CASCADE, null=True, blank=True)
     tarjeta_grafica = models.ForeignKey(TarjetaGrafica, on_delete=models.CASCADE, null=True, blank=True)
     memoria_ram = models.ForeignKey(MemoriaRam, on_delete=models.CASCADE, null=True, blank=True)
@@ -279,7 +275,6 @@ class Comentario(models.Model):
     ventilador = models.ForeignKey(Ventilador, on_delete=models.CASCADE, null=True, blank=True)
     
     def get_related_product(self):
-        """Método helper para obtener el producto real al que apunta el comentario."""
         if self.procesador_id: return self.procesador
         if self.tarjeta_grafica_id: return self.tarjeta_grafica
         if self.memoria_ram_id: return self.memoria_ram
@@ -314,7 +309,6 @@ class ItemCarrito(models.Model):
     carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE, related_name='items')
     cantidad = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     
-    # Claves Foráneas Múltiples para enlazar a CUALQUIER producto
     procesador = models.ForeignKey(Procesador, on_delete=models.CASCADE, null=True, blank=True)
     tarjeta_grafica = models.ForeignKey(TarjetaGrafica, on_delete=models.CASCADE, null=True, blank=True)
     memoria_ram = models.ForeignKey(MemoriaRam, on_delete=models.CASCADE, null=True, blank=True)
@@ -326,11 +320,9 @@ class ItemCarrito(models.Model):
     refrigeracion = models.ForeignKey(RefrigeracionCooler, on_delete=models.CASCADE, null=True, blank=True)
     ventilador = models.ForeignKey(Ventilador, on_delete=models.CASCADE, null=True, blank=True)
     
-    # Campo para almacenar el precio del producto en el momento en que fue añadido al carrito
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], default=0)
 
     def get_related_product(self):
-        """Método helper para obtener el producto real al que apunta el ítem."""
         if self.procesador_id: return self.procesador
         if self.tarjeta_grafica_id: return self.tarjeta_grafica
         if self.memoria_ram_id: return self.memoria_ram
@@ -344,7 +336,6 @@ class ItemCarrito(models.Model):
         return None
 
     def get_model_name(self):
-        """Devuelve el nombre del campo del modelo que está siendo usado."""
         if self.procesador_id: return 'procesador'
         if self.tarjeta_grafica_id: return 'tarjeta_grafica'
         if self.memoria_ram_id: return 'memoria_ram'
@@ -358,7 +349,6 @@ class ItemCarrito(models.Model):
         return None
 
     def get_total(self):
-        # Usamos el precio almacenado
         return self.precio_unitario * self.cantidad
         
     def __str__(self):
@@ -381,7 +371,6 @@ class Pedido(models.Model):
     fecha_pedido = models.DateTimeField(default=timezone.now)
     total_monto = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # Datos de Envío/Facturación (simulación de Boleta)
     direccion_envio = models.CharField(max_length=255)
     comuna_envio = models.ForeignKey(Comuna, on_delete=models.PROTECT, null=True)
     
@@ -394,9 +383,8 @@ class Pedido(models.Model):
 class ItemPedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='items_pedido')
     
-    # Datos Estáticos del Producto al momento de la compra
     producto_nombre = models.CharField(max_length=200, verbose_name="Producto")
-    producto_tipo = models.CharField(max_length=50, verbose_name="Tipo") # Ej: Procesador, SSD
+    producto_tipo = models.CharField(max_length=50, verbose_name="Tipo") 
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2) 
     cantidad = models.PositiveIntegerField()
     
@@ -413,7 +401,6 @@ class PagoBoleta(models.Model):
     metodo_pago = models.CharField(max_length=50) 
     transaccion_id = models.CharField(max_length=100, unique=True)
     
-    # Datos del Usuario (tomados del Pedido)
     nombre_comprador = models.CharField(max_length=200)
     email_comprador = models.EmailField()
     
@@ -427,7 +414,6 @@ class Favorito(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favoritos')
     fecha_agregado = models.DateTimeField(auto_now_add=True)
 
-    # Claves Foráneas Múltiples para enlazar a CUALQUIER producto
     procesador = models.ForeignKey(Procesador, on_delete=models.CASCADE, null=True, blank=True)
     tarjeta_grafica = models.ForeignKey(TarjetaGrafica, on_delete=models.CASCADE, null=True, blank=True)
     memoria_ram = models.ForeignKey(MemoriaRam, on_delete=models.CASCADE, null=True, blank=True)
@@ -442,7 +428,6 @@ class Favorito(models.Model):
     class Meta:
         verbose_name = "Favorito"
         verbose_name_plural = "Favoritos"
-        # Restricción para que un usuario no pueda añadir el mismo producto a favoritos más de una vez.
         constraints = [
             models.UniqueConstraint(fields=['usuario', 'procesador'], name='unique_fav_procesador'),
             models.UniqueConstraint(fields=['usuario', 'tarjeta_grafica'], name='unique_fav_tarjeta_grafica'),
@@ -457,7 +442,6 @@ class Favorito(models.Model):
         ]
 
     def get_related_product(self):
-        """Método helper para obtener el producto real al que apunta el favorito."""
         product_fields = ['procesador', 'tarjeta_grafica', 'memoria_ram', 'placa_madre', 'almacenamiento_ssd', 'almacenamiento_hdd', 'gabinete', 'fuente_de_poder', 'refrigeracion', 'ventilador']
         for field in product_fields:
             if getattr(self, field):

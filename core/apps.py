@@ -7,7 +7,6 @@ class CoreConfig(AppConfig):
     verbose_name = 'BD HardwareHouse'
 
     def ready(self):
-        # Importa las señales para que se registren cuando la app esté lista.
         import core.signals
 
 

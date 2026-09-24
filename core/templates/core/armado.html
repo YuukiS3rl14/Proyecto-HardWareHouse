@@ -26,7 +26,7 @@
         <!-- Columna de Selección de Componentes -->
         <div class="col-lg-9">
             <div id="pc-builder">
-                <!-- Las tarjetas de componentes se generarán aquí con JS en una rejilla -->
+                <!-- Tarjetas de componentes -->
             </div>
         </div>
 
@@ -38,7 +38,7 @@
                 </div>
                 <div class="card-body">
                     <div id="summary-list">
-                        <!-- El resumen de componentes se generará aquí -->
+                        <!-- Resumen de componentes -->
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between mt-2">
@@ -61,7 +61,7 @@
 
 {{ componentes|json_script:"componentes-data" }}
 
-<div id="builder-urls" data-add-to-cart-url="{% url 'agregar_al_carrito' %}" data-placeholder-img="{% static 'core/img/placeholder_product.webp' %}" style="display: none;"></div>
+<div id="builder-urls" data-add-to-cart-url="{% url 'core:agregar_al_carrito' %}" data-placeholder-img="{% static 'core/img/placeholder_product.webp' %}" style="display: none;"></div>
 
 <!-- Modal para seleccionar componentes -->
 <div class="modal fade" id="componentModal" tabindex="-1" aria-labelledby="componentModalLabel" aria-hidden="true">
@@ -74,7 +74,7 @@
                 </button>
             </div>
             <div class="modal-body" id="componentModalBody">
-                <!-- La lista de componentes se cargará aquí -->
+                <!-- Lista de componentes -->
             </div>
         </div>
     </div>

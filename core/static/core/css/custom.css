@@ -1,0 +1,144 @@
+/* Estilos personalizados para HardWareHouse */
+
+/* --- Estilos Globales --- */
+
+body {
+    background-image: url('../img/bg_image.webp');
+    background-size: cover; 
+    background-repeat: no-repeat; 
+    background-position: center center; 
+    background-attachment: fixed;
+    background-color: #f8f9fa; 
+}
+
+
+/* --- Navbar --- */
+
+/* Hover para enlaces principales (Inicio, Tienda, etc.) */
+.navbar-nav .nav-link {
+    transition: all 0.2s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: #28a745 !important; /* Verde éxito */
+    transform: translateY(-2px);
+}
+
+/* Hover para enlaces de usuario (Perfil, Login, etc.) */
+.col-lg-3 .nav-item.nav-link:hover,
+.col-lg-3 .border-0.bg-transparent:hover {
+    color: #28a745 !important; /* Verde éxito */
+}
+
+/* Hover para botones de íconos (Favoritos, Carrito, Pedidos) */
+.sub-navbar-btn {
+    transition: all 0.2s ease-in-out;
+    background-color: #28a745; /* Verde éxito */
+    border-color: #28a745;
+}
+
+.sub-navbar-btn:hover {
+    transform: scale(1.1);
+    background-color: #218838; /* Verde más oscuro */
+    border-color: #1e7e34;
+}
+
+.sub-navbar-btn .fa-heart,
+.sub-navbar-btn .fa-box-open,
+.sub-navbar-btn .fa-shopping-cart {
+    color: #fff !important;
+}
+
+.sub-navbar-container {
+    border-bottom: none !important;
+}
+
+
+/* --- Página de Inicio (index.html) --- */
+
+/* Estilo para los bloques de características (Componentes de calidad, etc.) */
+.feature-box {
+    background-color: #fff;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden; /* Necesario para la cinta */
+}
+
+.feature-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Cinta "En Desarrollo" para el bloque de soporte técnico */
+#soporte-tecnico-box::after {
+    content: 'En Desarrollo';
+    position: absolute;
+    top: 10px;
+    right: -30px;
+    background-color: #ffc107; /* Amarillo warning */
+    color: #212529;
+    padding: 2px 30px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    transform: rotate(45deg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Estilo para los logos de proveedores */
+.vendor-item {
+    border-radius: 0.5rem !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.vendor-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+    border-color: #28a745 !important;
+}
+
+
+/* --- Página de Tienda (tienda.html) --- */
+
+/* Estilo para los grupos de filtros */
+.filter-group {
+    background-color: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: 0.5rem;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Estilo para las tarjetas de producto en la tienda */
+.product-item {
+    border-radius: 0.5rem !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.product-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Carrusel Principal (index.html) --- */
+.carousel-item .btn-success {
+    color: #000 !important; /* Texto negro para el botón "Comenzar" */
+}
+
+.carousel-item .promo-badge {
+    background-color: #28a745;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    display: inline-block;
+}
+
+.carousel-item .btn-outline-success {
+    background-color: #28a745;
+    color: #fff;
+}

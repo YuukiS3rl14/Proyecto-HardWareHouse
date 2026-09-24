@@ -7,7 +7,7 @@
 {% block navbar %}
 <div class="container-fluid py-3 px-xl-5 bg-light">
     <div class="text-center">
-        <a href="{% url 'index' %}" class="text-decoration-none">
+        <a href="{% url 'core:index' %}" class="text-decoration-none">
             <h1 class="m-0 display-5 font-weight-semi-bold">
                 <span class="text-success font-weight-bold border px-3 me-1">H</span>ardware House
             </h1>
@@ -29,12 +29,12 @@
                     Perfil de Usuario
                 </h2>
                 <div class="d-flex align-items-center">
-                    <a href="{% url 'index' %}" class="btn btn-outline-success btn-sm me-2 rounded-3">
+                    <a href="{% url 'core:index' %}" class="btn btn-outline-success btn-sm me-2 rounded-3">
                         <i class="fa fa-home me-1"></i> Volver al Inicio
                     </a>
                     
                     {% if not edit_mode %}
-                        <a href="{% url 'perfil' %}?edit=true#main-profile-heading" class="btn btn-outline-success btn-sm rounded-3">
+                        <a href="{% url 'core:perfil' %}?edit=true#main-profile-heading" class="btn btn-outline-success btn-sm rounded-3">
                             <i class="fa fa-edit me-1"></i> Editar Perfil
                         </a>
                     {% endif %}
@@ -89,7 +89,7 @@
                             {% endif %}
                             
                             <div class="d-flex justify-content-center mt-4">
-                                <a href="{% url 'perfil' %}#main-profile-heading" class="btn btn-outline-danger px-4 rounded-3 me-3">Cancelar</a>
+                                <a href="{% url 'core:perfil' %}#main-profile-heading" class="btn btn-outline-danger px-4 rounded-3 me-3">Cancelar</a>
                                 <button type="submit" id="save_changes" class="btn btn-success px-4 rounded-3">Guardar Cambios</button>
                             </div>
                         </form>

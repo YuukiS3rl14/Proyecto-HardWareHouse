@@ -62,16 +62,47 @@
                     <div id="paypal-button-container">
                         {{ form_paypal.render }}
                     </div>
-                    <a href="{% url 'cancelar_pedido' pedido.id %}" class="btn btn-sm btn-outline-danger mt-2" onclick="return confirm('¿Estás seguro de que quieres cancelar este pedido? Esta acción no se puede deshacer.');">Cancelar Pedido</a>
+                    <a href="{% url 'core:cancelar_pedido' pedido.id %}" id="cancel-order-btn" class="btn btn-sm btn-outline-danger mt-2">Cancelar Pedido</a>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
     <div class="text-center mt-5">
-        <a href="{% url 'mis_pedidos' %}" class="btn btn-secondary">
+        <a href="{% url 'core:mis_pedidos' %}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Volver a Mis Pedidos
         </a>
     </div>
 </div>
+
+{% block extra_scripts %}
+<!-- SweetAlert2 para confirmaciones -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cancelButton = document.getElementById('cancel-order-btn');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.href;
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción cancelará tu pedido y no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, cancelar pedido',
+                cancelButtonText: 'No, volver'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
 {% endblock %}

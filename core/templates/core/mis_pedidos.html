@@ -40,9 +40,9 @@
                                 </span>
                             </td>
                             <td>
-                                <a href="{% url 'detalle_pedido' pedido.id %}" class="btn btn-sm btn-info">Ver Detalles</a>
+                                <a href="{% url 'core:detalle_pedido' pedido.id %}" class="btn btn-sm btn-info">Ver Detalles</a>
                                 {% if pedido.estado == 'PAGADO' %}
-                                    <a href="{% url 'ver_boleta' pedido.id %}" class="btn btn-sm btn-success">Ver Boleta</a>
+                                    <a href="{% url 'core:ver_boleta' pedido.id %}" class="btn btn-sm btn-success">Ver Boleta</a>
                                 {% endif %}
                             </td>
                         </tr>

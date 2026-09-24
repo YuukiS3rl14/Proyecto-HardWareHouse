@@ -19,7 +19,6 @@ from decimal import Decimal
 # Create your views here.
 
 def mostrarIndex(request):
-    # Obtenemos todos los proveedores que tienen un logo para mostrarlos en el carrusel.
     proveedores_con_logo = Proveedor.objects.filter(logo__isnull=False).exclude(logo='').order_by('nombre').distinct()
     
     context = {
@@ -28,7 +27,6 @@ def mostrarIndex(request):
     return render(request, 'core/index.html', context)
 
 def mostrarArmado(request):    
-    # Diccionario para almacenar todos los componentes que se pasarán a la plantilla
     def get_component_data(model, fields):
         components = []
         for item in model.objects.all():
@@ -50,7 +48,6 @@ def mostrarArmado(request):
         'refrigeracion_cooler': get_component_data(RefrigeracionCooler, ['nombre', 'precio', 'socket_compatibles', 'tipo', 'tamanho_radiador_mm', 'stock']),
     }
 
-    # Convertimos los precios a string para que el JSON no tenga problemas con el tipo Decimal
     for categoria in componentes:
         for componente in componentes[categoria]:
             componente['precio'] = str(componente['precio'])
@@ -60,13 +57,10 @@ def mostrarArmado(request):
 
 @login_required
 def mostrarCarrito(request):
-    # Obtenemos o creamos el carrito para el usuario actual
     carrito, created = Carrito.objects.get_or_create(usuario=request.user)
     
-    # Obtenemos todos los items del carrito
     items = carrito.items.all().order_by('id')
     
-    # Calculamos el total
     total_carrito = carrito.get_total_precio()
     
     context = {
@@ -82,14 +76,14 @@ def mostrarCheckout(request):
 
     if not items_carrito.exists():
         messages.warning(request, "Tu carrito está vacío. Agrega productos antes de proceder al pago.")
-        return redirect('carrito')
+        return redirect('core:carrito')
 
     # Verificación de stock antes de proceder
     for item_carrito in items_carrito:
         producto = item_carrito.get_related_product()
         if producto.stock < item_carrito.cantidad:
             messages.error(request, f"No hay suficiente stock para '{producto.nombre}'. Solo quedan {producto.stock} unidades. Por favor, ajusta tu carrito.")
-            return redirect('carrito')
+            return redirect('core:carrito')
 
 
     total_clp = carrito.get_total_precio()
@@ -99,32 +93,24 @@ def mostrarCheckout(request):
     # Creamos un pedido PENDIENTE
     # Usamos transaction.atomic para asegurar que la creación del pedido y sus items sea una operación única
     with transaction.atomic():
-        pedido, created = Pedido.objects.get_or_create(
+        # Siempre creamos un nuevo pedido para cada checkout.
+        # Esto evita reutilizar pedidos antiguos y asegura un invoice único.
+        pedido = Pedido.objects.create(
             usuario=request.user,
             estado='PENDIENTE',
-            defaults={'total_monto': total_clp}
+            total_monto=total_clp,
+            direccion_envio="Por definir" # O la dirección que tengas del usuario
         )
-        # Si el pedido ya existía, lo actualizamos. Si es nuevo, lo llenamos.
-        if not created:
-            pedido.items_pedido.all().delete() # Limpiamos items antiguos
-            pedido.total_monto = total_clp
-            pedido.save()
 
         for item_carrito in items_carrito:
             producto = item_carrito.get_related_product()
-            model_name = item_carrito.get_model_name() # Necesitamos un método para obtener el nombre del modelo
-
-            item_pedido = ItemPedido.objects.create(
+            ItemPedido.objects.create(
                 pedido=pedido,
                 producto_nombre=producto.nombre,
                 producto_tipo=producto.categoria,
                 precio_unitario=item_carrito.precio_unitario,
                 cantidad=item_carrito.cantidad
             )
-            # Guardamos la referencia al producto original en el ItemPedido
-            if model_name:
-                setattr(item_pedido, model_name, producto)
-                item_pedido.save()
 
 
 
@@ -134,11 +120,11 @@ def mostrarCheckout(request):
         "business": settings.PAYPAL_RECEIVER_EMAIL,
         "amount": f"{total_usd:.2f}",
         "item_name": f"Pedido #{pedido.id} - HardWareHouse",
-        "invoice": str(pedido.id), # ID único de la factura/pedido
+        "invoice": str(pedido.id), 
         "currency_code": "USD",
-        "notify_url": request.build_absolute_uri(reverse('paypal-ipn')),
-        "return_url": request.build_absolute_uri(reverse('payment_success')),
-        "cancel_return": request.build_absolute_uri(reverse('payment_failed')),
+        "notify_url": settings.SITE_URL + reverse('paypal-ipn'), 
+        "return_url": settings.SITE_URL + reverse('core:payment_success'),
+        "cancel_return": settings.SITE_URL + reverse('core:payment_failed'),
     }
 
     form_paypal = PayPalPaymentsForm(initial=paypal_dict)
@@ -187,26 +173,19 @@ PRODUCT_MODEL_MAP = {
 }
 
 def mostrarDetalle(request, model_name, pk):
-    """
-    Muestra los detalles de un producto específico, buscándolo en el modelo correcto.
-    """
-    # 1. Normalizar el nombre del modelo
     model_name_lower = model_name.lower()
     ModelClass = PRODUCT_MODEL_MAP.get(model_name_lower)
     
     if not ModelClass:
         raise Http404("Tipo de producto no encontrado.")
         
-    # 2. Obtener el objeto específico
     producto = get_object_or_404(ModelClass, pk=pk)
     
-    # 3. Verificar si el producto está en favoritos (si el usuario está logueado)
     is_favorito = False
     if request.user.is_authenticated:
         lookup_kwargs = {f'{model_name_lower}__id': pk, 'usuario': request.user}
         is_favorito = Favorito.objects.filter(**lookup_kwargs).exists()
 
-    # 4. Obtener comentarios, promedio de calificación y total de comentarios
     comment_lookup = {f'{model_name_lower}_id': pk}
     comentarios = Comentario.objects.filter(**comment_lookup).order_by('-fecha_creacion')
     
@@ -219,7 +198,7 @@ def mostrarDetalle(request, model_name, pk):
 
     context = {
         'producto': producto,
-        'model_name': model_name_lower, # Pasamos el nombre del modelo a la plantilla
+        'model_name': model_name_lower, 
         'is_favorito': is_favorito,
         'comentarios': comentarios,
         'promedio_calificacion': promedio_calificacion,
@@ -229,7 +208,6 @@ def mostrarDetalle(request, model_name, pk):
     return render(request, 'core/detalle.html', context)
 
 def mostrarTienda(request):
-    # --- 1. Obtener parámetros de la URL ---
     query = request.GET.get('q')
     selected_categorias = request.GET.getlist('categoria')
     selected_proveedores = request.GET.getlist('proveedor')
@@ -243,34 +221,28 @@ def mostrarTienda(request):
     ]
 
     # --- 2. Lógica de Filtrado ---
-    # Si no hay filtros ni búsqueda, mostramos los productos más recientes.
     no_filters_applied = not query and not selected_categorias and not selected_proveedores and not selected_precio
     if no_filters_applied:
         for modelo in modelos:
-            # Corregimos el model_name para que coincida con las claves del MAP y los campos del modelo
             model_name = modelo._meta.model_name.replace('tarjetagrafica', 'tarjeta_grafica').replace('memoriaram', 'memoria_ram').replace('placamadre', 'placa_madre').replace('almacenamientossd', 'almacenamiento_ssd').replace('almacenamientohdd', 'almacenamiento_hdd').replace('fuentedepoder', 'fuente_de_poder').replace('refrigeracioncooler', 'refrigeracion')
-            if modelo == RefrigeracionCooler: # Caso especial para RefrigeracionCooler
+            if modelo == RefrigeracionCooler: 
                 model_name = 'refrigeracion'
             productos_recientes = modelo.objects.order_by('-id')[:5]
             for producto in productos_recientes:
                 productos_con_modelo.append((producto, model_name))
     else:
-        # Si hay filtros o búsqueda, los aplicamos.
         for modelo in modelos:
             # a. Filtro por Categoría
-            # Si se seleccionaron categorías y la del modelo actual no está en la lista, lo saltamos.
             categoria_modelo = modelo._meta.get_field('categoria').default
             if selected_categorias and categoria_modelo not in selected_categorias:
                 continue
 
             # b. Construcción de la consulta
-            # Corregimos el model_name para que coincida con las claves del MAP y los campos del modelo
             model_name = modelo._meta.model_name.replace('tarjetagrafica', 'tarjeta_grafica').replace('memoriaram', 'memoria_ram').replace('placamadre', 'placa_madre').replace('almacenamientossd', 'almacenamiento_ssd').replace('almacenamientohdd', 'almacenamiento_hdd').replace('fuentedepoder', 'fuente_de_poder').replace('refrigeracioncooler', 'refrigeracion')
-            if modelo == RefrigeracionCooler: # Caso especial para RefrigeracionCooler
+            if modelo == RefrigeracionCooler: 
                 model_name = 'refrigeracion'
             qs = modelo.objects.all()
             
-            # Filtro por texto (query 'q')
             if query:
                 search_query = (
                     Q(nombre__icontains=query) | 
@@ -340,7 +312,7 @@ def mostrarRegistro(request):
             if user_authenticated is not None:
                 login(request, user_authenticated)
                 messages.success(request, '¡Registro exitoso!, Puedes iniciar sesión.')
-                return redirect(to='login')
+                return redirect('login')
             else:
                 messages.warning(request, 'Registro exitoso, pero fallo al iniciar sesión automáticamente. Inténtalo manualmente.')
                 return redirect('login')
@@ -360,7 +332,7 @@ def verPerfil(request):
             if user_form.is_valid():
                 user_form.save()
                 messages.success(request, '¡Información de perfil actualizada con éxito!')
-                return redirect('perfil') 
+                return redirect('core:perfil') 
             else:
                 messages.error(request, 'Error al actualizar la información. Revisa los campos.')
                 edit_mode = True 
@@ -402,43 +374,37 @@ def agregar_al_carrito(request):
         ModelClass = PRODUCT_MODEL_MAP.get(model_name)
         if not ModelClass or not product_id:
             messages.error(request, "Error al intentar agregar el producto.")
-            return redirect(request.META.get('HTTP_REFERER', 'tienda'))
+            return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
 
         producto = get_object_or_404(ModelClass, id=product_id)
 
         # --- VALIDACIÓN DE STOCK ---
         if producto.stock <= 0:
             messages.error(request, f"Lo sentimos, '{producto.nombre}' está agotado y no se puede agregar al carrito.")
-            return redirect(request.META.get('HTTP_REFERER', 'tienda'))
+            return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
 
         carrito, created = Carrito.objects.get_or_create(usuario=request.user)
 
-        # Construimos el filtro para buscar el item en el carrito
-        # Ejemplo: {'procesador_id': product_id}
         lookup_kwargs = {f'{model_name}__id': product_id}
         item, created = ItemCarrito.objects.get_or_create(carrito=carrito, **lookup_kwargs)
 
         if created:
-            # Si es un nuevo item, asignamos el producto y la cantidad
             setattr(item, model_name, producto)
-            item.cantidad = max(1, quantity) # Asegurarse que la cantidad sea al menos 1
-            item.precio_unitario = producto.precio # Guardamos el precio actual
+            item.cantidad = max(1, quantity) 
+            item.precio_unitario = producto.precio 
             message = f"'{producto.nombre}' se agregó a tu carrito."
         else:
-            # Si el item ya existía, solo actualizamos la cantidad
             item.cantidad += max(1, quantity)
             message = f"Se actualizó la cantidad de '{producto.nombre}' en tu carrito."
         
         item.save()
 
-        # Si es una petición AJAX, devolvemos JSON. Si no, redirigimos.
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'status': 'success', 'message': message})
         
-        # Si NO es AJAX, sí agregamos el mensaje a la sesión antes de redirigir.
         messages.success(request, message)
 
-    return redirect(request.META.get('HTTP_REFERER', 'tienda'))
+    return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
 
 @login_required
 def eliminar_del_carrito(request, item_id):
@@ -446,7 +412,7 @@ def eliminar_del_carrito(request, item_id):
     nombre_producto = item.get_related_product().nombre
     item.delete()
     messages.warning(request, f"'{nombre_producto}' fue eliminado de tu carrito.")
-    return redirect('carrito')
+    return redirect('core:carrito')
 
 @login_required
 def actualizar_carrito(request, item_id):
@@ -459,10 +425,9 @@ def actualizar_carrito(request, item_id):
             item.save()
             messages.success(request, "Cantidad actualizada.")
         else:
-            # Si la cantidad es 0 o menos, eliminamos el item
             return eliminar_del_carrito(request, item_id)
             
-    return redirect('carrito')
+    return redirect('core:carrito')
 
 # --- VISTAS DE FAVORITOS ---
 
@@ -474,7 +439,6 @@ def mostrar_favoritos(request):
     for fav in favoritos:
         producto = fav.get_related_product()
         if producto:
-            # Buscamos la clave correcta en el PRODUCT_MODEL_MAP que corresponde a la clase del producto
             model_name = None
             for key, model_class in PRODUCT_MODEL_MAP.items():
                 if isinstance(producto, model_class):
@@ -502,13 +466,11 @@ def toggle_favorito(request):
         try:
             favorito, created = Favorito.objects.get_or_create(**lookup_kwargs)
             if created:
-                # Se acaba de crear, así que se agregó a favoritos
                 producto = get_object_or_404(ModelClass, id=product_id)
                 setattr(favorito, model_name, producto)
                 favorito.save()
                 return JsonResponse({'status': 'added', 'message': '¡Agregado a favoritos!'})
             else:
-                # Ya existía, así que lo eliminamos
                 favorito.delete()
                 return JsonResponse({'status': 'removed', 'message': 'Eliminado de favoritos.'})
         except Exception as e:
@@ -521,7 +483,7 @@ def eliminar_favorito(request, fav_id):
     favorito = get_object_or_404(Favorito, id=fav_id, usuario=request.user)
     favorito.delete()
     messages.success(request, "Producto eliminado de tus favoritos.")
-    return redirect('favoritos')
+    return redirect('core:favoritos')
 
 # --- VISTA DE COMENTARIOS ---
 
@@ -539,13 +501,13 @@ def agregar_comentario(request, model_name, pk):
         if form.is_valid():
             comentario = form.save(commit=False)
             comentario.usuario = request.user
-            setattr(comentario, model_name, producto) # Asocia el comentario con el producto correcto
+            setattr(comentario, model_name, producto)
             comentario.save()
             messages.success(request, "¡Gracias por tu reseña! Tu comentario ha sido publicado.")
         else:
             messages.error(request, "Hubo un error al publicar tu comentario. Por favor, revisa los campos.")
 
-    return redirect('detalle', model_name=model_name, pk=pk)
+    return redirect('core:detalle', model_name=model_name, pk=pk)
 
 # --- VISTAS DE PEDIDOS ---
 
@@ -561,7 +523,6 @@ def mis_pedidos(request):
 def detalle_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
     
-    # Si el pedido está pendiente, generamos un nuevo botón de pago
     form_paypal = None
     if pedido.estado == 'PENDIENTE':
         total_usd = (pedido.total_monto / Decimal(settings.CLP_TO_USD_RATE)).quantize(Decimal('0.01'))
@@ -571,9 +532,9 @@ def detalle_pedido(request, pedido_id):
             "item_name": f"Pedido #{pedido.id} - HardWareHouse",
             "invoice": str(pedido.id),
             "currency_code": "USD",
-            "notify_url": request.build_absolute_uri(reverse('paypal-ipn')),
-            "return_url": request.build_absolute_uri(reverse('payment_success')),
-            "cancel_return": request.build_absolute_uri(reverse('payment_failed')),
+            "notify_url": settings.SITE_URL + reverse('paypal-ipn'), 
+            "return_url": settings.SITE_URL + reverse('core:payment_success'),
+            "cancel_return": settings.SITE_URL + reverse('core:payment_failed'),
         }
         form_paypal = PayPalPaymentsForm(initial=paypal_dict)
 
@@ -584,24 +545,22 @@ def detalle_pedido(request, pedido_id):
     return render(request, 'core/detalle_pedido.html', context)
 
 @login_required
-@transaction.atomic # Usamos una transacción para asegurar la consistencia de los datos
+@transaction.atomic 
 def cancelar_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
 
     if pedido.estado != 'PENDIENTE':
         messages.error(request, "Solo se pueden cancelar pedidos pendientes de pago.")
-        return redirect('detalle_pedido', pedido_id=pedido.id)
+        return redirect('core:detalle_pedido', pedido_id=pedido.id)
 
-    # Cambiar el estado del pedido a CANCELADO
     pedido.estado = 'CANCELADO'
     pedido.save()
 
     messages.success(request, f"El Pedido #{pedido.id} ha sido cancelado correctamente.")
-    return redirect('mis_pedidos')
+    return redirect('core:mis_pedidos')
 
 @login_required
 def ver_boleta(request, pedido_id):
-    # Buscamos un pedido que esté PAGADO y que pertenezca al usuario
     pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user, estado='PAGADO')
     
     context = {

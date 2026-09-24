@@ -29,7 +29,7 @@ DEBUG = True
 # Añade aquí el dominio que te da ngrok, sin el 'https://'
 # Ejemplo: 't1u-n3l-al3at0r10.ngrok-free.app'
 # El '*' es para desarrollo, pero es mejor ser específico.
-ALLOWED_HOSTS = ['starred-hypocoristically-jaxson.ngrok-free.dev', '127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '8w96bzrx-8000.brs.devtunnels.ms']
 
 
 # Application definition
@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core.apps.CoreConfig', # <-- CAMBIO CLAVE: Usar AppConfig para registrar las señales
+    'core.apps.CoreConfig',
     'bootstrap5',
     'django.contrib.humanize',
     'paypal.standard.ipn',
@@ -170,5 +170,45 @@ PAYPAL_TEST = True
 # Tasa de cambio de ejemplo (CLP a USD). En un proyecto real, esto debería obtenerse de una API.
 CLP_TO_USD_RATE = 950 
 
-# Actualiza esta URL con la que te dio ngrok (con https)
-SITE_URL = 'https://t1u-n3l-al3at0r10.ngrok-free.app' # URL base de tu sitio de desarrollo
+# URL base pública de tu sitio en desarrollo (la que te da Dev Tunnels o ngrok)
+SITE_URL = 'https://8w96bzrx-8000.brs.devtunnels.ms'
+
+# ----------------------------------------------------
+# CONFIGURACIÓN DE LOGGING
+# ----------------------------------------------------
+
+# Creamos el directorio de logs si no existe para evitar errores al iniciar.
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'paypal_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOGS_DIR, 'paypal_ipn.log'),
+            'maxBytes': 1024 * 1024 * 5,  
+            'backupCount': 2,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'paypal.ipn': {
+            'handlers': ['console', 'paypal_file'],
+            'level': 'INFO',
+            'propagate': False, 
+        },
+    },
+}

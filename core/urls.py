@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import *
+from django.contrib.auth.views import LoginView
 
 urlpatterns = [
     path('', mostrarIndex, name='index'),
@@ -12,6 +13,7 @@ urlpatterns = [
     path('tienda/', mostrarTienda, name='tienda'),
     path('registro/', mostrarRegistro, name='registro'),
     path('perfil/', verPerfil, name='perfil'),
+    path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
 
     # URLs del Carrito
     path('carrito/agregar/', agregar_al_carrito, name='agregar_al_carrito'),

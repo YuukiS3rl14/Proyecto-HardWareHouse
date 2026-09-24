@@ -24,6 +24,7 @@
     <link href="{% static 'core/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style2.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/custom.css' %}" rel="stylesheet">
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -36,7 +37,7 @@
             <div class="col-lg-6 d-none d-lg-block">
                 <div class="d-inline-flex align-items-center">
                     <span class="text-muted px-2">|</span>
-                    <a class="text-light" href="{% url 'contacto' %}">Contacto</a>
+                    <a class="text-light" href="{% url 'core:contacto' %}">Contacto</a>
                 </div>
             </div>
             <div class="col-lg-6 text-center text-lg-right">
@@ -48,9 +49,9 @@
                     <span class="text-muted px-2">|</span>
                     {% endif %}
 
-                    <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-facebook-f"></i></a>
-                    <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-twitter"></i></a>
-                    <a class="text-light px-2" href="{% url 'index' %}"><i class="fab fa-instagram"></i></a>
+                    <a class="text-light px-2" href="{% url 'core:index' %}"><i class="fab fa-facebook-f"></i></a>
+                    <a class="text-light px-2" href="{% url 'core:index' %}"><i class="fab fa-twitter"></i></a>
+                    <a class="text-light px-2" href="{% url 'core:index' %}"><i class="fab fa-instagram"></i></a>
                 </div>
             </div>
         </div>
@@ -61,7 +62,7 @@
     <div class="container-fluid">
         <div class="row py-3 px-xl-5 align-items-center bg-light">
             <div class="col-lg-3 col-6 d-flex align-items-center">
-                <a href="{% url 'index' %}" class="text-decoration-none">
+                <a href="{% url 'core:index' %}" class="text-decoration-none">
                     <h1 class="m-0 display-5 font-weight-semi-bold">
                         <span class="text-success font-weight-bold border px-3 mr-1">H</span>ardware House
                     </h1>
@@ -71,10 +72,10 @@
             <div class="col-lg-6 d-none d-lg-block">
                 <nav class="navbar navbar-expand-lg bg-light navbar-light py-3 py-lg-0 px-0">
                     <div class="navbar-nav mr-auto py-0">
-                        <a href="{% url 'index' %}" class="nav-item nav-link active">Inicio</a>
-                        <a href="{% url 'tienda' %}" class="nav-item nav-link">Tienda</a>
-                        <a href="{% url 'armado' %}" class="nav-item nav-link">Armado de PC</a>
-                        <a href="{% url 'contacto' %}" class="nav-item nav-link">Contacto</a>
+                        <a href="{% url 'core:index' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">Inicio</a>
+                        <a href="{% url 'core:tienda' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'tienda' %}active{% endif %}">Tienda</a>
+                        <a href="{% url 'core:armado' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'armado' %}active{% endif %}">Armado de PC</a>
+                        <a href="{% url 'core:contacto' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'contacto' %}active{% endif %}">Contacto</a>
                     </div>
                 </nav>
             </div>
@@ -82,7 +83,7 @@
             <div class="col-lg-3 col-6 text-right d-none d-lg-block">
                 <div class="d-inline-flex align-items-center">
                     {% if user.is_authenticated %}
-                    <a href="{% url 'perfil' %}" class="nav-item nav-link py-0 px-2 text-dark">
+                    <a href="{% url 'core:perfil' %}" class="nav-item nav-link py-0 px-2 text-dark">
                         <i class="fas fa-user-circle text-success mr-1"></i> {{ user.username }}
                     </a>
                     <span class="text-muted">|</span>
@@ -96,16 +97,16 @@
                     {% else %}
                     <a href="{% url 'login' %}" class="nav-item nav-link py-0 px-2 text-dark">Login</a>
                     <span class="text-muted">|</span>
-                    <a href="{% url 'registro' %}" class="nav-item nav-link py-0 px-2 text-dark">Registro</a>
+                    <a href="{% url 'core:registro' %}" class="nav-item nav-link py-0 px-2 text-dark">Registro</a>
                     {% endif %}
                 </div>
             </div>
         </div>
 
         {% block navbarBaja %}
-        <div class="row border-top border-bottom px-xl-5 py-3 align-items-center">
+        <div class="row border-top px-xl-5 py-3 align-items-center sub-navbar-container">
             <div class="col-lg-7">
-                <form action="{% url 'tienda' %}" method="GET">
+                <form action="{% url 'core:tienda' %}" method="GET">
                     <div class="input-group">
                         <input type="text" class="form-control" name="q" placeholder="Buscar productos">
 
@@ -120,15 +121,23 @@
 
             <div class="col-lg-5 text-right">
                 {% if user.is_authenticated %}
-                <a href="{% url 'mis_pedidos' %}" class="btn border" title="Mis Pedidos"><i class="fas fa-box-open text-success"></i></a>
-                <a href="{% url 'favoritos' %}" class="btn border" title="Mis Favoritos"><i class="fas fa-heart text-success"></i><span
-                        class="badge">{{ favorite_item_count }}</span></a>
+                <a href="{% url 'core:mis_pedidos' %}" class="btn sub-navbar-btn" title="Mis Pedidos" style="width: 45px; height: 38px; display: inline-flex; align-items: center; justify-content: center; position: relative;">
+                    <i class="fas fa-box-open text-success"></i>
+                </a>
+                <a href="{% url 'core:favoritos' %}" class="btn sub-navbar-btn" title="Mis Favoritos" style="width: 45px; height: 38px; display: inline-flex; align-items-center; justify-content: center; position: relative;">
+                    <i class="far fa-heart text-success"></i>
+                    <span class="badge" style="position: absolute; top: -5px; right: -5px;">{{ favorite_item_count }}</span>
+                </a>
                 {% else %}
-                <a href="{% url 'login' %}" class="btn border" title="Inicia sesión para ver tus favoritos"><i class="fas fa-heart text-success"></i><span
-                        class="badge">0</span></a>
+                <a href="{% url 'login' %}" class="btn sub-navbar-btn" title="Inicia sesión para ver tus favoritos" style="width: 45px; height: 38px; display: inline-flex; align-items-center; justify-content: center; position: relative;">
+                    <i class="far fa-heart text-success"></i>
+                    <span class="badge" style="position: absolute; top: -5px; right: -5px;">0</span>
+                </a>
                 {% endif %}
-                <a href="{% url 'carrito' %}" class="btn border" title="Mi Carrito"><i class="fas fa-shopping-cart text-success"></i><span
-                        class="badge">{{ cart_item_count }}</span></a>
+                <a href="{% url 'core:carrito' %}" class="btn sub-navbar-btn" title="Mi Carrito" style="width: 45px; height: 38px; display: inline-flex; align-items-center; justify-content: center; position: relative;">
+                    <i class="fas fa-shopping-cart text-success"></i>
+                    <span class="badge" style="position: absolute; top: -5px; right: -5px;">{{ cart_item_count }}</span>
+                </a>
             </div>
         </div>
         {% endblock %}
@@ -166,12 +175,12 @@
             <div class="col-lg-4 mb-5">
                 <h5 class="font-weight-bold text-success mb-4">Enlaces rápidos</h5>
                 <div class="d-flex flex-column">
-                    <a class="text-light mb-2" href="{% url 'index' %}"><i class="fa fa-angle-right mr-2"></i>Inicio</a>
-                    <a class="text-light mb-2" href="{% url 'tienda' %}"><i
+                    <a class="text-light mb-2" href="{% url 'core:index' %}"><i class="fa fa-angle-right mr-2"></i>Inicio</a>
+                    <a class="text-light mb-2" href="{% url 'core:tienda' %}"><i
                             class="fa fa-angle-right mr-2"></i>Tienda</a>
-                    <a class="text-light mb-2" href="{% url 'armado' %}"><i class="fa fa-angle-right mr-2"></i>Armado de
+                    <a class="text-light mb-2" href="{% url 'core:armado' %}"><i class="fa fa-angle-right mr-2"></i>Armado de
                         PC</a>
-                    <a class="text-light" href="{% url 'contacto' %}"><i class="fa fa-angle-right mr-2"></i>Contacto</a>
+                    <a class="text-light" href="{% url 'core:contacto' %}"><i class="fa fa-angle-right mr-2"></i>Contacto</a>
                 </div>
             </div>
             <div class="col-lg-4 mb-5">

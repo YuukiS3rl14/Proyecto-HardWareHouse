@@ -19,7 +19,6 @@ class ProveedorAdmin(admin.ModelAdmin):
 # 2. CLASES DE ADMINISTRACIÓN DE PRODUCTOS INDEPENDIENTES
 # ----------------------------------------------------------------------
 
-# Atributos generales de listado para todos los productos (sin herencia de código)
 PRODUCTO_LIST_DISPLAY = ('id', 'nombre', 'categoria', 'proveedor', 'precio', 'stock', 'imagen')
 PRODUCTO_EDITABLE = ('nombre', 'precio', 'stock')
 
@@ -59,18 +58,16 @@ class PlacaMadreAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': ('socket_cpu', 'chipset', 'formato', 'ranuras_ram')}),
     )
 
-# --- Formularios personalizados para capacidad ---
 class AlmacenamientoAdminForm(forms.ModelForm):
     capacidad_valor = forms.IntegerField(label="Capacidad (Valor)", help_text="Ej: 512, 1, 2")
     capacidad_unidad = forms.ChoiceField(label="Unidad", choices=[('GB', 'GB'), ('TB', 'TB')])
 
     class Meta:
-        model = AlmacenamientoSSD # Se puede reusar para HDD
+        model = AlmacenamientoSSD 
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Si estamos editando, poblamos los campos de capacidad
         if self.instance and self.instance.pk:
             capacidad_gb = self.instance.capacidad_gb
             if capacidad_gb >= 1000:
@@ -81,18 +78,15 @@ class AlmacenamientoAdminForm(forms.ModelForm):
                 self.fields['capacidad_unidad'].initial = 'GB'
 
     def save(self, commit=True):
-        # Obtenemos los valores de los campos personalizados
         valor = self.cleaned_data.get('capacidad_valor')
         unidad = self.cleaned_data.get('capacidad_unidad')
 
-        # Calculamos y asignamos el valor al campo real del modelo
         if valor is not None and unidad:
             if unidad == 'TB':
                 self.instance.capacidad_gb = valor * 1024
-            else: # Es 'GB'
+            else: 
                 self.instance.capacidad_gb = valor
         
-        # Llamamos al método save original para que guarde la instancia
         return super().save(commit=commit)
 
 class AlmacenamientoSSDAdmin(admin.ModelAdmin):
@@ -178,7 +172,6 @@ admin.site.register(Region)
 admin.site.register(Comuna)
 admin.site.register(Proveedor, ProveedorAdmin)
 
-# Registro de Modelos de Producto Específicos
 admin.site.register(Procesador, ProcesadorAdmin)
 admin.site.register(TarjetaGrafica, TarjetaGraficaAdmin)
 admin.site.register(MemoriaRam, MemoriaRamAdmin)
@@ -190,7 +183,6 @@ admin.site.register(FuenteDePoder, FuenteDePoderAdmin)
 admin.site.register(RefrigeracionCooler, RefrigeracionCoolerAdmin)
 admin.site.register(Ventilador, VentiladorAdmin)
 
-# Otros modelos
 admin.site.register(Comentario)
 
 class CarritoAdmin(admin.ModelAdmin):
@@ -208,7 +200,10 @@ class FavoritoAdmin(admin.ModelAdmin):
 admin.site.register(Favorito, FavoritoAdmin)
 admin.site.register(PagoBoleta)
 
+# ----------------------------------------------------------------------
 # 5. Sobrescribir títulos del Admin Site
+# ----------------------------------------------------------------------
+
 admin.site.site_header = 'HardWareHouse | Panel de Control'
 admin.site.site_title = 'Admin HardWareHouse'
 admin.site.index_title = 'Gestión de la Plataforma'

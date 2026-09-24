@@ -4,16 +4,31 @@
 
 {% block tittle %}{{ producto.nombre }} - Detalle{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drift-zoom/dist/drift-basic.min.css">
+<style>
+    .detail-img-container {
+        position: relative;
+        height: 500px; 
+    }
+    .detail-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;    
+    }
+</style>
+{% endblock %}
+
 {% block principal %}
 <!-- Contenido principal -->
 <div class="container py-5">
     <div class="row">
         <!-- Columna de Imagen -->
-        <div class="col-lg-5 mb-4">
+        <div class="col-lg-5 mb-4 detail-img-container">
             {% if producto.imagen %}
-                <img src="{{ producto.imagen.url }}" class="img-fluid border rounded" alt="{{ producto.nombre }}">
+                <img src="{{ producto.imagen.url }}" class="border rounded bg-white" alt="{{ producto.nombre }}" data-zoom="{{ producto.imagen.url }}">
             {% else %}
-                <img src="{% static 'core/img/placeholder_detail.webp' %}" class="img-fluid border rounded" alt="Producto Sin Imagen">
+                <img src="{% static 'core/img/placeholder_detail.webp' %}" class="border rounded bg-white" alt="Producto Sin Imagen">
             {% endif %}
         </div>
         
@@ -40,10 +55,8 @@
             <!-- Precio Formateado -->
             <h3 class="text-success font-weight-bold mb-4">${{ producto.precio|floatformat:"0"|intcomma }} CLP</h3>
             
-            <!-- Descripción -->
             <p>{{ producto.descripcion|default:"Descripción no disponible." }}</p>
             
-            <!-- Especificaciones Adicionales (Ejemplo de acceso) -->
             <hr>
             <h5>Especificaciones Clave</h5>
             <ul class="list-unstyled">
@@ -107,7 +120,7 @@
             <!-- Controles de Compra y Navegación -->
             <div class="d-flex align-items-center mb-4 mt-4">
                 {% if producto.stock > 0 %}
-                    <form action="{% url 'agregar_al_carrito' %}" method="POST" class="add-to-cart-form d-flex align-items-center">
+                    <form action="{% url 'core:agregar_al_carrito' %}" method="POST" class="add-to-cart-form d-flex align-items-center">
                         {% csrf_token %}
                         <input type="hidden" name="product_id" value="{{ producto.id }}">
                         <input type="hidden" name="model_name" value="{{ model_name }}">
@@ -132,7 +145,7 @@
                 <button class="btn btn-outline-danger px-3 ml-3 toggle-favorite-btn"
                         data-product-id="{{ producto.id }}"
                         data-model-name="{{ model_name }}"
-                        data-url="{% url 'toggle_favorito' %}"
+                        data-url="{% url 'core:toggle_favorito' %}"
                         data-is-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"
                         data-login-url="{% url 'login' %}"
                         title="{% if is_favorito %}Quitar de favoritos{% else %}Agregar a favoritos{% endif %}">
@@ -181,7 +194,7 @@
                 <div class="mt-4">
                     <h4 class="mb-4">Deja tu reseña</h4>
                     {% if user.is_authenticated %}
-                    <form action="{% url 'agregar_comentario' model_name=model_name pk=producto.id %}" method="POST">
+                    <form action="{% url 'core:agregar_comentario' model_name=model_name pk=producto.id %}" method="POST">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="{{ comentario_form.calificacion.id_for_label }}">{{ comentario_form.calificacion.label }}</label>
@@ -199,7 +212,7 @@
                     </form>
                     {% else %}
                     <div class="alert alert-warning" role="alert">
-                        Debes <a href="{% url 'login' %}?next={{ request.path }}" class="alert-link">iniciar sesión</a> para poder dejar una reseña.
+                        Debes <a href="{% url 'core:login' %}?next={{ request.path }}" class="alert-link">iniciar sesión</a> para poder dejar una reseña.
                     </div>
                     {% endif %}
                 </div>
@@ -213,4 +226,15 @@
 <script src="{% static 'core/js/ajax-cart.js' %}"></script>
 <script src="{% static 'core/js/ajax-favorites.js' %}"></script>
 
+{% block extra_scripts %}
+<!-- Librería para el Zoom -->
+<script src="https://cdn.jsdelivr.net/npm/drift-zoom/dist/Drift.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var drift = new Drift(document.querySelector('.detail-img-container img'), {
+            paneContainer: document.querySelector('.detail-img-container')
+        });
+    });
+</script>
+{% endblock %}
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load humanize %} <!-- AÑADIDO: Para el formato de precio -->
+{% load humanize %} 
 
 {% block tittle %} Tienda {% endblock %}
 
@@ -10,43 +10,49 @@
     <div class="row px-xl-5">
         <div class="col-lg-3 col-md-12 mb-5">
             <h5 class="font-weight-semi-bold mb-4">Filtros</h5>
-            <form action="{% url 'tienda' %}" method="GET">
-                <h5 class="font-weight-semi-bold mb-3">Categoría</h5>
-                {% for cat in categorias %}
-                    <div class="custom-control custom-checkbox mb-2">
-                        <input type="checkbox" class="custom-control-input" name="categoria" value="{{ cat }}" id="cat-{{ forloop.counter }}" {% if cat in selected_categorias %}checked{% endif %}>
-                        <label class="custom-control-label" for="cat-{{ forloop.counter }}">{{ cat }}</label>
-                    </div>
-                {% endfor %}
+            <form action="{% url 'core:tienda' %}" method="GET">
+                <div class="filter-group">
+                    <h5 class="font-weight-semi-bold mb-3">Categoría</h5>
+                    {% for cat in categorias %}
+                        <div class="custom-control custom-checkbox mb-2">
+                            <input type="checkbox" class="custom-control-input" name="categoria" value="{{ cat }}" id="cat-{{ forloop.counter }}" {% if cat in selected_categorias %}checked{% endif %}>
+                            <label class="custom-control-label" for="cat-{{ forloop.counter }}">{{ cat }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
 
-                <h5 class="font-weight-semi-bold mt-4 mb-3">Marca</h5>
-                {% for prov in proveedores %}
-                    <div class="custom-control custom-checkbox mb-2">
-                        <input type="checkbox" class="custom-control-input" name="proveedor" value="{{ prov.id }}" id="prov-{{ prov.id }}" {% if prov.id in selected_proveedores %}checked{% endif %}>
-                        <label class="custom-control-label" for="prov-{{ prov.id }}">{{ prov.nombre }}</label>
-                    </div>
-                {% endfor %}
+                <div class="filter-group">
+                    <h5 class="font-weight-semi-bold mb-3">Marca</h5>
+                    {% for prov in proveedores %}
+                        <div class="custom-control custom-checkbox mb-2">
+                            <input type="checkbox" class="custom-control-input" name="proveedor" value="{{ prov.id }}" id="prov-{{ prov.id }}" {% if prov.id in selected_proveedores %}checked{% endif %}>
+                            <label class="custom-control-label" for="prov-{{ prov.id }}">{{ prov.nombre }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
 
-                <h5 class="font-weight-semi-bold mt-4 mb-3">Precio</h5>
-                <div class="custom-control custom-radio mb-2">
-                    <input type="radio" class="custom-control-input" name="precio" value="p1" id="p1" {% if selected_precio == 'p1' %}checked{% endif %}>
-                    <label class="custom-control-label" for="p1">$0 - $100.000</label>
-                </div>
-                <div class="custom-control custom-radio mb-2">
-                    <input type="radio" class="custom-control-input" name="precio" value="p2" id="p2" {% if selected_precio == 'p2' %}checked{% endif %}>
-                    <label class="custom-control-label" for="p2">$100.000 - $300.000</label>
-                </div>
-                <div class="custom-control custom-radio mb-2">
-                    <input type="radio" class="custom-control-input" name="precio" value_name="precio" value="p3" id="p3" {% if selected_precio == 'p3' %}checked{% endif %}>
-                    <label class="custom-control-label" for="p3">$300.000 - $600.000</label>
-                </div>
-                <div class="custom-control custom-radio mb-2">
-                    <input type="radio" class="custom-control-input" name="precio" value="p4" id="p4" {% if selected_precio == 'p4' %}checked{% endif %}>
-                    <label class="custom-control-label" for="p4">$600.000+</label>
+                <div class="filter-group">
+                    <h5 class="font-weight-semi-bold mb-3">Precio</h5>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" class="custom-control-input" name="precio" value="p1" id="p1" {% if selected_precio == 'p1' %}checked{% endif %}>
+                        <label class="custom-control-label" for="p1">$0 - $100.000</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" class="custom-control-input" name="precio" value="p2" id="p2" {% if selected_precio == 'p2' %}checked{% endif %}>
+                        <label class="custom-control-label" for="p2">$100.000 - $300.000</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" class="custom-control-input" name="precio" value_name="precio" value="p3" id="p3" {% if selected_precio == 'p3' %}checked{% endif %}>
+                        <label class="custom-control-label" for="p3">$300.000 - $600.000</label>
+                    </div>
+                    <div class="custom-control custom-radio mb-2">
+                        <input type="radio" class="custom-control-input" name="precio" value="p4" id="p4" {% if selected_precio == 'p4' %}checked{% endif %}>
+                        <label class="custom-control-label" for="p4">$600.000+</label>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-success btn-block mt-4">Aplicar Filtros</button>
-                <a href="{% url 'tienda' %}" class="btn btn-outline-dark btn-block mt-2">Limpiar Filtros</a>
+                <a href="{% url 'core:tienda' %}" class="btn btn-outline-dark btn-block mt-2">Limpiar Filtros</a>
             </form>
         </div>
 
@@ -69,9 +75,9 @@
                 {% if productos %}
                     {% for producto, model_name in productos %}
                     <div class="col-lg-4 col-md-6 col-sm-12 pb-1">
-                        <div class="card product-item border-0 mb-4 h-100 d-flex flex-column">
-                            <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0" style="height: 250px;">
-                                <a href="{% url 'detalle' model_name producto.id %}"> 
+                        <div class="card product-item mb-4 h-100 d-flex flex-column">
+                            <div class="card-header product-img position-relative overflow-hidden bg-white border p-0" style="height: 250px;">
+                                <a href="{% url 'core:detalle' model_name producto.id %}"> 
                                     {% if producto.imagen %}
                                         <img class="img-fluid w-100 h-100" src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="object-fit: contain;">
                                     {% else %}
@@ -87,7 +93,7 @@
                                 <small class="text-muted d-block mt-1">{{ producto.categoria }}</small>
                             </div>
                             <div class="card-footer d-flex justify-content-between bg-light border">
-                                <a href="{% url 'detalle' model_name producto.id %}" class="btn btn-sm text-dark p-0" title="Ver detalle">
+                                <a href="{% url 'core:detalle' model_name producto.id %}" class="btn btn-sm text-dark p-0" title="Ver detalle">
                                     <i class="fas fa-eye text-success mr-1"></i>Ver
                                 </a>
                                 
@@ -97,7 +103,7 @@
                                 <button class="btn btn-sm text-dark p-0 border-0 bg-transparent toggle-favorite-btn"
                                         data-product-id="{{ producto.id }}"
                                         data-model-name="{{ model_name }}"
-                                        data-url="{% url 'toggle_favorito' %}"
+                                        data-url="{% url 'core:toggle_favorito' %}"
                                         data-is-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"
                                         data-login-url="{% url 'login' %}"
                                         title="{% if fav_key in favoritos_ids %}Quitar de favoritos{% else %}Agregar a favoritos{% endif %}">
@@ -105,7 +111,7 @@
                                 </button>
                                 {% endwith %}
 
-                                <form action="{% url 'agregar_al_carrito' %}" method="POST" class="add-to-cart-form" style="display: inline;">
+                                <form action="{% url 'core:agregar_al_carrito' %}" method="POST" class="add-to-cart-form" style="display: inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="product_id" value="{{ producto.id }}">
                                     <input type="hidden" name="model_name" value="{{ model_name }}">
