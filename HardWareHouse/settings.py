@@ -13,23 +13,45 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / '.env')
+
+
+def env_bool(name, default=False):
+    return os.environ.get(name, str(default)).strip().lower() in ('true', '1', 'yes')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n9n94jsyf$j7qayj9!l84pcltxt13vvan@5$vyq1qqqb)nov05'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured('Falta la variable SECRET_KEY. Defínela en el archivo .env (ver .env.example).')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool('DEBUG', default=False)
 
-# Añade aquí el dominio que te da ngrok, sin el 'https://'
-# Ejemplo: 't1u-n3l-al3at0r10.ngrok-free.app'
-# El '*' es para desarrollo, pero es mejor ser específico.
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '8w96bzrx-8000.brs.devtunnels.ms']
+# Reemplaza 'url-ejemplo' por el dominio o la IP pública que te entregue AWS, sin 'https://'.
+# Ejemplo: 'ec2-3-90-12-34.compute-1.amazonaws.com' o 'www.hardwarehouse.cl'
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '8w96bzrx-8000.brs.devtunnels.ms', 'url-ejemplo']
+
+# Mismo dominio que en ALLOWED_HOSTS, pero aquí con el esquema 'https://'.
+CSRF_TRUSTED_ORIGINS = ['https://8w96bzrx-8000.brs.devtunnels.ms', 'https://url-ejemplo']
+
+# Requiere que el sitio se sirva por HTTPS (Nginx debe enviar la cabecera X-Forwarded-Proto).
+# Si en AWS todavía accedes por http://, define USE_HTTPS=False en el .env o no podrás iniciar sesión.
+USE_HTTPS = env_bool('USE_HTTPS', default=not DEBUG)
+if USE_HTTPS:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 # Application definition
@@ -92,11 +114,11 @@ WSGI_APPLICATION = 'HardWareHouse.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "bd_hardwarehouse",
-        "USER": "postgres",
-        "PASSWORD": "Yxds3rl.14",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "NAME": os.environ.get("DB_NAME", "bd_hardwarehouse"),
+        "USER": os.environ.get("DB_USER", "postgres"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+        "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
+        "PORT": os.environ.get("DB_PORT", "5432"),
     }
 }
 
@@ -137,6 +159,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Carpeta donde 'python manage.py collectstatic' reúne los estáticos para que Nginx los sirva.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -170,8 +195,8 @@ PAYPAL_TEST = True
 # Tasa de cambio de ejemplo (CLP a USD). En un proyecto real, esto debería obtenerse de una API.
 CLP_TO_USD_RATE = 950 
 
-# URL base pública de tu sitio en desarrollo (la que te da Dev Tunnels o ngrok)
-SITE_URL = 'https://8w96bzrx-8000.brs.devtunnels.ms'
+# URL base pública del sitio, sin '/' final. PayPal la usa para el IPN y las redirecciones.
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
 
 # ----------------------------------------------------
 # CONFIGURACIÓN DE LOGGING
