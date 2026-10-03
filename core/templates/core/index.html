@@ -28,31 +28,31 @@
 {% endblock %}
 
 {% block principal %}
-<div class="container-fluid pt-5">
+<div class="container-fluid pt-3 pt-lg-5">
     <div class="row px-xl-5">
         <div class="col-lg-12">
             <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
-                    <div class="carousel-item active" style="height: 475px;"> <img class="img-fluid"
+                    <div class="carousel-item hero-item active"> <img
                             src="{% static 'core/img/carrusel_armado.webp' %}" alt="PC Gamer">
                         <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
                             <div class="p-3" style="max-width: 700px;">
-                                <h4 class="text-light text-uppercase font-weight-medium mb-3">¡Arma tu PC
+                                <h4 class="hero-subtitle text-light text-uppercase font-weight-medium mb-3">¡Arma tu PC
                                     personalizada!</h4>
-                                <h3 class="display-4 text-white font-weight-semi-bold mb-4">Rendimiento a tu medida
+                                <h3 class="hero-title display-4 text-white font-weight-semi-bold mb-4">Rendimiento a tu medida
                                 </h3>
                                 <a href="{% url 'core:armado' %}" class="btn btn-success py-2 px-3">Comenzar</a>
                             </div>
                         </div>
                     </div>
-                    <div class="carousel-item" style="height: 475px;"> <img class="img-fluid"
+                    <div class="carousel-item hero-item"> <img
                             src="{% static 'core/img/ofertas_pc_gamer.webp' %}" alt="Componentes Gamer">
                         <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
                             <div class="p-3" style="max-width: 700px;">
-                                <h4 class="text-uppercase mb-3">
+                                <h4 class="hero-subtitle text-uppercase mb-3">
                                     <span class="promo-badge">Hasta 20% OFF</span>
                                 </h4>
-                                <h3 class="display-4 text-white font-weight-semi-bold mb-4">Componentes Gamer Listos</h3>
+                                <h3 class="hero-title display-4 text-white font-weight-semi-bold mb-4">Componentes Gamer Listos</h3>
                                 <a href="{% url 'core:tienda' %}" class="btn btn-outline-success py-2 px-3">Ver Ofertas</a>
                             </div>
                         </div>
@@ -74,26 +74,26 @@
 <!-- Caracteristicas -->
 <div class="container-fluid pt-5">
     <div class="row px-xl-5 pb-3">
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-            <div class="d-flex align-items-center border mb-4 feature-box" style="padding: 30px">
+        <div class="col-6 col-lg-3 pb-1">
+            <div class="d-flex align-items-center border mb-4 feature-box">
                 <h1 class="fa fa-check text-success m-0 mr-3"></h1>
                 <h5 class="font-weight-semi-bold m-0">Componentes de calidad</h5>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-            <div class="d-flex align-items-center border mb-4 feature-box" style="padding: 30px">
+        <div class="col-6 col-lg-3 pb-1">
+            <div class="d-flex align-items-center border mb-4 feature-box">
                 <h1 class="fa fa-shipping-fast text-success m-0 mr-3"></h1>
                 <h5 class="font-weight-semi-bold m-0">Envíos a todo Chile</h5>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-            <div class="d-flex align-items-center border mb-4 feature-box" style="padding: 30px">
+        <div class="col-6 col-lg-3 pb-1">
+            <div class="d-flex align-items-center border mb-4 feature-box">
                 <h1 class="fas fa-exchange-alt text-success m-0 mr-3"></h1>
                 <h5 class="font-weight-semi-bold m-0">Garantía y devolución</h5>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-            <div id="soporte-tecnico-box" class="d-flex align-items-center border mb-4 feature-box" style="padding: 30px">
+        <div class="col-6 col-lg-3 pb-1">
+            <div id="soporte-tecnico-box" class="d-flex align-items-center border mb-4 feature-box">
                 <h1 class="fa fa-headset text-success m-0 mr-3"></h1>
                 <h5 class="font-weight-semi-bold m-0">Soporte técnico 24/7</h5>
             </div>
@@ -104,7 +104,7 @@
 <!-- Categorias -->
 <div class="container-fluid pt-5">
     <div class="text-center mb-4">
-        <h2 class="section-title px-5">
+        <h2 class="section-title px-3 px-sm-5">
             <span class="px-2">Categorías Principales</span>
         </h2>
     </div>
@@ -174,7 +174,7 @@
 <!-- Proveedores  -->
 <div class="container-fluid py-5">
   <div class="text-center mb-4">
-        <h2 class="section-title px-5">
+        <h2 class="section-title px-3 px-sm-5">
             <span class="px-2">Proveedores</span>
         </h2>
     </div>

@@ -1,0 +1,285 @@
+/* Ajustes responsivos para HardWareHouse.
+   Breakpoints de Bootstrap: sm 576px, md 768px, lg 992px, xl 1200px. */
+
+/* --- Global --- */
+
+.brand-logo {
+    font-size: clamp(1.4rem, 1rem + 2.2vw, 2.5rem);
+    white-space: nowrap;
+}
+
+/* En lg+ el logo comparte la fila con el menú y ocupa solo 3 de 12 columnas. */
+@media (min-width: 992px) {
+    .row > .col-lg-3 .brand-logo {
+        font-size: clamp(1.2rem, 0.2rem + 1.6vw, 2.5rem);
+    }
+}
+
+.page-header {
+    min-height: 250px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+}
+
+.back-to-top {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    line-height: 44px;
+}
+
+.icon-btn {
+    width: 45px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.icon-btn .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+}
+
+/* --- Menú lateral móvil --- */
+
+.offcanvas .nav-link {
+    padding: 0.75rem 0;
+    color: #212529;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.offcanvas .nav-link.active,
+.offcanvas .nav-link:hover {
+    color: #28a745;
+}
+
+/* --- Inicio: carrusel principal --- */
+
+.hero-item {
+    height: 475px;
+}
+
+.hero-item > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.feature-box {
+    padding: 30px;
+}
+
+/* --- Tienda: filtros en off-canvas por debajo de lg --- */
+
+@media (min-width: 992px) {
+    .filters-offcanvas {
+        position: static;
+        z-index: auto;
+        width: auto;
+        visibility: visible !important;
+        background-color: transparent;
+        border: 0;
+        transform: none;
+        transition: none;
+    }
+
+    .filters-offcanvas .offcanvas-header {
+        display: none;
+    }
+
+    .filters-offcanvas .offcanvas-body {
+        padding: 0;
+        overflow: visible;
+    }
+}
+
+.product-img {
+    height: 250px;
+}
+
+/* --- Tablas que se convierten en tarjetas en pantallas pequeñas --- */
+
+@media (max-width: 767.98px) {
+    .table-stack thead {
+        display: none;
+    }
+
+    .table-stack,
+    .table-stack tbody,
+    .table-stack tr,
+    .table-stack td {
+        display: block;
+        width: 100%;
+    }
+
+    .table-stack tr {
+        margin-bottom: 1rem;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .table-stack.table-bordered td,
+    .table-stack td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        border: 0;
+        border-bottom: 1px solid #f0f0f0;
+        text-align: right !important;
+    }
+
+    .table-stack td:last-child {
+        border-bottom: 0;
+    }
+
+    .table-stack td[data-label]::before {
+        content: attr(data-label);
+        font-weight: 600;
+        text-align: left;
+    }
+
+    .table-stack td.cell-product {
+        justify-content: flex-start;
+        text-align: left !important;
+        font-weight: 600;
+    }
+}
+
+/* --- Armado de PC: barra inferior con el total en móvil --- */
+
+.builder-mobile-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1020;
+    padding: 0.75rem 1rem;
+    background-color: #fff;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.12);
+}
+
+@media (min-width: 992px) {
+    .builder-summary {
+        position: sticky;
+        top: 1rem;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .has-builder-bar {
+        padding-bottom: 72px;
+    }
+
+    .has-builder-bar .back-to-top {
+        bottom: 88px;
+    }
+}
+
+/* --- Tablets y menores --- */
+
+@media (max-width: 991.98px) {
+    /* background-attachment: fixed se ve mal (o se ignora) en navegadores móviles. */
+    body {
+        background-attachment: scroll;
+    }
+
+    .hero-item {
+        height: 360px;
+    }
+
+    .detail-img-container {
+        height: 380px !important;
+    }
+}
+
+/* --- Celulares --- */
+
+@media (max-width: 575.98px) {
+    .page-header {
+        min-height: 150px;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+    }
+
+    .hero-item {
+        height: 260px;
+    }
+
+    .hero-title {
+        font-size: 1.5rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .feature-box {
+        flex-direction: column;
+        justify-content: center;
+        height: calc(100% - 1rem);
+        padding: 16px 10px;
+        text-align: center;
+    }
+
+    .feature-box h1 {
+        margin: 0 0 0.5rem 0 !important;
+        font-size: 1.75rem;
+    }
+
+    .feature-box h5 {
+        font-size: 0.9rem;
+    }
+
+    .category-card {
+        height: 200px !important;
+    }
+
+    .product-img {
+        height: 160px;
+    }
+
+    .product-item .card-body h6 {
+        font-size: 0.85rem;
+    }
+
+    .product-item .card-footer {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .detail-img-container {
+        height: 280px !important;
+    }
+
+    .back-to-top {
+        right: 16px;
+        bottom: 16px;
+    }
+
+    #popup {
+        width: 90%;
+        padding: 30px 20px;
+    }
+
+    .login-container,
+    .register-container {
+        margin: 30px auto;
+        padding: 24px;
+    }
+
+    #save_changes {
+        width: auto;
+    }
+}

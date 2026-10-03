@@ -25,11 +25,12 @@
     <link href="{% static 'core/css/style.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style2.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/custom.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/responsive.css' %}" rel="stylesheet">
 
     {% block extra_head %}{% endblock %}
 </head>
 
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
     {% block topbar %}
     <div class="container-fluid">
@@ -61,12 +62,19 @@
     {% block navbar %}
     <div class="container-fluid">
         <div class="row py-3 px-xl-5 align-items-center bg-light">
-            <div class="col-lg-3 col-6 d-flex align-items-center">
+            <div class="col-lg-3 col d-flex align-items-center">
                 <a href="{% url 'core:index' %}" class="text-decoration-none">
-                    <h1 class="m-0 display-5 font-weight-semi-bold">
-                        <span class="text-success font-weight-bold border px-3 mr-1">H</span>ardware House
+                    <h1 class="m-0 brand-logo font-weight-semi-bold">
+                        <span class="text-success font-weight-bold border px-2 px-sm-3 mr-1">H</span>ardware House
                     </h1>
                 </a>
+            </div>
+
+            <div class="col-auto d-lg-none">
+                <button class="btn btn-success" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuMovil"
+                    aria-controls="menuMovil" aria-label="Abrir menú">
+                    <i class="fas fa-bars text-white"></i>
+                </button>
             </div>
 
             <div class="col-lg-6 d-none d-lg-block">
@@ -103,9 +111,52 @@
             </div>
         </div>
 
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="menuMovil" aria-labelledby="menuMovilLabel">
+            <div class="offcanvas-header border-bottom">
+                <h5 class="offcanvas-title font-weight-bold" id="menuMovilLabel">
+                    <span class="text-success">H</span>ardware House
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column">
+                <nav class="nav flex-column mb-4">
+                    <a href="{% url 'core:index' %}" class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}"><i class="fas fa-home fa-fw mr-2"></i>Inicio</a>
+                    <a href="{% url 'core:tienda' %}" class="nav-link {% if request.resolver_match.url_name == 'tienda' %}active{% endif %}"><i class="fas fa-store fa-fw mr-2"></i>Tienda</a>
+                    <a href="{% url 'core:armado' %}" class="nav-link {% if request.resolver_match.url_name == 'armado' %}active{% endif %}"><i class="fas fa-desktop fa-fw mr-2"></i>Armado de PC</a>
+                    <a href="{% url 'core:contacto' %}" class="nav-link {% if request.resolver_match.url_name == 'contacto' %}active{% endif %}"><i class="fas fa-envelope fa-fw mr-2"></i>Contacto</a>
+                </nav>
+
+                <h6 class="text-muted text-uppercase small mb-2">Mi cuenta</h6>
+                <nav class="nav flex-column">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'core:perfil' %}" class="nav-link"><i class="fas fa-user-circle fa-fw text-success mr-2"></i>{{ user.username }}</a>
+                    <a href="{% url 'core:mis_pedidos' %}" class="nav-link"><i class="fas fa-box-open fa-fw mr-2"></i>Mis Pedidos</a>
+                    <a href="{% url 'core:favoritos' %}" class="nav-link"><i class="far fa-heart fa-fw mr-2"></i>Favoritos ({{ favorite_item_count }})</a>
+                    <a href="{% url 'core:carrito' %}" class="nav-link"><i class="fas fa-shopping-cart fa-fw mr-2"></i>Carrito ({{ cart_item_count }})</a>
+                    {% if user.is_superuser %}
+                    <a href="/admin/" class="nav-link"><i class="fas fa-tools fa-fw mr-2"></i>Panel de Administración</a>
+                    {% endif %}
+                    {% else %}
+                    <a href="{% url 'login' %}" class="nav-link"><i class="fas fa-sign-in-alt fa-fw mr-2"></i>Login</a>
+                    <a href="{% url 'core:registro' %}" class="nav-link"><i class="fas fa-user-plus fa-fw mr-2"></i>Registro</a>
+                    <a href="{% url 'core:carrito' %}" class="nav-link"><i class="fas fa-shopping-cart fa-fw mr-2"></i>Carrito ({{ cart_item_count }})</a>
+                    {% endif %}
+                </nav>
+
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'logout' %}" class="mt-auto pt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
         {% block navbarBaja %}
         <div class="row border-top px-xl-5 py-3 align-items-center sub-navbar-container">
-            <div class="col-lg-7">
+            <div class="col col-lg-7">
                 <form action="{% url 'core:tienda' %}" method="GET">
                     <div class="input-group">
                         <input type="text" class="form-control" name="q" placeholder="Buscar productos">
@@ -119,24 +170,24 @@
                 </form>
             </div>
 
-            <div class="col-lg-5 text-right">
+            <div class="col-auto col-lg-5 d-flex justify-content-end gap-2 ps-0 ps-lg-3">
                 {% if user.is_authenticated %}
-                <a href="{% url 'core:mis_pedidos' %}" class="btn sub-navbar-btn" title="Mis Pedidos" style="width: 45px; height: 38px; display: inline-flex; align-items: center; justify-content: center; position: relative;">
+                <a href="{% url 'core:mis_pedidos' %}" class="btn sub-navbar-btn icon-btn" title="Mis Pedidos">
                     <i class="fas fa-box-open text-success"></i>
                 </a>
-                <a href="{% url 'core:favoritos' %}" class="btn sub-navbar-btn" title="Mis Favoritos" style="width: 45px; height: 38px; display: inline-flex; align-items:center; justify-content: center; position: relative;">
+                <a href="{% url 'core:favoritos' %}" class="btn sub-navbar-btn icon-btn" title="Mis Favoritos">
                     <i class="far fa-heart text-success"></i>
-                    <span class="badge" style="position: absolute; top: -5px; right: -5px;">{{ favorite_item_count }}</span>
+                    <span class="badge">{{ favorite_item_count }}</span>
                 </a>
                 {% else %}
-                <a href="{% url 'login' %}" class="btn sub-navbar-btn" title="Inicia sesión para ver tus favoritos" style="width: 45px; height: 38px; display: inline-flex; align-items:center; justify-content: center; position: relative;">
+                <a href="{% url 'login' %}" class="btn sub-navbar-btn icon-btn" title="Inicia sesión para ver tus favoritos">
                     <i class="far fa-heart text-success"></i>
-                    <span class="badge" style="position: absolute; top: -5px; right: -5px;">0</span>
+                    <span class="badge">0</span>
                 </a>
                 {% endif %}
-                <a href="{% url 'core:carrito' %}" class="btn sub-navbar-btn" title="Mi Carrito" style="width: 45px; height: 38px; display: inline-flex; align-items:center; justify-content: center; position: relative;">
+                <a href="{% url 'core:carrito' %}" class="btn sub-navbar-btn icon-btn" title="Mi Carrito">
                     <i class="fas fa-shopping-cart text-success"></i>
-                    <span class="badge" style="position: absolute; top: -5px; right: -5px;">{{ cart_item_count }}</span>
+                    <span class="badge">{{ cart_item_count }}</span>
                 </a>
             </div>
         </div>
@@ -145,18 +196,16 @@
     </div>
     {% endblock %}
 
+    {% if messages %}
     <div class="container pt-4">
-        {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                     {{ message }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
                 </div>
             {% endfor %}
-        {% endif %}
     </div>
+    {% endif %}
 
     {% block principal %}
     {% endblock %}
@@ -164,7 +213,7 @@
     {% block footer %}
     <div class="container-fluid bg-dark text-light mt-5 pt-5 pb-3">
         <div class="row px-xl-5">
-            <div class="col-lg-4 mb-5">
+            <div class="col-md-6 col-lg-4 mb-5">
                 <h5 class="font-weight-bold text-success mb-4">HardWareHouse</h5>
                 <p>Tu tienda de confianza en hardware de computador. Ofrecemos calidad, asesoría y armado personalizado.
                 </p>
@@ -172,7 +221,7 @@
                 <p><i class="fa fa-envelope text-success mr-2"></i>contacto@techparts.cl</p>
                 <p><i class="fa fa-phone-alt text-success mr-2"></i>+56 9 1234 5678</p>
             </div>
-            <div class="col-lg-4 mb-5">
+            <div class="col-md-6 col-lg-4 mb-5">
                 <h5 class="font-weight-bold text-success mb-4">Enlaces rápidos</h5>
                 <div class="d-flex flex-column">
                     <a class="text-light mb-2" href="{% url 'core:index' %}"><i class="fa fa-angle-right mr-2"></i>Inicio</a>
@@ -183,7 +232,7 @@
                     <a class="text-light" href="{% url 'core:contacto' %}"><i class="fa fa-angle-right mr-2"></i>Contacto</a>
                 </div>
             </div>
-            <div class="col-lg-4 mb-5">
+            <div class="col-md-12 col-lg-4 mb-5">
                 <h5 class="font-weight-bold text-success mb-4">Suscríbete</h5>
                 <form>
                     <div class="input-group">

@@ -6,7 +6,7 @@
 
 {% block principal %}
 <div class="container-fluid bg-light mb-5">
-    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 250px">
+    <div class="page-header d-flex flex-column align-items-center justify-content-center">
         <h1 class="font-weight-semi-bold text-uppercase mb-3">Detalle del Pedido #{{ pedido.id }}</h1>
     </div>
 </div>
@@ -21,8 +21,8 @@
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         {% for item in pedido.items_pedido.all %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
+                        <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div class="text-break">
                                 <strong>{{ item.producto_nombre }}</strong> ({{ item.producto_tipo }})
                                 <br>
                                 <small class="text-muted">{{ item.cantidad }} x ${{ item.precio_unitario|floatformat:"0"|intcomma }} CLP</small>
@@ -48,7 +48,7 @@
                         </span>
                     </p>
                     {% if pedido.paypal_transaccion_id %}
-                    <p><strong>ID Transacción:</strong> {{ pedido.paypal_transaccion_id }}</p>
+                    <p class="text-break"><strong>ID Transacción:</strong> {{ pedido.paypal_transaccion_id }}</p>
                     {% endif %}
                     <hr>
                     <h5 class="d-flex justify-content-between">

@@ -11,10 +11,12 @@
 <link href="{% static 'core/css/armado.css' %}" rel="stylesheet">
 {% endblock %}
 
+{% block body_class %}has-builder-bar{% endblock %}
+
 {% block principal %}
 <!-- Page Header Start -->
 <div class="container-fluid bg-light mb-5">
-    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 250px">
+    <div class="page-header d-flex flex-column align-items-center justify-content-center">
         <h1 class="font-weight-semi-bold text-uppercase mb-3">Arma tu PC</h1>
         <p class="text-muted">Selecciona los componentes y obtén un presupuesto al instante.</p>
     </div>
@@ -24,15 +26,15 @@
 <div class="container-fluid">
     <div class="row px-xl-5">
         <!-- Columna de Selección de Componentes -->
-        <div class="col-lg-9">
+        <div class="col-lg-8 col-xl-9">
             <div id="pc-builder">
                 <!-- Tarjetas de componentes -->
             </div>
         </div>
 
         <!-- Columna de Resumen y Presupuesto -->
-        <div class="col-lg-3">
-            <div class="card border-success mb-5">
+        <div class="col-lg-4 col-xl-3" id="resumen-presupuesto">
+            <div class="card border-success mb-5 builder-summary">
                 <div class="card-header bg-success border-success">
                     <h4 class="font-weight-semi-bold m-0 text-white">Resumen del Presupuesto</h4>
                 </div>
@@ -59,19 +61,25 @@
     </div>
 </div>
 
+<div class="builder-mobile-bar d-flex d-lg-none align-items-center justify-content-between">
+    <div>
+        <small class="text-muted d-block">Total del presupuesto</small>
+        <strong class="text-success h5 m-0" id="mobile-total-price">$0</strong>
+    </div>
+    <a href="#resumen-presupuesto" class="btn btn-success">Ver resumen</a>
+</div>
+
 {{ componentes|json_script:"componentes-data" }}
 
 <div id="builder-urls" data-add-to-cart-url="{% url 'core:agregar_al_carrito' %}" data-placeholder-img="{% static 'core/img/placeholder_product.webp' %}" style="display: none;"></div>
 
 <!-- Modal para seleccionar componentes -->
 <div class="modal fade" id="componentModal" tabindex="-1" aria-labelledby="componentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="componentModalLabel">Seleccionar Componente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body" id="componentModalBody">
                 <!-- Lista de componentes -->
@@ -89,4 +97,14 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script> 
 <!-- Nuestro script para el constructor -->
 <script src="{% static 'core/js/pc-builder.js' %}"></script>
+<script>
+    (function () {
+        const source = document.getElementById('total-price');
+        const target = document.getElementById('mobile-total-price');
+        if (!source || !target) return;
+        const sync = () => { target.textContent = source.textContent; };
+        new MutationObserver(sync).observe(source, { childList: true, characterData: true, subtree: true });
+        sync();
+    })();
+</script>
 {% endblock %}

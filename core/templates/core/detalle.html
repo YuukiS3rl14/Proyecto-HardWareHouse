@@ -34,7 +34,7 @@
         
         <!-- Columna de Información -->
         <div class="col-lg-7">
-            <h3 class="font-weight-bold">{{ producto.nombre }}</h3>
+            <h3 class="font-weight-bold text-break">{{ producto.nombre }}</h3>
             <p class="text-muted">Marca: {{ producto.proveedor.nombre }} | Categoría: {{ producto.categoria }}</p>
             
             <div class="d-flex mb-3">
@@ -118,14 +118,14 @@
                 </li>
             </ul>
             <!-- Controles de Compra y Navegación -->
-            <div class="d-flex align-items-center mb-4 mt-4">
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-4 mt-4">
                 {% if producto.stock > 0 %}
-                    <form action="{% url 'core:agregar_al_carrito' %}" method="POST" class="add-to-cart-form d-flex align-items-center">
+                    <form action="{% url 'core:agregar_al_carrito' %}" method="POST" class="add-to-cart-form d-flex flex-wrap align-items-center gap-3">
                         {% csrf_token %}
                         <input type="hidden" name="product_id" value="{{ producto.id }}">
                         <input type="hidden" name="model_name" value="{{ model_name }}">
         
-                        <div class="input-group quantity mr-3" style="width: 130px;">
+                        <div class="input-group quantity" style="width: 130px;">
                             <div class="input-group-btn">
                                 <button type="button" class="btn btn-success btn-minus"><i class="fa fa-minus"></i></button>
                             </div>
@@ -142,7 +142,7 @@
                     <button class="btn btn-secondary px-3" disabled><i class="fa fa-times-circle mr-1"></i>Agotado</button>
                 {% endif %}
                 <!-- Botón de Favoritos -->
-                <button class="btn btn-outline-danger px-3 ml-3 toggle-favorite-btn"
+                <button class="btn btn-outline-danger px-3 toggle-favorite-btn"
                         data-product-id="{{ producto.id }}"
                         data-model-name="{{ model_name }}"
                         data-url="{% url 'core:toggle_favorito' %}"
@@ -162,7 +162,7 @@
 <div class="container mt-5">
     <div class="row">
         <div class="col">
-            <div class="bg-light p-4 rounded">
+            <div class="bg-light p-3 p-md-4 rounded">
                 <h4 class="mb-4">Reseñas de Usuarios ({{ total_comentarios }})</h4>
                 <hr>
 

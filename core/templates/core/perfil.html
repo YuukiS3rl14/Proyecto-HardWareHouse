@@ -8,7 +8,7 @@
 <div class="container-fluid py-3 px-xl-5 bg-light">
     <div class="text-center">
         <a href="{% url 'core:index' %}" class="text-decoration-none">
-            <h1 class="m-0 display-5 font-weight-semi-bold">
+            <h1 class="m-0 brand-logo font-weight-semi-bold">
                 <span class="text-success font-weight-bold border px-3 me-1">H</span>ardware House
             </h1>
         </a>
@@ -24,12 +24,12 @@
     <div class="row px-xl-5">
         <div class="col-lg-8 offset-lg-2">
             
-            <div class="d-flex justify-content-between align-items-center mb-4">->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <h2 id="main-profile-heading" class="font-weight-semi-bold text-success m-0">
                     Perfil de Usuario
                 </h2>
-                <div class="d-flex align-items-center">
-                    <a href="{% url 'core:index' %}" class="btn btn-outline-success btn-sm me-2 rounded-3">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <a href="{% url 'core:index' %}" class="btn btn-outline-success btn-sm rounded-3">
                         <i class="fa fa-home me-1"></i> Volver al Inicio
                     </a>
                     
@@ -61,7 +61,7 @@
                              alt="{{ user.username }}" 
                              class="rounded-circle me-3 border border-success" 
                              style="width: 80px; height: 80px; object-fit: cover;">
-                        <div>
+                        <div class="text-break">
                             <p class="mb-0 font-weight-bold">{{ user.username }}</p>
                             <small class="text-muted">{{ user.email }}</small>
                         </div>
@@ -88,8 +88,8 @@
                                 <div class="alert alert-danger small">{{ user_form.non_field_errors }}</div>
                             {% endif %}
                             
-                            <div class="d-flex justify-content-center mt-4">
-                                <a href="{% url 'core:perfil' %}#main-profile-heading" class="btn btn-outline-danger px-4 rounded-3 me-3">Cancelar</a>
+                            <div class="d-flex flex-column-reverse flex-sm-row justify-content-center gap-3 mt-4">
+                                <a href="{% url 'core:perfil' %}#main-profile-heading" class="btn btn-outline-danger px-4 rounded-3">Cancelar</a>
                                 <button type="submit" id="save_changes" class="btn btn-success px-4 rounded-3">Guardar Cambios</button>
                             </div>
                         </form>
@@ -109,7 +109,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <p class="mb-1 text-muted">Email:</p>
-                                <p class="font-weight-bold">{{ user.email }}</p>
+                                <p class="font-weight-bold text-break">{{ user.email }}</p>
                             </div>
                         </div>
                     {% endif %}

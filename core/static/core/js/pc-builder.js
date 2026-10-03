@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const specs = component ? getComponentSpecs(component, true) : '<li>Selecciona un producto</li>';
 
         return `
-            <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="col-sm-6 col-xl-4 mb-4">
                 <div class="component-card-wrapper">
                     <div class="component-card">
                         <div class="info">
