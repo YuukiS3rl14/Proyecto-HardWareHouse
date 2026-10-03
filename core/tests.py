@@ -356,3 +356,37 @@ class ArmadoCarritoTests(TestCase):
         self.assertContains(response, 'almacenamiento_ssd')
         self.assertContains(response, 'almacenamiento_hdd')
         self.assertContains(response, 'agregar-armado')
+
+
+class CarritoSinImagenTests(TestCase):
+    def test_carrito_con_producto_sin_imagen_responde_200(self):
+        usuario = User.objects.create_user(
+            'carrito_sin_imagen',
+            'sin-imagen@example.com',
+            'clave-test-carrito',
+        )
+        proveedor = Proveedor.objects.create(nombre='Marca sin imagen')
+        cpu = Procesador.objects.create(
+            proveedor=proveedor,
+            nombre='CPU sin foto de prueba',
+            precio=Decimal('1000.00'),
+            stock=2,
+            socket='AM5',
+            nucleos=6,
+            frecuencia_base=Decimal('3.50'),
+        )
+        carrito = Carrito.objects.create(usuario=usuario)
+        ItemCarrito.objects.create(
+            carrito=carrito,
+            procesador=cpu,
+            cantidad=1,
+            precio_unitario=cpu.precio,
+        )
+
+        self.client.force_login(usuario)
+        response = self.client.get(reverse('core:carrito'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'CPU sin foto de prueba')
+        self.assertContains(response, 'Sin imagen')
+        self.assertContains(response, 'core/img/placeholder.webp')

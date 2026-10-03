@@ -27,7 +27,12 @@
                     {% with producto=item.get_related_product %}
                     <tr>
                         <td class="align-middle text-left">
-                            <img src="{{ producto.imagen.url }}" alt="" style="width: 50px;"> {{ producto.nombre }}
+                            {% if producto.imagen %}
+                            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="width: 50px;">
+                            {% else %}
+                            <img src="{% static 'core/img/placeholder.webp' %}" alt="Sin imagen" style="width: 50px;">
+                            {% endif %}
+                            {{ producto.nombre }}
                         </td>
                         <td class="align-middle">${{ item.precio_unitario|floatformat:"0"|intcomma }}</td>
                         <td class="align-middle">
