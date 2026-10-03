@@ -14,10 +14,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const modelName = button.dataset.modelName;
             const url = button.dataset.url;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const icon = button.querySelector('i');
 
             const formData = new FormData();
             formData.append('product_id', productId);
             formData.append('model_name', modelName);
+
+            HW.replayAnimation(icon, 'is-popping');
+            button.disabled = true;
 
             fetch(url, {
                 method: 'POST',
@@ -30,9 +34,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'added' || data.status === 'removed') {
-                    showToast(data.message, 'success');
+                    HW.showToast(data.message, 'success');
+                    HW.updateFavoriteCount(data.favorite_count);
                     // Cambiar el ícono y texto del botón
-                    const icon = button.querySelector('i');
                     if (data.status === 'added') {
                         icon.classList.remove('far');
                         icon.classList.add('fas');
@@ -43,21 +47,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         button.title = 'Agregar a favoritos';
                     }
                 } else {
-                    showToast(data.message || 'Ocurrió un error.', 'error');
+                    HW.showToast(data.message || 'Ocurrió un error.', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('Error de conexión. Inténtalo de nuevo.', 'error');
+                HW.showToast('Error de conexión. Inténtalo de nuevo.', 'error');
+            })
+            .finally(() => {
+                button.disabled = false;
             });
         }
     });
-
-    // La función showToast ya existe en ajax-cart.js, así que la reutilizamos.
-    // Si este archivo se carga antes, la definimos aquí también por seguridad.
-    if (typeof showToast === 'undefined') {
-        window.showToast = function(message, type = 'success') {
-            // Implementación de showToast (copiada de ajax-cart.js si es necesario)
-        };
-    }
 });

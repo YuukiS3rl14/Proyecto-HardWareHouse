@@ -400,7 +400,7 @@ def agregar_al_carrito(request):
         item.save()
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'success', 'message': message})
+            return JsonResponse({'status': 'success', 'message': message, 'cart_count': carrito.items.count()})
         
         messages.success(request, message)
 
@@ -469,10 +469,12 @@ def toggle_favorito(request):
                 producto = get_object_or_404(ModelClass, id=product_id)
                 setattr(favorito, model_name, producto)
                 favorito.save()
-                return JsonResponse({'status': 'added', 'message': '¡Agregado a favoritos!'})
+                status, message = 'added', '¡Agregado a favoritos!'
             else:
                 favorito.delete()
-                return JsonResponse({'status': 'removed', 'message': 'Eliminado de favoritos.'})
+                status, message = 'removed', 'Eliminado de favoritos.'
+            favorite_count = Favorito.objects.filter(usuario=request.user).count()
+            return JsonResponse({'status': status, 'message': message, 'favorite_count': favorite_count})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 

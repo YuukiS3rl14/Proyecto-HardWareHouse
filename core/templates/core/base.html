@@ -25,6 +25,7 @@
     <link href="{% static 'core/css/style.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style2.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/custom.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/theme.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/responsive.css' %}" rel="stylesheet">
 
     {% block extra_head %}{% endblock %}
@@ -131,15 +132,15 @@
                     {% if user.is_authenticated %}
                     <a href="{% url 'core:perfil' %}" class="nav-link"><i class="fas fa-user-circle fa-fw text-success mr-2"></i>{{ user.username }}</a>
                     <a href="{% url 'core:mis_pedidos' %}" class="nav-link"><i class="fas fa-box-open fa-fw mr-2"></i>Mis Pedidos</a>
-                    <a href="{% url 'core:favoritos' %}" class="nav-link"><i class="far fa-heart fa-fw mr-2"></i>Favoritos ({{ favorite_item_count }})</a>
-                    <a href="{% url 'core:carrito' %}" class="nav-link"><i class="fas fa-shopping-cart fa-fw mr-2"></i>Carrito ({{ cart_item_count }})</a>
+                    <a href="{% url 'core:favoritos' %}" class="nav-link"><i class="far fa-heart fa-fw mr-2"></i>Favoritos (<span data-favorite-count>{{ favorite_item_count }}</span>)</a>
+                    <a href="{% url 'core:carrito' %}" class="nav-link"><i class="fas fa-shopping-cart fa-fw mr-2"></i>Carrito (<span data-cart-count>{{ cart_item_count }}</span>)</a>
                     {% if user.is_superuser %}
                     <a href="/admin/" class="nav-link"><i class="fas fa-tools fa-fw mr-2"></i>Panel de Administración</a>
                     {% endif %}
                     {% else %}
                     <a href="{% url 'login' %}" class="nav-link"><i class="fas fa-sign-in-alt fa-fw mr-2"></i>Login</a>
                     <a href="{% url 'core:registro' %}" class="nav-link"><i class="fas fa-user-plus fa-fw mr-2"></i>Registro</a>
-                    <a href="{% url 'core:carrito' %}" class="nav-link"><i class="fas fa-shopping-cart fa-fw mr-2"></i>Carrito ({{ cart_item_count }})</a>
+                    <a href="{% url 'core:carrito' %}" class="nav-link"><i class="fas fa-shopping-cart fa-fw mr-2"></i>Carrito (<span data-cart-count>{{ cart_item_count }}</span>)</a>
                     {% endif %}
                 </nav>
 
@@ -177,7 +178,7 @@
                 </a>
                 <a href="{% url 'core:favoritos' %}" class="btn sub-navbar-btn icon-btn" title="Mis Favoritos">
                     <i class="far fa-heart text-success"></i>
-                    <span class="badge">{{ favorite_item_count }}</span>
+                    <span class="badge" data-favorite-count>{{ favorite_item_count }}</span>
                 </a>
                 {% else %}
                 <a href="{% url 'login' %}" class="btn sub-navbar-btn icon-btn" title="Inicia sesión para ver tus favoritos">
@@ -187,7 +188,7 @@
                 {% endif %}
                 <a href="{% url 'core:carrito' %}" class="btn sub-navbar-btn icon-btn" title="Mi Carrito">
                     <i class="fas fa-shopping-cart text-success"></i>
-                    <span class="badge">{{ cart_item_count }}</span>
+                    <span class="badge" data-cart-count>{{ cart_item_count }}</span>
                 </a>
             </div>
         </div>
@@ -258,6 +259,7 @@
     <!-- Librerías de la Plantilla -->
     <script src="{% static 'core/lib/owlcarousel/owl.carousel.min.js' %}"></script>
     <script src="{% static 'core/js/main.js' %}"></script>
+    <script src="{% static 'core/js/ui.js' %}"></script>
 </body>
 
 {% block extra_scripts %}{% endblock %}

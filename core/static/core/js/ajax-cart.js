@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const formData = new FormData(form);
             const url = form.action;
+            const submitButton = event.submitter || form.querySelector('button[type="submit"]');
+            if (submitButton) submitButton.classList.add('is-loading');
 
             fetch(url, {
                 method: 'POST',
@@ -18,39 +20,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-Requested-With': 'XMLHttpRequest',
                 },
             })
-            .then(response => response.json())
+            .then(response => {
+                // @login_required redirige a la página de login en vez de responder JSON.
+                if (response.redirected && response.url.includes('/login')) {
+                    const loginUrl = new URL(response.url);
+                    loginUrl.searchParams.set('next', window.location.pathname + window.location.search);
+                    window.location.href = loginUrl.toString();
+                    return null;
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data) return;
                 if (data.status === 'success') {
-                    // Mostramos el mensaje de éxito
-                    showToast(data.message);
+                    HW.showToast(data.message);
+                    HW.updateCartCount(data.cart_count);
                 } else {
-                    // Mostramos un mensaje de error si algo falla
-                    showToast(data.message || 'Ocurrió un error.', 'error');
+                    HW.showToast(data.message || 'Ocurrió un error.', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('Error de conexión. Inténtalo de nuevo.', 'error');
+                HW.showToast('Error de conexión. Inténtalo de nuevo.', 'error');
+            })
+            .finally(() => {
+                if (submitButton) submitButton.classList.remove('is-loading');
             });
         });
     });
-
-    // Función para mostrar un mensaje flotante (toast)
-    function showToast(message, type = 'success') {
-        const toastContainer = document.body;
-        const toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
-        toast.style.bottom = '20px';
-        toast.style.right = '20px';
-        toast.style.zIndex = '1050';
-        toast.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-        toast.textContent = message;
-
-        toastContainer.appendChild(toast);
-
-        // El mensaje desaparece después de 3 segundos
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    }
 });

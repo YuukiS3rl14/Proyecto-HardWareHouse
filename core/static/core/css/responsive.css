@@ -236,7 +236,9 @@
 
     .feature-box h1 {
         margin: 0 0 0.5rem 0 !important;
-        font-size: 1.75rem;
+        width: 2.75rem;
+        height: 2.75rem;
+        font-size: 1.2rem;
     }
 
     .feature-box h5 {

@@ -90,27 +90,32 @@ const form = document.getElementById('contactForm');
 const popupBg = document.getElementById('popup-bg');
 const popupMsg = document.getElementById('popup-msg');
 
-form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const name = document.getElementById('name').value.trim();
-    if (name) {
-        popupMsg.innerHTML = `Gracias, <strong>${name}</strong>. Tu mensaje fue enviado correctamente.`;
-        popupBg.style.display = 'flex';
-        form.reset();
-    }
-});
+if (form) {
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const name = document.getElementById('name').value.trim();
+        if (name) {
+            popupMsg.innerHTML = `Gracias, <strong>${name}</strong>. Tu mensaje fue enviado correctamente.`;
+            popupBg.style.display = 'flex';
+            form.reset();
+        }
+    });
+}
 
 function closePopup() {
     popupBg.style.display = 'none';
 }
 
 // Mostrar y ocultar alerta
-document.getElementById("addCart").addEventListener("click", () => {
-    const alert = document.getElementById("cartAlert");
-    alert.style.display = "block";
-    alert.classList.add("show");
-    setTimeout(() => {
-        alert.classList.remove("show");
-        alert.style.display = "none";
-    }, 3000);
-});
+const addCartButton = document.getElementById("addCart");
+if (addCartButton) {
+    addCartButton.addEventListener("click", () => {
+        const alert = document.getElementById("cartAlert");
+        alert.style.display = "block";
+        alert.classList.add("show");
+        setTimeout(() => {
+            alert.classList.remove("show");
+            alert.style.display = "none";
+        }, 3000);
+    });
+}
