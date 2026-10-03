@@ -20,6 +20,11 @@ eficiencia, rieles, conectores, largo de la fuente ni temperatura. La
 potencia de referencia no es el consumo máximo ni el TDP. Cumplir el mínimo
 no declara la fuente completamente compatible.
 
+La reserva de 150 W es un margen fijo para placa, memoria, discos y
+ventiladores. No aumenta al agregar SSD o HDD y no mide el consumo de cada
+unidad. Unos pocos discos caben en ese margen junto con el resto del equipo;
+muchas unidades exigirían revisar la reserva, porque la fórmula no lo hace.
+
 Largo de la GPU
 ---------------
 Si hay GPU y gabinete, la tarjeta cabe en largo cuando largo_mm es menor o
@@ -42,6 +47,13 @@ ESTADO_DATOS_INSUFICIENTES = 'datos_insuficientes'
 ESTADO_INCOMPLETO = 'incompleto'
 ESTADO_NO_EVALUADA = 'no_evaluada'
 MENSAJE_NO_EVALUADA = 'Compatibilidad no evaluada'
+MENSAJE_ALMACENAMIENTO = (
+    'Compatibilidad no evaluada. No se comprueban puertos SATA, ranuras M.2 '
+    'ni bahías. La reserva de potencia es un margen fijo para placa, memoria, '
+    'discos y ventiladores; no suma el consumo de cada unidad.'
+)
+MENSAJE_ELEGIR_GABINETE = 'Selecciona un gabinete para comprobar el largo.'
+MENSAJE_ELEGIR_GPU = 'Selecciona una GPU para comprobar el largo.'
 
 REGLAS_POR_CATEGORIA = {
     'procesador': ('socket',),
@@ -129,7 +141,7 @@ class EvaluacionCandidato:
     @property
     def etiqueta(self):
         if self.estado == ESTADO_NO_EVALUADA:
-            return MENSAJE_NO_EVALUADA
+            return self.motivos[0] if self.motivos else MENSAJE_NO_EVALUADA
         if self.estado == ESTADO_COMPATIBLE:
             if (
                 len(self.coincidencias) == 1
@@ -443,7 +455,7 @@ def _evaluar_largo(tarjeta_grafica, gabinete):
         return Hallazgo(
             'largo',
             ESTADO_INCOMPLETO,
-            'Falta la GPU o el gabinete para comprobar el largo.',
+            MENSAJE_ELEGIR_GPU if tarjeta_grafica is None else MENSAJE_ELEGIR_GABINETE,
         )
 
     largo_gpu = _entero_positivo(getattr(tarjeta_grafica, 'largo_mm', None))

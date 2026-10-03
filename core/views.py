@@ -1,13 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, update_session_auth_hash 
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from .excel_armado import (
+    aclaracion_de_pieza,
+    especificaciones_de,
+    libro_en_bytes,
+    pesos_enteros,
+    texto_de_estado,
+)
 from .compatibilidad import (
     ESTADO_NO_EVALUADA,
-    MENSAJE_NO_EVALUADA,
+    MENSAJE_ALMACENAMIENTO,
     EvaluacionCandidato,
     evaluar_candidato,
     evaluaciones_de_seleccion,
@@ -24,6 +31,7 @@ from django.db.models import Q, Avg, Count
 from .models import *
 from paypal.standard.forms import PayPalPaymentsForm
 from django.urls import reverse
+from django.utils import timezone
 from decimal import Decimal
 
 # Create your views here.
@@ -461,6 +469,25 @@ _CLAVE_QUE_REEMPLAZA = {
     'fuente_de_poder': 'fuente_de_poder',
 }
 
+_TIPOS_ALMACENAMIENTO = frozenset({'almacenamiento_ssd', 'almacenamiento_hdd'})
+
+
+def _cantidad_pedida(item):
+    """Entero positivo. Si no viene cantidad, la pieza cuenta como una."""
+    if 'cantidad' not in item or item.get('cantidad') in (None, ''):
+        return 1
+    valor = item.get('cantidad')
+    if isinstance(valor, bool) or isinstance(valor, float):
+        return None
+    if isinstance(valor, str):
+        if not valor.isdigit():
+            return None
+        valor = int(valor)
+    if not isinstance(valor, int) or valor < 1:
+        return None
+    return valor
+
+
 _UI_POR_TIPO = {
     'procesador': 'procesador',
     'placa_madre': 'placa_madre',
@@ -484,7 +511,8 @@ def _cargar_seleccion(componentes, excluir_clave=None):
         return None, _error_seleccion('La selección no es válida.')
 
     seleccion = {}
-    sin_regla = []
+    almacenamientos = []
+    grupos_disco = {}
     vistos = set()
     for item in componentes:
         if not isinstance(item, dict):
@@ -496,8 +524,11 @@ def _cargar_seleccion(componentes, excluir_clave=None):
         clave = _CLAVES_DE_VALIDACION.get(tipo)
         if excluir_clave is not None and clave == excluir_clave:
             continue
-        if clave_ui in vistos:
-            return None, _error_seleccion('Hay una pieza repetida en la selección.')
+        cantidad = _cantidad_pedida(item)
+        if cantidad is None:
+            return None, _error_seleccion('La cantidad debe ser un entero positivo.')
+        if clave and cantidad != 1:
+            return None, _error_seleccion('Solo el almacenamiento admite varias unidades.')
         ModelClass = PRODUCT_MODEL_MAP.get(tipo)
         try:
             product_id = int(item.get('id'))
@@ -506,12 +537,19 @@ def _cargar_seleccion(componentes, excluir_clave=None):
         producto = ModelClass.objects.filter(pk=product_id).first() if ModelClass else None
         if producto is None:
             return None, _error_seleccion('Una pieza de la selección ya no está disponible.')
-        vistos.add(clave_ui)
         if clave:
+            if clave_ui in vistos:
+                return None, _error_seleccion('Hay una pieza repetida en la selección.')
+            vistos.add(clave_ui)
             seleccion[clave] = producto
+            continue
+        grupo = (tipo, product_id)
+        if grupo in grupos_disco:
+            almacenamientos[grupos_disco[grupo]]['cantidad'] += cantidad
         else:
-            sin_regla.append(clave_ui)
-    return (seleccion, sin_regla), None
+            grupos_disco[grupo] = len(almacenamientos)
+            almacenamientos.append({'tipo': tipo, 'producto': producto, 'cantidad': cantidad})
+    return (seleccion, almacenamientos), None
 
 
 def _serializar_evaluacion(evaluacion):
@@ -535,24 +573,123 @@ def evaluar_armado(request):
     cargado, error = _cargar_seleccion(payload.get('componentes') or [])
     if error:
         return error
-    seleccion, sin_regla = cargado
+    seleccion, almacenamientos = cargado
     resultado, por_categoria = evaluaciones_de_seleccion(seleccion)
-    for clave_ui in sin_regla:
-        por_categoria[clave_ui] = EvaluacionCandidato(
+    if almacenamientos:
+        por_categoria['almacenamiento'] = EvaluacionCandidato(
             ESTADO_NO_EVALUADA,
-            motivos=(MENSAJE_NO_EVALUADA,),
+            motivos=(MENSAJE_ALMACENAMIENTO,),
         )
 
     return JsonResponse({
         'status': 'success',
         'estado': resultado.estado,
-        'texto': texto_del_armado(resultado, bool(sin_regla), bool(seleccion)),
+        'texto': texto_del_armado(resultado, bool(almacenamientos), bool(seleccion)),
         'motivos': resultado.motivos_de_rechazo,
         'piezas': {
             clave: _serializar_evaluacion(evaluacion)
             for clave, evaluacion in por_categoria.items()
         },
     })
+
+
+_ORDEN_EXPORTACION = (
+    ('procesador', 'procesador', 'Procesador (CPU)'),
+    ('placa_madre', 'placa_madre', 'Placa Madre'),
+    ('memoria_ram', 'memoria_ram', 'Memoria RAM'),
+    ('refrigeracion', 'refrigeracion_cooler', 'Refrigeración CPU'),
+    ('tarjeta_grafica', 'tarjeta_grafica', 'Tarjeta Gráfica (GPU)'),
+    ('almacenamiento', 'almacenamiento', 'Almacenamiento'),
+    ('gabinete', 'gabinete', 'Gabinete'),
+    ('fuente_de_poder', 'fuente_de_poder', 'Fuente de Poder'),
+)
+
+
+def _filas_de_exportacion(seleccion, almacenamientos, por_categoria):
+    filas = []
+    aclaraciones = []
+    for clave_modelo, clave_ui, componente in _ORDEN_EXPORTACION:
+        if clave_ui == 'almacenamiento':
+            if not almacenamientos:
+                continue
+            evaluacion = por_categoria['almacenamiento']
+            aclaracion = aclaracion_de_pieza(componente, evaluacion)
+            if aclaracion:
+                aclaraciones.append(aclaracion)
+            for disco in almacenamientos:
+                producto = disco['producto']
+                filas.append({
+                    'componente': componente,
+                    'producto': producto.nombre,
+                    'cantidad': disco['cantidad'],
+                    'precio': pesos_enteros(producto.precio),
+                    'estado': evaluacion.estado,
+                    'texto_estado': texto_de_estado(evaluacion),
+                    'especificaciones': especificaciones_de(producto),
+                })
+            continue
+        producto = seleccion.get(clave_modelo)
+        if producto is None:
+            continue
+        evaluacion = por_categoria[clave_ui]
+        filas.append({
+            'componente': componente,
+            'producto': producto.nombre,
+            'cantidad': 1,
+            'precio': pesos_enteros(producto.precio),
+            'estado': evaluacion.estado,
+            'texto_estado': texto_de_estado(evaluacion),
+            'especificaciones': especificaciones_de(producto),
+        })
+    return filas, aclaraciones
+
+
+@require_POST
+def exportar_armado(request):
+    """Genera el Excel con una evaluación nueva. No reutiliza un resultado anterior."""
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return _error_seleccion('La solicitud no es válida.')
+
+    cargado, error = _cargar_seleccion(payload.get('componentes') or [])
+    if error:
+        return error
+    seleccion, almacenamientos = cargado
+    if not seleccion and not almacenamientos:
+        return _error_seleccion('Selecciona al menos un componente.')
+
+    resultado, por_categoria = evaluaciones_de_seleccion(seleccion)
+    if almacenamientos:
+        por_categoria['almacenamiento'] = EvaluacionCandidato(
+            ESTADO_NO_EVALUADA,
+            motivos=(MENSAJE_ALMACENAMIENTO,),
+        )
+    try:
+        filas, aclaraciones = _filas_de_exportacion(seleccion, almacenamientos, por_categoria)
+    except ValueError as exc:
+        return _error_seleccion(str(exc))
+    for evaluacion in por_categoria.values():
+        for pendiente in evaluacion.pendientes:
+            if pendiente not in aclaraciones:
+                aclaraciones.append(pendiente)
+
+    contenido = libro_en_bytes(
+        filas,
+        {
+            'estado': resultado.estado,
+            'texto': texto_del_armado(resultado, bool(almacenamientos), bool(seleccion)),
+            'motivos': resultado.motivos_de_rechazo,
+            'aclaraciones': aclaraciones,
+        },
+        timezone.localtime(),
+    )
+    respuesta = HttpResponse(
+        contenido,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    respuesta['Content-Disposition'] = 'attachment; filename="Presupuesto_armado_PC.xlsx"'
+    return respuesta
 
 _ORDEN_RECOMENDACION = {
     'compatible': 0,
@@ -595,6 +732,11 @@ def recomendar_armado(request):
     for modelo, categoria_regla, model_name in fuentes:
         for producto in modelo.objects.all():
             evaluacion = evaluar_candidato(categoria_regla, producto, **seleccion)
+            if categoria == 'almacenamiento' and evaluacion.estado == ESTADO_NO_EVALUADA:
+                evaluacion = EvaluacionCandidato(
+                    ESTADO_NO_EVALUADA,
+                    motivos=(MENSAJE_ALMACENAMIENTO,),
+                )
             candidatos.append({
                 'id': producto.id,
                 'model_name': model_name,
@@ -628,9 +770,9 @@ def agregar_armado_al_carrito(request):
     if not isinstance(componentes, list) or not componentes:
         return _error_armado('Selecciona al menos un componente.', estado='incompleto')
 
-    productos = []
+    grupos = {}
+    orden = []
     seleccion = {}
-    tipos_vistos = set()
 
     for item in componentes:
         if not isinstance(item, dict):
@@ -638,8 +780,22 @@ def agregar_armado_al_carrito(request):
 
         model_name = item.get('tipo') or item.get('model_name')
         ModelClass = PRODUCT_MODEL_MAP.get(model_name)
-        if not ModelClass or model_name in tipos_vistos:
+        if not ModelClass:
             return _error_armado('Hay un componente con un tipo no válido.')
+
+        cantidad = _cantidad_pedida(item)
+        if cantidad is None:
+            return _error_armado(
+                'La cantidad debe ser un entero positivo.',
+                estado='error',
+                motivos=['La cantidad debe ser un entero positivo.'],
+            )
+        if model_name not in _TIPOS_ALMACENAMIENTO and cantidad != 1:
+            return _error_armado(
+                'Solo el almacenamiento admite varias unidades.',
+                estado='error',
+                motivos=['Solo el almacenamiento admite varias unidades.'],
+            )
 
         try:
             product_id = int(item.get('id'))
@@ -650,16 +806,43 @@ def agregar_armado_al_carrito(request):
         if producto is None:
             return _error_armado('Uno de los componentes ya no está disponible.')
 
-        tipos_vistos.add(model_name)
-        productos.append((model_name, producto))
+        if model_name not in _TIPOS_ALMACENAMIENTO and any(nombre == model_name for nombre, _pid in orden):
+            return _error_armado('Hay una pieza repetida en la selección.')
+
+        clave_grupo = (model_name, product_id)
+        if clave_grupo in grupos:
+            grupos[clave_grupo]['cantidad'] += cantidad
+        else:
+            grupos[clave_grupo] = {'producto': producto, 'cantidad': cantidad}
+            orden.append(clave_grupo)
         clave = _CLAVES_DE_VALIDACION.get(model_name)
         if clave:
             seleccion[clave] = producto
 
-    agotados = [producto.nombre for _, producto in productos if producto.stock <= 0]
-    if agotados:
-        motivos = [f"'{nombre}' está agotado." for nombre in agotados]
-        return _error_armado('No se agregó el armado al carrito.', estado='error', motivos=motivos)
+    carrito_previo = Carrito.objects.filter(usuario=request.user).first()
+    motivos_stock = []
+    for model_name, product_id in orden:
+        grupo = grupos[(model_name, product_id)]
+        producto = grupo['producto']
+        ya_en_carrito = 0
+        if carrito_previo is not None:
+            existente = ItemCarrito.objects.filter(
+                carrito=carrito_previo,
+                **{f'{model_name}__id': producto.id},
+            ).first()
+            ya_en_carrito = existente.cantidad if existente else 0
+        if ya_en_carrito + grupo['cantidad'] > producto.stock:
+            motivos_stock.append(
+                f"'{producto.nombre}' no tiene stock suficiente: "
+                f"se piden {grupo['cantidad']} y hay {producto.stock} "
+                f"({ya_en_carrito} ya en el carrito)."
+            )
+    if motivos_stock:
+        return _error_armado(
+            'No se agregó el armado al carrito.',
+            estado='error',
+            motivos=motivos_stock,
+        )
 
     resultado = validar_armado(**seleccion)
     if resultado.bloquea_agregar:
@@ -671,15 +854,17 @@ def agregar_armado_al_carrito(request):
 
     with transaction.atomic():
         carrito, _created = Carrito.objects.get_or_create(usuario=request.user)
-        for model_name, producto in productos:
+        for model_name, product_id in orden:
+            grupo = grupos[(model_name, product_id)]
+            producto = grupo['producto']
             lookup_kwargs = {f'{model_name}__id': producto.id}
             item, created = ItemCarrito.objects.get_or_create(carrito=carrito, **lookup_kwargs)
             if created:
                 setattr(item, model_name, producto)
-                item.cantidad = 1
+                item.cantidad = grupo['cantidad']
                 item.precio_unitario = producto.precio
             else:
-                item.cantidad += 1
+                item.cantidad += grupo['cantidad']
             item.save()
 
     return JsonResponse({

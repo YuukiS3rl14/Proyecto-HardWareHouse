@@ -8,6 +8,7 @@ urlpatterns = [
     path('armado/', mostrarArmado, name='armado'),
     path('armado/recomendar/', recomendar_armado, name='recomendar_armado'),
     path('armado/evaluar/', evaluar_armado, name='evaluar_armado'),
+    path('armado/exportar/', exportar_armado, name='exportar_armado'),
     path('carrito/', mostrarCarrito, name='carrito'),
     path('checkout/', mostrarCheckout, name='checkout'),
     path('contacto/', mostrarContacto, name='contacto'),

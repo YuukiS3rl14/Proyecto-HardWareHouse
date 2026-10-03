@@ -10,6 +10,7 @@ function iniciarArmado() {
 
     // Estado actual de la construcción y de la última consulta vigente.
     let currentBuild = {};
+    let discos = [];
     let evaluacionActual = null;
     let consultaSerial = 0;
 
@@ -20,7 +21,7 @@ function iniciarArmado() {
         { key: 'memoria_ram', label: 'Memoria RAM', modelName: 'memoria_ram' },
         { key: 'refrigeracion_cooler', label: 'Refrigeración CPU', modelName: 'refrigeracion' },
         { key: 'tarjeta_grafica', label: 'Tarjeta Gráfica (GPU)', modelName: 'tarjeta_grafica' },
-        { key: 'almacenamiento', label: 'Almacenamiento', modelName: 'almacenamiento_ssd' }, // O hdd, se maneja en el carrito
+        { key: 'almacenamiento', label: 'Almacenamiento', modelName: 'almacenamiento_ssd' },
         { key: 'gabinete', label: 'Gabinete', modelName: 'gabinete' },
         { key: 'fuente_de_poder', label: 'Fuente de Poder', modelName: 'fuente_de_poder' },
     ];
@@ -43,11 +44,63 @@ function iniciarArmado() {
         document.querySelectorAll('.remove-component-btn').forEach(btn => {
             btn.addEventListener('click', handleRemoveComponent);
         });
+        document.querySelectorAll('.quitar-disco-btn').forEach(btn => {
+            btn.addEventListener('click', quitarDisco);
+        });
+        document.querySelectorAll('.cantidad-disco').forEach(input => {
+            input.addEventListener('change', cambiarCantidadDisco);
+        });
 
         updateSummaryAndTotal();
     }
 
+    function htmlAlmacenamiento(label) {
+        const hay = discos.length > 0;
+        const visual = hay ? estadoVisual(piezaEvaluada('almacenamiento')) : { status: '', icon: '' };
+        const detalle = hay ? htmlDetallePieza('almacenamiento') : '';
+        const totalDiscos = discos.reduce((suma, disco) => suma + parseFloat(disco.precio) * disco.cantidad, 0);
+        const precio = hay ? `$${totalDiscos.toLocaleString('es-CL')}` : '-';
+        const lineas = hay ? discos.map(disco => {
+            const subtotal = parseFloat(disco.precio) * disco.cantidad;
+            return `
+                <div class="border-top pt-2 mt-2">
+                    <p class="mb-1 small">${escaparHtml(disco.nombre)}</p>
+                    <ul class="list-unstyled spec-list mb-1">${getComponentSpecs(disco, true)}</ul>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <label class="small mb-0">Cantidad
+                            <input type="number" min="1" max="${disco.stock}" step="1" class="form-control form-control-sm cantidad-disco d-inline-block ml-1" style="width: 4.5rem;" data-model-name="${escaparHtml(disco.model_name)}" data-id="${disco.id}" value="${disco.cantidad}">
+                        </label>
+                        <strong class="small">$${subtotal.toLocaleString('es-CL')}</strong>
+                        <button type="button" class="btn btn-sm btn-outline-danger quitar-disco-btn" data-model-name="${escaparHtml(disco.model_name)}" data-id="${disco.id}">Quitar</button>
+                    </div>
+                </div>`;
+        }).join('') : '<p class="mb-1 small">No seleccionado</p><ul class="list-unstyled spec-list mb-0"><li>Puedes combinar SSD y HDD</li></ul>';
+        return `
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="component-card-wrapper">
+                    <div class="component-card">
+                        <div class="info">
+                            <h5 class="font-weight-bold ${visual.status}">${visual.icon}${label}</h5>
+                            <img src="${urls.placeholderImg}" alt="Almacenamiento">
+                            ${lineas}
+                            ${detalle}
+                        </div>
+                        <div class="actions">
+                            <h5 class="font-weight-bold mb-3">${precio}</h5>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-sm btn-outline-success select-component-btn" data-type="almacenamiento">Agregar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     function createComponentCardHTML(key, label, component) {
+        if (key === 'almacenamiento') {
+            return htmlAlmacenamiento(label);
+        }
         const price = component ? `$${parseInt(component.precio).toLocaleString('es-CL')}` : '-';
         const name = component ? component.nombre : `No seleccionado`;
         const image = component && component.imagen ? component.imagen : urls.placeholderImg;
@@ -108,13 +161,21 @@ function iniciarArmado() {
     }
 
     function seleccionActual() {
-        return Object.entries(currentBuild).map(([type, component]) => {
+        const piezas = Object.entries(currentBuild).map(([type, component]) => {
             const { modelName } = componentOrder.find(c => c.key === type);
             return {
                 tipo: component.model_name || modelName,
                 id: component.id,
             };
         });
+        discos.forEach(disco => {
+            piezas.push({
+                tipo: disco.model_name,
+                id: disco.id,
+                cantidad: disco.cantidad,
+            });
+        });
+        return piezas;
     }
 
     async function openComponentModal(e) {
@@ -168,7 +229,7 @@ function iniciarArmado() {
         `;
 
         if (visibles.length === 0) {
-            html += '<p class="text-muted mb-0">No hay piezas compatibles con la selección actual.</p>';
+            html += htmlListaVacia();
         } else {
             html += '<div class="list-group">';
             visibles.forEach(candidato => {
@@ -212,6 +273,37 @@ function iniciarArmado() {
         modalBody.querySelectorAll('[data-seleccionable="1"]').forEach(item => {
             item.addEventListener('click', handleSelectionChange);
         });
+        const quitarFiltro = document.getElementById('quitar-filtro-compatibles');
+        if (quitarFiltro) {
+            quitarFiltro.addEventListener('click', () => {
+                soloCompatibles = false;
+                renderRecomendaciones();
+            });
+        }
+    }
+
+    function htmlListaVacia() {
+        if (recomendacionesActuales.length === 0 || !soloCompatibles) {
+            return '<p class="text-muted mb-0">No hay piezas en esta categoría.</p>';
+        }
+        const estados = new Set(recomendacionesActuales.map(candidato => candidato.estado));
+        const boton = '<button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="quitar-filtro-compatibles">Mostrar todas</button>';
+        const soloSinComprobar = [...estados].every(estado => estado === 'incompleto' || estado === 'no_evaluada');
+        if (soloSinComprobar) {
+            let causa = 'Faltan piezas o no hay reglas evaluables. Eso no significa que todas sean incompatibles.';
+            if (estados.size === 1 && estados.has('no_evaluada')) {
+                causa = 'Esta categoría no tiene reglas que el filtro pueda exigir. No se comprueban puertos SATA, ranuras M.2 ni bahías. Eso no significa que todas sean incompatibles.';
+            } else if (categoriaModal === 'tarjeta_grafica') {
+                causa = 'Selecciona un gabinete para comprobar el largo. Mientras falte, el filtro no puede mostrar estas GPU como compatibles. Eso no significa que todas sean incompatibles.';
+            }
+            return `<p class="text-muted mb-0">${causa} ${boton}</p>`;
+        }
+        const haySinComprobar = estados.has('incompleto') || estados.has('no_evaluada');
+        const hayConflicto = estados.has('incompatible') || estados.has('datos_insuficientes');
+        if (hayConflicto && haySinComprobar) {
+            return `<p class="text-muted mb-0">Ninguna pieza cumple las reglas que ya se pueden comprobar. Otras siguen sin evaluarse; eso no las hace incompatibles. ${boton}</p>`;
+        }
+        return '<p class="text-muted mb-0">No hay piezas compatibles con la selección actual.</p>';
     }
 
     function detalleRecomendacion(candidato) {
@@ -221,12 +313,16 @@ function iniciarArmado() {
                 : '';
             return `<p class="mb-0 mt-1 text-success"><small>${escaparHtml(candidato.etiqueta)}</small></p>${pendientes}`;
         }
+        if (candidato.estado === 'incompleto') {
+            const pendientes = (candidato.pendientes || []).map(texto => `<p class="mb-0 text-muted"><small>${escaparHtml(texto)}</small></p>`).join('');
+            return `<p class="mb-0 mt-1 text-muted"><small>${escaparHtml(candidato.etiqueta)}</small></p>${pendientes}`;
+        }
         if (candidato.estado === 'incompatible' || candidato.estado === 'datos_insuficientes') {
             const motivos = (candidato.motivos || []).map(motivo => `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(motivo)}</small></p>`).join('');
-            return `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(candidato.etiqueta)}</small></p>${motivos}`;
+            const pendientes = (candidato.pendientes || []).map(texto => `<p class="mb-0 text-muted"><small>${escaparHtml(texto)}</small></p>`).join('');
+            return `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(candidato.etiqueta)}</small></p>${motivos}${pendientes}`;
         }
-        const clase = candidato.estado === 'no_evaluada' ? 'text-muted' : 'text-muted';
-        return `<p class="mb-0 mt-1 ${clase}"><small>${escaparHtml(candidato.etiqueta)}</small></p>`;
+        return `<p class="mb-0 mt-1 text-muted"><small>${escaparHtml(candidato.etiqueta)}</small></p>`;
     }
 
     function getComponentSpecs(component, isCard) {
@@ -273,12 +369,52 @@ function iniciarArmado() {
         const type = target.dataset.type;
         const selectedId = target.dataset.id;
         const modelName = target.dataset.modelName;
-
-        currentBuild[type] = allComponentsData[type].find(c => (
+        const producto = (allComponentsData[type] || []).find(c => (
             String(c.id) === String(selectedId) && (!modelName || c.model_name === modelName)
         ));
+        if (!producto) {
+            return;
+        }
+
+        if (type === 'almacenamiento') {
+            const existente = discos.find(disco => (
+                disco.model_name === producto.model_name && String(disco.id) === String(producto.id)
+            ));
+            if (existente) {
+                if (existente.cantidad >= Number(existente.stock)) {
+                    showToast('No hay más unidades en stock.', 'error');
+                    return;
+                }
+                existente.cantidad += 1;
+            } else {
+                discos.push(Object.assign({}, producto, { cantidad: 1 }));
+            }
+        } else {
+            currentBuild[type] = producto;
+        }
 
         $('#componentModal').modal('hide');
+        consultarEvaluacion();
+    }
+
+    function quitarDisco(e) {
+        const modelName = e.currentTarget.dataset.modelName;
+        const id = e.currentTarget.dataset.id;
+        discos = discos.filter(disco => !(disco.model_name === modelName && String(disco.id) === String(id)));
+        consultarEvaluacion();
+    }
+
+    function cambiarCantidadDisco(e) {
+        const modelName = e.target.dataset.modelName;
+        const id = e.target.dataset.id;
+        const disco = discos.find(item => item.model_name === modelName && String(item.id) === String(id));
+        const numero = Number(e.target.value);
+        if (!disco || !Number.isInteger(numero) || numero < 1 || numero > Number(disco.stock)) {
+            showToast('La cantidad debe ser un entero positivo dentro del stock.', 'error');
+            consultarEvaluacion();
+            return;
+        }
+        disco.cantidad = numero;
         consultarEvaluacion();
     }
 
@@ -378,24 +514,6 @@ function iniciarArmado() {
         initializeBuilder();
     }
 
-    async function evaluacionParaExportar(componentes) {
-        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-        const response = await fetch(urls.evaluarUrl, {
-            method: 'POST',
-            body: JSON.stringify({ componentes }),
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfInput ? csrfInput.value : '',
-            },
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || data.status !== 'success' || !data.piezas || !data.texto) {
-            return null;
-        }
-        return data;
-    }
-
     // --- 4. ACTUALIZAR RESUMEN Y TOTAL ---
 
     function updateSummaryAndTotal() {
@@ -404,6 +522,30 @@ function iniciarArmado() {
         let componentCount = 0;
 
         componentOrder.forEach(({ key, label }) => {
+            if (key === 'almacenamiento') {
+                if (discos.length === 0) {
+                    return;
+                }
+                const subtotal = discos.reduce((suma, disco) => suma + parseFloat(disco.precio) * disco.cantidad, 0);
+                total += subtotal;
+                componentCount += 1;
+                const visual = estadoVisual(piezaEvaluada(key));
+                const lineas = discos.map(disco => (
+                    `<p class="mb-0 small">${escaparHtml(disco.nombre)} × ${disco.cantidad}</p>`
+                )).join('');
+                const summaryItem = document.createElement('div');
+                summaryItem.className = 'd-flex justify-content-between mb-2';
+                summaryItem.innerHTML = `
+                    <div class="pr-2">
+                        <p class="mb-0 ${visual.status}">${visual.icon}${label}</p>
+                        ${lineas}
+                        ${htmlDetallePieza(key)}
+                    </div>
+                    <p class="mb-0">$${subtotal.toLocaleString('es-CL')}</p>
+                `;
+                summaryList.appendChild(summaryItem);
+                return;
+            }
             const component = currentBuild[key];
 
             if (component) {
@@ -470,16 +612,8 @@ function iniciarArmado() {
     }
 
     async function addAllToCart() {
-        const items = Object.entries(currentBuild);
-        if (items.length === 0) return;
-
-        const componentes = items.map(([type, component]) => {
-            const { modelName } = componentOrder.find(c => c.key === type);
-            return {
-                tipo: component.model_name || modelName,
-                id: component.id,
-            };
-        });
+        const componentes = seleccionActual();
+        if (componentes.length === 0) return;
 
         const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
 
@@ -517,78 +651,39 @@ function iniciarArmado() {
             return;
         }
 
-        let evaluacionExportada;
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        let response;
         try {
-            evaluacionExportada = await evaluacionParaExportar(componentes);
-        } catch (error) {
-            console.error('Error al evaluar el armado para Excel:', error);
-            evaluacionExportada = null;
-        }
-        if (!evaluacionExportada) {
-            alert('No se pudo consultar la compatibilidad. El Excel no se generó para no mostrar un resultado anterior.');
-            return;
-        }
-
-        const baseHeaders = ['Componente', 'Producto', 'Cantidad', 'Precio Unitario', 'Compatibilidad'];
-        const attributeHeaders = new Set();
-        const componentsToExport = [];
-
-        componentOrder.forEach(({ key, label }) => {
-            const component = currentBuild[key];
-            if (component) {
-                componentsToExport.push({ key, label, component });
-                Object.keys(component).forEach(attr => {
-                    if (!['id', 'nombre', 'precio', 'imagen', 'stock', 'model_name'].includes(attr)) {
-                        attributeHeaders.add(attr);
-                    }
-                });
-            }
-        });
-
-        const piezas = evaluacionExportada.piezas;
-        const faltaAlguna = componentsToExport.some(({ key }) => !piezas[key]);
-        if (faltaAlguna) {
-            alert('No se pudo consultar la compatibilidad. El Excel no se generó para no mostrar un resultado anterior.');
-            return;
-        }
-
-        const finalHeaders = baseHeaders.concat(Array.from(attributeHeaders).sort());
-        const data = [finalHeaders];
-        let totalBuildPrice = 0;
-
-        componentsToExport.forEach(({ key, label, component }) => {
-            const quantity = 1;
-            const price = parseInt(component.precio);
-            totalBuildPrice += price * quantity;
-            const pieza = piezas[key];
-            const textos = [pieza.etiqueta]
-                .concat(pieza.motivos || [])
-                .concat(pieza.pendientes || [])
-                .filter(Boolean);
-            const row = [label, component.nombre, quantity, price, textos.join(' | ')];
-            Array.from(attributeHeaders).sort().forEach(header => {
-                row.push(component[header] || '-');
+            response = await fetch(urls.exportarUrl, {
+                method: 'POST',
+                body: JSON.stringify({ componentes }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfInput ? csrfInput.value : '',
+                },
             });
-            data.push(row);
-        });
+        } catch (error) {
+            console.error('Error al exportar el armado:', error);
+            alert('No se pudo consultar la compatibilidad. El Excel no se generó para no mostrar un resultado anterior.');
+            return;
+        }
 
-        data.push([]);
-        data.push(['', 'Compatibilidad del Armado:', evaluacionExportada.texto]);
-        (evaluacionExportada.motivos || []).forEach(motivo => {
-            data.push(['', motivo]);
-        });
-        data.push(['', 'Precio Total del Armado:', totalBuildPrice]);
+        const tipo = response.headers.get('Content-Type') || '';
+        if (!response.ok || !tipo.includes('spreadsheetml')) {
+            alert('No se pudo consultar la compatibilidad. El Excel no se generó para no mostrar un resultado anterior.');
+            return;
+        }
 
-        // 4. Crear y descargar el archivo Excel
-        const worksheet = XLSX.utils.aoa_to_sheet(data);
-        worksheet['!cols'] = [{wch: 20}, {wch: 50}, {wch: 10}, {wch: 15}]; // Ancho para las primeras columnas
-        worksheet['D1'].z = '$#,##0'; // Formato moneda para cabecera de Precio Unitario
-        worksheet['C' + (data.length)].z = '$#,##0'; // Formato moneda para el Precio Total
-        
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Mi Armado de PC');
-
-        XLSX.writeFile(workbook, 'Mi_Armado_PC.xlsx');
+        const blob = await response.blob();
+        const enlace = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        enlace.href = url;
+        enlace.download = 'Presupuesto_armado_PC.xlsx';
+        document.body.appendChild(enlace);
+        enlace.click();
+        enlace.remove();
+        URL.revokeObjectURL(url);
     }
 
     // --- 6. INICIAR TODO ---
