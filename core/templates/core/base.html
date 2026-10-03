@@ -124,17 +124,17 @@
                 <a href="{% url 'core:mis_pedidos' %}" class="btn sub-navbar-btn" title="Mis Pedidos" style="width: 45px; height: 38px; display: inline-flex; align-items: center; justify-content: center; position: relative;">
                     <i class="fas fa-box-open text-success"></i>
                 </a>
-                <a href="{% url 'core:favoritos' %}" class="btn sub-navbar-btn" title="Mis Favoritos" style="width: 45px; height: 38px; display: inline-flex; align-items-center; justify-content: center; position: relative;">
+                <a href="{% url 'core:favoritos' %}" class="btn sub-navbar-btn" title="Mis Favoritos" style="width: 45px; height: 38px; display: inline-flex; align-items:center; justify-content: center; position: relative;">
                     <i class="far fa-heart text-success"></i>
                     <span class="badge" style="position: absolute; top: -5px; right: -5px;">{{ favorite_item_count }}</span>
                 </a>
                 {% else %}
-                <a href="{% url 'login' %}" class="btn sub-navbar-btn" title="Inicia sesión para ver tus favoritos" style="width: 45px; height: 38px; display: inline-flex; align-items-center; justify-content: center; position: relative;">
+                <a href="{% url 'login' %}" class="btn sub-navbar-btn" title="Inicia sesión para ver tus favoritos" style="width: 45px; height: 38px; display: inline-flex; align-items:center; justify-content: center; position: relative;">
                     <i class="far fa-heart text-success"></i>
                     <span class="badge" style="position: absolute; top: -5px; right: -5px;">0</span>
                 </a>
                 {% endif %}
-                <a href="{% url 'core:carrito' %}" class="btn sub-navbar-btn" title="Mi Carrito" style="width: 45px; height: 38px; display: inline-flex; align-items-center; justify-content: center; position: relative;">
+                <a href="{% url 'core:carrito' %}" class="btn sub-navbar-btn" title="Mi Carrito" style="width: 45px; height: 38px; display: inline-flex; align-items:center; justify-content: center; position: relative;">
                     <i class="fas fa-shopping-cart text-success"></i>
                     <span class="badge" style="position: absolute; top: -5px; right: -5px;">{{ cart_item_count }}</span>
                 </a>
