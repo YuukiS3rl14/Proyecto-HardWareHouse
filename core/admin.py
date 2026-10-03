@@ -23,21 +23,21 @@ PRODUCTO_LIST_DISPLAY = ('id', 'nombre', 'categoria', 'proveedor', 'precio', 'st
 PRODUCTO_EDITABLE = ('nombre', 'precio', 'stock')
 
 class ProcesadorAdmin(admin.ModelAdmin):
-    list_display = PRODUCTO_LIST_DISPLAY + ('socket', 'nucleos', 'frecuencia_base')
+    list_display = PRODUCTO_LIST_DISPLAY + ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('socket', 'nucleos', 'frecuencia_base')}),
+        ('Especificaciones Técnicas', {'fields': ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts')}),
     )
 
 class TarjetaGraficaAdmin(admin.ModelAdmin):
-    list_display = PRODUCTO_LIST_DISPLAY + ('vram_gb', 'tipo_memoria', 'interfaz')
+    list_display = PRODUCTO_LIST_DISPLAY + ('vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('vram_gb', 'tipo_memoria', 'interfaz')}),
+        ('Especificaciones Técnicas', {'fields': ('vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts')}),
     )
 
 class MemoriaRamAdmin(admin.ModelAdmin):

@@ -41,9 +41,9 @@ def mostrarArmado(request):
 
     componentes = {
         'placa_madre': get_component_data(PlacaMadre, ['nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'chipset', 'ranuras_ram', 'stock'], 'placa_madre'),
-        'procesador': get_component_data(Procesador, ['nombre', 'precio', 'socket', 'nucleos', 'frecuencia_base', 'stock'], 'procesador'),
+        'procesador': get_component_data(Procesador, ['nombre', 'precio', 'socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts', 'stock'], 'procesador'),
         'memoria_ram': get_component_data(MemoriaRam, ['nombre', 'precio', 'tipo_ddr', 'capacidad_gb', 'velocidad_mhz', 'stock'], 'memoria_ram'),
-        'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'stock'], 'tarjeta_grafica'),
+        'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'stock'], 'tarjeta_grafica'),
         'almacenamiento': (
             get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'formato', 'stock'], 'almacenamiento_ssd')
             + get_component_data(AlmacenamientoHDD, ['nombre', 'precio', 'capacidad_gb', 'stock'], 'almacenamiento_hdd')
@@ -417,6 +417,8 @@ _CLAVES_DE_VALIDACION = {
     'memoria_ram': 'memoria_ram',
     'gabinete': 'gabinete',
     'refrigeracion': 'refrigeracion',
+    'tarjeta_grafica': 'tarjeta_grafica',
+    'fuente_de_poder': 'fuente_de_poder',
 }
 
 def _error_armado(message, estado='error', motivos=None, status=400):
@@ -447,6 +449,8 @@ _CLAVE_SELECCION = {
     'memoria_ram': 'memoria_ram',
     'gabinete': 'gabinete',
     'refrigeracion': 'refrigeracion',
+    'tarjeta_grafica': 'tarjeta_grafica',
+    'fuente_de_poder': 'fuente_de_poder',
 }
 
 _CLAVE_QUE_REEMPLAZA = {
@@ -455,6 +459,8 @@ _CLAVE_QUE_REEMPLAZA = {
     'memoria_ram': 'memoria_ram',
     'gabinete': 'gabinete',
     'refrigeracion_cooler': 'refrigeracion',
+    'tarjeta_grafica': 'tarjeta_grafica',
+    'fuente_de_poder': 'fuente_de_poder',
 }
 
 _ORDEN_RECOMENDACION = {

@@ -51,6 +51,16 @@ class Procesador(models.Model):
     
     nucleos = models.IntegerField()
     frecuencia_base = models.DecimalField(max_digits=4, decimal_places=2, help_text="En GHz. Ej: 3.70")
+    potencia_referencia_watts = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Potencia de referencia (W)",
+        help_text=(
+            "Watts de referencia para estimar la fuente. No es el consumo máximo "
+            "ni equivale al TDP. Déjalo vacío si no se conoce; no uses 0."
+        ),
+    )
 
     class Meta:
         verbose_name_plural = "Procesadores (CPU)"
@@ -75,7 +85,27 @@ class TarjetaGrafica(models.Model):
         ('PCIe 4.0', 'PCIe 4.0'), ('PCIe 5.0', 'PCIe 5.0'), 
         ('PCIe 3.0', 'PCIe 3.0'), ('Otro', 'Otro')
     ]
-    interfaz = models.CharField(max_length=20, choices=INTERFAZ_CHOICES, verbose_name="Interfaz Bus") 
+    interfaz = models.CharField(max_length=20, choices=INTERFAZ_CHOICES, verbose_name="Interfaz Bus")
+    consumo_referencia_watts = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Consumo de referencia (W)",
+        help_text=(
+            "Consumo de referencia de la tarjeta, en watts. Sirve para estimar la fuente. "
+            "No es el consumo máximo ni el TDP. Déjalo vacío si no se conoce; no uses 0."
+        ),
+    )
+    potencia_minima_fuente_watts = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Fuente mínima recomendada (W)",
+        help_text=(
+            "Potencia mínima de fuente que indica el fabricante para un equipo con esta GPU. "
+            "No es el consumo de la tarjeta. Déjalo vacío si no se conoce; no uses 0."
+        ),
+    )
 
     class Meta:
         verbose_name_plural = "Tarjetas Gráficas (GPU)"

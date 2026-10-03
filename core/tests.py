@@ -172,6 +172,7 @@ class ArmadoCarritoTests(TestCase):
         return Procesador.objects.create(
             proveedor=cls.proveedor, nombre=nombre, precio=Decimal('100000'), stock=4,
             socket=socket, nucleos=6, frecuencia_base=Decimal('3.50'),
+            potencia_referencia_watts=65,
         )
 
     @classmethod
@@ -208,6 +209,7 @@ class ArmadoCarritoTests(TestCase):
         return TarjetaGrafica.objects.create(
             proveedor=cls.proveedor, nombre='GPU', precio=Decimal('300000'), stock=4,
             vram_gb=8, tipo_memoria='GDDR6', interfaz='PCIe 4.0',
+            consumo_referencia_watts=120,
         )
 
     @classmethod

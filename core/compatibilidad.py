@@ -2,10 +2,28 @@
 
 La función no declara compatible un socket "Otro" ni un formato que no esté
 en la jerarquía conocida. Los espacios y las mayúsculas no cambian el resultado.
+
+Estimación de potencia de la fuente
+-----------------------------------
+Con CPU, GPU y fuente presentes:
+
+    base = potencia_referencia_cpu + consumo_referencia_gpu + reserva_otros_watts
+    estimacion = techo(base * margen)
+    minimo = max(estimacion, potencia_minima_fuente_gpu) si esa cifra existe
+
+La política por defecto usa 150 W de reserva y un margen de 1.20. Se puede
+cambiar con el argumento ``politica`` o con el ajuste
+``POLITICA_POTENCIA_ARMADO = {'reserva_otros_watts': 150, 'margen': '1.20'}``.
+
+Es una estimación de catálogo, no una garantía eléctrica. No mide picos,
+eficiencia, rieles, conectores, largo de la fuente ni temperatura. La
+potencia de referencia no es el consumo máximo ni el TDP. Cumplir el mínimo
+no declara la fuente completamente compatible.
 """
 
 import re
 from dataclasses import dataclass, field
+from decimal import Decimal, ROUND_CEILING
 
 
 SOCKETS_CONOCIDOS = frozenset({'AM4', 'AM5', 'LGA1200', 'LGA1700'})
@@ -25,6 +43,7 @@ REGLAS_POR_CATEGORIA = {
     'memoria_ram': ('ddr',),
     'gabinete': ('formato',),
     'refrigeracion': ('cooler',),
+    'fuente_de_poder': ('potencia',),
 }
 
 CLAVE_POR_CATEGORIA = {
@@ -33,6 +52,7 @@ CLAVE_POR_CATEGORIA = {
     'memoria_ram': 'memoria_ram',
     'gabinete': 'gabinete',
     'refrigeracion': 'refrigeracion',
+    'fuente_de_poder': 'fuente_de_poder',
 }
 
 _PRIORIDAD = {
@@ -103,6 +123,11 @@ class EvaluacionCandidato:
         if self.estado == ESTADO_NO_EVALUADA:
             return MENSAJE_NO_EVALUADA
         if self.estado == ESTADO_COMPATIBLE:
+            if (
+                len(self.coincidencias) == 1
+                and self.coincidencias[0].startswith('Cumple la estimación de potencia')
+            ):
+                return self.coincidencias[0]
             return 'Coincide: ' + ', '.join(self.coincidencias)
         if self.estado == ESTADO_INCOMPLETO:
             return 'Selección incompleta'
@@ -111,7 +136,18 @@ class EvaluacionCandidato:
         return 'Incompatible'
 
 
-def evaluar_candidato(categoria, candidato, procesador=None, placa_madre=None, memoria_ram=None, gabinete=None, refrigeracion=None):
+def evaluar_candidato(
+    categoria,
+    candidato,
+    procesador=None,
+    placa_madre=None,
+    memoria_ram=None,
+    gabinete=None,
+    refrigeracion=None,
+    tarjeta_grafica=None,
+    fuente_de_poder=None,
+    politica=None,
+):
     """Clasifica un candidato reemplazando la pieza previa de su categoría.
 
     Usa validar_armado() como única fuente de las reglas. Una categoría sin
@@ -129,9 +165,12 @@ def evaluar_candidato(categoria, candidato, procesador=None, placa_madre=None, m
         'memoria_ram': memoria_ram,
         'gabinete': gabinete,
         'refrigeracion': refrigeracion,
+        'tarjeta_grafica': tarjeta_grafica,
+        'fuente_de_poder': fuente_de_poder,
     }
     piezas[CLAVE_POR_CATEGORIA[categoria]] = candidato
-    resultado = validar_armado(**piezas)
+    politica_activa = politica or politica_potencia()
+    resultado = validar_armado(**piezas, politica=politica_activa)
     hallazgos_por_regla = {}
     for hallazgo in resultado.hallazgos:
         if hallazgo.regla not in REGLAS_POR_CATEGORIA[categoria]:
@@ -153,9 +192,9 @@ def evaluar_candidato(categoria, candidato, procesador=None, placa_madre=None, m
             else:
                 motivos.append(hallazgo.mensaje)
             continue
-        if _regla_puede_comprobarse(regla, piezas):
+        if _regla_puede_comprobarse(regla, piezas, politica_activa):
             estados.append(ESTADO_COMPATIBLE)
-            coincidencias.append(_texto_coincidencia(regla, piezas))
+            coincidencias.append(_texto_coincidencia(regla, piezas, politica_activa))
         else:
             estados.append(ESTADO_INCOMPLETO)
             pendientes.append('Selección incompleta para comprobar esta regla.')
@@ -178,7 +217,7 @@ def _estado_de_candidato(estados):
     return ESTADO_INCOMPLETO
 
 
-def _regla_puede_comprobarse(regla, piezas):
+def _regla_puede_comprobarse(regla, piezas, politica):
     if regla == 'socket':
         return piezas['procesador'] is not None and piezas['placa_madre'] is not None
     if regla == 'ddr':
@@ -189,16 +228,20 @@ def _regla_puede_comprobarse(regla, piezas):
         return piezas['refrigeracion'] is not None and (
             piezas['procesador'] is not None or piezas['placa_madre'] is not None
         )
+    if regla == 'potencia':
+        return _potencia_cumplida(piezas, politica)
     return False
 
 
-def _texto_coincidencia(regla, piezas):
+def _texto_coincidencia(regla, piezas, politica):
     if regla == 'socket':
         return f"Socket {normalizar_spec(piezas['procesador'].socket)}"
     if regla == 'ddr':
         return f"DDR {normalizar_spec(piezas['memoria_ram'].tipo_ddr)}"
     if regla == 'formato':
         return f"Formato {normalizar_spec(piezas['placa_madre'].formato)}"
+    if regla == 'potencia':
+        return _texto_potencia_cumplida(piezas, politica)
     sockets = []
     if piezas['procesador'] is not None:
         sockets.append(normalizar_spec(piezas['procesador'].socket))
@@ -209,7 +252,16 @@ def _texto_coincidencia(regla, piezas):
     return 'Cooler para ' + ', '.join(sockets)
 
 
-def validar_armado(procesador=None, placa_madre=None, memoria_ram=None, gabinete=None, refrigeracion=None):
+def validar_armado(
+    procesador=None,
+    placa_madre=None,
+    memoria_ram=None,
+    gabinete=None,
+    refrigeracion=None,
+    tarjeta_grafica=None,
+    fuente_de_poder=None,
+    politica=None,
+):
     """Valida las piezas presentes. Las que no participan en estas reglas se ignoran.
 
     Devuelve compatible solo si cada regla aplicable quedó resuelta con datos conocidos.
@@ -219,6 +271,7 @@ def validar_armado(procesador=None, placa_madre=None, memoria_ram=None, gabinete
         _evaluar_socket(procesador, placa_madre),
         _evaluar_ddr(memoria_ram, placa_madre),
         _evaluar_formato(placa_madre, gabinete),
+        _evaluar_potencia(procesador, tarjeta_grafica, fuente_de_poder, politica or politica_potencia()),
     )
     hallazgos = [hallazgo for hallazgo in candidatos if hallazgo is not None]
     hallazgos.extend(_evaluar_cooler(refrigeracion, procesador, placa_madre))
@@ -359,5 +412,133 @@ def _cooler_contra_socket(sockets_conocidos, socket_objetivo, nombre_pieza):
             'cooler',
             ESTADO_INCOMPATIBLE,
             f'El cooler no admite el socket {objetivo} de {nombre_pieza}.',
+        )
+    return None
+
+
+@dataclass(frozen=True)
+class PoliticaPotencia:
+    """Parámetros de la estimación de fuente. Ver el docstring del módulo."""
+
+    reserva_otros_watts: int = 150
+    margen: Decimal = Decimal('1.20')
+
+    def __post_init__(self):
+        if self.reserva_otros_watts < 0:
+            raise ValueError('La reserva de potencia no puede ser negativa.')
+        margen = Decimal(self.margen)
+        if margen <= 0:
+            raise ValueError('El margen de potencia debe ser mayor que cero.')
+        object.__setattr__(self, 'margen', margen)
+
+    def estimar(self, potencia_cpu, consumo_gpu, minimo_fuente_gpu=None):
+        """Devuelve (estimacion, minimo_aplicado), ambos en watts enteros."""
+        base = potencia_cpu + consumo_gpu + self.reserva_otros_watts
+        estimacion = int((Decimal(base) * self.margen).to_integral_value(rounding=ROUND_CEILING))
+        if minimo_fuente_gpu is None:
+            return estimacion, estimacion
+        return estimacion, max(estimacion, minimo_fuente_gpu)
+
+
+POLITICA_POTENCIA_DEFECTO = PoliticaPotencia()
+
+
+def politica_potencia():
+    """Política activa: el ajuste del proyecto, o la de defecto si no existe."""
+    from django.conf import settings
+
+    cruda = getattr(settings, 'POLITICA_POTENCIA_ARMADO', None)
+    if not cruda:
+        return POLITICA_POTENCIA_DEFECTO
+    return PoliticaPotencia(
+        reserva_otros_watts=cruda['reserva_otros_watts'],
+        margen=cruda['margen'],
+    )
+
+
+def _watts_conocido(valor):
+    """Un watt conocido es un entero mayor que cero. NULL y 0 no son dato."""
+    if isinstance(valor, bool) or valor is None or isinstance(valor, float):
+        return None
+    if isinstance(valor, Decimal):
+        if valor != valor.to_integral_value():
+            return None
+        valor = int(valor)
+    try:
+        numero = int(valor)
+    except (TypeError, ValueError):
+        return None
+    if numero <= 0:
+        return None
+    return numero
+
+
+def _potencia_cumplida(piezas, politica):
+    return _evaluar_potencia(
+        piezas.get('procesador'),
+        piezas.get('tarjeta_grafica'),
+        piezas.get('fuente_de_poder'),
+        politica,
+    ) is None and piezas.get('fuente_de_poder') is not None and piezas.get('procesador') is not None and piezas.get('tarjeta_grafica') is not None
+
+
+def _texto_potencia_cumplida(piezas, politica):
+    _estimacion, minimo = _cifras_potencia(piezas, politica)
+    return (
+        f'Cumple la estimación de potencia ({minimo} W). '
+        'No se validan conectores ni dimensiones; no es una garantía eléctrica.'
+    )
+
+
+def _cifras_potencia(piezas, politica):
+    cpu = _watts_conocido(getattr(piezas['procesador'], 'potencia_referencia_watts', None))
+    gpu = _watts_conocido(getattr(piezas['tarjeta_grafica'], 'consumo_referencia_watts', None))
+    minimo_gpu = _watts_conocido(getattr(piezas['tarjeta_grafica'], 'potencia_minima_fuente_watts', None))
+    return politica.estimar(cpu, gpu, minimo_gpu)
+
+
+def _evaluar_potencia(procesador, tarjeta_grafica, fuente_de_poder, politica):
+    """Solo corre si hay una fuente. Sin ella, la regla no aplica al resto del armado."""
+    if fuente_de_poder is None:
+        return None
+    if procesador is None or tarjeta_grafica is None:
+        return Hallazgo(
+            'potencia',
+            ESTADO_INCOMPLETO,
+            'Falta el procesador o la tarjeta gráfica para estimar la potencia de la fuente.',
+        )
+
+    cpu_w = _watts_conocido(getattr(procesador, 'potencia_referencia_watts', None))
+    gpu_w = _watts_conocido(getattr(tarjeta_grafica, 'consumo_referencia_watts', None))
+    fuente_w = _watts_conocido(getattr(fuente_de_poder, 'potencia_watts', None))
+    faltan = []
+    if cpu_w is None:
+        faltan.append('la potencia de referencia del procesador')
+    if gpu_w is None:
+        faltan.append('el consumo de referencia de la GPU')
+    if fuente_w is None:
+        faltan.append('la potencia nominal de la fuente')
+    if faltan:
+        return Hallazgo(
+            'potencia',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede estimar la potencia porque falta '
+            + ' y '.join(faltan)
+            + '. Un valor vacío o 0 no se toma como consumo conocido.',
+        )
+
+    estimacion, minimo = politica.estimar(
+        cpu_w,
+        gpu_w,
+        _watts_conocido(getattr(tarjeta_grafica, 'potencia_minima_fuente_watts', None)),
+    )
+    if fuente_w < minimo:
+        return Hallazgo(
+            'potencia',
+            ESTADO_INCOMPATIBLE,
+            'Potencia insuficiente según la política de estimación: '
+            f'la fuente ofrece {fuente_w} W y el mínimo estimado es {minimo} W '
+            f'(cálculo con reserva y margen: {estimacion} W). '
+            'Es una estimación, no una garantía eléctrica.',
         )
     return None

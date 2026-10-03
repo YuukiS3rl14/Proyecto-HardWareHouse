@@ -8,9 +8,15 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from core.management.commands.cargar_demo_armado import CATALOGO_DEMO, PROVEEDOR_DEMO
+from core.management.commands.cargar_demo_armado import (
+    FUENTES_DEMO,
+    GPU_DEMO,
+    POTENCIA_CPU_DEMO,
+)
 from core.models import (
     AlmacenamientoHDD,
     AlmacenamientoSSD,
+    FuenteDePoder,
     Gabinete,
     ItemCarrito,
     MemoriaRam,
@@ -18,6 +24,7 @@ from core.models import (
     Procesador,
     Proveedor,
     RefrigeracionCooler,
+    TarjetaGrafica,
 )
 
 
@@ -63,6 +70,8 @@ class CargarDemoArmadoTests(TestCase):
         self.assertEqual(previo.socket, 'AM4')
         self.assertEqual(previo.descripcion, 'No tocar')
         self.assertEqual(previo.proveedor_id, marca.id)
+        self.assertIsNone(previo.potencia_referencia_watts)
+        self.assertIsNone(ajeno.potencia_referencia_watts)
         self.assertEqual(ajeno.precio, Decimal('111.00'))
         self.assertEqual(Procesador.objects.filter(nombre='DEMO CPU AM5').count(), 1)
         self.assertEqual(Procesador.objects.filter(nombre='DEMO CPU AM4').count(), 1)
@@ -91,6 +100,9 @@ class CargarDemoArmadoTests(TestCase):
         self.assertEqual(Gabinete.objects.get(nombre='DEMO Gabinete Mini-ITX').formato_soporte, 'Mini-ITX')
         self.assertEqual(RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM4').socket_compatibles, 'AM4')
         self.assertEqual(RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM5').socket_compatibles, 'AM5')
+        self.assertIsNone(Procesador.objects.get(nombre='DEMO CPU AM5').potencia_referencia_watts)
+        self.assertEqual(TarjetaGrafica.objects.count(), 0)
+        self.assertEqual(FuenteDePoder.objects.count(), 0)
 
 
 @override_settings(DEBUG=True)
@@ -172,3 +184,76 @@ class DemoArmadoCarritoTests(TestCase):
         self.assertIsNone(item_ssd.almacenamiento_hdd_id)
         self.assertEqual(item_hdd.almacenamiento_hdd_id, self.hdd.id)
         self.assertIsNone(item_hdd.almacenamiento_ssd_id)
+
+
+@override_settings(DEBUG=True)
+class CargarDemoPotenciaTests(TestCase):
+    def test_sin_la_opcion_no_escribe_potencia(self):
+        call_command('cargar_demo_armado')
+
+        self.assertIsNone(Procesador.objects.get(nombre='DEMO CPU AM5').potencia_referencia_watts)
+        self.assertFalse(TarjetaGrafica.objects.filter(nombre=GPU_DEMO['nombre']).exists())
+        self.assertFalse(FuenteDePoder.objects.filter(nombre='DEMO Fuente 550W').exists())
+
+    def test_la_opcion_solo_completa_las_piezas_demo(self):
+        marca = Proveedor.objects.create(nombre='Marca real')
+        real = Procesador.objects.create(
+            proveedor=marca,
+            nombre='CPU real',
+            precio=Decimal('222.00'),
+            stock=2,
+            socket='LGA1700',
+            nucleos=4,
+            frecuencia_base=Decimal('3.00'),
+        )
+        demo_previo = Procesador.objects.create(
+            proveedor=marca,
+            nombre='DEMO CPU AM5',
+            descripcion='No tocar el resto',
+            precio=Decimal('1.00'),
+            stock=1,
+            socket='AM4',
+            nucleos=2,
+            frecuencia_base=Decimal('1.10'),
+        )
+        gpu_previa = TarjetaGrafica.objects.create(
+            proveedor=marca,
+            nombre=GPU_DEMO['nombre'],
+            descripcion='GPU ya cargada',
+            precio=Decimal('5.00'),
+            stock=1,
+            vram_gb=4,
+            tipo_memoria='GDDR6',
+            interfaz='PCIe 4.0',
+        )
+
+        call_command('cargar_demo_armado', potencia=True)
+        call_command('cargar_demo_armado', potencia=True)
+
+        real.refresh_from_db()
+        demo_previo.refresh_from_db()
+        gpu_previa.refresh_from_db()
+        self.assertIsNone(real.potencia_referencia_watts)
+        self.assertEqual(real.precio, Decimal('222.00'))
+        self.assertEqual(demo_previo.precio, Decimal('1.00'))
+        self.assertEqual(demo_previo.socket, 'AM4')
+        self.assertEqual(demo_previo.descripcion, 'No tocar el resto')
+        self.assertEqual(demo_previo.potencia_referencia_watts, POTENCIA_CPU_DEMO['DEMO CPU AM5'])
+        self.assertEqual(gpu_previa.precio, Decimal('5.00'))
+        self.assertEqual(gpu_previa.vram_gb, 4)
+        self.assertEqual(gpu_previa.consumo_referencia_watts, GPU_DEMO['consumo_referencia_watts'])
+        self.assertEqual(gpu_previa.potencia_minima_fuente_watts, GPU_DEMO['potencia_minima_fuente_watts'])
+        self.assertEqual(TarjetaGrafica.objects.filter(nombre=GPU_DEMO['nombre']).count(), 1)
+        self.assertEqual(FuenteDePoder.objects.count(), len(FUENTES_DEMO))
+        for item in FUENTES_DEMO:
+            fuente = FuenteDePoder.objects.get(nombre=item['nombre'])
+            self.assertEqual(fuente.potencia_watts, item['potencia_watts'])
+            self.assertTrue(fuente.nombre.startswith('DEMO'))
+
+    def test_rechaza_la_opcion_si_debug_esta_apagado(self):
+        with override_settings(DEBUG=False):
+            with self.assertRaises(CommandError):
+                call_command('cargar_demo_armado', potencia=True)
+
+        self.assertEqual(FuenteDePoder.objects.count(), 0)
+        self.assertEqual(Procesador.objects.count(), 0)

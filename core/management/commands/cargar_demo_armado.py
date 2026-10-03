@@ -7,12 +7,14 @@ from django.db import transaction
 from core.models import (
     AlmacenamientoHDD,
     AlmacenamientoSSD,
+    FuenteDePoder,
     Gabinete,
     MemoriaRam,
     PlacaMadre,
     Procesador,
     Proveedor,
     RefrigeracionCooler,
+    TarjetaGrafica,
 )
 
 PROVEEDOR_DEMO = 'DEMO'
@@ -167,21 +169,90 @@ CATALOGO_DEMO = (
     },
 )
 
+# Watts ficticios. Solo los escribe la opción --potencia, y solo en estos nombres.
+POTENCIA_CPU_DEMO = {
+    'DEMO CPU AM4': 65,
+    'DEMO CPU AM5': 120,
+}
+
+GPU_DEMO = {
+    'nombre': 'DEMO GPU',
+    'consumo_referencia_watts': 220,
+    'potencia_minima_fuente_watts': 650,
+    'campos': {
+        'descripcion': (
+            'Pieza ficticia de demostración. Consumo de referencia 220 W y fuente mínima '
+            'recomendada 650 W. Esas cifras no son un TDP ni un consumo máximo.'
+        ),
+        'precio': Decimal('199990.00'),
+        'stock': STOCK_DEMO,
+        'vram_gb': 8,
+        'tipo_memoria': 'GDDR6',
+        'interfaz': 'PCIe 4.0',
+    },
+}
+
+FUENTES_DEMO = (
+    {
+        'nombre': 'DEMO Fuente 550W',
+        'potencia_watts': 550,
+        'campos': {
+            'descripcion': (
+                'Pieza ficticia de demostración. 550 W nominales: queda bajo el mínimo '
+                'estimado con DEMO CPU AM5 y DEMO GPU usando la política por defecto.'
+            ),
+            'precio': Decimal('39990.00'),
+            'stock': STOCK_DEMO,
+            'certificacion': '80+ Bronze',
+            'modular': False,
+        },
+    },
+    {
+        'nombre': 'DEMO Fuente 750W',
+        'potencia_watts': 750,
+        'campos': {
+            'descripcion': (
+                'Pieza ficticia de demostración. 750 W nominales: alcanza la estimación '
+                'de potencia con DEMO CPU AM5 y DEMO GPU. No valida conectores ni dimensiones.'
+            ),
+            'precio': Decimal('69990.00'),
+            'stock': STOCK_DEMO,
+            'certificacion': '80+ Gold',
+            'modular': True,
+        },
+    },
+)
+
 
 class Command(BaseCommand):
     help = 'Carga piezas DEMO para probar el armador. No modifica productos que ya existen.'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--potencia',
+            action='store_true',
+            help=(
+                'Escribe la potencia de referencia solo en las piezas DEMO de este comando '
+                'y crea la GPU y las dos fuentes de prueba si faltan.'
+            ),
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG:
             raise CommandError('cargar_demo_armado solo puede ejecutarse con DEBUG=True.')
 
+        self._crear_faltantes_del_catalogo()
+        if options['potencia']:
+            self._aplicar_potencia_demo()
+
+    def _crear_faltantes_del_catalogo(self):
         faltantes = [
             item for item in CATALOGO_DEMO
             if not item['modelo'].objects.filter(nombre=item['nombre']).exists()
         ]
         if not faltantes:
             self.stdout.write(self.style.SUCCESS(
-                'Todos los productos DEMO ya existen. No se modificó nada.'
+                'Catálogo DEMO: todos los productos ya existen. No se creó ni se modificó ninguno de ellos.'
             ))
             return
 
@@ -206,4 +277,64 @@ class Command(BaseCommand):
             self.stdout.write(f'Creado: {nombre}')
         self.stdout.write(self.style.SUCCESS(
             f'Listo. Creados: {len(creados)}. Omitidos porque ya existían: {len(CATALOGO_DEMO) - len(creados)}.'
+        ))
+
+    def _aplicar_potencia_demo(self):
+        """Completa watts solo en nombres DEMO de este comando. No toca otros productos."""
+        with transaction.atomic():
+            proveedor, _creado = Proveedor.objects.get_or_create(nombre=PROVEEDOR_DEMO)
+            for nombre, watts in POTENCIA_CPU_DEMO.items():
+                actualizados = Procesador.objects.filter(nombre=nombre).update(
+                    potencia_referencia_watts=watts,
+                )
+                if actualizados:
+                    self.stdout.write(f'Potencia de referencia en {nombre}: {watts} W')
+                else:
+                    self.stdout.write(self.style.WARNING(
+                        f'No existe {nombre}; no se creó un procesador fuera del catálogo.'
+                    ))
+
+            gpu = TarjetaGrafica.objects.filter(nombre=GPU_DEMO['nombre']).first()
+            if gpu is None:
+                gpu = TarjetaGrafica(
+                    proveedor=proveedor,
+                    nombre=GPU_DEMO['nombre'],
+                    consumo_referencia_watts=GPU_DEMO['consumo_referencia_watts'],
+                    potencia_minima_fuente_watts=GPU_DEMO['potencia_minima_fuente_watts'],
+                    **GPU_DEMO['campos'],
+                )
+                gpu.full_clean()
+                gpu.save()
+                self.stdout.write(f"Creada: {GPU_DEMO['nombre']}")
+            else:
+                TarjetaGrafica.objects.filter(pk=gpu.pk).update(
+                    consumo_referencia_watts=GPU_DEMO['consumo_referencia_watts'],
+                    potencia_minima_fuente_watts=GPU_DEMO['potencia_minima_fuente_watts'],
+                )
+                self.stdout.write(
+                    f"Potencia de referencia en {GPU_DEMO['nombre']}: "
+                    f"{GPU_DEMO['consumo_referencia_watts']} W, "
+                    f"fuente mínima {GPU_DEMO['potencia_minima_fuente_watts']} W"
+                )
+
+            for item in FUENTES_DEMO:
+                fuente = FuenteDePoder.objects.filter(nombre=item['nombre']).first()
+                if fuente is None:
+                    fuente = FuenteDePoder(
+                        proveedor=proveedor,
+                        nombre=item['nombre'],
+                        potencia_watts=item['potencia_watts'],
+                        **item['campos'],
+                    )
+                    fuente.full_clean()
+                    fuente.save()
+                    self.stdout.write(f"Creada: {item['nombre']}")
+                else:
+                    FuenteDePoder.objects.filter(pk=fuente.pk).update(
+                        potencia_watts=item['potencia_watts'],
+                    )
+                    self.stdout.write(f"Potencia nominal en {item['nombre']}: {item['potencia_watts']} W")
+
+        self.stdout.write(self.style.SUCCESS(
+            'Potencia DEMO aplicada solo a los nombres ficticios de este comando.'
         ))

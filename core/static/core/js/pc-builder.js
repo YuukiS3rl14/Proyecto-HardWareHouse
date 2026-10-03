@@ -247,6 +247,9 @@ function iniciarArmado() {
         if (component.capacidad_gb) specs.push(`Capacidad: ${component.capacidad_gb}GB`);
         // Fuente de Poder
         if (component.potencia_watts) specs.push(`Potencia: ${component.potencia_watts}W`);
+        if (component.potencia_referencia_watts) specs.push(`Referencia: ${component.potencia_referencia_watts}W`);
+        if (component.consumo_referencia_watts) specs.push(`Consumo ref.: ${component.consumo_referencia_watts}W`);
+        if (component.potencia_minima_fuente_watts) specs.push(`Fuente mín. recomendada: ${component.potencia_minima_fuente_watts}W`);
         // Refrigeración
         if (component.tipo) specs.push(`Tipo: ${component.tipo}`);
         if (component.tamanho_radiador_mm) specs.push(`Radiador: ${component.tamanho_radiador_mm}mm`);

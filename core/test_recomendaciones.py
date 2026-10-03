@@ -82,13 +82,22 @@ class EvaluarCandidatoTests(TestCase):
         self.assertEqual(evaluacion.etiqueta, 'Selección incompleta')
         self.assertEqual(evaluacion.coincidencias, ())
 
-    def test_gpu_fuente_y_almacenamiento_no_se_declaran_compatibles(self):
+    def test_gpu_y_almacenamiento_no_se_declaran_compatibles(self):
         cpu = pieza(socket='AM5')
         placa = pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX')
-        for categoria in ('tarjeta_grafica', 'fuente_de_poder', 'almacenamiento_ssd', 'almacenamiento_hdd'):
+        for categoria in ('tarjeta_grafica', 'almacenamiento_ssd', 'almacenamiento_hdd'):
             evaluacion = evaluar_candidato(categoria, pieza(nombre='Pieza'), procesador=cpu, placa_madre=placa)
             self.assertEqual(evaluacion.estado, 'no_evaluada')
             self.assertEqual(evaluacion.etiqueta, 'Compatibilidad no evaluada')
+
+        fuente = evaluar_candidato(
+            'fuente_de_poder',
+            pieza(potencia_watts=650),
+            procesador=cpu,
+            placa_madre=placa,
+        )
+        self.assertEqual(fuente.estado, 'incompleto')
+        self.assertNotIn('completamente compatible', fuente.etiqueta.lower())
 
     def test_coincidencias_nombran_la_regla_comprobada(self):
         evaluacion = evaluar_candidato(
