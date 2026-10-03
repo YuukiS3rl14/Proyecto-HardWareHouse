@@ -11,7 +11,10 @@ function iniciarArmado() {
     // Estado actual de la construcción y de la última consulta vigente.
     let currentBuild = {};
     let discos = [];
+    let memorias = [];
     let evaluacionActual = null;
+    let modoModal = '';
+    let reemplazaId = null;
     let consultaSerial = 0;
 
     // Orden y etiquetas de los componentes
@@ -49,6 +52,12 @@ function iniciarArmado() {
         });
         document.querySelectorAll('.cantidad-disco').forEach(input => {
             input.addEventListener('change', cambiarCantidadDisco);
+        });
+        document.querySelectorAll('.quitar-ram-btn').forEach(btn => {
+            btn.addEventListener('click', quitarRam);
+        });
+        document.querySelectorAll('.cantidad-ram').forEach(input => {
+            input.addEventListener('change', cambiarCantidadRam);
         });
 
         updateSummaryAndTotal();
@@ -97,7 +106,79 @@ function iniciarArmado() {
         `;
     }
 
+    function htmlMemorias(label) {
+        const hay = memorias.length > 0;
+        const visual = hay ? estadoVisual(piezaEvaluada('memoria_ram')) : { status: '', icon: '' };
+        const detalle = hay ? htmlDetallePieza('memoria_ram') : '';
+        const totalRam = memorias.reduce((suma, ram) => suma + parseFloat(ram.precio) * ram.cantidad, 0);
+        const precio = hay ? `$${totalRam.toLocaleString('es-CL')}` : '-';
+        const lineas = hay ? memorias.map(ram => {
+            const subtotal = parseFloat(ram.precio) * ram.cantidad;
+            return `
+                <div class="border-top pt-2 mt-2">
+                    <p class="mb-1 small">${escaparHtml(ram.nombre)}</p>
+                    <ul class="list-unstyled spec-list mb-1">${getComponentSpecs(ram, true)}</ul>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <label class="small mb-0">Cantidad
+                            <input type="number" min="1" max="${ram.stock}" step="1" class="form-control form-control-sm cantidad-ram d-inline-block ml-1" style="width: 4.5rem;" data-id="${ram.id}" value="${ram.cantidad}">
+                        </label>
+                        <strong class="small">$${subtotal.toLocaleString('es-CL')}</strong>
+                        <button type="button" class="btn btn-sm btn-outline-secondary select-component-btn" data-type="memoria_ram" data-modo="reemplazar" data-reemplaza-id="${ram.id}">Editar</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger quitar-ram-btn" data-id="${ram.id}">Quitar</button>
+                    </div>
+                </div>`;
+        }).join('') : '<p class="mb-1 small">No seleccionado</p><ul class="list-unstyled spec-list mb-0"><li>Puedes combinar módulos y kits</li></ul>';
+        const conteo = hay ? `<p class="mb-0 text-muted"><small>${escaparHtml(textoConteoRam())}</small></p>` : '';
+        return `
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="component-card-wrapper">
+                    <div class="component-card">
+                        <div class="info">
+                            <h5 class="font-weight-bold ${visual.status}">${visual.icon}${label}</h5>
+                            <img src="${urls.placeholderImg}" alt="Memoria RAM">
+                            ${lineas}
+                            ${conteo}
+                            ${detalle}
+                        </div>
+                        <div class="actions">
+                            <h5 class="font-weight-bold mb-3">${precio}</h5>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-sm btn-outline-success select-component-btn" data-type="memoria_ram" data-modo="agregar">Agregar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function textoConteoRam() {
+        let modulos = 0;
+        let capacidad = 0;
+        let faltaModulos = false;
+        let faltaCapacidad = false;
+        memorias.forEach(ram => {
+            const cantidad = Number(ram.cantidad);
+            if (ram.modulos_por_producto) {
+                modulos += Number(ram.modulos_por_producto) * cantidad;
+            } else {
+                faltaModulos = true;
+            }
+            if (ram.capacidad_gb) {
+                capacidad += Number(ram.capacidad_gb) * cantidad;
+            } else {
+                faltaCapacidad = true;
+            }
+        });
+        const textoModulos = faltaModulos ? 'módulos sin dato' : `${modulos} módulos`;
+        const textoCapacidad = faltaCapacidad ? 'capacidad sin dato' : `${capacidad} GB`;
+        return `${textoModulos} · ${textoCapacidad} en total`;
+    }
+
     function createComponentCardHTML(key, label, component) {
+        if (key === 'memoria_ram') {
+            return htmlMemorias(label);
+        }
         if (key === 'almacenamiento') {
             return htmlAlmacenamiento(label);
         }
@@ -175,6 +256,13 @@ function iniciarArmado() {
                 cantidad: disco.cantidad,
             });
         });
+        memorias.forEach(ram => {
+            piezas.push({
+                tipo: 'memoria_ram',
+                id: ram.id,
+                cantidad: ram.cantidad,
+            });
+        });
         return piezas;
     }
 
@@ -184,18 +272,27 @@ function iniciarArmado() {
         const modalBody = document.getElementById('componentModalBody');
         const { label } = componentOrder.find(c => c.key === type);
         categoriaModal = type;
-        modalTitle.textContent = `Seleccionar ${label}`;
+        modoModal = e.target.dataset.modo || '';
+        reemplazaId = e.target.dataset.reemplazaId || null;
+        modalTitle.textContent = modoModal === 'reemplazar' ? `Reemplazar ${label}` : `Seleccionar ${label}`;
         modalBody.innerHTML = '<p class="text-muted mb-0">Revisando compatibilidad...</p>';
         $('#componentModal').modal('show');
 
+        const cuerpo = {
+            categoria: type,
+            componentes: seleccionActual(),
+        };
+        if (type === 'memoria_ram') {
+            cuerpo.modo = modoModal || 'agregar';
+            if (cuerpo.modo === 'reemplazar') {
+                cuerpo.reemplaza_id = Number(reemplazaId);
+            }
+        }
         const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
         try {
             const response = await fetch(urls.recomendarUrl, {
                 method: 'POST',
-                body: JSON.stringify({
-                    categoria: type,
-                    componentes: seleccionActual(),
-                }),
+                body: JSON.stringify(cuerpo),
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
@@ -307,22 +404,25 @@ function iniciarArmado() {
     }
 
     function detalleRecomendacion(candidato) {
+        const avisos = (candidato.advertencias || []).map(texto => (
+            `<p class="mb-0 text-warning"><small>${escaparHtml(texto)}</small></p>`
+        )).join('');
         if (candidato.estado === 'compatible') {
             const pendientes = (candidato.pendientes || []).length
                 ? `<p class="mb-0 text-muted"><small>Selección incompleta en reglas que aún no se pueden comprobar.</small></p>`
                 : '';
-            return `<p class="mb-0 mt-1 text-success"><small>${escaparHtml(candidato.etiqueta)}</small></p>${pendientes}`;
+            return `<p class="mb-0 mt-1 text-success"><small>${escaparHtml(candidato.etiqueta)}</small></p>${avisos}${pendientes}`;
         }
         if (candidato.estado === 'incompleto') {
             const pendientes = (candidato.pendientes || []).map(texto => `<p class="mb-0 text-muted"><small>${escaparHtml(texto)}</small></p>`).join('');
-            return `<p class="mb-0 mt-1 text-muted"><small>${escaparHtml(candidato.etiqueta)}</small></p>${pendientes}`;
+            return `<p class="mb-0 mt-1 text-muted"><small>${escaparHtml(candidato.etiqueta)}</small></p>${avisos}${pendientes}`;
         }
         if (candidato.estado === 'incompatible' || candidato.estado === 'datos_insuficientes') {
             const motivos = (candidato.motivos || []).map(motivo => `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(motivo)}</small></p>`).join('');
             const pendientes = (candidato.pendientes || []).map(texto => `<p class="mb-0 text-muted"><small>${escaparHtml(texto)}</small></p>`).join('');
-            return `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(candidato.etiqueta)}</small></p>${motivos}${pendientes}`;
+            return `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(candidato.etiqueta)}</small></p>${motivos}${avisos}${pendientes}`;
         }
-        return `<p class="mb-0 mt-1 text-muted"><small>${escaparHtml(candidato.etiqueta)}</small></p>`;
+        return `<p class="mb-0 mt-1 text-muted"><small>${escaparHtml(candidato.etiqueta)}</small></p>${avisos}`;
     }
 
     function getComponentSpecs(component, isCard) {
@@ -336,16 +436,22 @@ function iniciarArmado() {
         if (component.chipset) specs.push(`Chipset: ${component.chipset}`);
         if (component.formato) specs.push(`Formato: ${component.formato}`);
         if (component.tipo_ram_soportado) specs.push(`RAM: ${component.tipo_ram_soportado}`);
+        if (component.formato_ram_soportado) specs.push(`Formato RAM: ${component.formato_ram_soportado}`);
         if (component.ranuras_ram) specs.push(`Slots RAM: ${component.ranuras_ram}`);
+        if (component.capacidad_maxima_ram_gb) specs.push(`RAM máx.: ${component.capacidad_maxima_ram_gb}GB`);
         // RAM
         if (component.tipo_ddr) specs.push(`Tipo: ${component.tipo_ddr}`);
-        if (component.velocidad_mhz) specs.push(`Velocidad: ${component.velocidad_mhz}MHz`);
+        if (component.formato_ram) specs.push(`Formato: ${component.formato_ram}`);
+        if (component.modulos_por_producto) specs.push(`Módulos: ${component.modulos_por_producto}`);
+        if (component.capacidad_modulo_gb) specs.push(`Por módulo: ${component.capacidad_modulo_gb}GB`);
+        if (component.velocidad_mhz) specs.push(`Velocidad indicada: ${component.velocidad_mhz}MHz`);
         // GPU
         if (component.vram_gb) specs.push(`VRAM: ${component.vram_gb}GB`);
         if (component.tipo_memoria) specs.push(`Memoria: ${component.tipo_memoria}`);
         if (component.interfaz) specs.push(`Interfaz: ${component.interfaz}`);
         // Almacenamiento y otros con capacidad
-        if (component.capacidad_gb) specs.push(`Capacidad: ${component.capacidad_gb}GB`);
+        if (component.capacidad_gb && !component.tipo_ddr) specs.push(`Capacidad: ${component.capacidad_gb}GB`);
+        if (component.capacidad_gb && component.tipo_ddr) specs.push(`Capacidad del producto: ${component.capacidad_gb}GB`);
         // Fuente de Poder
         if (component.potencia_watts) specs.push(`Potencia: ${component.potencia_watts}W`);
         if (component.potencia_referencia_watts) specs.push(`Referencia: ${component.potencia_referencia_watts}W`);
@@ -376,7 +482,39 @@ function iniciarArmado() {
             return;
         }
 
-        if (type === 'almacenamiento') {
+        if (type === 'memoria_ram') {
+            if (modoModal === 'reemplazar') {
+                const indice = memorias.findIndex(ram => String(ram.id) === String(reemplazaId));
+                const cantidad = indice >= 0 ? memorias[indice].cantidad : 1;
+                const sinLinea = memorias.filter(ram => String(ram.id) !== String(reemplazaId));
+                const existente = sinLinea.find(ram => String(ram.id) === String(producto.id));
+                if (existente && existente.cantidad + cantidad > Number(existente.stock)) {
+                    showToast('No hay más unidades en stock.', 'error');
+                    return;
+                }
+                if (!existente && cantidad > Number(producto.stock)) {
+                    showToast('No hay más unidades en stock.', 'error');
+                    return;
+                }
+                memorias = sinLinea;
+                if (existente) {
+                    existente.cantidad += cantidad;
+                } else {
+                    memorias.push(Object.assign({}, producto, { cantidad }));
+                }
+            } else {
+                const existente = memorias.find(ram => String(ram.id) === String(producto.id));
+                if (existente) {
+                    if (existente.cantidad >= Number(existente.stock)) {
+                        showToast('No hay más unidades en stock.', 'error');
+                        return;
+                    }
+                    existente.cantidad += 1;
+                } else {
+                    memorias.push(Object.assign({}, producto, { cantidad: 1 }));
+                }
+            }
+        } else if (type === 'almacenamiento') {
             const existente = discos.find(disco => (
                 disco.model_name === producto.model_name && String(disco.id) === String(producto.id)
             ));
@@ -415,6 +553,25 @@ function iniciarArmado() {
             return;
         }
         disco.cantidad = numero;
+        consultarEvaluacion();
+    }
+
+    function quitarRam(e) {
+        const id = e.currentTarget.dataset.id;
+        memorias = memorias.filter(ram => String(ram.id) !== String(id));
+        consultarEvaluacion();
+    }
+
+    function cambiarCantidadRam(e) {
+        const id = e.target.dataset.id;
+        const ram = memorias.find(item => String(item.id) === String(id));
+        const numero = Number(e.target.value);
+        if (!ram || !Number.isInteger(numero) || numero < 1 || numero > Number(ram.stock)) {
+            showToast('La cantidad debe ser un entero positivo dentro del stock.', 'error');
+            consultarEvaluacion();
+            return;
+        }
+        ram.cantidad = numero;
         consultarEvaluacion();
     }
 
@@ -522,6 +679,31 @@ function iniciarArmado() {
         let componentCount = 0;
 
         componentOrder.forEach(({ key, label }) => {
+            if (key === 'memoria_ram') {
+                if (memorias.length === 0) {
+                    return;
+                }
+                const subtotal = memorias.reduce((suma, ram) => suma + parseFloat(ram.precio) * ram.cantidad, 0);
+                total += subtotal;
+                componentCount += 1;
+                const visual = estadoVisual(piezaEvaluada(key));
+                const lineas = memorias.map(ram => (
+                    `<p class="mb-0 small">${escaparHtml(ram.nombre)} × ${ram.cantidad}</p>`
+                )).join('');
+                const summaryItem = document.createElement('div');
+                summaryItem.className = 'd-flex justify-content-between mb-2';
+                summaryItem.innerHTML = `
+                    <div class="pr-2">
+                        <p class="mb-0 ${visual.status}">${visual.icon}${label}</p>
+                        ${lineas}
+                        <p class="mb-0 text-muted"><small>${escaparHtml(textoConteoRam())}</small></p>
+                        ${htmlDetallePieza(key)}
+                    </div>
+                    <p class="mb-0">$${subtotal.toLocaleString('es-CL')}</p>
+                `;
+                summaryList.appendChild(summaryItem);
+                return;
+            }
             if (key === 'almacenamiento') {
                 if (discos.length === 0) {
                     return;
@@ -578,7 +760,10 @@ function iniciarArmado() {
                 const motivos = (evaluacionActual.motivos || [])
                     .map(motivo => `<p class="mb-0 text-danger"><small>${escaparHtml(motivo)}</small></p>`)
                     .join('');
-                nota.innerHTML = `<p class="mb-0"><small>${escaparHtml(evaluacionActual.texto)}</small></p>${motivos}`;
+                const avisos = (evaluacionActual.advertencias || [])
+                    .map(aviso => `<p class="mb-0 text-warning"><small>${escaparHtml(aviso)}</small></p>`)
+                    .join('');
+                nota.innerHTML = `<p class="mb-0"><small>${escaparHtml(evaluacionActual.texto)}</small></p>${motivos}${avisos}`;
             }
             summaryList.appendChild(nota);
         }

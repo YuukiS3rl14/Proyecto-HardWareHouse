@@ -47,12 +47,17 @@ _CAMPOS = {
         ('chipset', 'Chipset'),
         ('formato', 'Formato'),
         ('tipo_ram_soportado', 'Tipo de RAM'),
+        ('formato_ram_soportado', 'Formato de RAM admitido'),
         ('ranuras_ram', 'Ranuras de RAM'),
+        ('capacidad_maxima_ram_gb', 'Capacidad máxima de RAM (GB)'),
     ),
     'memoria_ram': (
         ('tipo_ddr', 'Tipo DDR'),
-        ('capacidad_gb', 'Capacidad (GB)'),
-        ('velocidad_mhz', 'Velocidad (MHz)'),
+        ('formato_ram', 'Formato'),
+        ('capacidad_gb', 'Capacidad del producto (GB)'),
+        ('modulos_por_producto', 'Módulos por producto'),
+        ('capacidad_modulo_gb', 'Capacidad por módulo (GB)'),
+        ('velocidad_mhz', 'Velocidad indicada (MHz)'),
     ),
     'refrigeracion_cooler': (
         ('tipo', 'Tipo de refrigeración'),
@@ -142,7 +147,8 @@ def especificaciones_de(producto):
 
 def texto_de_estado(evaluacion):
     partes = []
-    for texto in (evaluacion.etiqueta, *evaluacion.motivos, *evaluacion.pendientes):
+    avisos = getattr(evaluacion, 'advertencias', ())
+    for texto in (evaluacion.etiqueta, *evaluacion.motivos, *evaluacion.pendientes, *avisos):
         if texto and texto not in partes:
             partes.append(texto)
     return '\n'.join(partes)

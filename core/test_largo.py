@@ -27,8 +27,14 @@ from core.tests import pieza
 def armado_largo(largo_gpu, largo_maximo):
     return validar_armado(
         procesador=pieza(socket='AM5'),
-        placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX'),
-        memoria_ram=pieza(tipo_ddr='DDR5'),
+        placa_madre=pieza(
+            socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX',
+            ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        ),
+        memoria_ram=pieza(
+            tipo_ddr='DDR5', capacidad_gb=16, modulos_por_producto=1,
+            capacidad_modulo_gb=16, formato_ram='DIMM',
+        ),
         gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=largo_maximo),
         tarjeta_grafica=pieza(largo_mm=largo_gpu),
     )
@@ -60,8 +66,14 @@ class LargoGpuTests(TestCase):
         sin_gpu = validar_armado(
             procesador=pieza(socket='AM5'),
             gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=320),
-            placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX'),
-            memoria_ram=pieza(tipo_ddr='DDR5'),
+            placa_madre=pieza(
+                socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX',
+                ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+            ),
+            memoria_ram=pieza(
+                tipo_ddr='DDR5', capacidad_gb=16, modulos_por_producto=1,
+                capacidad_modulo_gb=16, formato_ram='DIMM',
+            ),
         )
         sin_gabinete = validar_armado(tarjeta_grafica=pieza(largo_mm=320))
 
@@ -212,10 +224,12 @@ class EvaluacionVisualTests(TestCase):
         cls.placa = PlacaMadre.objects.create(
             proveedor=proveedor, nombre='Placa visual', precio=Decimal('80000'), stock=3,
             socket_cpu='AM5', chipset='B650', formato='ATX', ranuras_ram=4, tipo_ram_soportado='DDR5',
+            formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
         )
         cls.ram = MemoriaRam.objects.create(
             proveedor=proveedor, nombre='RAM visual', precio=Decimal('40000'), stock=3,
             capacidad_gb=16, tipo_ddr='DDR5', velocidad_mhz=5600,
+            modulos_por_producto=1, capacidad_modulo_gb=16, formato_ram='DIMM',
         )
         cls.cooler = RefrigeracionCooler.objects.create(
             proveedor=proveedor, nombre='Cooler visual', precio=Decimal('30000'), stock=3,
@@ -342,5 +356,5 @@ class EvaluacionVisualTests(TestCase):
         self.assertLess(js.index('El Excel no se generó'), hasta_archivo)
         self.assertContains(pagina, 'data-evaluar-url')
         self.assertContains(pagina, 'data-exportar-url')
-        self.assertContains(pagina, 'pc-builder.js?v=discos2')
+        self.assertContains(pagina, 'pc-builder.js?v=ram1')
         self.assertNotContains(pagina, 'xlsx.full.min.js')

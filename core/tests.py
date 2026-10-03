@@ -33,8 +33,14 @@ class CompatibilidadTests(SimpleTestCase):
     def armado_base(self, **cambios):
         seleccion = {
             'procesador': pieza(socket='AM5'),
-            'placa_madre': pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX'),
-            'memoria_ram': pieza(tipo_ddr='DDR5'),
+            'placa_madre': pieza(
+                socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX',
+                ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+            ),
+            'memoria_ram': pieza(
+                tipo_ddr='DDR5', capacidad_gb=16, modulos_por_producto=1,
+                capacidad_modulo_gb=16, formato_ram='DIMM',
+            ),
             'gabinete': pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
             'tarjeta_grafica': pieza(largo_mm=300),
             'refrigeracion': pieza(socket_compatibles='AM5, LGA1700'),
@@ -45,8 +51,14 @@ class CompatibilidadTests(SimpleTestCase):
     def test_combinacion_compatible_normaliza_espacios_y_mayusculas(self):
         resultado = validar_armado(
             procesador=pieza(socket=' am5 '),
-            placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado=' ddr5 ', formato='micro-atx'),
-            memoria_ram=pieza(tipo_ddr='DDR5'),
+            placa_madre=pieza(
+                socket_cpu='AM5', tipo_ram_soportado=' ddr5 ', formato='micro-atx',
+                ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+            ),
+            memoria_ram=pieza(
+                tipo_ddr='DDR5', capacidad_gb=16, modulos_por_producto=1,
+                capacidad_modulo_gb=16, formato_ram='DIMM',
+            ),
             gabinete=pieza(formato_soporte=' atx ', largo_max_gpu_mm=400),
             refrigeracion=pieza(socket_compatibles=' am5 , lga 1700 '),
             tarjeta_grafica=pieza(largo_mm=300),
@@ -58,7 +70,10 @@ class CompatibilidadTests(SimpleTestCase):
 
     def test_gabinete_mas_grande_admite_placa_mas_chica(self):
         resultado = self.armado_base(
-            placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='Mini-ITX'),
+            placa_madre=pieza(
+                socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='Mini-ITX',
+                ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+            ),
             gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
         )
 
@@ -182,7 +197,7 @@ class ArmadoCarritoTests(TestCase):
         return PlacaMadre.objects.create(
             proveedor=cls.proveedor, nombre=nombre, precio=Decimal('80000'), stock=4,
             socket_cpu=socket, chipset='B650', formato=formato, ranuras_ram=4,
-            tipo_ram_soportado=ddr,
+            tipo_ram_soportado=ddr, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
         )
 
     @classmethod
@@ -190,6 +205,7 @@ class ArmadoCarritoTests(TestCase):
         return MemoriaRam.objects.create(
             proveedor=cls.proveedor, nombre=f'RAM {tipo}', precio=Decimal('40000'), stock=4,
             capacidad_gb=16, tipo_ddr=tipo, velocidad_mhz=5600,
+            modulos_por_producto=1, capacidad_modulo_gb=16, formato_ram='DIMM',
         )
 
     @classmethod

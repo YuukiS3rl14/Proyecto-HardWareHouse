@@ -41,21 +41,21 @@ class TarjetaGraficaAdmin(admin.ModelAdmin):
     )
 
 class MemoriaRamAdmin(admin.ModelAdmin):
-    list_display = PRODUCTO_LIST_DISPLAY + ('capacidad_gb', 'tipo_ddr', 'velocidad_mhz')
+    list_display = PRODUCTO_LIST_DISPLAY + ('capacidad_gb', 'modulos_por_producto', 'capacidad_modulo_gb', 'formato_ram', 'tipo_ddr', 'velocidad_mhz')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('capacidad_gb', 'tipo_ddr', 'velocidad_mhz')}),
+        ('Especificaciones Técnicas', {'fields': ('capacidad_gb', 'modulos_por_producto', 'capacidad_modulo_gb', 'formato_ram', 'tipo_ddr', 'velocidad_mhz')}),
     )
 
 class PlacaMadreAdmin(admin.ModelAdmin):
-    list_display = PRODUCTO_LIST_DISPLAY + ('socket_cpu', 'chipset', 'formato', 'tipo_ram_soportado', 'ranuras_ram')
+    list_display = PRODUCTO_LIST_DISPLAY + ('socket_cpu', 'chipset', 'formato', 'tipo_ram_soportado', 'ranuras_ram', 'formato_ram_soportado', 'capacidad_maxima_ram_gb')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('socket_cpu', 'chipset', 'formato', 'tipo_ram_soportado', 'ranuras_ram')}),
+        ('Especificaciones Técnicas', {'fields': ('socket_cpu', 'chipset', 'formato', 'tipo_ram_soportado', 'ranuras_ram', 'formato_ram_soportado', 'capacidad_maxima_ram_gb')}),
     )
 
 class AlmacenamientoAdminForm(forms.ModelForm):

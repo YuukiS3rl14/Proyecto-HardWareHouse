@@ -30,6 +30,26 @@ Largo de la GPU
 Si hay GPU y gabinete, la tarjeta cabe en largo cuando largo_mm es menor o
 igual que largo_max_gpu_mm. La igualdad cumple. Un milímetro de más no.
 Esta regla no valida grosor, altura ni el espacio que ocupan los radiadores.
+
+Memoria RAM
+-----------
+``capacidad_gb`` es la capacidad del producto tal como se vende: un módulo
+suelto o el kit completo. La capacidad del armado es la suma de
+cantidad × capacidad_gb. No se multiplica otra vez por ``modulos_por_producto``,
+porque ese número ya está dentro de la capacidad del kit.
+
+``capacidad_modulo_gb`` es la capacidad de un solo módulo. Si ambos datos
+existen, debe cumplirse capacidad_gb = módulos × capacidad por módulo. Si no
+coinciden, el dato es insuficiente y no se elige una de las dos cifras.
+
+Las ranuras ocupadas son la suma de cantidad × módulos por producto.
+Un dato técnico vacío queda NULL y no se deduce del nombre. Eso es dato
+insuficiente, no una compatibilidad. Faltar la RAM o la placa es selección
+incompleta.
+
+Mezclar productos o kits distintos avisa que no se garantiza la estabilidad
+ni el perfil XMP/EXPO, aunque compartan DDR y velocidad. Esa advertencia no
+bloquea. No se promete dual channel ni una velocidad final.
 """
 
 import re
@@ -39,6 +59,7 @@ from decimal import Decimal, ROUND_CEILING
 
 SOCKETS_CONOCIDOS = frozenset({'AM4', 'AM5', 'LGA1200', 'LGA1700'})
 TIPOS_DDR_CONOCIDOS = frozenset({'DDR3', 'DDR4', 'DDR5'})
+FORMATOS_RAM_CONOCIDOS = frozenset({'DIMM', 'SO-DIMM'})
 FORMATOS_ORDENADOS = ('MINI-ITX', 'MICRO-ATX', 'ATX')
 
 ESTADO_COMPATIBLE = 'compatible'
@@ -54,11 +75,20 @@ MENSAJE_ALMACENAMIENTO = (
 )
 MENSAJE_ELEGIR_GABINETE = 'Selecciona un gabinete para comprobar el largo.'
 MENSAJE_ELEGIR_GPU = 'Selecciona una GPU para comprobar el largo.'
+MENSAJE_MEZCLA_RAM = (
+    'Hay productos o kits de RAM distintos. No se garantiza la estabilidad ni '
+    'el funcionamiento del perfil XMP/EXPO, aunque compartan DDR y velocidad.'
+)
+ACLARACION_RAM = (
+    'La capacidad total suma la cantidad de cada producto por su capacidad_gb. '
+    'Esa cifra es la del producto vendido, módulo suelto o kit completo, y no se '
+    'multiplica por los módulos. No se comprueba dual channel ni la velocidad final.'
+)
 
 REGLAS_POR_CATEGORIA = {
     'procesador': ('socket',),
-    'placa_madre': ('socket', 'ddr', 'formato'),
-    'memoria_ram': ('ddr',),
+    'placa_madre': ('socket', 'ddr', 'formato', 'formato_ram', 'ranuras_ram', 'capacidad_ram'),
+    'memoria_ram': ('ddr', 'formato_ram', 'ranuras_ram', 'capacidad_ram'),
     'gabinete': ('formato', 'largo'),
     'refrigeracion': ('cooler',),
     'fuente_de_poder': ('potencia',),
@@ -103,9 +133,18 @@ class Hallazgo:
     mensaje: str
 
 
+@dataclass(frozen=True)
+class LineaRam:
+    """Una línea de RAM: el producto vendido y cuántas unidades se piden."""
+
+    producto: object
+    cantidad: int = 1
+
+
 @dataclass
 class ResultadoCompatibilidad:
     hallazgos: list = field(default_factory=list)
+    advertencias: list = field(default_factory=list)
 
     @property
     def estado(self):
@@ -137,6 +176,7 @@ class EvaluacionCandidato:
     coincidencias: tuple = ()
     motivos: tuple = ()
     pendientes: tuple = ()
+    advertencias: tuple = ()
 
     @property
     def etiqueta(self):
@@ -170,6 +210,7 @@ def evaluar_candidato(
     tarjeta_grafica=None,
     fuente_de_poder=None,
     politica=None,
+    memorias_ram=None,
 ):
     """Clasifica un candidato reemplazando la pieza previa de su categoría.
 
@@ -191,9 +232,20 @@ def evaluar_candidato(
         'tarjeta_grafica': tarjeta_grafica,
         'fuente_de_poder': fuente_de_poder,
     }
-    piezas[CLAVE_POR_CATEGORIA[categoria]] = candidato
+    if categoria == 'memoria_ram' and memorias_ram is not None:
+        piezas['memorias_ram'] = memorias_ram
+    else:
+        piezas[CLAVE_POR_CATEGORIA[categoria]] = candidato
+        if memorias_ram is not None:
+            piezas['memoria_ram'] = None
+            piezas['memorias_ram'] = memorias_ram
     politica_activa = politica or politica_potencia()
-    resultado = validar_armado(**piezas, politica=politica_activa)
+    argumentos = {clave: valor for clave, valor in piezas.items() if clave != 'memorias_ram'}
+    resultado = validar_armado(
+        **argumentos,
+        politica=politica_activa,
+        memorias_ram=piezas.get('memorias_ram'),
+    )
     hallazgos_por_regla = {}
     for hallazgo in resultado.hallazgos:
         if hallazgo.regla not in REGLAS_POR_CATEGORIA[categoria]:
@@ -222,11 +274,15 @@ def evaluar_candidato(
             estados.append(ESTADO_INCOMPLETO)
             pendientes.append('Selección incompleta para comprobar esta regla.')
 
+    avisos = ()
+    if categoria in ('memoria_ram', 'placa_madre'):
+        avisos = tuple(resultado.advertencias)
     return EvaluacionCandidato(
         _estado_de_candidato(estados),
         tuple(coincidencias),
         tuple(motivos),
         tuple(pendientes),
+        avisos,
     )
 
 
@@ -244,7 +300,13 @@ def _regla_puede_comprobarse(regla, piezas, politica):
     if regla == 'socket':
         return piezas['procesador'] is not None and piezas['placa_madre'] is not None
     if regla == 'ddr':
-        return piezas['memoria_ram'] is not None and piezas['placa_madre'] is not None
+        return _memoria_comprobada('ddr', piezas)
+    if regla == 'formato_ram':
+        return _memoria_comprobada('formato_ram', piezas)
+    if regla == 'ranuras_ram':
+        return _memoria_comprobada('ranuras_ram', piezas)
+    if regla == 'capacidad_ram':
+        return _memoria_comprobada('capacidad_ram', piezas)
     if regla == 'formato':
         return piezas['placa_madre'] is not None and piezas['gabinete'] is not None
     if regla == 'cooler':
@@ -262,7 +324,13 @@ def _texto_coincidencia(regla, piezas, politica):
     if regla == 'socket':
         return f"Socket {normalizar_spec(piezas['procesador'].socket)}"
     if regla == 'ddr':
-        return f"DDR {normalizar_spec(piezas['memoria_ram'].tipo_ddr)}"
+        return _texto_ddr(piezas)
+    if regla == 'formato_ram':
+        return _texto_formato_ram(piezas)
+    if regla == 'ranuras_ram':
+        return _texto_ranuras_ram(piezas)
+    if regla == 'capacidad_ram':
+        return _texto_capacidad_ram(piezas)
     if regla == 'formato':
         return f"Formato {normalizar_spec(piezas['placa_madre'].formato)}"
     if regla == 'potencia':
@@ -301,20 +369,31 @@ _TEXTO_ARMADO = {
 }
 
 
-def evaluaciones_de_seleccion(piezas):
+def evaluaciones_de_seleccion(piezas, memorias_ram=None):
     """Evalúa cada pieza presente con las reglas de su categoría.
 
     La única fuente es validar_armado(), a través de evaluar_candidato().
+    Si hay varias RAM, se evalúan como un conjunto y no como una sola pieza.
     """
     presentes = {clave: pieza for clave, pieza in piezas.items() if pieza is not None}
-    resultado = validar_armado(**presentes)
+    if memorias_ram is not None:
+        presentes.pop('memoria_ram', None)
+    resultado = validar_armado(**presentes, memorias_ram=memorias_ram)
     por_categoria = {}
     for clave, pieza in presentes.items():
         otras = {nombre: valor for nombre, valor in presentes.items() if nombre != clave}
         por_categoria[_UI_POR_CLAVE[clave]] = evaluar_candidato(
             _CATEGORIA_POR_CLAVE[clave],
             pieza,
+            memorias_ram=memorias_ram,
             **otras,
+        )
+    if memorias_ram:
+        por_categoria['memoria_ram'] = evaluar_candidato(
+            'memoria_ram',
+            memorias_ram[0].producto,
+            memorias_ram=memorias_ram,
+            **presentes,
         )
     return resultado, por_categoria
 
@@ -337,22 +416,26 @@ def validar_armado(
     tarjeta_grafica=None,
     fuente_de_poder=None,
     politica=None,
+    memorias_ram=None,
 ):
     """Valida las piezas presentes. Las que no participan en estas reglas se ignoran.
 
+    ``memoria_ram`` es una sola pieza con cantidad 1. ``memorias_ram`` es el
+    conjunto de líneas y, si viene, reemplaza a esa pieza suelta.
     Devuelve compatible solo si cada regla aplicable quedó resuelta con datos conocidos.
     Una pieza sin su par es selección incompleta y no se trata como conflicto.
     """
+    lineas = _lineas_ram(memoria_ram, memorias_ram)
     candidatos = (
         _evaluar_socket(procesador, placa_madre),
-        _evaluar_ddr(memoria_ram, placa_madre),
         _evaluar_formato(placa_madre, gabinete),
         _evaluar_largo(tarjeta_grafica, gabinete),
         _evaluar_potencia(procesador, tarjeta_grafica, fuente_de_poder, politica or politica_potencia()),
     )
     hallazgos = [hallazgo for hallazgo in candidatos if hallazgo is not None]
     hallazgos.extend(_evaluar_cooler(refrigeracion, procesador, placa_madre))
-    return ResultadoCompatibilidad(hallazgos)
+    hallazgos.extend(_evaluar_memorias(lineas, placa_madre))
+    return ResultadoCompatibilidad(hallazgos, _advertencias_ram(lineas))
 
 
 def _evaluar_socket(procesador, placa_madre):
@@ -385,26 +468,132 @@ def _evaluar_socket(procesador, placa_madre):
     return None
 
 
-def _evaluar_ddr(memoria_ram, placa_madre):
-    if memoria_ram is None and placa_madre is None:
+def _lineas_ram(memoria_ram, memorias_ram):
+    """Una lista explícita gana. Si no hay lista, la pieza suelta cuenta como una."""
+    if memorias_ram is not None:
+        return [_como_linea(item) for item in memorias_ram]
+    if memoria_ram is None:
+        return []
+    return [LineaRam(memoria_ram, 1)]
+
+
+def _como_linea(item):
+    if isinstance(item, LineaRam):
+        return item
+    if isinstance(item, tuple) and len(item) == 2:
+        return LineaRam(item[0], int(item[1]))
+    return LineaRam(item, 1)
+
+
+def _lineas_en(piezas):
+    return _lineas_ram(piezas.get('memoria_ram'), piezas.get('memorias_ram'))
+
+
+def _memoria_comprobada(regla, piezas):
+    lineas = _lineas_en(piezas)
+    placa = piezas.get('placa_madre')
+    if not lineas or placa is None:
+        return False
+    return _hallazgo_memoria(regla, lineas, placa) is None
+
+
+def _evaluar_memorias(lineas, placa_madre):
+    return [
+        hallazgo
+        for hallazgo in (
+            _hallazgo_memoria('ddr', lineas, placa_madre),
+            _hallazgo_memoria('formato_ram', lineas, placa_madre),
+            _hallazgo_memoria('ranuras_ram', lineas, placa_madre),
+            _hallazgo_memoria('capacidad_ram', lineas, placa_madre),
+        )
+        if hallazgo is not None
+    ]
+
+
+def _hallazgo_memoria(regla, lineas, placa):
+    if regla == 'ddr':
+        return _evaluar_ddr(lineas, placa)
+    if regla == 'formato_ram':
+        return _evaluar_formato_ram(lineas, placa)
+    if regla == 'ranuras_ram':
+        return _evaluar_ranuras_ram(lineas, placa)
+    if regla == 'capacidad_ram':
+        return _evaluar_capacidad_ram(lineas, placa)
+    return None
+
+
+def _identidad_producto(producto):
+    pk = getattr(producto, 'pk', None)
+    if pk is not None:
+        return ('pk', pk)
+    identificador = getattr(producto, 'id', None)
+    if identificador is not None:
+        return ('id', identificador)
+    return ('obj', id(producto))
+
+
+def _advertencias_ram(lineas):
+    identidades = {_identidad_producto(linea.producto) for linea in lineas}
+    if len(identidades) < 2:
+        return []
+    return [MENSAJE_MEZCLA_RAM]
+
+
+def _tipos_ddr(lineas):
+    conocidos = []
+    desconocido = False
+    for linea in lineas:
+        tipo = normalizar_spec(getattr(linea.producto, 'tipo_ddr', None))
+        if tipo not in TIPOS_DDR_CONOCIDOS:
+            desconocido = True
+        elif tipo not in conocidos:
+            conocidos.append(tipo)
+    return conocidos, desconocido
+
+
+def _formatos_ram(lineas):
+    conocidos = []
+    desconocido = False
+    for linea in lineas:
+        formato = normalizar_spec(getattr(linea.producto, 'formato_ram', None))
+        if formato not in FORMATOS_RAM_CONOCIDOS:
+            desconocido = True
+        elif formato not in conocidos:
+            conocidos.append(formato)
+    return conocidos, desconocido
+
+
+def _evaluar_ddr(lineas, placa_madre):
+    if not lineas and placa_madre is None:
         return None
-    if memoria_ram is None or placa_madre is None:
+    conocidos, desconocido = _tipos_ddr(lineas)
+    if len(conocidos) > 1:
+        return Hallazgo(
+            'ddr',
+            ESTADO_INCOMPATIBLE,
+            f"Hay RAM {' y '.join(conocidos)}. No se pueden mezclar tipos DDR.",
+        )
+    if desconocido and (len(lineas) > 1 or placa_madre is not None):
+        return Hallazgo(
+            'ddr',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede verificar la RAM porque el tipo DDR no es conocido.',
+        )
+    if not lineas or placa_madre is None:
         return Hallazgo(
             'ddr',
             ESTADO_INCOMPLETO,
             'Falta la memoria RAM o la placa madre para comprobar el tipo DDR.',
         )
-
-    tipo_ram = normalizar_spec(memoria_ram.tipo_ddr)
     tipo_placa = normalizar_spec(placa_madre.tipo_ram_soportado)
-    desconocidos = [valor for valor in (tipo_ram, tipo_placa) if valor not in TIPOS_DDR_CONOCIDOS]
-    if desconocidos:
-        detalle = ', '.join(_etiqueta(valor) for valor in desconocidos)
+    if tipo_placa not in TIPOS_DDR_CONOCIDOS:
         return Hallazgo(
             'ddr',
             ESTADO_DATOS_INSUFICIENTES,
-            f'No se puede verificar la RAM porque el tipo DDR no es conocido ({detalle}).',
+            'No se puede verificar la RAM porque el tipo DDR no es conocido '
+            f'({_etiqueta(tipo_placa)}).',
         )
+    tipo_ram = conocidos[0]
     if tipo_ram != tipo_placa:
         return Hallazgo(
             'ddr',
@@ -412,6 +601,179 @@ def _evaluar_ddr(memoria_ram, placa_madre):
             f'El tipo de RAM ({tipo_ram}) no coincide con el que admite la placa madre ({tipo_placa}).',
         )
     return None
+
+
+def _evaluar_formato_ram(lineas, placa_madre):
+    if not lineas and placa_madre is None:
+        return None
+    conocidos, desconocido = _formatos_ram(lineas)
+    if len(conocidos) > 1:
+        return Hallazgo(
+            'formato_ram',
+            ESTADO_INCOMPATIBLE,
+            f"Hay RAM {' y '.join(conocidos)}. No se pueden mezclar esos formatos.",
+        )
+    if desconocido and (len(lineas) > 1 or placa_madre is not None):
+        return Hallazgo(
+            'formato_ram',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede comprobar el formato DIMM o SO-DIMM porque falta un dato. '
+            'No se deduce del nombre.',
+        )
+    if not lineas or placa_madre is None:
+        return Hallazgo(
+            'formato_ram',
+            ESTADO_INCOMPLETO,
+            'Falta la memoria RAM o la placa madre para comprobar el formato DIMM o SO-DIMM.',
+        )
+    formato_placa = normalizar_spec(getattr(placa_madre, 'formato_ram_soportado', None))
+    if formato_placa not in FORMATOS_RAM_CONOCIDOS:
+        return Hallazgo(
+            'formato_ram',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede comprobar el formato DIMM o SO-DIMM porque la placa no lo tiene registrado.',
+        )
+    formato_ram = conocidos[0]
+    if formato_ram != formato_placa:
+        return Hallazgo(
+            'formato_ram',
+            ESTADO_INCOMPATIBLE,
+            f'El formato de la RAM ({formato_ram}) no coincide con el que admite la placa ({formato_placa}).',
+        )
+    return None
+
+
+def _suma_modulos(lineas):
+    conocidos = 0
+    falta = False
+    for linea in lineas:
+        modulos = _entero_positivo(getattr(linea.producto, 'modulos_por_producto', None))
+        if modulos is None:
+            falta = True
+        else:
+            conocidos += linea.cantidad * modulos
+    return conocidos, falta
+
+
+def _evaluar_ranuras_ram(lineas, placa_madre):
+    if not lineas and placa_madre is None:
+        return None
+    if not lineas or placa_madre is None:
+        return Hallazgo(
+            'ranuras_ram',
+            ESTADO_INCOMPLETO,
+            'Falta la memoria RAM o la placa madre para comprobar las ranuras.',
+        )
+    ranuras = _entero_positivo(getattr(placa_madre, 'ranuras_ram', None))
+    if ranuras is None:
+        return Hallazgo(
+            'ranuras_ram',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede comprobar las ranuras porque la placa no tiene un número conocido.',
+        )
+    ocupadas, falta = _suma_modulos(lineas)
+    if ocupadas > ranuras:
+        return Hallazgo(
+            'ranuras_ram',
+            ESTADO_INCOMPATIBLE,
+            f'Las RAM ocupan {ocupadas} ranuras y la placa tiene {ranuras}.',
+        )
+    if falta:
+        return Hallazgo(
+            'ranuras_ram',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede comprobar las ranuras porque falta cuántos módulos trae un producto. '
+            'Un valor vacío no se deduce del nombre.',
+        )
+    return None
+
+
+def _linea_inconsistente(linea):
+    modulos = _entero_positivo(getattr(linea.producto, 'modulos_por_producto', None))
+    por_modulo = _entero_positivo(getattr(linea.producto, 'capacidad_modulo_gb', None))
+    total = _entero_positivo(getattr(linea.producto, 'capacidad_gb', None))
+    if modulos is None or por_modulo is None or total is None:
+        return False
+    return modulos * por_modulo != total
+
+
+def _suma_capacidad(lineas):
+    """Suma cantidad × capacidad del producto. No vuelve a multiplicar por los módulos."""
+    total = 0
+    falta = False
+    inconsistente = False
+    for linea in lineas:
+        if _linea_inconsistente(linea):
+            inconsistente = True
+            continue
+        capacidad = _entero_positivo(getattr(linea.producto, 'capacidad_gb', None))
+        if capacidad is None:
+            falta = True
+        else:
+            total += linea.cantidad * capacidad
+    return total, falta, inconsistente
+
+
+def _evaluar_capacidad_ram(lineas, placa_madre):
+    if not lineas and placa_madre is None:
+        return None
+    if not lineas or placa_madre is None:
+        return Hallazgo(
+            'capacidad_ram',
+            ESTADO_INCOMPLETO,
+            'Falta la memoria RAM o la placa madre para comprobar la capacidad máxima.',
+        )
+    maximo = _entero_positivo(getattr(placa_madre, 'capacidad_maxima_ram_gb', None))
+    if maximo is None:
+        return Hallazgo(
+            'capacidad_ram',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede comprobar la capacidad máxima porque la placa no la tiene registrada.',
+        )
+    total, falta, inconsistente = _suma_capacidad(lineas)
+    if total > maximo:
+        return Hallazgo(
+            'capacidad_ram',
+            ESTADO_INCOMPATIBLE,
+            f'La RAM suma {total} GB y la placa admite hasta {maximo} GB. '
+            'El total usa la capacidad de cada producto, sin multiplicarla por los módulos.',
+        )
+    if inconsistente:
+        return Hallazgo(
+            'capacidad_ram',
+            ESTADO_DATOS_INSUFICIENTES,
+            'La capacidad del producto no coincide con módulos × capacidad por módulo. '
+            'No se suman las dos cifras.',
+        )
+    if falta:
+        return Hallazgo(
+            'capacidad_ram',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede comprobar la capacidad porque falta la capacidad de un producto.',
+        )
+    return None
+
+
+def _texto_ddr(piezas):
+    conocidos, _desconocido = _tipos_ddr(_lineas_en(piezas))
+    return f"DDR {conocidos[0]}"
+
+
+def _texto_formato_ram(piezas):
+    conocidos, _desconocido = _formatos_ram(_lineas_en(piezas))
+    return f"formato {conocidos[0]}"
+
+
+def _texto_ranuras_ram(piezas):
+    ocupadas, _falta = _suma_modulos(_lineas_en(piezas))
+    ranuras = _entero_positivo(piezas['placa_madre'].ranuras_ram)
+    return f"{ocupadas} de {ranuras} ranuras"
+
+
+def _texto_capacidad_ram(piezas):
+    total, _falta, _inconsistente = _suma_capacidad(_lineas_en(piezas))
+    maximo = _entero_positivo(piezas['placa_madre'].capacidad_maxima_ram_gb)
+    return f"{total} GB de {maximo} GB"
 
 
 def _evaluar_formato(placa_madre, gabinete):

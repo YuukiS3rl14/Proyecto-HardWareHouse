@@ -13,9 +13,11 @@ from .excel_armado import (
     texto_de_estado,
 )
 from .compatibilidad import (
+    ACLARACION_RAM,
     ESTADO_NO_EVALUADA,
     MENSAJE_ALMACENAMIENTO,
     EvaluacionCandidato,
+    LineaRam,
     evaluar_candidato,
     evaluaciones_de_seleccion,
     texto_del_armado,
@@ -56,9 +58,9 @@ def mostrarArmado(request):
         return components
 
     componentes = {
-        'placa_madre': get_component_data(PlacaMadre, ['nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'chipset', 'ranuras_ram', 'stock'], 'placa_madre'),
+        'placa_madre': get_component_data(PlacaMadre, ['nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'chipset', 'ranuras_ram', 'formato_ram_soportado', 'capacidad_maxima_ram_gb', 'stock'], 'placa_madre'),
         'procesador': get_component_data(Procesador, ['nombre', 'precio', 'socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts', 'stock'], 'procesador'),
-        'memoria_ram': get_component_data(MemoriaRam, ['nombre', 'precio', 'tipo_ddr', 'capacidad_gb', 'velocidad_mhz', 'stock'], 'memoria_ram'),
+        'memoria_ram': get_component_data(MemoriaRam, ['nombre', 'precio', 'tipo_ddr', 'capacidad_gb', 'modulos_por_producto', 'capacidad_modulo_gb', 'formato_ram', 'velocidad_mhz', 'stock'], 'memoria_ram'),
         'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'largo_mm', 'stock'], 'tarjeta_grafica'),
         'almacenamiento': (
             get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'formato', 'stock'], 'almacenamiento_ssd')
@@ -470,6 +472,7 @@ _CLAVE_QUE_REEMPLAZA = {
 }
 
 _TIPOS_ALMACENAMIENTO = frozenset({'almacenamiento_ssd', 'almacenamiento_hdd'})
+_TIPOS_CON_CANTIDAD = _TIPOS_ALMACENAMIENTO | {'memoria_ram'}
 
 
 def _cantidad_pedida(item):
@@ -512,7 +515,9 @@ def _cargar_seleccion(componentes, excluir_clave=None):
 
     seleccion = {}
     almacenamientos = []
+    memorias = []
     grupos_disco = {}
+    grupos_ram = {}
     vistos = set()
     for item in componentes:
         if not isinstance(item, dict):
@@ -527,8 +532,10 @@ def _cargar_seleccion(componentes, excluir_clave=None):
         cantidad = _cantidad_pedida(item)
         if cantidad is None:
             return None, _error_seleccion('La cantidad debe ser un entero positivo.')
-        if clave and cantidad != 1:
-            return None, _error_seleccion('Solo el almacenamiento admite varias unidades.')
+        if tipo not in _TIPOS_CON_CANTIDAD and cantidad != 1:
+            return None, _error_seleccion(
+                'Solo el almacenamiento y la memoria RAM admiten varias unidades.'
+            )
         ModelClass = PRODUCT_MODEL_MAP.get(tipo)
         try:
             product_id = int(item.get('id'))
@@ -537,6 +544,15 @@ def _cargar_seleccion(componentes, excluir_clave=None):
         producto = ModelClass.objects.filter(pk=product_id).first() if ModelClass else None
         if producto is None:
             return None, _error_seleccion('Una pieza de la selección ya no está disponible.')
+        if tipo == 'memoria_ram':
+            if product_id in grupos_ram:
+                indice = grupos_ram[product_id]
+                previa = memorias[indice]
+                memorias[indice] = LineaRam(previa.producto, previa.cantidad + cantidad)
+            else:
+                grupos_ram[product_id] = len(memorias)
+                memorias.append(LineaRam(producto, cantidad))
+            continue
         if clave:
             if clave_ui in vistos:
                 return None, _error_seleccion('Hay una pieza repetida en la selección.')
@@ -549,7 +565,7 @@ def _cargar_seleccion(componentes, excluir_clave=None):
         else:
             grupos_disco[grupo] = len(almacenamientos)
             almacenamientos.append({'tipo': tipo, 'producto': producto, 'cantidad': cantidad})
-    return (seleccion, almacenamientos), None
+    return (seleccion, almacenamientos, memorias), None
 
 
 def _serializar_evaluacion(evaluacion):
@@ -559,6 +575,7 @@ def _serializar_evaluacion(evaluacion):
         'coincidencias': list(evaluacion.coincidencias),
         'motivos': list(evaluacion.motivos),
         'pendientes': list(evaluacion.pendientes),
+        'advertencias': list(evaluacion.advertencias),
     }
 
 
@@ -573,8 +590,11 @@ def evaluar_armado(request):
     cargado, error = _cargar_seleccion(payload.get('componentes') or [])
     if error:
         return error
-    seleccion, almacenamientos = cargado
-    resultado, por_categoria = evaluaciones_de_seleccion(seleccion)
+    seleccion, almacenamientos, memorias = cargado
+    resultado, por_categoria = evaluaciones_de_seleccion(
+        seleccion,
+        memorias_ram=memorias or None,
+    )
     if almacenamientos:
         por_categoria['almacenamiento'] = EvaluacionCandidato(
             ESTADO_NO_EVALUADA,
@@ -584,8 +604,9 @@ def evaluar_armado(request):
     return JsonResponse({
         'status': 'success',
         'estado': resultado.estado,
-        'texto': texto_del_armado(resultado, bool(almacenamientos), bool(seleccion)),
+        'texto': texto_del_armado(resultado, bool(almacenamientos), bool(seleccion) or bool(memorias)),
         'motivos': resultado.motivos_de_rechazo,
+        'advertencias': resultado.advertencias,
         'piezas': {
             clave: _serializar_evaluacion(evaluacion)
             for clave, evaluacion in por_categoria.items()
@@ -605,10 +626,29 @@ _ORDEN_EXPORTACION = (
 )
 
 
-def _filas_de_exportacion(seleccion, almacenamientos, por_categoria):
+def _filas_de_exportacion(seleccion, almacenamientos, memorias, por_categoria):
     filas = []
     aclaraciones = []
     for clave_modelo, clave_ui, componente in _ORDEN_EXPORTACION:
+        if clave_ui == 'memoria_ram':
+            if not memorias:
+                continue
+            evaluacion = por_categoria['memoria_ram']
+            for indice, linea in enumerate(memorias):
+                producto = linea.producto
+                especificaciones = list(especificaciones_de(producto))
+                if indice == 0:
+                    especificaciones.extend(_notas_del_conjunto_ram(memorias, evaluacion))
+                filas.append({
+                    'componente': componente,
+                    'producto': producto.nombre,
+                    'cantidad': linea.cantidad,
+                    'precio': pesos_enteros(producto.precio),
+                    'estado': evaluacion.estado,
+                    'texto_estado': texto_de_estado(evaluacion),
+                    'especificaciones': especificaciones,
+                })
+            continue
         if clave_ui == 'almacenamiento':
             if not almacenamientos:
                 continue
@@ -644,6 +684,13 @@ def _filas_de_exportacion(seleccion, almacenamientos, por_categoria):
     return filas, aclaraciones
 
 
+def _notas_del_conjunto_ram(memorias, evaluacion):
+    notas = [('Aclaración', ACLARACION_RAM)]
+    for aviso in evaluacion.advertencias:
+        notas.append(('Advertencia', aviso))
+    return notas
+
+
 @require_POST
 def exportar_armado(request):
     """Genera el Excel con una evaluación nueva. No reutiliza un resultado anterior."""
@@ -655,30 +702,40 @@ def exportar_armado(request):
     cargado, error = _cargar_seleccion(payload.get('componentes') or [])
     if error:
         return error
-    seleccion, almacenamientos = cargado
-    if not seleccion and not almacenamientos:
+    seleccion, almacenamientos, memorias = cargado
+    if not seleccion and not almacenamientos and not memorias:
         return _error_seleccion('Selecciona al menos un componente.')
 
-    resultado, por_categoria = evaluaciones_de_seleccion(seleccion)
+    resultado, por_categoria = evaluaciones_de_seleccion(
+        seleccion,
+        memorias_ram=memorias or None,
+    )
     if almacenamientos:
         por_categoria['almacenamiento'] = EvaluacionCandidato(
             ESTADO_NO_EVALUADA,
             motivos=(MENSAJE_ALMACENAMIENTO,),
         )
     try:
-        filas, aclaraciones = _filas_de_exportacion(seleccion, almacenamientos, por_categoria)
+        filas, aclaraciones = _filas_de_exportacion(
+            seleccion, almacenamientos, memorias, por_categoria,
+        )
     except ValueError as exc:
         return _error_seleccion(str(exc))
     for evaluacion in por_categoria.values():
         for pendiente in evaluacion.pendientes:
             if pendiente not in aclaraciones:
                 aclaraciones.append(pendiente)
+    if memorias and ACLARACION_RAM not in aclaraciones:
+        aclaraciones.append(ACLARACION_RAM)
+    for aviso in resultado.advertencias:
+        if aviso not in aclaraciones:
+            aclaraciones.append(aviso)
 
     contenido = libro_en_bytes(
         filas,
         {
             'estado': resultado.estado,
-            'texto': texto_del_armado(resultado, bool(almacenamientos), bool(seleccion)),
+            'texto': texto_del_armado(resultado, bool(almacenamientos), bool(seleccion) or bool(memorias)),
             'motivos': resultado.motivos_de_rechazo,
             'aclaraciones': aclaraciones,
         },
@@ -720,18 +777,38 @@ def recomendar_armado(request):
     if fuentes is None:
         return JsonResponse({'status': 'error', 'message': 'La categoría no es válida.'}, status=400)
 
+    modo = payload.get('modo') or ''
+    conserva_ram = categoria == 'memoria_ram' and modo in ('agregar', 'reemplazar')
     cargado, error = _cargar_seleccion(
         payload.get('componentes') or [],
-        excluir_clave=_CLAVE_QUE_REEMPLAZA.get(categoria),
+        excluir_clave=None if conserva_ram else _CLAVE_QUE_REEMPLAZA.get(categoria),
     )
     if error:
         return error
-    seleccion, _sin_regla = cargado
+    seleccion, _sin_regla, memorias = cargado
 
     candidatos = []
     for modelo, categoria_regla, model_name in fuentes:
         for producto in modelo.objects.all():
-            evaluacion = evaluar_candidato(categoria_regla, producto, **seleccion)
+            lineas = None
+            if conserva_ram:
+                lineas = _lineas_para_candidato(
+                    memorias,
+                    producto,
+                    modo,
+                    payload.get('reemplaza_id'),
+                )
+                if lineas is None:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'La línea de RAM que quieres reemplazar no está en la selección.',
+                    }, status=400)
+            evaluacion = evaluar_candidato(
+                categoria_regla,
+                producto,
+                memorias_ram=lineas if conserva_ram else (memorias or None),
+                **seleccion,
+            )
             if categoria == 'almacenamiento' and evaluacion.estado == ESTADO_NO_EVALUADA:
                 evaluacion = EvaluacionCandidato(
                     ESTADO_NO_EVALUADA,
@@ -748,6 +825,7 @@ def recomendar_armado(request):
                 'coincidencias': list(evaluacion.coincidencias),
                 'motivos': list(evaluacion.motivos),
                 'pendientes': list(evaluacion.pendientes),
+                'advertencias': list(evaluacion.advertencias),
                 'seleccionable': producto.stock > 0,
             })
 
@@ -756,6 +834,44 @@ def recomendar_armado(request):
         candidato['precio'] = str(candidato['precio'])
 
     return JsonResponse({'status': 'success', 'candidatos': candidatos})
+
+
+def _sumar_linea_ram(lineas, producto, cantidad):
+    nuevas = []
+    sumada = False
+    for linea in lineas:
+        if linea.producto.pk == producto.pk:
+            nuevas.append(LineaRam(linea.producto, linea.cantidad + cantidad))
+            sumada = True
+        else:
+            nuevas.append(linea)
+    if not sumada:
+        nuevas.append(LineaRam(producto, cantidad))
+    return nuevas
+
+
+def _lineas_para_candidato(memorias, producto, modo, reemplaza_id):
+    """Agregar suma el candidato al conjunto. Reemplazar sustituye una línea."""
+    if modo == 'agregar':
+        return _sumar_linea_ram(memorias, producto, 1)
+    if modo != 'reemplazar':
+        return [LineaRam(producto, 1)]
+    if reemplaza_id in (None, ''):
+        return [LineaRam(producto, 1)]
+    try:
+        buscado = int(reemplaza_id)
+    except (TypeError, ValueError):
+        return None
+    cantidad = None
+    restantes = []
+    for linea in memorias:
+        if linea.producto.id == buscado:
+            cantidad = linea.cantidad
+            continue
+        restantes.append(linea)
+    if cantidad is None:
+        return None
+    return _sumar_linea_ram(restantes, producto, cantidad)
 
 @login_required
 @require_POST
@@ -790,11 +906,11 @@ def agregar_armado_al_carrito(request):
                 estado='error',
                 motivos=['La cantidad debe ser un entero positivo.'],
             )
-        if model_name not in _TIPOS_ALMACENAMIENTO and cantidad != 1:
+        if model_name not in _TIPOS_CON_CANTIDAD and cantidad != 1:
             return _error_armado(
-                'Solo el almacenamiento admite varias unidades.',
+                'Solo el almacenamiento y la memoria RAM admiten varias unidades.',
                 estado='error',
-                motivos=['Solo el almacenamiento admite varias unidades.'],
+                motivos=['Solo el almacenamiento y la memoria RAM admiten varias unidades.'],
             )
 
         try:
@@ -806,7 +922,7 @@ def agregar_armado_al_carrito(request):
         if producto is None:
             return _error_armado('Uno de los componentes ya no está disponible.')
 
-        if model_name not in _TIPOS_ALMACENAMIENTO and any(nombre == model_name for nombre, _pid in orden):
+        if model_name not in _TIPOS_CON_CANTIDAD and any(nombre == model_name for nombre, _pid in orden):
             return _error_armado('Hay una pieza repetida en la selección.')
 
         clave_grupo = (model_name, product_id)
@@ -816,7 +932,7 @@ def agregar_armado_al_carrito(request):
             grupos[clave_grupo] = {'producto': producto, 'cantidad': cantidad}
             orden.append(clave_grupo)
         clave = _CLAVES_DE_VALIDACION.get(model_name)
-        if clave:
+        if clave and model_name != 'memoria_ram':
             seleccion[clave] = producto
 
     carrito_previo = Carrito.objects.filter(usuario=request.user).first()
@@ -844,7 +960,12 @@ def agregar_armado_al_carrito(request):
             motivos=motivos_stock,
         )
 
-    resultado = validar_armado(**seleccion)
+    memorias = [
+        LineaRam(grupos[clave]['producto'], grupos[clave]['cantidad'])
+        for clave in orden
+        if clave[0] == 'memoria_ram'
+    ]
+    resultado = validar_armado(**seleccion, memorias_ram=memorias or None)
     if resultado.bloquea_agregar:
         return _error_armado(
             'No se agregó el armado al carrito.',

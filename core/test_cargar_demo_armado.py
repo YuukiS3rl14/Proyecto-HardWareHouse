@@ -13,7 +13,9 @@ from core.management.commands.cargar_demo_armado import (
     GPU_DEMO,
     GPUS_LARGO_DEMO,
     LARGO_GABINETE_DEMO,
+    PLACAS_RAM_DEMO,
     POTENCIA_CPU_DEMO,
+    RAM_DEMO,
 )
 from core.models import (
     AlmacenamientoHDD,
@@ -104,6 +106,13 @@ class CargarDemoArmadoTests(TestCase):
         self.assertEqual(RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM5').socket_compatibles, 'AM5')
         self.assertIsNone(Procesador.objects.get(nombre='DEMO CPU AM5').potencia_referencia_watts)
         self.assertIsNone(Gabinete.objects.get(nombre='DEMO Gabinete ATX').largo_max_gpu_mm)
+        ram_demo = MemoriaRam.objects.get(nombre='DEMO RAM DDR5')
+        self.assertIsNone(ram_demo.modulos_por_producto)
+        self.assertIsNone(ram_demo.capacidad_modulo_gb)
+        self.assertIsNone(ram_demo.formato_ram)
+        self.assertIsNone(
+            PlacaMadre.objects.get(nombre='DEMO Placa AM5 DDR5 ATX').capacidad_maxima_ram_gb
+        )
         self.assertEqual(TarjetaGrafica.objects.count(), 0)
         self.assertEqual(FuenteDePoder.objects.count(), 0)
 
@@ -171,7 +180,6 @@ class DemoArmadoCarritoTests(TestCase):
         response = self.post_armado([
             ('procesador', self.cpu_am5),
             ('placa_madre', self.placa_am5),
-            ('memoria_ram', self.ram_ddr5),
             ('gabinete', self.gabinete_atx),
             ('refrigeracion', self.cooler_am5),
             ('almacenamiento_ssd', self.ssd),
@@ -180,7 +188,7 @@ class DemoArmadoCarritoTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['estado'], 'incompleto')
-        self.assertEqual(ItemCarrito.objects.count(), 7)
+        self.assertEqual(ItemCarrito.objects.count(), 6)
         item_ssd = ItemCarrito.objects.get(almacenamiento_ssd__isnull=False)
         item_hdd = ItemCarrito.objects.get(almacenamiento_hdd__isnull=False)
         self.assertEqual(item_ssd.almacenamiento_ssd_id, self.ssd.id)
@@ -313,3 +321,66 @@ class CargarDemoDimensionesTests(TestCase):
 
         self.assertEqual(TarjetaGrafica.objects.count(), 0)
         self.assertEqual(Gabinete.objects.count(), 0)
+
+
+@override_settings(DEBUG=True)
+class CargarDemoRamTests(TestCase):
+    def test_sin_la_opcion_no_inventa_modulos_ni_formato(self):
+        call_command('cargar_demo_armado')
+
+        ram = MemoriaRam.objects.get(nombre='DEMO RAM DDR4')
+        self.assertIsNone(ram.modulos_por_producto)
+        self.assertIsNone(ram.capacidad_modulo_gb)
+        self.assertIsNone(ram.formato_ram)
+        self.assertFalse(MemoriaRam.objects.filter(nombre='DEMO RAM módulo DDR5 16GB').exists())
+        self.assertIsNone(
+            PlacaMadre.objects.get(nombre='DEMO Placa AM5 DDR5 ATX').formato_ram_soportado
+        )
+
+    def test_la_opcion_solo_completa_las_piezas_previstas(self):
+        marca = Proveedor.objects.create(nombre='Marca real de RAM')
+        real = MemoriaRam.objects.create(
+            proveedor=marca, nombre='RAM real', precio=Decimal('10.00'), stock=1,
+            capacidad_gb=8, tipo_ddr='DDR4', velocidad_mhz=3200,
+        )
+        previa = MemoriaRam.objects.create(
+            proveedor=marca, nombre='DEMO RAM DDR5', descripcion='No convertir en kit',
+            precio=Decimal('1.00'), stock=1, capacidad_gb=16, tipo_ddr='DDR5', velocidad_mhz=5600,
+        )
+        placa_real = PlacaMadre.objects.create(
+            proveedor=marca, nombre='Placa real', precio=Decimal('20.00'), stock=1,
+            socket_cpu='AM4', chipset='B550', formato='ATX', ranuras_ram=2, tipo_ram_soportado='DDR4',
+        )
+
+        call_command('cargar_demo_armado', ram=True)
+        call_command('cargar_demo_armado', ram=True)
+
+        real.refresh_from_db()
+        previa.refresh_from_db()
+        placa_real.refresh_from_db()
+        self.assertIsNone(real.modulos_por_producto)
+        self.assertIsNone(real.formato_ram)
+        self.assertEqual(real.precio, Decimal('10.00'))
+        self.assertEqual(previa.precio, Decimal('1.00'))
+        self.assertEqual(previa.descripcion, 'No convertir en kit')
+        self.assertIsNone(previa.modulos_por_producto)
+        self.assertIsNone(placa_real.formato_ram_soportado)
+        self.assertIsNone(placa_real.capacidad_maxima_ram_gb)
+        for item in RAM_DEMO:
+            producto = MemoriaRam.objects.get(nombre=item['nombre'])
+            self.assertEqual(MemoriaRam.objects.filter(nombre=item['nombre']).count(), 1)
+            self.assertEqual(producto.modulos_por_producto, item['campos']['modulos_por_producto'])
+            self.assertEqual(producto.capacidad_gb, item['campos']['capacidad_gb'])
+            self.assertEqual(producto.capacidad_modulo_gb, item['campos']['capacidad_modulo_gb'])
+            self.assertEqual(producto.formato_ram, item['campos']['formato_ram'])
+        for nombre, campos in PLACAS_RAM_DEMO.items():
+            placa = PlacaMadre.objects.get(nombre=nombre)
+            self.assertEqual(placa.formato_ram_soportado, campos['formato_ram_soportado'])
+            self.assertEqual(placa.capacidad_maxima_ram_gb, campos['capacidad_maxima_ram_gb'])
+
+    def test_rechaza_la_opcion_si_debug_esta_apagado(self):
+        with override_settings(DEBUG=False):
+            with self.assertRaises(CommandError):
+                call_command('cargar_demo_armado', ram=True)
+
+        self.assertEqual(MemoriaRam.objects.count(), 0)

@@ -72,9 +72,12 @@
 
                 {# Atributos de Memoria RAM #}
                 {% if producto.capacidad_gb and producto.tipo_ddr and producto.velocidad_mhz %}
-                    <li><strong>Capacidad:</strong> {{ producto.capacidad_gb }} GB</li>
+                    <li><strong>Capacidad del producto:</strong> {{ producto.capacidad_gb }} GB</li>
+                    {% if producto.modulos_por_producto %}<li><strong>Módulos:</strong> {{ producto.modulos_por_producto }}</li>{% endif %}
+                    {% if producto.capacidad_modulo_gb %}<li><strong>Capacidad por módulo:</strong> {{ producto.capacidad_modulo_gb }} GB</li>{% endif %}
+                    {% if producto.formato_ram %}<li><strong>Formato:</strong> {{ producto.formato_ram }}</li>{% endif %}
                     <li><strong>Tipo DDR:</strong> {{ producto.tipo_ddr }}</li>
-                    <li><strong>Velocidad:</strong> {{ producto.velocidad_mhz }} MHz</li>
+                    <li><strong>Velocidad indicada:</strong> {{ producto.velocidad_mhz }} MHz</li>
                 {% elif producto.capacidad_gb %} {# Para SSD/HDD que también tienen capacidad_gb #}
                     <li><strong>Capacidad:</strong> {{ producto.capacidad_gb }} GB</li>
                 {% endif %}
@@ -84,6 +87,8 @@
                 {% if producto.chipset %} <li><strong>Chipset:</strong> {{ producto.chipset }}</li> {% endif %}
                 {% if producto.formato %} <li><strong>Formato:</strong> {{ producto.formato }}</li> {% endif %}
                 {% if producto.ranuras_ram %} <li><strong>Ranuras RAM:</strong> {{ producto.ranuras_ram }}</li> {% endif %}
+                {% if producto.formato_ram_soportado %} <li><strong>Formato de RAM:</strong> {{ producto.formato_ram_soportado }}</li> {% endif %}
+                {% if producto.capacidad_maxima_ram_gb %} <li><strong>RAM máxima:</strong> {{ producto.capacidad_maxima_ram_gb }} GB</li> {% endif %}
 
                 {# Atributos de Almacenamiento (SSD/HDD) #}
                 {% if producto.interfaz and producto.formato and producto.categoria != 'Memoria RAM' %} {# Evitar duplicar interfaz/formato si ya se mostró para GPU/MB #}

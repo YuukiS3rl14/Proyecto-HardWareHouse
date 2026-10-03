@@ -223,6 +223,74 @@ FUENTES_DEMO = (
     },
 )
 
+# Datos ficticios de RAM. Solo los escribe --ram, y solo en estos nombres.
+# capacidad_gb es la del producto vendido. En el kit ya incluye los dos módulos,
+# así que no se vuelve a multiplicar por modulos_por_producto.
+RAM_DEMO = (
+    {
+        'nombre': 'DEMO RAM módulo DDR5 16GB',
+        'campos': {
+            'descripcion': (
+                'Pieza ficticia de demostración. Un módulo DIMM de 16 GB DDR5 a 5600 MHz. '
+                'La capacidad del producto es 16 GB y trae 1 módulo.'
+            ),
+            'precio': Decimal('39990.00'),
+            'stock': STOCK_DEMO,
+            'capacidad_gb': 16,
+            'tipo_ddr': 'DDR5',
+            'velocidad_mhz': 5600,
+            'modulos_por_producto': 1,
+            'capacidad_modulo_gb': 16,
+            'formato_ram': 'DIMM',
+        },
+    },
+    {
+        'nombre': 'DEMO RAM kit DDR5 32GB',
+        'campos': {
+            'descripcion': (
+                'Pieza ficticia de demostración. Kit DIMM de dos módulos DDR5 a 5600 MHz. '
+                'La capacidad del producto es 32 GB; cada módulo es de 16 GB. '
+                'No se suman 32 y 16.'
+            ),
+            'precio': Decimal('69990.00'),
+            'stock': STOCK_DEMO,
+            'capacidad_gb': 32,
+            'tipo_ddr': 'DDR5',
+            'velocidad_mhz': 5600,
+            'modulos_por_producto': 2,
+            'capacidad_modulo_gb': 16,
+            'formato_ram': 'DIMM',
+        },
+    },
+    {
+        'nombre': 'DEMO RAM SO-DIMM DDR5 16GB',
+        'campos': {
+            'descripcion': (
+                'Pieza ficticia de demostración. Un módulo SO-DIMM de 16 GB DDR5. '
+                'No cabe en una placa que solo admite DIMM.'
+            ),
+            'precio': Decimal('42990.00'),
+            'stock': STOCK_DEMO,
+            'capacidad_gb': 16,
+            'tipo_ddr': 'DDR5',
+            'velocidad_mhz': 5600,
+            'modulos_por_producto': 1,
+            'capacidad_modulo_gb': 16,
+            'formato_ram': 'SO-DIMM',
+        },
+    },
+)
+PLACAS_RAM_DEMO = {
+    'DEMO Placa AM4 DDR4 ATX': {
+        'formato_ram_soportado': 'DIMM',
+        'capacidad_maxima_ram_gb': 128,
+    },
+    'DEMO Placa AM5 DDR5 ATX': {
+        'formato_ram_soportado': 'DIMM',
+        'capacidad_maxima_ram_gb': 48,
+    },
+}
+
 # Milímetros ficticios. Solo los escribe --dimensiones, y solo en estos nombres.
 LARGO_GABINETE_DEMO = {
     'DEMO Gabinete Mini-ITX': 200,
@@ -285,6 +353,14 @@ class Command(BaseCommand):
                 'y crea ejemplos que caben y que exceden el límite.'
             ),
         )
+        parser.add_argument(
+            '--ram',
+            action='store_true',
+            help=(
+                'Crea un módulo individual y un kit de dos módulos, más un SO-DIMM, '
+                'y escribe formato y capacidad máxima solo en las placas DEMO de este comando.'
+            ),
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG:
@@ -295,6 +371,8 @@ class Command(BaseCommand):
             self._aplicar_potencia_demo()
         if options['dimensiones']:
             self._aplicar_dimensiones_demo()
+        if options['ram']:
+            self._aplicar_ram_demo()
 
     def _crear_faltantes_del_catalogo(self):
         faltantes = [
@@ -423,4 +501,46 @@ class Command(BaseCommand):
                     self.stdout.write(f"Largo en {item['nombre']}: {item['largo_mm']} mm")
         self.stdout.write(self.style.SUCCESS(
             'Dimensiones DEMO aplicadas solo a los nombres ficticios de este comando.'
+        ))
+
+    def _aplicar_ram_demo(self):
+        """Completa módulos, formato y capacidad máxima solo en los nombres de esta opción."""
+        with transaction.atomic():
+            proveedor, _creado = Proveedor.objects.get_or_create(nombre=PROVEEDOR_DEMO)
+            for item in RAM_DEMO:
+                ram = MemoriaRam.objects.filter(nombre=item['nombre']).first()
+                datos = {
+                    'modulos_por_producto': item['campos']['modulos_por_producto'],
+                    'capacidad_modulo_gb': item['campos']['capacidad_modulo_gb'],
+                    'formato_ram': item['campos']['formato_ram'],
+                    'capacidad_gb': item['campos']['capacidad_gb'],
+                }
+                if ram is None:
+                    ram = MemoriaRam(
+                        proveedor=proveedor,
+                        nombre=item['nombre'],
+                        **item['campos'],
+                    )
+                    ram.full_clean()
+                    ram.save()
+                    self.stdout.write(f"Creada: {item['nombre']}")
+                else:
+                    MemoriaRam.objects.filter(pk=ram.pk).update(**datos)
+                    self.stdout.write(
+                        f"{item['nombre']}: {datos['modulos_por_producto']} módulos, "
+                        f"{datos['capacidad_gb']} GB en total, formato {datos['formato_ram']}"
+                    )
+            for nombre, campos in PLACAS_RAM_DEMO.items():
+                actualizados = PlacaMadre.objects.filter(nombre=nombre).update(**campos)
+                if actualizados:
+                    self.stdout.write(
+                        f"{nombre}: formato {campos['formato_ram_soportado']}, "
+                        f"máximo {campos['capacidad_maxima_ram_gb']} GB"
+                    )
+                else:
+                    self.stdout.write(self.style.WARNING(
+                        f'No existe {nombre}; no se creó una placa fuera del catálogo.'
+                    ))
+        self.stdout.write(self.style.SUCCESS(
+            'RAM DEMO aplicada solo a los nombres ficticios de este comando.'
         ))

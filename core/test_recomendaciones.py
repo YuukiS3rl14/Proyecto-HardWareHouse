@@ -106,8 +106,14 @@ class EvaluarCandidatoTests(TestCase):
     def test_coincidencias_nombran_la_regla_comprobada(self):
         evaluacion = evaluar_candidato(
             'memoria_ram',
-            pieza(tipo_ddr='DDR5'),
-            placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX'),
+            pieza(
+                tipo_ddr='DDR5', capacidad_gb=16, modulos_por_producto=1,
+                capacidad_modulo_gb=16, formato_ram='DIMM',
+            ),
+            placa_madre=pieza(
+                socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX',
+                ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+            ),
             gabinete=pieza(formato_soporte='ATX'),
         )
 
@@ -148,7 +154,7 @@ class RecomendarArmadoTests(TestCase):
         return PlacaMadre.objects.create(
             proveedor=cls.proveedor, nombre=nombre, precio=Decimal('80000'), stock=4,
             socket_cpu=socket, chipset='B650', formato=formato, ranuras_ram=4,
-            tipo_ram_soportado=ddr,
+            tipo_ram_soportado=ddr, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
         )
 
     @classmethod
@@ -156,6 +162,7 @@ class RecomendarArmadoTests(TestCase):
         return MemoriaRam.objects.create(
             proveedor=cls.proveedor, nombre=nombre, precio=Decimal('30000'), stock=4,
             capacidad_gb=16, tipo_ddr=tipo, velocidad_mhz=5600,
+            modulos_por_producto=1, capacidad_modulo_gb=16, formato_ram='DIMM',
         )
 
     def post(self, categoria, componentes):

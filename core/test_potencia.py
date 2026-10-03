@@ -24,8 +24,14 @@ POLITICA_EXACTA = PoliticaPotencia(reserva_otros_watts=50, margen=Decimal('1.10'
 def cpu_gpu_fuente(fuente_w, cpu_w=100, gpu_w=100, minimo_gpu=None):
     return dict(
         procesador=pieza(socket='AM5', potencia_referencia_watts=cpu_w),
-        placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX'),
-        memoria_ram=pieza(tipo_ddr='DDR5'),
+        placa_madre=pieza(
+            socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX',
+            ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        ),
+        memoria_ram=pieza(
+            tipo_ddr='DDR5', capacidad_gb=16, modulos_por_producto=1,
+            capacidad_modulo_gb=16, formato_ram='DIMM',
+        ),
         gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
         tarjeta_grafica=pieza(
             consumo_referencia_watts=gpu_w,
@@ -95,8 +101,14 @@ class PoliticaPotenciaTests(SimpleTestCase):
     def test_sin_fuente_no_aplica_la_regla_al_resto_del_armado(self):
         resultado = validar_armado(
             procesador=pieza(socket='AM5', potencia_referencia_watts=100),
-            placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX'),
-            memoria_ram=pieza(tipo_ddr='DDR5'),
+            placa_madre=pieza(
+                socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX',
+                ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+            ),
+            memoria_ram=pieza(
+                tipo_ddr='DDR5', capacidad_gb=16, modulos_por_producto=1,
+                capacidad_modulo_gb=16, formato_ram='DIMM',
+            ),
             gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
             tarjeta_grafica=pieza(consumo_referencia_watts=200, largo_mm=300),
             politica=POLITICA_EXACTA,
