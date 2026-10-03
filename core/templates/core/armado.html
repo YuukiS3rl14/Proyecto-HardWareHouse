@@ -61,7 +61,7 @@
 
 {{ componentes|json_script:"componentes-data" }}
 
-<div id="builder-urls" data-add-to-cart-url="{% url 'core:agregar_al_carrito' %}" data-placeholder-img="{% static 'core/img/placeholder_product.webp' %}" style="display: none;"></div>
+<div id="builder-urls" data-add-armado-url="{% url 'core:agregar_armado_al_carrito' %}" data-placeholder-img="{% static 'core/img/placeholder_product.webp' %}" style="display: none;">{% csrf_token %}</div>
 
 <!-- Modal para seleccionar componentes -->
 <div class="modal fade" id="componentModal" tabindex="-1" aria-labelledby="componentModalLabel" aria-hidden="true">

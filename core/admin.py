@@ -50,12 +50,12 @@ class MemoriaRamAdmin(admin.ModelAdmin):
     )
 
 class PlacaMadreAdmin(admin.ModelAdmin):
-    list_display = PRODUCTO_LIST_DISPLAY + ('socket_cpu', 'chipset', 'formato', 'ranuras_ram')
+    list_display = PRODUCTO_LIST_DISPLAY + ('socket_cpu', 'chipset', 'formato', 'tipo_ram_soportado', 'ranuras_ram')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('socket_cpu', 'chipset', 'formato', 'ranuras_ram')}),
+        ('Especificaciones Técnicas', {'fields': ('socket_cpu', 'chipset', 'formato', 'tipo_ram_soportado', 'ranuras_ram')}),
     )
 
 class AlmacenamientoAdminForm(forms.ModelForm):

@@ -17,6 +17,7 @@ urlpatterns = [
 
     # URLs del Carrito
     path('carrito/agregar/', agregar_al_carrito, name='agregar_al_carrito'),
+    path('carrito/agregar-armado/', agregar_armado_al_carrito, name='agregar_armado_al_carrito'),
     path('carrito/eliminar/<int:item_id>/', eliminar_del_carrito, name='eliminar_del_carrito'),
     path('carrito/actualizar/<int:item_id>/', actualizar_carrito, name='actualizar_carrito'),
 

@@ -43,10 +43,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         updateSummaryAndTotal();
-
-        // Listeners para los botones de acción
-        addToCartBtn.addEventListener('click', addAllToCart);
-        downloadExcelBtn.addEventListener('click', downloadAsExcel);
     }
 
     function createComponentCardHTML(key, label, component) {
@@ -57,14 +53,9 @@ document.addEventListener('DOMContentLoaded', function () {
         let compatibilityStatus = '';
         let compatibilityIcon = '';
         if (component) {
-            const { isCompatible, warning } = checkCompatibility(component, key);
-            if (!isCompatible) {
-                compatibilityStatus = 'text-danger';
-                compatibilityIcon = `<i class="fas fa-exclamation-triangle mr-1" title="${warning}"></i>`;
-            } else {
-                compatibilityStatus = 'text-success';
-                compatibilityIcon = `<i class="fas fa-check-circle mr-1" title="Compatible"></i>`;
-            }
+            const visual = estadoVisual(checkCompatibility(component, key));
+            compatibilityStatus = visual.status;
+            compatibilityIcon = visual.icon;
         }
 
         // Generar lista de especificaciones clave
@@ -190,64 +181,159 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSummaryAndTotal();
     }
 
+    const SOCKETS_CONOCIDOS = ['AM4', 'AM5', 'LGA1200', 'LGA1700'];
+    const TIPOS_DDR = ['DDR3', 'DDR4', 'DDR5'];
+    const FORMATOS = ['MINI-ITX', 'MICRO-ATX', 'ATX'];
+
+    function normalizarSpec(valor) {
+        return String(valor ?? '').trim().toUpperCase().replace(/\s+/g, '');
+    }
+
+    function peorEstado(actual, candidato) {
+        const orden = { compatible: 0, incompleto: 1, datos_insuficientes: 2, incompatible: 3 };
+        return orden[candidato] > orden[actual] ? candidato : actual;
+    }
+
+    function resumir(hallazgos) {
+        const vigentes = hallazgos.filter(Boolean);
+        if (vigentes.length === 0) {
+            return { estado: 'compatible', isCompatible: true, warning: null };
+        }
+        const estado = vigentes.reduce((peor, hallazgo) => peorEstado(peor, hallazgo.estado), 'compatible');
+        const aviso = vigentes.find(hallazgo => hallazgo.estado === estado && hallazgo.warning);
+        return { estado, isCompatible: false, warning: aviso ? aviso.warning : null };
+    }
+
+    function estadoVisual(resultado) {
+        if (resultado.estado === 'incompatible' || resultado.estado === 'datos_insuficientes') {
+            const titulo = (resultado.warning || '').replace(/"/g, '&quot;');
+            return {
+                status: 'text-danger',
+                icon: `<i class="fas fa-exclamation-triangle mr-1" title="${titulo}"></i>`,
+            };
+        }
+        if (resultado.estado === 'compatible') {
+            return {
+                status: 'text-success',
+                icon: '<i class="fas fa-check-circle mr-1" title="Compatible"></i>',
+            };
+        }
+        return { status: '', icon: '' };
+    }
+
+    function evaluarSocket(cpuPresente, socketCpu, placaPresente, socketPlaca, mensajeIncompatible) {
+        if (!cpuPresente || !placaPresente) {
+            return { estado: 'incompleto', warning: null };
+        }
+        const cpu = normalizarSpec(socketCpu);
+        const placa = normalizarSpec(socketPlaca);
+        if (!SOCKETS_CONOCIDOS.includes(cpu) || !SOCKETS_CONOCIDOS.includes(placa)) {
+            return { estado: 'datos_insuficientes', warning: 'No se puede verificar el socket: un valor Otro o desconocido no es compatible.' };
+        }
+        if (cpu !== placa) {
+            return { estado: 'incompatible', warning: mensajeIncompatible };
+        }
+        return null;
+    }
+
+    function evaluarRam(ramPresente, tipoRam, placaPresente, tipoPlaca, mensajeIncompatible) {
+        if (!ramPresente || !placaPresente) {
+            return { estado: 'incompleto', warning: null };
+        }
+        const ram = normalizarSpec(tipoRam);
+        const placa = normalizarSpec(tipoPlaca);
+        if (!TIPOS_DDR.includes(ram) || !TIPOS_DDR.includes(placa)) {
+            return { estado: 'datos_insuficientes', warning: 'No se puede verificar la RAM porque el tipo DDR no es conocido.' };
+        }
+        if (ram !== placa) {
+            return { estado: 'incompatible', warning: mensajeIncompatible };
+        }
+        return null;
+    }
+
+    function evaluarFormato(placaPresente, formatoPlaca, gabinetePresente, formatoGabinete, mensajeIncompatible) {
+        if (!placaPresente || !gabinetePresente) {
+            return { estado: 'incompleto', warning: null };
+        }
+        const indicePlaca = FORMATOS.indexOf(normalizarSpec(formatoPlaca));
+        const indiceGabinete = FORMATOS.indexOf(normalizarSpec(formatoGabinete));
+        if (indicePlaca === -1 || indiceGabinete === -1) {
+            return { estado: 'datos_insuficientes', warning: 'No se puede verificar el formato porque no es un formato conocido.' };
+        }
+        if (indiceGabinete < indicePlaca) {
+            return { estado: 'incompatible', warning: mensajeIncompatible };
+        }
+        return null;
+    }
+
+    function evaluarCoolerContra(socketsConocidos, socketObjetivo, mensajeIncompatible) {
+        const objetivo = normalizarSpec(socketObjetivo);
+        if (!SOCKETS_CONOCIDOS.includes(objetivo) || socketsConocidos.length === 0) {
+            return { estado: 'datos_insuficientes', warning: 'No se puede verificar el cooler: faltan sockets conocidos.' };
+        }
+        if (!socketsConocidos.includes(objetivo)) {
+            return { estado: 'incompatible', warning: mensajeIncompatible };
+        }
+        return null;
+    }
+
     function checkCompatibility(component, type) {
         const placaMadre = currentBuild.placa_madre;
         const procesador = currentBuild.procesador;
         const gabinete = currentBuild.gabinete;
         const ram = currentBuild.memoria_ram;
+        const hallazgos = [];
 
-        // Lógica de compatibilidad
-        switch (type) {
-            case 'procesador':
-                if (placaMadre && component.socket !== placaMadre.socket_cpu) {
-                    return { isCompatible: false, warning: `Socket incompatible (requiere ${placaMadre.socket_cpu})` };
+        if (type === 'procesador') {
+            hallazgos.push(evaluarSocket(
+                true, component.socket, !!placaMadre, placaMadre && placaMadre.socket_cpu,
+                `Socket incompatible (requiere ${placaMadre ? placaMadre.socket_cpu : ''})`
+            ));
+        } else if (type === 'placa_madre') {
+            hallazgos.push(evaluarSocket(
+                !!procesador, procesador && procesador.socket, true, component.socket_cpu,
+                `Socket incompatible (requiere ${procesador ? procesador.socket : ''})`
+            ));
+            hallazgos.push(evaluarFormato(
+                true, component.formato, !!gabinete, gabinete && gabinete.formato_soporte,
+                'Formato incompatible con gabinete'
+            ));
+            hallazgos.push(evaluarRam(
+                !!ram, ram && ram.tipo_ddr, true, component.tipo_ram_soportado,
+                `Tipo RAM incompatible (requiere ${ram ? ram.tipo_ddr : ''})`
+            ));
+        } else if (type === 'memoria_ram') {
+            hallazgos.push(evaluarRam(
+                true, component.tipo_ddr, !!placaMadre, placaMadre && placaMadre.tipo_ram_soportado,
+                `Tipo de RAM incompatible (requiere ${placaMadre ? placaMadre.tipo_ram_soportado : ''})`
+            ));
+        } else if (type === 'refrigeracion_cooler') {
+            if (!procesador && !placaMadre) {
+                hallazgos.push({ estado: 'incompleto', warning: null });
+            } else {
+                const sockets = String(component.socket_compatibles || '').split(',').map(normalizarSpec).filter(Boolean);
+                const conocidos = sockets.filter(socket => SOCKETS_CONOCIDOS.includes(socket));
+                if (procesador) {
+                    hallazgos.push(evaluarCoolerContra(
+                        conocidos, procesador.socket,
+                        `Incompatible con socket de CPU (${procesador.socket})`
+                    ));
                 }
-                break;
-
-            case 'placa_madre':
-                if (procesador && component.socket_cpu !== procesador.socket) {
-                    return { isCompatible: false, warning: `Socket incompatible (requiere ${procesador.socket})` };
+                if (placaMadre) {
+                    hallazgos.push(evaluarCoolerContra(
+                        conocidos, placaMadre.socket_cpu,
+                        `Incompatible con socket de Placa (${placaMadre.socket_cpu})`
+                    ));
                 }
-                if (gabinete && !isFormatoCompatible(component.formato, gabinete.formato_soporte)) {
-                    return { isCompatible: false, warning: `Formato incompatible con gabinete` };
-                }
-                if (ram && component.tipo_ram_soportado !== ram.tipo_ddr) {
-                    return { isCompatible: false, warning: `Tipo RAM incompatible (requiere ${ram.tipo_ddr})` };
-                }
-                break;
-
-            case 'memoria_ram':
-                if (placaMadre && component.tipo_ddr !== placaMadre.tipo_ram_soportado) {
-                    return { isCompatible: false, warning: `Tipo de RAM incompatible (requiere ${placaMadre.tipo_ram_soportado})` };
-                }
-                break;
-
-            case 'refrigeracion_cooler':
-                const socketsCompatibles = component.socket_compatibles.split(',').map(s => s.trim());
-                if (procesador && !socketsCompatibles.includes(procesador.socket)) {
-                     return { isCompatible: false, warning: `Incompatible con socket de CPU (${procesador.socket})` };
-                }
-                if (placaMadre && !socketsCompatibles.includes(placaMadre.socket_cpu)) {
-                    return { isCompatible: false, warning: `Incompatible con socket de Placa (${placaMadre.socket_cpu})` };
-                }
-                break;
-            
-            case 'gabinete':
-                if (placaMadre && !isFormatoCompatible(placaMadre.formato, component.formato_soporte)) {
-                    return { isCompatible: false, warning: `No soporta formato de Placa Madre (${placaMadre.formato})` };
-                }
-                break;
+            }
+        } else if (type === 'gabinete') {
+            hallazgos.push(evaluarFormato(
+                !!placaMadre, placaMadre && placaMadre.formato, true, component.formato_soporte,
+                `No soporta formato de Placa Madre (${placaMadre ? placaMadre.formato : ''})`
+            ));
         }
 
-        return { isCompatible: true, warning: null };
-    }
-
-    function isFormatoCompatible(formatoPlaca, formatoGabinete) {
-        // Un gabinete más grande puede albergar una placa más pequeña.
-        const formatos = ['Mini-ITX', 'Micro-ATX', 'ATX'];
-        const indicePlaca = formatos.indexOf(formatoPlaca);
-        const indiceGabinete = formatos.indexOf(formatoGabinete);
-        return indiceGabinete >= indicePlaca;
+        return resumir(hallazgos);
     }
 
     // --- 4. ACTUALIZAR RESUMEN Y TOTAL ---
@@ -266,16 +352,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 componentCount++;
 
                 // Añadir al resumen
-                let compatibilityStatus = '';
-                let compatibilityIcon = '';
-                const { isCompatible, warning } = checkCompatibility(component, key);
-                if (!isCompatible && warning) { // Solo mostrar advertencia si hay un warning específico
-                    compatibilityStatus = 'text-danger';
-                    compatibilityIcon = `<i class="fas fa-exclamation-triangle mr-1" title="${warning}"></i>`;
-                } else if (isCompatible) { // Solo mostrar check si es compatible
-                    compatibilityStatus = 'text-success';
-                    compatibilityIcon = `<i class="fas fa-check-circle mr-1" title="Compatible"></i>`;
-                }
+                const visual = estadoVisual(checkCompatibility(component, key));
+                const compatibilityStatus = visual.status;
+                const compatibilityIcon = visual.icon;
                 const summaryItem = document.createElement('div');
                 summaryItem.className = 'd-flex justify-content-between mb-2';
                 summaryItem.innerHTML = `
@@ -318,40 +397,39 @@ document.addEventListener('DOMContentLoaded', function () {
         const items = Object.entries(currentBuild);
         if (items.length === 0) return;
 
-        // Usamos un bucle for...of con await para procesar las peticiones en secuencia
-        for (const [type, component] of items) {
-            const formData = new FormData();
+        const componentes = items.map(([type, component]) => {
             const { modelName } = componentOrder.find(c => c.key === type);
+            return {
+                tipo: component.model_name || modelName,
+                id: component.id,
+            };
+        });
 
-            formData.append('product_id', component.id);
-            formData.append('model_name', modelName);
-            formData.append('quantity', 1);
-            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
 
-            try {
-                const response = await fetch(urls.addToCartUrl, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                });
-                const data = await response.json();
-                console.log(`Agregado: ${component.nombre}`, data);
-            } catch (error) {
-                // Si el error es un SyntaxError, probablemente la respuesta no fue JSON (ej. un 404 HTML)
-                if (error instanceof SyntaxError) {
-                    console.error(`Error de parseo JSON al agregar ${component.nombre}. Posiblemente un error del servidor o URL incorrecta.`, error);
-                    alert(`Hubo un error de comunicación con el servidor al agregar ${component.nombre}. Por favor, inténtalo de nuevo.`);
-                } else {
-                    console.error(`Error agregando ${component.nombre}:`, error);
-                    alert(`Hubo un error al agregar ${component.nombre} al carrito.`);
-                }
-                alert(`Hubo un error al agregar ${component.nombre} al carrito.`);
-                return; // Detener si hay un error
+        try {
+            const response = await fetch(urls.addArmadoUrl, {
+                method: 'POST',
+                body: JSON.stringify({ componentes }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfInput ? csrfInput.value : '',
+                },
+            });
+            const data = await response.json();
+            if (!response.ok || data.status !== 'success') {
+                const motivos = (data.motivos || []).filter(Boolean);
+                alert(motivos.length ? motivos.join('\n') : (data.message || 'No se agregó el armado al carrito.'));
+                return;
             }
+        } catch (error) {
+            console.error('Error al agregar el armado:', error);
+            alert('Hubo un error de comunicación con el servidor al agregar el armado.');
+            return;
         }
 
         showToast('¡Componentes agregados! Redirigiendo al carrito...');
-        // Esperamos un momento para que el usuario vea el toast antes de redirigir
         setTimeout(() => {
             window.location.href = '/carrito/';
         }, 1500);
@@ -362,20 +440,23 @@ document.addEventListener('DOMContentLoaded', function () {
         const baseHeaders = ['Componente', 'Producto', 'Cantidad', 'Precio Unitario'];
         const attributeHeaders = new Set();
         const componentsToExport = [];
-        let isBuildCompatible = true;
+        let estadoArmado = 'compatible';
+        const etiquetasEstado = {
+            compatible: 'Compatible',
+            incompatible: 'Incompatible (Revisar Componentes)',
+            datos_insuficientes: 'Datos insuficientes (no se declara compatible)',
+            incompleto: 'Selección incompleta',
+        };
 
         // Recopilar todos los componentes y sus atributos
         componentOrder.forEach(({ key, label }) => {
             const component = currentBuild[key];
             if (component) {
                 componentsToExport.push({ label, component });
-                // Comprobar compatibilidad general
-                if (!checkCompatibility(component, key).isCompatible) {
-                    isBuildCompatible = false;
-                }
+                estadoArmado = peorEstado(estadoArmado, checkCompatibility(component, key).estado);
                 // Recopilar cabeceras de atributos
                 Object.keys(component).forEach(attr => {
-                    if (!['id', 'nombre', 'precio', 'imagen', 'stock'].includes(attr)) {
+                    if (!['id', 'nombre', 'precio', 'imagen', 'stock', 'model_name'].includes(attr)) {
                         attributeHeaders.add(attr);
                     }
                 });
@@ -403,7 +484,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 3. Añadir filas de resumen al final
         data.push([]); // Fila vacía como separador
-        data.push(['', 'Compatibilidad del Armado:', isBuildCompatible ? 'Compatible' : 'Incompatible (Revisar Componentes)']);
+        data.push(['', 'Compatibilidad del Armado:', etiquetasEstado[estadoArmado] || estadoArmado]);
         data.push(['', 'Precio Total del Armado:', totalBuildPrice]);
 
         // 4. Crear y descargar el archivo Excel
@@ -419,5 +500,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- 6. INICIAR TODO ---
+    addToCartBtn.addEventListener('click', addAllToCart);
+    downloadExcelBtn.addEventListener('click', downloadAsExcel);
     initializeBuilder();
 });

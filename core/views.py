@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, update_session_auth_hash 
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from .compatibilidad import validar_armado
 from .forms import *
 import json
 import uuid
@@ -27,10 +29,10 @@ def mostrarIndex(request):
     return render(request, 'core/index.html', context)
 
 def mostrarArmado(request):    
-    def get_component_data(model, fields):
+    def get_component_data(model, fields, model_name):
         components = []
         for item in model.objects.all():
-            data = {'id': item.id}
+            data = {'id': item.id, 'model_name': model_name}
             for field in fields:
                 data[field] = getattr(item, field)
             data['imagen'] = item.imagen.url if item.imagen else None
@@ -38,14 +40,17 @@ def mostrarArmado(request):
         return components
 
     componentes = {
-        'placa_madre': get_component_data(PlacaMadre, ['nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'chipset', 'ranuras_ram', 'stock']),
-        'procesador': get_component_data(Procesador, ['nombre', 'precio', 'socket', 'nucleos', 'frecuencia_base', 'stock']),
-        'memoria_ram': get_component_data(MemoriaRam, ['nombre', 'precio', 'tipo_ddr', 'capacidad_gb', 'velocidad_mhz', 'stock']),
-        'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'stock']),
-        'almacenamiento': get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'formato', 'stock']) + get_component_data(AlmacenamientoHDD, ['nombre', 'precio', 'capacidad_gb', 'stock']),
-        'gabinete': get_component_data(Gabinete, ['nombre', 'precio', 'formato_soporte', 'stock']),
-        'fuente_de_poder': get_component_data(FuenteDePoder, ['nombre', 'precio', 'potencia_watts', 'stock']),
-        'refrigeracion_cooler': get_component_data(RefrigeracionCooler, ['nombre', 'precio', 'socket_compatibles', 'tipo', 'tamanho_radiador_mm', 'stock']),
+        'placa_madre': get_component_data(PlacaMadre, ['nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'chipset', 'ranuras_ram', 'stock'], 'placa_madre'),
+        'procesador': get_component_data(Procesador, ['nombre', 'precio', 'socket', 'nucleos', 'frecuencia_base', 'stock'], 'procesador'),
+        'memoria_ram': get_component_data(MemoriaRam, ['nombre', 'precio', 'tipo_ddr', 'capacidad_gb', 'velocidad_mhz', 'stock'], 'memoria_ram'),
+        'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'stock'], 'tarjeta_grafica'),
+        'almacenamiento': (
+            get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'formato', 'stock'], 'almacenamiento_ssd')
+            + get_component_data(AlmacenamientoHDD, ['nombre', 'precio', 'capacidad_gb', 'stock'], 'almacenamiento_hdd')
+        ),
+        'gabinete': get_component_data(Gabinete, ['nombre', 'precio', 'formato_soporte', 'stock'], 'gabinete'),
+        'fuente_de_poder': get_component_data(FuenteDePoder, ['nombre', 'precio', 'potencia_watts', 'stock'], 'fuente_de_poder'),
+        'refrigeracion_cooler': get_component_data(RefrigeracionCooler, ['nombre', 'precio', 'socket_compatibles', 'tipo', 'tamanho_radiador_mm', 'stock'], 'refrigeracion'),
     }
 
     for categoria in componentes:
@@ -405,6 +410,96 @@ def agregar_al_carrito(request):
         messages.success(request, message)
 
     return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
+
+_CLAVES_DE_VALIDACION = {
+    'procesador': 'procesador',
+    'placa_madre': 'placa_madre',
+    'memoria_ram': 'memoria_ram',
+    'gabinete': 'gabinete',
+    'refrigeracion': 'refrigeracion',
+}
+
+def _error_armado(message, estado='error', motivos=None, status=400):
+    return JsonResponse({
+        'status': 'error',
+        'estado': estado,
+        'message': message,
+        'motivos': motivos if motivos is not None else [message],
+    }, status=status)
+
+@login_required
+@require_POST
+def agregar_armado_al_carrito(request):
+    """Valida el armado completo y, solo si no hay conflicto, agrega todas las piezas."""
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return _error_armado('El armado enviado no es válido.')
+
+    componentes = payload.get('componentes')
+    if not isinstance(componentes, list) or not componentes:
+        return _error_armado('Selecciona al menos un componente.', estado='incompleto')
+
+    productos = []
+    seleccion = {}
+    tipos_vistos = set()
+
+    for item in componentes:
+        if not isinstance(item, dict):
+            return _error_armado('El armado enviado no es válido.')
+
+        model_name = item.get('tipo') or item.get('model_name')
+        ModelClass = PRODUCT_MODEL_MAP.get(model_name)
+        if not ModelClass or model_name in tipos_vistos:
+            return _error_armado('Hay un componente con un tipo no válido.')
+
+        try:
+            product_id = int(item.get('id'))
+        except (TypeError, ValueError):
+            return _error_armado('Hay un componente sin identificador válido.')
+
+        producto = ModelClass.objects.filter(pk=product_id).first()
+        if producto is None:
+            return _error_armado('Uno de los componentes ya no está disponible.')
+
+        tipos_vistos.add(model_name)
+        productos.append((model_name, producto))
+        clave = _CLAVES_DE_VALIDACION.get(model_name)
+        if clave:
+            seleccion[clave] = producto
+
+    agotados = [producto.nombre for _, producto in productos if producto.stock <= 0]
+    if agotados:
+        motivos = [f"'{nombre}' está agotado." for nombre in agotados]
+        return _error_armado('No se agregó el armado al carrito.', estado='error', motivos=motivos)
+
+    resultado = validar_armado(**seleccion)
+    if resultado.bloquea_agregar:
+        return _error_armado(
+            'No se agregó el armado al carrito.',
+            estado=resultado.estado,
+            motivos=resultado.motivos_de_rechazo,
+        )
+
+    with transaction.atomic():
+        carrito, _created = Carrito.objects.get_or_create(usuario=request.user)
+        for model_name, producto in productos:
+            lookup_kwargs = {f'{model_name}__id': producto.id}
+            item, created = ItemCarrito.objects.get_or_create(carrito=carrito, **lookup_kwargs)
+            if created:
+                setattr(item, model_name, producto)
+                item.cantidad = 1
+                item.precio_unitario = producto.precio
+            else:
+                item.cantidad += 1
+            item.save()
+
+    return JsonResponse({
+        'status': 'success',
+        'estado': resultado.estado,
+        'message': 'Se agregaron los componentes del armado al carrito.',
+        'motivos': [],
+    })
 
 @login_required
 def eliminar_del_carrito(request, item_id):
