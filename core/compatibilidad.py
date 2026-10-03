@@ -19,6 +19,12 @@ Es una estimación de catálogo, no una garantía eléctrica. No mide picos,
 eficiencia, rieles, conectores, largo de la fuente ni temperatura. La
 potencia de referencia no es el consumo máximo ni el TDP. Cumplir el mínimo
 no declara la fuente completamente compatible.
+
+Largo de la GPU
+---------------
+Si hay GPU y gabinete, la tarjeta cabe en largo cuando largo_mm es menor o
+igual que largo_max_gpu_mm. La igualdad cumple. Un milímetro de más no.
+Esta regla no valida grosor, altura ni el espacio que ocupan los radiadores.
 """
 
 import re
@@ -41,9 +47,10 @@ REGLAS_POR_CATEGORIA = {
     'procesador': ('socket',),
     'placa_madre': ('socket', 'ddr', 'formato'),
     'memoria_ram': ('ddr',),
-    'gabinete': ('formato',),
+    'gabinete': ('formato', 'largo'),
     'refrigeracion': ('cooler',),
     'fuente_de_poder': ('potencia',),
+    'tarjeta_grafica': ('largo',),
 }
 
 CLAVE_POR_CATEGORIA = {
@@ -53,6 +60,7 @@ CLAVE_POR_CATEGORIA = {
     'gabinete': 'gabinete',
     'refrigeracion': 'refrigeracion',
     'fuente_de_poder': 'fuente_de_poder',
+    'tarjeta_grafica': 'tarjeta_grafica',
 }
 
 _PRIORIDAD = {
@@ -125,7 +133,10 @@ class EvaluacionCandidato:
         if self.estado == ESTADO_COMPATIBLE:
             if (
                 len(self.coincidencias) == 1
-                and self.coincidencias[0].startswith('Cumple la estimación de potencia')
+                and (
+                    self.coincidencias[0].startswith('Cumple la estimación de potencia')
+                    or self.coincidencias[0].startswith('Cumple el límite de largo')
+                )
             ):
                 return self.coincidencias[0]
             return 'Coincide: ' + ', '.join(self.coincidencias)
@@ -230,6 +241,8 @@ def _regla_puede_comprobarse(regla, piezas, politica):
         )
     if regla == 'potencia':
         return _potencia_cumplida(piezas, politica)
+    if regla == 'largo':
+        return _largo_cumplido(piezas)
     return False
 
 
@@ -242,6 +255,8 @@ def _texto_coincidencia(regla, piezas, politica):
         return f"Formato {normalizar_spec(piezas['placa_madre'].formato)}"
     if regla == 'potencia':
         return _texto_potencia_cumplida(piezas, politica)
+    if regla == 'largo':
+        return _texto_largo_cumplido(piezas)
     sockets = []
     if piezas['procesador'] is not None:
         sockets.append(normalizar_spec(piezas['procesador'].socket))
@@ -250,6 +265,55 @@ def _texto_coincidencia(regla, piezas, politica):
         if socket_placa not in sockets:
             sockets.append(socket_placa)
     return 'Cooler para ' + ', '.join(sockets)
+
+
+_UI_POR_CLAVE = {
+    'procesador': 'procesador',
+    'placa_madre': 'placa_madre',
+    'memoria_ram': 'memoria_ram',
+    'gabinete': 'gabinete',
+    'refrigeracion': 'refrigeracion_cooler',
+    'fuente_de_poder': 'fuente_de_poder',
+    'tarjeta_grafica': 'tarjeta_grafica',
+}
+
+_CATEGORIA_POR_CLAVE = {
+    clave: categoria for categoria, clave in CLAVE_POR_CATEGORIA.items()
+}
+
+_TEXTO_ARMADO = {
+    ESTADO_COMPATIBLE: 'Compatible',
+    ESTADO_INCOMPATIBLE: 'Incompatible (Revisar Componentes)',
+    ESTADO_DATOS_INSUFICIENTES: 'Datos insuficientes (no se declara compatible)',
+    ESTADO_INCOMPLETO: 'Selección incompleta',
+}
+
+
+def evaluaciones_de_seleccion(piezas):
+    """Evalúa cada pieza presente con las reglas de su categoría.
+
+    La única fuente es validar_armado(), a través de evaluar_candidato().
+    """
+    presentes = {clave: pieza for clave, pieza in piezas.items() if pieza is not None}
+    resultado = validar_armado(**presentes)
+    por_categoria = {}
+    for clave, pieza in presentes.items():
+        otras = {nombre: valor for nombre, valor in presentes.items() if nombre != clave}
+        por_categoria[_UI_POR_CLAVE[clave]] = evaluar_candidato(
+            _CATEGORIA_POR_CLAVE[clave],
+            pieza,
+            **otras,
+        )
+    return resultado, por_categoria
+
+
+def texto_del_armado(resultado, hay_pieza_sin_regla, hay_pieza_con_regla):
+    """Texto único del armado exportado. No reutiliza una consulta anterior."""
+    if not hay_pieza_con_regla:
+        return MENSAJE_NO_EVALUADA
+    if resultado.estado == ESTADO_COMPATIBLE and hay_pieza_sin_regla:
+        return 'Reglas comprobadas; hay piezas sin regla de compatibilidad'
+    return _TEXTO_ARMADO[resultado.estado]
 
 
 def validar_armado(
@@ -271,6 +335,7 @@ def validar_armado(
         _evaluar_socket(procesador, placa_madre),
         _evaluar_ddr(memoria_ram, placa_madre),
         _evaluar_formato(placa_madre, gabinete),
+        _evaluar_largo(tarjeta_grafica, gabinete),
         _evaluar_potencia(procesador, tarjeta_grafica, fuente_de_poder, politica or politica_potencia()),
     )
     hallazgos = [hallazgo for hallazgo in candidatos if hallazgo is not None]
@@ -370,6 +435,61 @@ def _evaluar_formato(placa_madre, gabinete):
     return None
 
 
+def _evaluar_largo(tarjeta_grafica, gabinete):
+    """Solo compara milímetros de largo. No mira grosor, altura ni radiadores."""
+    if tarjeta_grafica is None and gabinete is None:
+        return None
+    if tarjeta_grafica is None or gabinete is None:
+        return Hallazgo(
+            'largo',
+            ESTADO_INCOMPLETO,
+            'Falta la GPU o el gabinete para comprobar el largo.',
+        )
+
+    largo_gpu = _entero_positivo(getattr(tarjeta_grafica, 'largo_mm', None))
+    largo_maximo = _entero_positivo(getattr(gabinete, 'largo_max_gpu_mm', None))
+    faltan = []
+    if largo_gpu is None:
+        faltan.append('el largo de la GPU')
+    if largo_maximo is None:
+        faltan.append('el largo máximo del gabinete')
+    if faltan:
+        return Hallazgo(
+            'largo',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede comprobar el largo porque falta '
+            + ' y '.join(faltan)
+            + '. Un valor vacío o 0 no se toma como medida conocida.',
+        )
+    if largo_gpu > largo_maximo:
+        return Hallazgo(
+            'largo',
+            ESTADO_INCOMPATIBLE,
+            f'La GPU mide {largo_gpu} mm y el gabinete admite hasta {largo_maximo} mm. '
+            'Solo se comprueba el largo; no el grosor, la altura ni el espacio de radiadores.',
+        )
+    return None
+
+
+def _largo_cumplido(piezas):
+    gpu = piezas.get('tarjeta_grafica')
+    gabinete = piezas.get('gabinete')
+    return (
+        gpu is not None
+        and gabinete is not None
+        and _evaluar_largo(gpu, gabinete) is None
+    )
+
+
+def _texto_largo_cumplido(piezas):
+    largo_gpu = _entero_positivo(piezas['tarjeta_grafica'].largo_mm)
+    largo_maximo = _entero_positivo(piezas['gabinete'].largo_max_gpu_mm)
+    return (
+        f'Cumple el límite de largo ({largo_gpu} mm de {largo_maximo} mm). '
+        'Solo se comprueba el largo; no el grosor, la altura ni el espacio de radiadores.'
+    )
+
+
 def _sockets_conocidos_del_cooler(texto):
     tokens = [normalizar_spec(parte) for parte in str(texto or '').split(',')]
     return frozenset(token for token in tokens if token in SOCKETS_CONOCIDOS)
@@ -456,8 +576,8 @@ def politica_potencia():
     )
 
 
-def _watts_conocido(valor):
-    """Un watt conocido es un entero mayor que cero. NULL y 0 no son dato."""
+def _entero_positivo(valor):
+    """Entero mayor que cero. NULL, 0 y decimales no son un dato conocido."""
     if isinstance(valor, bool) or valor is None or isinstance(valor, float):
         return None
     if isinstance(valor, Decimal):
@@ -471,6 +591,9 @@ def _watts_conocido(valor):
     if numero <= 0:
         return None
     return numero
+
+
+_watts_conocido = _entero_positivo
 
 
 def _potencia_cumplida(piezas, politica):

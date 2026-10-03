@@ -5,7 +5,15 @@ from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from .compatibilidad import evaluar_candidato, validar_armado
+from .compatibilidad import (
+    ESTADO_NO_EVALUADA,
+    MENSAJE_NO_EVALUADA,
+    EvaluacionCandidato,
+    evaluar_candidato,
+    evaluaciones_de_seleccion,
+    texto_del_armado,
+    validar_armado,
+)
 from .forms import *
 import json
 import uuid
@@ -43,12 +51,12 @@ def mostrarArmado(request):
         'placa_madre': get_component_data(PlacaMadre, ['nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'chipset', 'ranuras_ram', 'stock'], 'placa_madre'),
         'procesador': get_component_data(Procesador, ['nombre', 'precio', 'socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts', 'stock'], 'procesador'),
         'memoria_ram': get_component_data(MemoriaRam, ['nombre', 'precio', 'tipo_ddr', 'capacidad_gb', 'velocidad_mhz', 'stock'], 'memoria_ram'),
-        'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'stock'], 'tarjeta_grafica'),
+        'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'largo_mm', 'stock'], 'tarjeta_grafica'),
         'almacenamiento': (
             get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'formato', 'stock'], 'almacenamiento_ssd')
             + get_component_data(AlmacenamientoHDD, ['nombre', 'precio', 'capacidad_gb', 'stock'], 'almacenamiento_hdd')
         ),
-        'gabinete': get_component_data(Gabinete, ['nombre', 'precio', 'formato_soporte', 'stock'], 'gabinete'),
+        'gabinete': get_component_data(Gabinete, ['nombre', 'precio', 'formato_soporte', 'largo_max_gpu_mm', 'stock'], 'gabinete'),
         'fuente_de_poder': get_component_data(FuenteDePoder, ['nombre', 'precio', 'potencia_watts', 'stock'], 'fuente_de_poder'),
         'refrigeracion_cooler': get_component_data(RefrigeracionCooler, ['nombre', 'precio', 'socket_compatibles', 'tipo', 'tamanho_radiador_mm', 'stock'], 'refrigeracion'),
     }
@@ -443,16 +451,6 @@ _RECOMENDACIONES = {
     ),
 }
 
-_CLAVE_SELECCION = {
-    'procesador': 'procesador',
-    'placa_madre': 'placa_madre',
-    'memoria_ram': 'memoria_ram',
-    'gabinete': 'gabinete',
-    'refrigeracion': 'refrigeracion',
-    'tarjeta_grafica': 'tarjeta_grafica',
-    'fuente_de_poder': 'fuente_de_poder',
-}
-
 _CLAVE_QUE_REEMPLAZA = {
     'procesador': 'procesador',
     'placa_madre': 'placa_madre',
@@ -462,6 +460,99 @@ _CLAVE_QUE_REEMPLAZA = {
     'tarjeta_grafica': 'tarjeta_grafica',
     'fuente_de_poder': 'fuente_de_poder',
 }
+
+_UI_POR_TIPO = {
+    'procesador': 'procesador',
+    'placa_madre': 'placa_madre',
+    'memoria_ram': 'memoria_ram',
+    'gabinete': 'gabinete',
+    'refrigeracion': 'refrigeracion_cooler',
+    'tarjeta_grafica': 'tarjeta_grafica',
+    'fuente_de_poder': 'fuente_de_poder',
+    'almacenamiento_ssd': 'almacenamiento',
+    'almacenamiento_hdd': 'almacenamiento',
+}
+
+
+def _error_seleccion(message):
+    return JsonResponse({'status': 'error', 'message': message}, status=400)
+
+
+def _cargar_seleccion(componentes, excluir_clave=None):
+    """Carga las piezas enviadas. No escribe carrito, productos ni usuarios."""
+    if not isinstance(componentes, list):
+        return None, _error_seleccion('La selección no es válida.')
+
+    seleccion = {}
+    sin_regla = []
+    vistos = set()
+    for item in componentes:
+        if not isinstance(item, dict):
+            return None, _error_seleccion('La selección no es válida.')
+        tipo = item.get('tipo') or item.get('model_name')
+        clave_ui = _UI_POR_TIPO.get(tipo)
+        if clave_ui is None:
+            continue
+        clave = _CLAVES_DE_VALIDACION.get(tipo)
+        if excluir_clave is not None and clave == excluir_clave:
+            continue
+        if clave_ui in vistos:
+            return None, _error_seleccion('Hay una pieza repetida en la selección.')
+        ModelClass = PRODUCT_MODEL_MAP.get(tipo)
+        try:
+            product_id = int(item.get('id'))
+        except (TypeError, ValueError):
+            return None, _error_seleccion('Hay una pieza sin identificador válido.')
+        producto = ModelClass.objects.filter(pk=product_id).first() if ModelClass else None
+        if producto is None:
+            return None, _error_seleccion('Una pieza de la selección ya no está disponible.')
+        vistos.add(clave_ui)
+        if clave:
+            seleccion[clave] = producto
+        else:
+            sin_regla.append(clave_ui)
+    return (seleccion, sin_regla), None
+
+
+def _serializar_evaluacion(evaluacion):
+    return {
+        'estado': evaluacion.estado,
+        'etiqueta': evaluacion.etiqueta,
+        'coincidencias': list(evaluacion.coincidencias),
+        'motivos': list(evaluacion.motivos),
+        'pendientes': list(evaluacion.pendientes),
+    }
+
+
+@require_POST
+def evaluar_armado(request):
+    """Devuelve el estado actual de la selección usando validar_armado()."""
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return _error_seleccion('La solicitud no es válida.')
+
+    cargado, error = _cargar_seleccion(payload.get('componentes') or [])
+    if error:
+        return error
+    seleccion, sin_regla = cargado
+    resultado, por_categoria = evaluaciones_de_seleccion(seleccion)
+    for clave_ui in sin_regla:
+        por_categoria[clave_ui] = EvaluacionCandidato(
+            ESTADO_NO_EVALUADA,
+            motivos=(MENSAJE_NO_EVALUADA,),
+        )
+
+    return JsonResponse({
+        'status': 'success',
+        'estado': resultado.estado,
+        'texto': texto_del_armado(resultado, bool(sin_regla), bool(seleccion)),
+        'motivos': resultado.motivos_de_rechazo,
+        'piezas': {
+            clave: _serializar_evaluacion(evaluacion)
+            for clave, evaluacion in por_categoria.items()
+        },
+    })
 
 _ORDEN_RECOMENDACION = {
     'compatible': 0,
@@ -492,34 +583,13 @@ def recomendar_armado(request):
     if fuentes is None:
         return JsonResponse({'status': 'error', 'message': 'La categoría no es válida.'}, status=400)
 
-    componentes = payload.get('componentes') or []
-    if not isinstance(componentes, list):
-        return JsonResponse({'status': 'error', 'message': 'La selección no es válida.'}, status=400)
-
-    clave_reemplazada = _CLAVE_QUE_REEMPLAZA.get(categoria)
-    seleccion = {}
-    tipos_vistos = set()
-    for item in componentes:
-        if not isinstance(item, dict):
-            return JsonResponse({'status': 'error', 'message': 'La selección no es válida.'}, status=400)
-        tipo = item.get('tipo') or item.get('model_name')
-        clave = _CLAVE_SELECCION.get(tipo)
-        if clave is None:
-            continue
-        if clave == clave_reemplazada:
-            continue
-        if clave in tipos_vistos:
-            return JsonResponse({'status': 'error', 'message': 'Hay una pieza repetida en la selección.'}, status=400)
-        ModelClass = PRODUCT_MODEL_MAP.get(tipo)
-        try:
-            product_id = int(item.get('id'))
-        except (TypeError, ValueError):
-            return JsonResponse({'status': 'error', 'message': 'Hay una pieza sin identificador válido.'}, status=400)
-        producto = ModelClass.objects.filter(pk=product_id).first() if ModelClass else None
-        if producto is None:
-            return JsonResponse({'status': 'error', 'message': 'Una pieza de la selección ya no está disponible.'}, status=400)
-        tipos_vistos.add(clave)
-        seleccion[clave] = producto
+    cargado, error = _cargar_seleccion(
+        payload.get('componentes') or [],
+        excluir_clave=_CLAVE_QUE_REEMPLAZA.get(categoria),
+    )
+    if error:
+        return error
+    seleccion, _sin_regla = cargado
 
     candidatos = []
     for modelo, categoria_regla, model_name in fuentes:

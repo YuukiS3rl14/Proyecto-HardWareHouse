@@ -26,10 +26,11 @@ def cpu_gpu_fuente(fuente_w, cpu_w=100, gpu_w=100, minimo_gpu=None):
         procesador=pieza(socket='AM5', potencia_referencia_watts=cpu_w),
         placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX'),
         memoria_ram=pieza(tipo_ddr='DDR5'),
-        gabinete=pieza(formato_soporte='ATX'),
+        gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
         tarjeta_grafica=pieza(
             consumo_referencia_watts=gpu_w,
             potencia_minima_fuente_watts=minimo_gpu,
+            largo_mm=300,
         ),
         fuente_de_poder=pieza(potencia_watts=fuente_w),
     )
@@ -96,8 +97,8 @@ class PoliticaPotenciaTests(SimpleTestCase):
             procesador=pieza(socket='AM5', potencia_referencia_watts=100),
             placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX'),
             memoria_ram=pieza(tipo_ddr='DDR5'),
-            gabinete=pieza(formato_soporte='ATX'),
-            tarjeta_grafica=pieza(consumo_referencia_watts=200),
+            gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
+            tarjeta_grafica=pieza(consumo_referencia_watts=200, largo_mm=300),
             politica=POLITICA_EXACTA,
         )
 
@@ -231,5 +232,6 @@ class RecomendacionPotenciaTests(TestCase):
             fuente_de_poder=self.fuente_holgada,
         )
 
-        self.assertEqual(evaluacion.estado, 'no_evaluada')
-        self.assertEqual(evaluacion.etiqueta, 'Compatibilidad no evaluada')
+        self.assertEqual(evaluacion.estado, 'incompleto')
+        self.assertEqual(evaluacion.etiqueta, 'Selección incompleta')
+        self.assertNotIn('Cumple el límite de largo', evaluacion.etiqueta)

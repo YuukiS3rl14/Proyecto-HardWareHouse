@@ -11,6 +11,8 @@ from core.management.commands.cargar_demo_armado import CATALOGO_DEMO, PROVEEDOR
 from core.management.commands.cargar_demo_armado import (
     FUENTES_DEMO,
     GPU_DEMO,
+    GPUS_LARGO_DEMO,
+    LARGO_GABINETE_DEMO,
     POTENCIA_CPU_DEMO,
 )
 from core.models import (
@@ -101,6 +103,7 @@ class CargarDemoArmadoTests(TestCase):
         self.assertEqual(RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM4').socket_compatibles, 'AM4')
         self.assertEqual(RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM5').socket_compatibles, 'AM5')
         self.assertIsNone(Procesador.objects.get(nombre='DEMO CPU AM5').potencia_referencia_watts)
+        self.assertIsNone(Gabinete.objects.get(nombre='DEMO Gabinete ATX').largo_max_gpu_mm)
         self.assertEqual(TarjetaGrafica.objects.count(), 0)
         self.assertEqual(FuenteDePoder.objects.count(), 0)
 
@@ -176,7 +179,7 @@ class DemoArmadoCarritoTests(TestCase):
         ])
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['estado'], 'compatible')
+        self.assertEqual(response.json()['estado'], 'incompleto')
         self.assertEqual(ItemCarrito.objects.count(), 7)
         item_ssd = ItemCarrito.objects.get(almacenamiento_ssd__isnull=False)
         item_hdd = ItemCarrito.objects.get(almacenamiento_hdd__isnull=False)
@@ -257,3 +260,56 @@ class CargarDemoPotenciaTests(TestCase):
 
         self.assertEqual(FuenteDePoder.objects.count(), 0)
         self.assertEqual(Procesador.objects.count(), 0)
+
+
+@override_settings(DEBUG=True)
+class CargarDemoDimensionesTests(TestCase):
+    def test_sin_la_opcion_no_escribe_largos(self):
+        call_command('cargar_demo_armado')
+
+        self.assertIsNone(Gabinete.objects.get(nombre='DEMO Gabinete ATX').largo_max_gpu_mm)
+        self.assertFalse(TarjetaGrafica.objects.filter(nombre='DEMO GPU 280mm').exists())
+        self.assertFalse(TarjetaGrafica.objects.filter(nombre='DEMO GPU 321mm').exists())
+
+    def test_la_opcion_solo_completa_las_piezas_demo(self):
+        marca = Proveedor.objects.create(nombre='Marca real de medidas')
+        real = Gabinete.objects.create(
+            proveedor=marca, nombre='Gabinete real', precio=Decimal('10.00'), stock=1,
+            formato_soporte='ATX', material='Acero',
+        )
+        demo = Gabinete.objects.create(
+            proveedor=marca, nombre='DEMO Gabinete ATX', descripcion='No tocar formato',
+            precio=Decimal('2.00'), stock=1, formato_soporte='Mini-ITX', material='Acero',
+        )
+        gpu_potencia = TarjetaGrafica.objects.create(
+            proveedor=marca, nombre='DEMO GPU', descripcion='Ya existía',
+            precio=Decimal('3.00'), stock=1, vram_gb=4, tipo_memoria='GDDR6', interfaz='PCIe 4.0',
+        )
+
+        call_command('cargar_demo_armado', dimensiones=True)
+        call_command('cargar_demo_armado', dimensiones=True)
+
+        real.refresh_from_db()
+        demo.refresh_from_db()
+        gpu_potencia.refresh_from_db()
+        self.assertIsNone(real.largo_max_gpu_mm)
+        self.assertEqual(demo.precio, Decimal('2.00'))
+        self.assertEqual(demo.formato_soporte, 'Mini-ITX')
+        self.assertEqual(demo.descripcion, 'No tocar formato')
+        self.assertEqual(demo.largo_max_gpu_mm, LARGO_GABINETE_DEMO['DEMO Gabinete ATX'])
+        self.assertEqual(gpu_potencia.precio, Decimal('3.00'))
+        self.assertEqual(gpu_potencia.vram_gb, 4)
+        self.assertEqual(gpu_potencia.largo_mm, 280)
+        self.assertEqual(TarjetaGrafica.objects.filter(nombre='DEMO GPU').count(), 1)
+        for item in GPUS_LARGO_DEMO:
+            gpu = TarjetaGrafica.objects.get(nombre=item['nombre'])
+            self.assertEqual(gpu.largo_mm, item['largo_mm'])
+            self.assertEqual(TarjetaGrafica.objects.filter(nombre=item['nombre']).count(), 1)
+
+    def test_rechaza_la_opcion_si_debug_esta_apagado(self):
+        with override_settings(DEBUG=False):
+            with self.assertRaises(CommandError):
+                call_command('cargar_demo_armado', dimensiones=True)
+
+        self.assertEqual(TarjetaGrafica.objects.count(), 0)
+        self.assertEqual(Gabinete.objects.count(), 0)

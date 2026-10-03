@@ -223,6 +223,47 @@ FUENTES_DEMO = (
     },
 )
 
+# Milímetros ficticios. Solo los escribe --dimensiones, y solo en estos nombres.
+LARGO_GABINETE_DEMO = {
+    'DEMO Gabinete Mini-ITX': 200,
+    'DEMO Gabinete ATX': 320,
+}
+LARGO_GPU_DEMO = {
+    'DEMO GPU': 280,
+}
+GPUS_LARGO_DEMO = (
+    {
+        'nombre': 'DEMO GPU 280mm',
+        'largo_mm': 280,
+        'campos': {
+            'descripcion': (
+                'Pieza ficticia de demostración. Largo 280 mm: cabe en DEMO Gabinete ATX (320 mm) '
+                'y excede DEMO Gabinete Mini-ITX (200 mm). No describe grosor ni altura.'
+            ),
+            'precio': Decimal('179990.00'),
+            'stock': STOCK_DEMO,
+            'vram_gb': 8,
+            'tipo_memoria': 'GDDR6',
+            'interfaz': 'PCIe 4.0',
+        },
+    },
+    {
+        'nombre': 'DEMO GPU 321mm',
+        'largo_mm': 321,
+        'campos': {
+            'descripcion': (
+                'Pieza ficticia de demostración. Largo 321 mm: excede por 1 mm el máximo de '
+                'DEMO Gabinete ATX (320 mm). No describe grosor ni altura.'
+            ),
+            'precio': Decimal('219990.00'),
+            'stock': STOCK_DEMO,
+            'vram_gb': 8,
+            'tipo_memoria': 'GDDR6',
+            'interfaz': 'PCIe 4.0',
+        },
+    },
+)
+
 
 class Command(BaseCommand):
     help = 'Carga piezas DEMO para probar el armador. No modifica productos que ya existen.'
@@ -236,6 +277,14 @@ class Command(BaseCommand):
                 'y crea la GPU y las dos fuentes de prueba si faltan.'
             ),
         )
+        parser.add_argument(
+            '--dimensiones',
+            action='store_true',
+            help=(
+                'Escribe el largo de GPU solo en las piezas DEMO de este comando '
+                'y crea ejemplos que caben y que exceden el límite.'
+            ),
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG:
@@ -244,6 +293,8 @@ class Command(BaseCommand):
         self._crear_faltantes_del_catalogo()
         if options['potencia']:
             self._aplicar_potencia_demo()
+        if options['dimensiones']:
+            self._aplicar_dimensiones_demo()
 
     def _crear_faltantes_del_catalogo(self):
         faltantes = [
@@ -337,4 +388,39 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             'Potencia DEMO aplicada solo a los nombres ficticios de este comando.'
+        ))
+
+    def _aplicar_dimensiones_demo(self):
+        """Completa el largo solo en nombres DEMO de este comando."""
+        with transaction.atomic():
+            proveedor, _creado = Proveedor.objects.get_or_create(nombre=PROVEEDOR_DEMO)
+            for nombre, largo in LARGO_GABINETE_DEMO.items():
+                actualizados = Gabinete.objects.filter(nombre=nombre).update(largo_max_gpu_mm=largo)
+                if actualizados:
+                    self.stdout.write(f'Largo máximo de GPU en {nombre}: {largo} mm')
+                else:
+                    self.stdout.write(self.style.WARNING(
+                        f'No existe {nombre}; no se creó un gabinete fuera del catálogo.'
+                    ))
+            for nombre, largo in LARGO_GPU_DEMO.items():
+                actualizados = TarjetaGrafica.objects.filter(nombre=nombre).update(largo_mm=largo)
+                if actualizados:
+                    self.stdout.write(f'Largo en {nombre}: {largo} mm')
+            for item in GPUS_LARGO_DEMO:
+                gpu = TarjetaGrafica.objects.filter(nombre=item['nombre']).first()
+                if gpu is None:
+                    gpu = TarjetaGrafica(
+                        proveedor=proveedor,
+                        nombre=item['nombre'],
+                        largo_mm=item['largo_mm'],
+                        **item['campos'],
+                    )
+                    gpu.full_clean()
+                    gpu.save()
+                    self.stdout.write(f"Creada: {item['nombre']}")
+                else:
+                    TarjetaGrafica.objects.filter(pk=gpu.pk).update(largo_mm=item['largo_mm'])
+                    self.stdout.write(f"Largo en {item['nombre']}: {item['largo_mm']} mm")
+        self.stdout.write(self.style.SUCCESS(
+            'Dimensiones DEMO aplicadas solo a los nombres ficticios de este comando.'
         ))

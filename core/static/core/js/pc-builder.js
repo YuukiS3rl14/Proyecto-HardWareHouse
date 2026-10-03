@@ -8,8 +8,10 @@ function iniciarArmado() {
     const addToCartBtn = document.getElementById('add-to-cart-btn');
     const downloadExcelBtn = document.getElementById('download-excel-btn');
 
-    // Estado actual de la construcción
+    // Estado actual de la construcción y de la última consulta vigente.
     let currentBuild = {};
+    let evaluacionActual = null;
+    let consultaSerial = 0;
 
     // Orden y etiquetas de los componentes
     const componentOrder = [
@@ -52,10 +54,12 @@ function iniciarArmado() {
 
         let compatibilityStatus = '';
         let compatibilityIcon = '';
+        let compatibilityDetail = '';
         if (component) {
-            const visual = estadoVisual(checkCompatibility(component, key));
+            const visual = estadoVisual(piezaEvaluada(key));
             compatibilityStatus = visual.status;
             compatibilityIcon = visual.icon;
+            compatibilityDetail = htmlDetallePieza(key);
         }
 
         // Generar lista de especificaciones clave
@@ -70,6 +74,7 @@ function iniciarArmado() {
                             <img src="${image}" alt="${name}">
                             <p class="mb-1 small text-truncate">${name}</p>
                             <ul class="list-unstyled spec-list mb-0">${specs}</ul>
+                            ${compatibilityDetail}
                         </div>
                         <div class="actions">
                             <h5 class="font-weight-bold mb-3">${price}</h5>
@@ -250,6 +255,8 @@ function iniciarArmado() {
         if (component.potencia_referencia_watts) specs.push(`Referencia: ${component.potencia_referencia_watts}W`);
         if (component.consumo_referencia_watts) specs.push(`Consumo ref.: ${component.consumo_referencia_watts}W`);
         if (component.potencia_minima_fuente_watts) specs.push(`Fuente mín. recomendada: ${component.potencia_minima_fuente_watts}W`);
+        if (component.largo_mm) specs.push(`Largo: ${component.largo_mm}mm`);
+        if (component.largo_max_gpu_mm) specs.push(`GPU máx.: ${component.largo_max_gpu_mm}mm`);
         // Refrigeración
         if (component.tipo) specs.push(`Tipo: ${component.tipo}`);
         if (component.tamanho_radiador_mm) specs.push(`Radiador: ${component.tamanho_radiador_mm}mm`);
@@ -272,174 +279,121 @@ function iniciarArmado() {
         ));
 
         $('#componentModal').modal('hide');
-        initializeBuilder(); // Redibuja toda la interfaz con la nueva selección
-        updateSummaryAndTotal();
+        consultarEvaluacion();
     }
 
     function handleRemoveComponent(e) {
         const type = e.target.dataset.type;
         delete currentBuild[type];
-        initializeBuilder();
-        updateSummaryAndTotal();
+        consultarEvaluacion();
     }
 
-    const SOCKETS_CONOCIDOS = ['AM4', 'AM5', 'LGA1200', 'LGA1700'];
-    const TIPOS_DDR = ['DDR3', 'DDR4', 'DDR5'];
-    const FORMATOS = ['MINI-ITX', 'MICRO-ATX', 'ATX'];
-
-    function normalizarSpec(valor) {
-        return String(valor ?? '').trim().toUpperCase().replace(/\s+/g, '');
-    }
-
-    function peorEstado(actual, candidato) {
-        const orden = { compatible: 0, incompleto: 1, datos_insuficientes: 2, incompatible: 3 };
-        return orden[candidato] > orden[actual] ? candidato : actual;
-    }
-
-    function resumir(hallazgos) {
-        const vigentes = hallazgos.filter(Boolean);
-        if (vigentes.length === 0) {
-            return { estado: 'compatible', isCompatible: true, warning: null };
+    function piezaEvaluada(key) {
+        if (!evaluacionActual || evaluacionActual.pendiente || evaluacionActual.fallo) {
+            return null;
         }
-        const estado = vigentes.reduce((peor, hallazgo) => peorEstado(peor, hallazgo.estado), 'compatible');
-        const aviso = vigentes.find(hallazgo => hallazgo.estado === estado && hallazgo.warning);
-        return { estado, isCompatible: false, warning: aviso ? aviso.warning : null };
+        return (evaluacionActual.piezas || {})[key] || null;
     }
 
-    function estadoVisual(resultado) {
-        if (resultado.estado === 'incompatible' || resultado.estado === 'datos_insuficientes') {
-            const titulo = (resultado.warning || '').replace(/"/g, '&quot;');
+    function htmlDetallePieza(key) {
+        if (!evaluacionActual || evaluacionActual.pendiente) {
+            return '<p class="mb-0 text-muted"><small>Consultando compatibilidad...</small></p>';
+        }
+        if (evaluacionActual.fallo) {
+            return '<p class="mb-0 text-danger"><small>No se pudo consultar la compatibilidad.</small></p>';
+        }
+        const pieza = (evaluacionActual.piezas || {})[key];
+        if (!pieza) {
+            return '<p class="mb-0 text-danger"><small>No se pudo consultar la compatibilidad.</small></p>';
+        }
+        return detalleRecomendacion(pieza);
+    }
+
+    function estadoVisual(pieza) {
+        if (!pieza) {
+            return { status: '', icon: '' };
+        }
+        if (pieza.estado === 'incompatible' || pieza.estado === 'datos_insuficientes') {
+            const titulo = escaparHtml((pieza.motivos || []).join(' ') || pieza.etiqueta);
             return {
                 status: 'text-danger',
                 icon: `<i class="fas fa-exclamation-triangle mr-1" title="${titulo}"></i>`,
             };
         }
-        if (resultado.estado === 'compatible') {
+        if (pieza.estado === 'compatible') {
+            const titulo = escaparHtml(pieza.etiqueta);
             return {
                 status: 'text-success',
-                icon: '<i class="fas fa-check-circle mr-1" title="Compatible"></i>',
+                icon: `<i class="fas fa-check-circle mr-1" title="${titulo}"></i>`,
             };
         }
-        return { status: '', icon: '' };
+        return { status: 'text-muted', icon: '' };
     }
 
-    function evaluarSocket(cpuPresente, socketCpu, placaPresente, socketPlaca, mensajeIncompatible) {
-        if (!cpuPresente || !placaPresente) {
-            return { estado: 'incompleto', warning: null };
-        }
-        const cpu = normalizarSpec(socketCpu);
-        const placa = normalizarSpec(socketPlaca);
-        if (!SOCKETS_CONOCIDOS.includes(cpu) || !SOCKETS_CONOCIDOS.includes(placa)) {
-            return { estado: 'datos_insuficientes', warning: 'No se puede verificar el socket: un valor Otro o desconocido no es compatible.' };
-        }
-        if (cpu !== placa) {
-            return { estado: 'incompatible', warning: mensajeIncompatible };
-        }
-        return null;
-    }
-
-    function evaluarRam(ramPresente, tipoRam, placaPresente, tipoPlaca, mensajeIncompatible) {
-        if (!ramPresente || !placaPresente) {
-            return { estado: 'incompleto', warning: null };
-        }
-        const ram = normalizarSpec(tipoRam);
-        const placa = normalizarSpec(tipoPlaca);
-        if (!TIPOS_DDR.includes(ram) || !TIPOS_DDR.includes(placa)) {
-            return { estado: 'datos_insuficientes', warning: 'No se puede verificar la RAM porque el tipo DDR no es conocido.' };
-        }
-        if (ram !== placa) {
-            return { estado: 'incompatible', warning: mensajeIncompatible };
-        }
-        return null;
-    }
-
-    function evaluarFormato(placaPresente, formatoPlaca, gabinetePresente, formatoGabinete, mensajeIncompatible) {
-        if (!placaPresente || !gabinetePresente) {
-            return { estado: 'incompleto', warning: null };
-        }
-        const indicePlaca = FORMATOS.indexOf(normalizarSpec(formatoPlaca));
-        const indiceGabinete = FORMATOS.indexOf(normalizarSpec(formatoGabinete));
-        if (indicePlaca === -1 || indiceGabinete === -1) {
-            return { estado: 'datos_insuficientes', warning: 'No se puede verificar el formato porque no es un formato conocido.' };
-        }
-        if (indiceGabinete < indicePlaca) {
-            return { estado: 'incompatible', warning: mensajeIncompatible };
-        }
-        return null;
-    }
-
-    function evaluarCoolerContra(socketsConocidos, socketObjetivo, mensajeIncompatible) {
-        const objetivo = normalizarSpec(socketObjetivo);
-        if (!SOCKETS_CONOCIDOS.includes(objetivo) || socketsConocidos.length === 0) {
-            return { estado: 'datos_insuficientes', warning: 'No se puede verificar el cooler: faltan sockets conocidos.' };
-        }
-        if (!socketsConocidos.includes(objetivo)) {
-            return { estado: 'incompatible', warning: mensajeIncompatible };
-        }
-        return null;
-    }
-
-    function checkCompatibility(component, type) {
-        if (type === 'tarjeta_grafica' || type === 'almacenamiento' || type === 'fuente_de_poder') {
-            return { estado: 'no_evaluada', isCompatible: false, warning: null };
+    async function consultarEvaluacion() {
+        const serial = ++consultaSerial;
+        const componentes = seleccionActual();
+        if (componentes.length === 0) {
+            evaluacionActual = {
+                piezas: {},
+                estado: 'compatible',
+                texto: '',
+                motivos: [],
+                fallo: false,
+                pendiente: false,
+            };
+            initializeBuilder();
+            return;
         }
 
-        const placaMadre = currentBuild.placa_madre;
-        const procesador = currentBuild.procesador;
-        const gabinete = currentBuild.gabinete;
-        const ram = currentBuild.memoria_ram;
-        const hallazgos = [];
-
-        if (type === 'procesador') {
-            hallazgos.push(evaluarSocket(
-                true, component.socket, !!placaMadre, placaMadre && placaMadre.socket_cpu,
-                `Socket incompatible (requiere ${placaMadre ? placaMadre.socket_cpu : ''})`
-            ));
-        } else if (type === 'placa_madre') {
-            hallazgos.push(evaluarSocket(
-                !!procesador, procesador && procesador.socket, true, component.socket_cpu,
-                `Socket incompatible (requiere ${procesador ? procesador.socket : ''})`
-            ));
-            hallazgos.push(evaluarFormato(
-                true, component.formato, !!gabinete, gabinete && gabinete.formato_soporte,
-                'Formato incompatible con gabinete'
-            ));
-            hallazgos.push(evaluarRam(
-                !!ram, ram && ram.tipo_ddr, true, component.tipo_ram_soportado,
-                `Tipo RAM incompatible (requiere ${ram ? ram.tipo_ddr : ''})`
-            ));
-        } else if (type === 'memoria_ram') {
-            hallazgos.push(evaluarRam(
-                true, component.tipo_ddr, !!placaMadre, placaMadre && placaMadre.tipo_ram_soportado,
-                `Tipo de RAM incompatible (requiere ${placaMadre ? placaMadre.tipo_ram_soportado : ''})`
-            ));
-        } else if (type === 'refrigeracion_cooler') {
-            if (!procesador && !placaMadre) {
-                hallazgos.push({ estado: 'incompleto', warning: null });
-            } else {
-                const sockets = String(component.socket_compatibles || '').split(',').map(normalizarSpec).filter(Boolean);
-                const conocidos = sockets.filter(socket => SOCKETS_CONOCIDOS.includes(socket));
-                if (procesador) {
-                    hallazgos.push(evaluarCoolerContra(
-                        conocidos, procesador.socket,
-                        `Incompatible con socket de CPU (${procesador.socket})`
-                    ));
-                }
-                if (placaMadre) {
-                    hallazgos.push(evaluarCoolerContra(
-                        conocidos, placaMadre.socket_cpu,
-                        `Incompatible con socket de Placa (${placaMadre.socket_cpu})`
-                    ));
-                }
+        evaluacionActual = { pendiente: true, fallo: false, piezas: {} };
+        initializeBuilder();
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        try {
+            const response = await fetch(urls.evaluarUrl, {
+                method: 'POST',
+                body: JSON.stringify({ componentes }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfInput ? csrfInput.value : '',
+                },
+            });
+            const data = await response.json().catch(() => ({}));
+            if (serial !== consultaSerial) {
+                return;
             }
-        } else if (type === 'gabinete') {
-            hallazgos.push(evaluarFormato(
-                !!placaMadre, placaMadre && placaMadre.formato, true, component.formato_soporte,
-                `No soporta formato de Placa Madre (${placaMadre ? placaMadre.formato : ''})`
-            ));
+            if (!response.ok || data.status !== 'success' || !data.piezas) {
+                evaluacionActual = { fallo: true, pendiente: false, piezas: {} };
+            } else {
+                evaluacionActual = Object.assign({}, data, { fallo: false, pendiente: false });
+            }
+        } catch (error) {
+            console.error('Error al evaluar el armado:', error);
+            if (serial !== consultaSerial) {
+                return;
+            }
+            evaluacionActual = { fallo: true, pendiente: false, piezas: {} };
         }
+        initializeBuilder();
+    }
 
-        return resumir(hallazgos);
+    async function evaluacionParaExportar(componentes) {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        const response = await fetch(urls.evaluarUrl, {
+            method: 'POST',
+            body: JSON.stringify({ componentes }),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfInput ? csrfInput.value : '',
+            },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.status !== 'success' || !data.piezas || !data.texto) {
+            return null;
+        }
+        return data;
     }
 
     // --- 4. ACTUALIZAR RESUMEN Y TOTAL ---
@@ -457,19 +411,35 @@ function iniciarArmado() {
                 total += price;
                 componentCount++;
 
-                // Añadir al resumen
-                const visual = estadoVisual(checkCompatibility(component, key));
-                const compatibilityStatus = visual.status;
-                const compatibilityIcon = visual.icon;
+                const visual = estadoVisual(piezaEvaluada(key));
                 const summaryItem = document.createElement('div');
                 summaryItem.className = 'd-flex justify-content-between mb-2';
                 summaryItem.innerHTML = `
-                    <p class="mb-0 ${compatibilityStatus}">${compatibilityIcon}${label}</p>
+                    <div class="pr-2">
+                        <p class="mb-0 ${visual.status}">${visual.icon}${label}</p>
+                        ${htmlDetallePieza(key)}
+                    </div>
                     <p class="mb-0">$${price.toLocaleString('es-CL')}</p>
                 `;
                 summaryList.appendChild(summaryItem);
             }
         });
+
+        if (componentCount > 0) {
+            const nota = document.createElement('div');
+            nota.className = 'mt-2';
+            if (!evaluacionActual || evaluacionActual.pendiente) {
+                nota.innerHTML = '<p class="mb-0 text-muted"><small>Consultando compatibilidad...</small></p>';
+            } else if (evaluacionActual.fallo) {
+                nota.innerHTML = '<p class="mb-0 text-danger"><small>No se pudo consultar la compatibilidad.</small></p>';
+            } else {
+                const motivos = (evaluacionActual.motivos || [])
+                    .map(motivo => `<p class="mb-0 text-danger"><small>${escaparHtml(motivo)}</small></p>`)
+                    .join('');
+                nota.innerHTML = `<p class="mb-0"><small>${escaparHtml(evaluacionActual.texto)}</small></p>${motivos}`;
+            }
+            summaryList.appendChild(nota);
+        }
 
         totalPriceEl.textContent = `$${total.toLocaleString('es-CL')}`;
 
@@ -541,33 +511,32 @@ function iniciarArmado() {
         }, 1500);
     }
 
-    function downloadAsExcel() {
-        // 1. Determinar dinámicamente todas las columnas de atributos
-        const baseHeaders = ['Componente', 'Producto', 'Cantidad', 'Precio Unitario'];
+    async function downloadAsExcel() {
+        const componentes = seleccionActual();
+        if (componentes.length === 0) {
+            return;
+        }
+
+        let evaluacionExportada;
+        try {
+            evaluacionExportada = await evaluacionParaExportar(componentes);
+        } catch (error) {
+            console.error('Error al evaluar el armado para Excel:', error);
+            evaluacionExportada = null;
+        }
+        if (!evaluacionExportada) {
+            alert('No se pudo consultar la compatibilidad. El Excel no se generó para no mostrar un resultado anterior.');
+            return;
+        }
+
+        const baseHeaders = ['Componente', 'Producto', 'Cantidad', 'Precio Unitario', 'Compatibilidad'];
         const attributeHeaders = new Set();
         const componentsToExport = [];
-        let estadoReglas = null;
-        let hayPiezaSinRegla = false;
-        const etiquetasEstado = {
-            compatible: 'Compatible',
-            incompatible: 'Incompatible (Revisar Componentes)',
-            datos_insuficientes: 'Datos insuficientes (no se declara compatible)',
-            incompleto: 'Selección incompleta',
-            no_evaluada: 'Compatibilidad no evaluada',
-        };
 
-        // Recopilar todos los componentes y sus atributos
         componentOrder.forEach(({ key, label }) => {
             const component = currentBuild[key];
             if (component) {
-                componentsToExport.push({ label, component });
-                const estadoPieza = checkCompatibility(component, key).estado;
-                if (estadoPieza === 'no_evaluada') {
-                    hayPiezaSinRegla = true;
-                } else {
-                    estadoReglas = estadoReglas ? peorEstado(estadoReglas, estadoPieza) : estadoPieza;
-                }
-                // Recopilar cabeceras de atributos
+                componentsToExport.push({ key, label, component });
                 Object.keys(component).forEach(attr => {
                     if (!['id', 'nombre', 'precio', 'imagen', 'stock', 'model_name'].includes(attr)) {
                         attributeHeaders.add(attr);
@@ -576,34 +545,38 @@ function iniciarArmado() {
             }
         });
 
-        const finalHeaders = baseHeaders.concat(Array.from(attributeHeaders).sort());
+        const piezas = evaluacionExportada.piezas;
+        const faltaAlguna = componentsToExport.some(({ key }) => !piezas[key]);
+        if (faltaAlguna) {
+            alert('No se pudo consultar la compatibilidad. El Excel no se generó para no mostrar un resultado anterior.');
+            return;
+        }
 
-        // 2. Construir las filas de datos
+        const finalHeaders = baseHeaders.concat(Array.from(attributeHeaders).sort());
         const data = [finalHeaders];
         let totalBuildPrice = 0;
 
-        componentsToExport.forEach(({ label, component }) => {
-            const quantity = 1; // Cantidad es siempre 1 en el armador
+        componentsToExport.forEach(({ key, label, component }) => {
+            const quantity = 1;
             const price = parseInt(component.precio);
             totalBuildPrice += price * quantity;
-
-            const row = [label, component.nombre, quantity, price];
-            // Añadir valores de atributos en el orden correcto
+            const pieza = piezas[key];
+            const textos = [pieza.etiqueta]
+                .concat(pieza.motivos || [])
+                .concat(pieza.pendientes || [])
+                .filter(Boolean);
+            const row = [label, component.nombre, quantity, price, textos.join(' | ')];
             Array.from(attributeHeaders).sort().forEach(header => {
                 row.push(component[header] || '-');
             });
             data.push(row);
         });
 
-        // 3. Añadir filas de resumen al final
-        data.push([]); // Fila vacía como separador
-        let textoCompatibilidad = etiquetasEstado.no_evaluada;
-        if (estadoReglas === 'compatible' && hayPiezaSinRegla) {
-            textoCompatibilidad = 'Reglas comprobadas; hay piezas sin regla de compatibilidad';
-        } else if (estadoReglas) {
-            textoCompatibilidad = etiquetasEstado[estadoReglas] || estadoReglas;
-        }
-        data.push(['', 'Compatibilidad del Armado:', textoCompatibilidad]);
+        data.push([]);
+        data.push(['', 'Compatibilidad del Armado:', evaluacionExportada.texto]);
+        (evaluacionExportada.motivos || []).forEach(motivo => {
+            data.push(['', motivo]);
+        });
         data.push(['', 'Precio Total del Armado:', totalBuildPrice]);
 
         // 4. Crear y descargar el archivo Excel

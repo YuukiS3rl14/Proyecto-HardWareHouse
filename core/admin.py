@@ -32,12 +32,12 @@ class ProcesadorAdmin(admin.ModelAdmin):
     )
 
 class TarjetaGraficaAdmin(admin.ModelAdmin):
-    list_display = PRODUCTO_LIST_DISPLAY + ('vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts')
+    list_display = PRODUCTO_LIST_DISPLAY + ('vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'largo_mm')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts')}),
+        ('Especificaciones Técnicas', {'fields': ('vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'largo_mm')}),
     )
 
 class MemoriaRamAdmin(admin.ModelAdmin):
@@ -110,12 +110,12 @@ class AlmacenamientoHDDAdmin(admin.ModelAdmin):
     )
     
 class GabineteAdmin(admin.ModelAdmin):
-    list_display = PRODUCTO_LIST_DISPLAY + ('formato_soporte', 'ventiladores_incluidos', 'material')
+    list_display = PRODUCTO_LIST_DISPLAY + ('formato_soporte', 'ventiladores_incluidos', 'material', 'largo_max_gpu_mm')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('formato_soporte', 'ventiladores_incluidos', 'material')}),
+        ('Especificaciones Técnicas', {'fields': ('formato_soporte', 'ventiladores_incluidos', 'material', 'largo_max_gpu_mm')}),
     )
 
 class FuenteDePoderAdmin(admin.ModelAdmin):

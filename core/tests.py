@@ -35,7 +35,8 @@ class CompatibilidadTests(SimpleTestCase):
             'procesador': pieza(socket='AM5'),
             'placa_madre': pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX'),
             'memoria_ram': pieza(tipo_ddr='DDR5'),
-            'gabinete': pieza(formato_soporte='ATX'),
+            'gabinete': pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
+            'tarjeta_grafica': pieza(largo_mm=300),
             'refrigeracion': pieza(socket_compatibles='AM5, LGA1700'),
         }
         seleccion.update(cambios)
@@ -46,8 +47,9 @@ class CompatibilidadTests(SimpleTestCase):
             procesador=pieza(socket=' am5 '),
             placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado=' ddr5 ', formato='micro-atx'),
             memoria_ram=pieza(tipo_ddr='DDR5'),
-            gabinete=pieza(formato_soporte=' atx '),
+            gabinete=pieza(formato_soporte=' atx ', largo_max_gpu_mm=400),
             refrigeracion=pieza(socket_compatibles=' am5 , lga 1700 '),
+            tarjeta_grafica=pieza(largo_mm=300),
         )
 
         self.assertEqual(resultado.estado, 'compatible')
@@ -57,7 +59,7 @@ class CompatibilidadTests(SimpleTestCase):
     def test_gabinete_mas_grande_admite_placa_mas_chica(self):
         resultado = self.armado_base(
             placa_madre=pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='Mini-ITX'),
-            gabinete=pieza(formato_soporte='ATX'),
+            gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
         )
 
         self.assertTrue(resultado.es_compatible)
@@ -194,7 +196,7 @@ class ArmadoCarritoTests(TestCase):
     def _case(cls, formato, nombre):
         return Gabinete.objects.create(
             proveedor=cls.proveedor, nombre=nombre, precio=Decimal('50000'), stock=4,
-            formato_soporte=formato, material='Acero',
+            formato_soporte=formato, material='Acero', largo_max_gpu_mm=320,
         )
 
     @classmethod
@@ -209,7 +211,7 @@ class ArmadoCarritoTests(TestCase):
         return TarjetaGrafica.objects.create(
             proveedor=cls.proveedor, nombre='GPU', precio=Decimal('300000'), stock=4,
             vram_gb=8, tipo_memoria='GDDR6', interfaz='PCIe 4.0',
-            consumo_referencia_watts=120,
+            consumo_referencia_watts=120, largo_mm=280,
         )
 
     @classmethod

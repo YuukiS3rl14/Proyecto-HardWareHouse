@@ -106,6 +106,16 @@ class TarjetaGrafica(models.Model):
             "No es el consumo de la tarjeta. Déjalo vacío si no se conoce; no uses 0."
         ),
     )
+    largo_mm = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Largo (mm)",
+        help_text=(
+            "Largo de la tarjeta en milímetros. Solo sirve para compararlo con el máximo del gabinete. "
+            "No describe grosor ni altura. Déjalo vacío si no se conoce; no uses 0."
+        ),
+    )
 
     class Meta:
         verbose_name_plural = "Tarjetas Gráficas (GPU)"
@@ -214,7 +224,18 @@ class Gabinete(models.Model):
     ventiladores_incluidos = models.BooleanField(default=False)
     
     MATERIAL_CHOICES = [('Acero', 'Acero'), ('Aluminio', 'Aluminio'), ('Plástico', 'Plástico'), ('Vidrio Templado', 'Vidrio Templado')]
-    material = models.CharField(max_length=50, choices=MATERIAL_CHOICES) 
+    material = models.CharField(max_length=50, choices=MATERIAL_CHOICES)
+    largo_max_gpu_mm = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Largo máximo de GPU (mm)",
+        help_text=(
+            "Largo máximo de tarjeta que admite el gabinete, en milímetros. "
+            "No reserva espacio de radiadores ni limita grosor o altura. "
+            "Déjalo vacío si no se conoce; no uses 0."
+        ),
+    ) 
 
     class Meta:
         verbose_name_plural = "Gabinetes"

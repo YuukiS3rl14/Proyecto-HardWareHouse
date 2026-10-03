@@ -85,10 +85,14 @@ class EvaluarCandidatoTests(TestCase):
     def test_gpu_y_almacenamiento_no_se_declaran_compatibles(self):
         cpu = pieza(socket='AM5')
         placa = pieza(socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX')
-        for categoria in ('tarjeta_grafica', 'almacenamiento_ssd', 'almacenamiento_hdd'):
+        for categoria in ('almacenamiento_ssd', 'almacenamiento_hdd'):
             evaluacion = evaluar_candidato(categoria, pieza(nombre='Pieza'), procesador=cpu, placa_madre=placa)
             self.assertEqual(evaluacion.estado, 'no_evaluada')
             self.assertEqual(evaluacion.etiqueta, 'Compatibilidad no evaluada')
+
+        gpu = evaluar_candidato('tarjeta_grafica', pieza(largo_mm=300), procesador=cpu, placa_madre=placa)
+        self.assertEqual(gpu.estado, 'incompleto')
+        self.assertEqual(gpu.etiqueta, 'Selección incompleta')
 
         fuente = evaluar_candidato(
             'fuente_de_poder',
