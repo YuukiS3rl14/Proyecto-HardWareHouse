@@ -61,7 +61,7 @@
 
 {{ componentes|json_script:"componentes-data" }}
 
-<div id="builder-urls" data-add-armado-url="{% url 'core:agregar_armado_al_carrito' %}" data-placeholder-img="{% static 'core/img/placeholder_product.webp' %}" style="display: none;">{% csrf_token %}</div>
+<div id="builder-urls" data-add-armado-url="{% url 'core:agregar_armado_al_carrito' %}" data-recomendar-url="{% url 'core:recomendar_armado' %}" data-placeholder-img="{% static 'core/img/placeholder.webp' %}" style="display: none;">{% csrf_token %}</div>
 
 <!-- Modal para seleccionar componentes -->
 <div class="modal fade" id="componentModal" tabindex="-1" aria-labelledby="componentModalLabel" aria-hidden="true">
@@ -88,5 +88,5 @@
 <!-- SheetJS (js-xlsx) para generar Excel -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script> 
 <!-- Nuestro script para el constructor -->
-<script src="{% static 'core/js/pc-builder.js' %}"></script>
+<script src="{% static 'core/js/pc-builder.js' %}?v=recomendaciones"></script>
 {% endblock %}

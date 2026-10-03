@@ -16,6 +16,24 @@ ESTADO_COMPATIBLE = 'compatible'
 ESTADO_INCOMPATIBLE = 'incompatible'
 ESTADO_DATOS_INSUFICIENTES = 'datos_insuficientes'
 ESTADO_INCOMPLETO = 'incompleto'
+ESTADO_NO_EVALUADA = 'no_evaluada'
+MENSAJE_NO_EVALUADA = 'Compatibilidad no evaluada'
+
+REGLAS_POR_CATEGORIA = {
+    'procesador': ('socket',),
+    'placa_madre': ('socket', 'ddr', 'formato'),
+    'memoria_ram': ('ddr',),
+    'gabinete': ('formato',),
+    'refrigeracion': ('cooler',),
+}
+
+CLAVE_POR_CATEGORIA = {
+    'procesador': 'procesador',
+    'placa_madre': 'placa_madre',
+    'memoria_ram': 'memoria_ram',
+    'gabinete': 'gabinete',
+    'refrigeracion': 'refrigeracion',
+}
 
 _PRIORIDAD = {
     ESTADO_COMPATIBLE: 0,
@@ -71,6 +89,124 @@ class ResultadoCompatibilidad:
     def bloquea_agregar(self):
         """Incompatibilidad o datos insuficientes impiden agregar el armado."""
         return bool(self.motivos_de_rechazo)
+
+
+@dataclass(frozen=True)
+class EvaluacionCandidato:
+    estado: str
+    coincidencias: tuple = ()
+    motivos: tuple = ()
+    pendientes: tuple = ()
+
+    @property
+    def etiqueta(self):
+        if self.estado == ESTADO_NO_EVALUADA:
+            return MENSAJE_NO_EVALUADA
+        if self.estado == ESTADO_COMPATIBLE:
+            return 'Coincide: ' + ', '.join(self.coincidencias)
+        if self.estado == ESTADO_INCOMPLETO:
+            return 'Selección incompleta'
+        if self.estado == ESTADO_DATOS_INSUFICIENTES:
+            return 'Datos insuficientes'
+        return 'Incompatible'
+
+
+def evaluar_candidato(categoria, candidato, procesador=None, placa_madre=None, memoria_ram=None, gabinete=None, refrigeracion=None):
+    """Clasifica un candidato reemplazando la pieza previa de su categoría.
+
+    Usa validar_armado() como única fuente de las reglas. Una categoría sin
+    regla queda como no evaluada: no se afirma que sea compatible.
+    """
+    if categoria not in REGLAS_POR_CATEGORIA:
+        return EvaluacionCandidato(
+            ESTADO_NO_EVALUADA,
+            motivos=(MENSAJE_NO_EVALUADA,),
+        )
+
+    piezas = {
+        'procesador': procesador,
+        'placa_madre': placa_madre,
+        'memoria_ram': memoria_ram,
+        'gabinete': gabinete,
+        'refrigeracion': refrigeracion,
+    }
+    piezas[CLAVE_POR_CATEGORIA[categoria]] = candidato
+    resultado = validar_armado(**piezas)
+    hallazgos_por_regla = {}
+    for hallazgo in resultado.hallazgos:
+        if hallazgo.regla not in REGLAS_POR_CATEGORIA[categoria]:
+            continue
+        previo = hallazgos_por_regla.get(hallazgo.regla)
+        if previo is None or _PRIORIDAD[hallazgo.estado] > _PRIORIDAD[previo.estado]:
+            hallazgos_por_regla[hallazgo.regla] = hallazgo
+
+    coincidencias = []
+    motivos = []
+    pendientes = []
+    estados = []
+    for regla in REGLAS_POR_CATEGORIA[categoria]:
+        hallazgo = hallazgos_por_regla.get(regla)
+        if hallazgo is not None:
+            estados.append(hallazgo.estado)
+            if hallazgo.estado == ESTADO_INCOMPLETO:
+                pendientes.append(hallazgo.mensaje)
+            else:
+                motivos.append(hallazgo.mensaje)
+            continue
+        if _regla_puede_comprobarse(regla, piezas):
+            estados.append(ESTADO_COMPATIBLE)
+            coincidencias.append(_texto_coincidencia(regla, piezas))
+        else:
+            estados.append(ESTADO_INCOMPLETO)
+            pendientes.append('Selección incompleta para comprobar esta regla.')
+
+    return EvaluacionCandidato(
+        _estado_de_candidato(estados),
+        tuple(coincidencias),
+        tuple(motivos),
+        tuple(pendientes),
+    )
+
+
+def _estado_de_candidato(estados):
+    if ESTADO_INCOMPATIBLE in estados:
+        return ESTADO_INCOMPATIBLE
+    if ESTADO_DATOS_INSUFICIENTES in estados:
+        return ESTADO_DATOS_INSUFICIENTES
+    if ESTADO_COMPATIBLE in estados:
+        return ESTADO_COMPATIBLE
+    return ESTADO_INCOMPLETO
+
+
+def _regla_puede_comprobarse(regla, piezas):
+    if regla == 'socket':
+        return piezas['procesador'] is not None and piezas['placa_madre'] is not None
+    if regla == 'ddr':
+        return piezas['memoria_ram'] is not None and piezas['placa_madre'] is not None
+    if regla == 'formato':
+        return piezas['placa_madre'] is not None and piezas['gabinete'] is not None
+    if regla == 'cooler':
+        return piezas['refrigeracion'] is not None and (
+            piezas['procesador'] is not None or piezas['placa_madre'] is not None
+        )
+    return False
+
+
+def _texto_coincidencia(regla, piezas):
+    if regla == 'socket':
+        return f"Socket {normalizar_spec(piezas['procesador'].socket)}"
+    if regla == 'ddr':
+        return f"DDR {normalizar_spec(piezas['memoria_ram'].tipo_ddr)}"
+    if regla == 'formato':
+        return f"Formato {normalizar_spec(piezas['placa_madre'].formato)}"
+    sockets = []
+    if piezas['procesador'] is not None:
+        sockets.append(normalizar_spec(piezas['procesador'].socket))
+    if piezas['placa_madre'] is not None:
+        socket_placa = normalizar_spec(piezas['placa_madre'].socket_cpu)
+        if socket_placa not in sockets:
+            sockets.append(socket_placa)
+    return 'Cooler para ' + ', '.join(sockets)
 
 
 def validar_armado(procesador=None, placa_madre=None, memoria_ram=None, gabinete=None, refrigeracion=None):

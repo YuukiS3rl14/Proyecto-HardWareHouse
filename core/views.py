@@ -5,7 +5,7 @@ from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from .compatibilidad import validar_armado
+from .compatibilidad import evaluar_candidato, validar_armado
 from .forms import *
 import json
 import uuid
@@ -426,6 +426,118 @@ def _error_armado(message, estado='error', motivos=None, status=400):
         'message': message,
         'motivos': motivos if motivos is not None else [message],
     }, status=status)
+
+_RECOMENDACIONES = {
+    'procesador': ((Procesador, 'procesador', 'procesador'),),
+    'placa_madre': ((PlacaMadre, 'placa_madre', 'placa_madre'),),
+    'memoria_ram': ((MemoriaRam, 'memoria_ram', 'memoria_ram'),),
+    'gabinete': ((Gabinete, 'gabinete', 'gabinete'),),
+    'refrigeracion_cooler': ((RefrigeracionCooler, 'refrigeracion', 'refrigeracion'),),
+    'tarjeta_grafica': ((TarjetaGrafica, 'tarjeta_grafica', 'tarjeta_grafica'),),
+    'fuente_de_poder': ((FuenteDePoder, 'fuente_de_poder', 'fuente_de_poder'),),
+    'almacenamiento': (
+        (AlmacenamientoSSD, 'almacenamiento_ssd', 'almacenamiento_ssd'),
+        (AlmacenamientoHDD, 'almacenamiento_hdd', 'almacenamiento_hdd'),
+    ),
+}
+
+_CLAVE_SELECCION = {
+    'procesador': 'procesador',
+    'placa_madre': 'placa_madre',
+    'memoria_ram': 'memoria_ram',
+    'gabinete': 'gabinete',
+    'refrigeracion': 'refrigeracion',
+}
+
+_CLAVE_QUE_REEMPLAZA = {
+    'procesador': 'procesador',
+    'placa_madre': 'placa_madre',
+    'memoria_ram': 'memoria_ram',
+    'gabinete': 'gabinete',
+    'refrigeracion_cooler': 'refrigeracion',
+}
+
+_ORDEN_RECOMENDACION = {
+    'compatible': 0,
+    'incompleto': 1,
+    'no_evaluada': 2,
+    'datos_insuficientes': 3,
+    'incompatible': 4,
+}
+
+def _orden_recomendado(candidato):
+    return (
+        0 if candidato['stock'] > 0 else 1,
+        _ORDEN_RECOMENDACION[candidato['estado']],
+        candidato['precio'],
+        candidato['nombre'],
+    )
+
+@require_POST
+def recomendar_armado(request):
+    """Clasifica los candidatos de una categoría con las piezas ya elegidas."""
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'message': 'La solicitud no es válida.'}, status=400)
+
+    categoria = payload.get('categoria')
+    fuentes = _RECOMENDACIONES.get(categoria)
+    if fuentes is None:
+        return JsonResponse({'status': 'error', 'message': 'La categoría no es válida.'}, status=400)
+
+    componentes = payload.get('componentes') or []
+    if not isinstance(componentes, list):
+        return JsonResponse({'status': 'error', 'message': 'La selección no es válida.'}, status=400)
+
+    clave_reemplazada = _CLAVE_QUE_REEMPLAZA.get(categoria)
+    seleccion = {}
+    tipos_vistos = set()
+    for item in componentes:
+        if not isinstance(item, dict):
+            return JsonResponse({'status': 'error', 'message': 'La selección no es válida.'}, status=400)
+        tipo = item.get('tipo') or item.get('model_name')
+        clave = _CLAVE_SELECCION.get(tipo)
+        if clave is None:
+            continue
+        if clave == clave_reemplazada:
+            continue
+        if clave in tipos_vistos:
+            return JsonResponse({'status': 'error', 'message': 'Hay una pieza repetida en la selección.'}, status=400)
+        ModelClass = PRODUCT_MODEL_MAP.get(tipo)
+        try:
+            product_id = int(item.get('id'))
+        except (TypeError, ValueError):
+            return JsonResponse({'status': 'error', 'message': 'Hay una pieza sin identificador válido.'}, status=400)
+        producto = ModelClass.objects.filter(pk=product_id).first() if ModelClass else None
+        if producto is None:
+            return JsonResponse({'status': 'error', 'message': 'Una pieza de la selección ya no está disponible.'}, status=400)
+        tipos_vistos.add(clave)
+        seleccion[clave] = producto
+
+    candidatos = []
+    for modelo, categoria_regla, model_name in fuentes:
+        for producto in modelo.objects.all():
+            evaluacion = evaluar_candidato(categoria_regla, producto, **seleccion)
+            candidatos.append({
+                'id': producto.id,
+                'model_name': model_name,
+                'nombre': producto.nombre,
+                'precio': producto.precio,
+                'stock': producto.stock,
+                'estado': evaluacion.estado,
+                'etiqueta': evaluacion.etiqueta,
+                'coincidencias': list(evaluacion.coincidencias),
+                'motivos': list(evaluacion.motivos),
+                'pendientes': list(evaluacion.pendientes),
+                'seleccionable': producto.stock > 0,
+            })
+
+    candidatos.sort(key=_orden_recomendado)
+    for candidato in candidatos:
+        candidato['precio'] = str(candidato['precio'])
+
+    return JsonResponse({'status': 'success', 'candidatos': candidatos})
 
 @login_required
 @require_POST

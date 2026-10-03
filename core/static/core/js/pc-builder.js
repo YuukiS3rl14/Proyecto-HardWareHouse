@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+function iniciarArmado() {
     // --- 1. OBTENER DATOS Y ELEMENTOS DEL DOM ---
     const allComponentsData = JSON.parse(document.getElementById('componentes-data').textContent);
     const urls = document.getElementById('builder-urls').dataset;
@@ -88,47 +88,140 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- 3. MANEJO DE EVENTOS Y LÓGICA DE COMPATIBILIDAD ---
 
-    function openComponentModal(e) {
+    let soloCompatibles = false;
+    let recomendacionesActuales = [];
+    let categoriaModal = null;
+
+    function escaparHtml(texto) {
+        return String(texto ?? '').replace(/[&<>"']/g, caracter => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[caracter]));
+    }
+
+    function seleccionActual() {
+        return Object.entries(currentBuild).map(([type, component]) => {
+            const { modelName } = componentOrder.find(c => c.key === type);
+            return {
+                tipo: component.model_name || modelName,
+                id: component.id,
+            };
+        });
+    }
+
+    async function openComponentModal(e) {
         const type = e.target.dataset.type;
         const modalTitle = document.getElementById('componentModalLabel');
         const modalBody = document.getElementById('componentModalBody');
-
         const { label } = componentOrder.find(c => c.key === type);
+        categoriaModal = type;
         modalTitle.textContent = `Seleccionar ${label}`;
+        modalBody.innerHTML = '<p class="text-muted mb-0">Revisando compatibilidad...</p>';
+        $('#componentModal').modal('show');
 
-        const sortedComponents = [...allComponentsData[type]].sort((a, b) => parseFloat(a.precio) - parseFloat(b.precio));
-        
-        let listHTML = '<div class="list-group">';
-        sortedComponents.forEach(component => {
-            const { isCompatible, warning } = checkCompatibility(component, type);
-            const price = parseInt(component.precio).toLocaleString('es-CL');
-            const image = component.imagen ? component.imagen : urls.placeholderImg;
-            listHTML += `
-                <a href="#" class="list-group-item list-group-item-action" data-id="${component.id}" data-type="${type}">
-                    <div class="d-flex w-100">
-                        <img src="${image}" alt="${component.nombre}" style="width: 60px; height: 60px; object-fit: contain; margin-right: 15px;">
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="mb-1">${component.nombre}</h6>
-                                <strong class="text-success">$${price}</strong>
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        try {
+            const response = await fetch(urls.recomendarUrl, {
+                method: 'POST',
+                body: JSON.stringify({
+                    categoria: type,
+                    componentes: seleccionActual(),
+                }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfInput ? csrfInput.value : '',
+                },
+            });
+            const data = await response.json();
+            if (!response.ok || data.status !== 'success') {
+                modalBody.innerHTML = `<p class="text-danger mb-0">${escaparHtml(data.message || 'No se pudo recomendar.')}</p>`;
+                return;
+            }
+            recomendacionesActuales = data.candidatos;
+            renderRecomendaciones();
+        } catch (error) {
+            console.error('Error al recomendar:', error);
+            modalBody.innerHTML = '<p class="text-danger mb-0">No se pudo consultar la compatibilidad.</p>';
+        }
+    }
+
+    function renderRecomendaciones() {
+        const modalBody = document.getElementById('componentModalBody');
+        const visibles = soloCompatibles
+            ? recomendacionesActuales.filter(candidato => candidato.estado === 'compatible')
+            : recomendacionesActuales;
+
+        let html = `
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="solo-compatibles" ${soloCompatibles ? 'checked' : ''}>
+                <label class="form-check-label" for="solo-compatibles">Solo compatibles</label>
+            </div>
+        `;
+
+        if (visibles.length === 0) {
+            html += '<p class="text-muted mb-0">No hay piezas compatibles con la selección actual.</p>';
+        } else {
+            html += '<div class="list-group">';
+            visibles.forEach(candidato => {
+                const local = (allComponentsData[categoriaModal] || []).find(componente => (
+                    String(componente.id) === String(candidato.id) && componente.model_name === candidato.model_name
+                )) || candidato;
+                const price = parseInt(local.precio).toLocaleString('es-CL');
+                const image = local.imagen ? local.imagen : urls.placeholderImg;
+                const detalle = detalleRecomendacion(candidato);
+                const etiquetaStock = candidato.seleccionable ? '' : '<span class="badge badge-secondary ml-2">Sin stock</span>';
+                const clase = candidato.seleccionable ? 'list-group-item list-group-item-action' : 'list-group-item disabled';
+                const tag = candidato.seleccionable ? 'a' : 'div';
+                const href = candidato.seleccionable ? ' href="#"' : '';
+                html += `
+                    <${tag}${href} class="${clase}" data-id="${candidato.id}" data-type="${categoriaModal}" data-model-name="${escaparHtml(candidato.model_name)}" data-seleccionable="${candidato.seleccionable ? '1' : '0'}">
+                        <div class="d-flex w-100">
+                            <img src="${escaparHtml(image)}" alt="${escaparHtml(local.nombre)}" style="width: 60px; height: 60px; object-fit: contain; margin-right: 15px;">
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="mb-1">${escaparHtml(local.nombre)}${etiquetaStock}</h6>
+                                    <strong class="text-success">$${price}</strong>
+                                </div>
+                                <small class="text-muted">${getComponentSpecs(local, false)}</small>
+                                ${detalle}
                             </div>
-                            <small class="text-muted">${getComponentSpecs(component, false)}</small>
-                            ${warning ? `<p class="mb-0 mt-1 text-danger"><small>⚠️ ${warning}</small></p>` : ''}
                         </div>
-                    </div>
-                </a>
-            `;
-        });
-        listHTML += '</div>';
+                    </${tag}>
+                `;
+            });
+            html += '</div>';
+        }
 
-        modalBody.innerHTML = listHTML;
-
-        // Añadir listeners a los items de la lista
-        modalBody.querySelectorAll('.list-group-item').forEach(item => {
+        modalBody.innerHTML = html;
+        const filtro = document.getElementById('solo-compatibles');
+        if (filtro) {
+            filtro.addEventListener('change', () => {
+                soloCompatibles = filtro.checked;
+                renderRecomendaciones();
+            });
+        }
+        modalBody.querySelectorAll('[data-seleccionable="1"]').forEach(item => {
             item.addEventListener('click', handleSelectionChange);
         });
+    }
 
-        $('#componentModal').modal('show');
+    function detalleRecomendacion(candidato) {
+        if (candidato.estado === 'compatible') {
+            const pendientes = (candidato.pendientes || []).length
+                ? `<p class="mb-0 text-muted"><small>Selección incompleta en reglas que aún no se pueden comprobar.</small></p>`
+                : '';
+            return `<p class="mb-0 mt-1 text-success"><small>${escaparHtml(candidato.etiqueta)}</small></p>${pendientes}`;
+        }
+        if (candidato.estado === 'incompatible' || candidato.estado === 'datos_insuficientes') {
+            const motivos = (candidato.motivos || []).map(motivo => `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(motivo)}</small></p>`).join('');
+            return `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(candidato.etiqueta)}</small></p>${motivos}`;
+        }
+        const clase = candidato.estado === 'no_evaluada' ? 'text-muted' : 'text-muted';
+        return `<p class="mb-0 mt-1 ${clase}"><small>${escaparHtml(candidato.etiqueta)}</small></p>`;
     }
 
     function getComponentSpecs(component, isCard) {
@@ -164,10 +257,16 @@ document.addEventListener('DOMContentLoaded', function () {
     function handleSelectionChange(e) {
         e.preventDefault();
         const target = e.currentTarget;
+        if (target.dataset.seleccionable === '0') {
+            return;
+        }
         const type = target.dataset.type;
         const selectedId = target.dataset.id;
+        const modelName = target.dataset.modelName;
 
-        currentBuild[type] = allComponentsData[type].find(c => c.id == selectedId);
+        currentBuild[type] = allComponentsData[type].find(c => (
+            String(c.id) === String(selectedId) && (!modelName || c.model_name === modelName)
+        ));
 
         $('#componentModal').modal('hide');
         initializeBuilder(); // Redibuja toda la interfaz con la nueva selección
@@ -278,6 +377,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function checkCompatibility(component, type) {
+        if (type === 'tarjeta_grafica' || type === 'almacenamiento' || type === 'fuente_de_poder') {
+            return { estado: 'no_evaluada', isCompatible: false, warning: null };
+        }
+
         const placaMadre = currentBuild.placa_madre;
         const procesador = currentBuild.procesador;
         const gabinete = currentBuild.gabinete;
@@ -440,12 +543,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const baseHeaders = ['Componente', 'Producto', 'Cantidad', 'Precio Unitario'];
         const attributeHeaders = new Set();
         const componentsToExport = [];
-        let estadoArmado = 'compatible';
+        let estadoReglas = null;
+        let hayPiezaSinRegla = false;
         const etiquetasEstado = {
             compatible: 'Compatible',
             incompatible: 'Incompatible (Revisar Componentes)',
             datos_insuficientes: 'Datos insuficientes (no se declara compatible)',
             incompleto: 'Selección incompleta',
+            no_evaluada: 'Compatibilidad no evaluada',
         };
 
         // Recopilar todos los componentes y sus atributos
@@ -453,7 +558,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const component = currentBuild[key];
             if (component) {
                 componentsToExport.push({ label, component });
-                estadoArmado = peorEstado(estadoArmado, checkCompatibility(component, key).estado);
+                const estadoPieza = checkCompatibility(component, key).estado;
+                if (estadoPieza === 'no_evaluada') {
+                    hayPiezaSinRegla = true;
+                } else {
+                    estadoReglas = estadoReglas ? peorEstado(estadoReglas, estadoPieza) : estadoPieza;
+                }
                 // Recopilar cabeceras de atributos
                 Object.keys(component).forEach(attr => {
                     if (!['id', 'nombre', 'precio', 'imagen', 'stock', 'model_name'].includes(attr)) {
@@ -484,7 +594,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 3. Añadir filas de resumen al final
         data.push([]); // Fila vacía como separador
-        data.push(['', 'Compatibilidad del Armado:', etiquetasEstado[estadoArmado] || estadoArmado]);
+        let textoCompatibilidad = etiquetasEstado.no_evaluada;
+        if (estadoReglas === 'compatible' && hayPiezaSinRegla) {
+            textoCompatibilidad = 'Reglas comprobadas; hay piezas sin regla de compatibilidad';
+        } else if (estadoReglas) {
+            textoCompatibilidad = etiquetasEstado[estadoReglas] || estadoReglas;
+        }
+        data.push(['', 'Compatibilidad del Armado:', textoCompatibilidad]);
         data.push(['', 'Precio Total del Armado:', totalBuildPrice]);
 
         // 4. Crear y descargar el archivo Excel
@@ -503,4 +619,10 @@ document.addEventListener('DOMContentLoaded', function () {
     addToCartBtn.addEventListener('click', addAllToCart);
     downloadExcelBtn.addEventListener('click', downloadAsExcel);
     initializeBuilder();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciarArmado);
+} else {
+    iniciarArmado();
+}
