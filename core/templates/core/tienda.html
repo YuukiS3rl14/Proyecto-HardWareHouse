@@ -94,7 +94,7 @@
                                     {% if producto.imagen %}
                                         <img class="img-fluid w-100 h-100" src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="object-fit: contain;">
                                     {% else %}
-                                        <img class="img-fluid w-100 h-100" src="{% static 'core/img/placeholder_product.webp' %}" alt="Producto Sin Imagen" style="object-fit: contain;">
+                                        <img class="img-fluid w-100 h-100" src="{% static 'core/img/placeholder.webp' %}" alt="Producto Sin Imagen" style="object-fit: contain;">
                                     {% endif %}
                                 </a>
                             </div>

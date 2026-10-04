@@ -34,7 +34,7 @@
                     <tr>
                         <td class="align-middle text-left cell-product">
                             <a href="{% url 'core:detalle' item.model_name item.producto.id %}">
-                                <img src="{% if item.producto.imagen %}{{ item.producto.imagen.url }}{% else %}{% static 'core/img/placeholder_product.webp' %}{% endif %}" alt="{{ item.producto.nombre }}" style="width: 50px;">
+                                <img src="{% if item.producto.imagen %}{{ item.producto.imagen.url }}{% else %}{% static 'core/img/placeholder.webp' %}{% endif %}" alt="{{ item.producto.nombre }}" style="width: 50px;">
                                 {{ item.producto.nombre }}
                             </a>
                         </td>

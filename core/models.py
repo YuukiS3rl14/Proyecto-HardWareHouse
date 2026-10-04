@@ -51,6 +51,16 @@ class Procesador(models.Model):
     
     nucleos = models.IntegerField()
     frecuencia_base = models.DecimalField(max_digits=4, decimal_places=2, help_text="En GHz. Ej: 3.70")
+    potencia_referencia_watts = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Potencia de referencia (W)",
+        help_text=(
+            "Watts de referencia para estimar la fuente. No es el consumo máximo "
+            "ni equivale al TDP. Déjalo vacío si no se conoce; no uses 0."
+        ),
+    )
 
     class Meta:
         verbose_name_plural = "Procesadores (CPU)"
@@ -75,7 +85,37 @@ class TarjetaGrafica(models.Model):
         ('PCIe 4.0', 'PCIe 4.0'), ('PCIe 5.0', 'PCIe 5.0'), 
         ('PCIe 3.0', 'PCIe 3.0'), ('Otro', 'Otro')
     ]
-    interfaz = models.CharField(max_length=20, choices=INTERFAZ_CHOICES, verbose_name="Interfaz Bus") 
+    interfaz = models.CharField(max_length=20, choices=INTERFAZ_CHOICES, verbose_name="Interfaz Bus")
+    consumo_referencia_watts = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Consumo de referencia (W)",
+        help_text=(
+            "Consumo de referencia de la tarjeta, en watts. Sirve para estimar la fuente. "
+            "No es el consumo máximo ni el TDP. Déjalo vacío si no se conoce; no uses 0."
+        ),
+    )
+    potencia_minima_fuente_watts = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Fuente mínima recomendada (W)",
+        help_text=(
+            "Potencia mínima de fuente que indica el fabricante para un equipo con esta GPU. "
+            "No es el consumo de la tarjeta. Déjalo vacío si no se conoce; no uses 0."
+        ),
+    )
+    largo_mm = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Largo (mm)",
+        help_text=(
+            "Largo de la tarjeta en milímetros. Solo sirve para compararlo con el máximo del gabinete. "
+            "No describe grosor ni altura. Déjalo vacío si no se conoce; no uses 0."
+        ),
+    )
 
     class Meta:
         verbose_name_plural = "Tarjetas Gráficas (GPU)"
@@ -90,12 +130,49 @@ class MemoriaRam(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
-    capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
+    capacidad_gb = models.IntegerField(
+        verbose_name="Capacidad del producto (GB)",
+        help_text=(
+            "Capacidad del producto tal como se vende: el módulo suelto o el kit completo. "
+            "La capacidad del armado suma cantidad × este valor. No la multipliques por "
+            "los módulos, porque este número ya incluye todos los del kit."
+        ),
+    )
     
     TIPO_DDR_CHOICES = [('DDR5', 'DDR5'), ('DDR4', 'DDR4'), ('DDR3', 'DDR3')]
     tipo_ddr = models.CharField(max_length=5, choices=TIPO_DDR_CHOICES, verbose_name="Tipo DDR") 
     
-    velocidad_mhz = models.IntegerField(verbose_name="Velocidad (MHz)", help_text="Ej: 3200, 5600")
+    velocidad_mhz = models.IntegerField(verbose_name="Velocidad (MHz)", help_text="Ej: 3200, 5600. Es la velocidad indicada del producto, no la velocidad final del equipo.")
+    modulos_por_producto = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Módulos por producto",
+        help_text=(
+            "Cuántos módulos trae este producto o kit. Las ranuras ocupadas son "
+            "cantidad × este número. Vacío si no se sabe; no se deduce del nombre."
+        ),
+    )
+    capacidad_modulo_gb = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Capacidad por módulo (GB)",
+        help_text=(
+            "Capacidad de un solo módulo. Si la indicas junto con los módulos, debe "
+            "cumplirse capacidad del producto = módulos × esta cifra. No se suma aparte "
+            "de la capacidad del producto. Vacío si no se sabe."
+        ),
+    )
+    FORMATO_RAM_CHOICES = [('DIMM', 'DIMM'), ('SO-DIMM', 'SO-DIMM')]
+    formato_ram = models.CharField(
+        max_length=10,
+        choices=FORMATO_RAM_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Formato",
+        help_text="DIMM o SO-DIMM. Vacío si no se sabe; no se deduce del nombre del producto.",
+    )
     
     class Meta:
         verbose_name_plural = "Memorias RAM"
@@ -125,6 +202,21 @@ class PlacaMadre(models.Model):
     formato = models.CharField(max_length=30, choices=FORMATO_CHOICES) 
     ranuras_ram = models.IntegerField(verbose_name="Slots RAM")
     tipo_ram_soportado = models.CharField(max_length=10, choices=MemoriaRam.TIPO_DDR_CHOICES, default='DDR4', verbose_name="Tipo RAM Soportado")
+    formato_ram_soportado = models.CharField(
+        max_length=10,
+        choices=MemoriaRam.FORMATO_RAM_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Formato de RAM admitido",
+        help_text="DIMM o SO-DIMM. Vacío si no se sabe.",
+    )
+    capacidad_maxima_ram_gb = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Capacidad máxima de RAM (GB)",
+        help_text="Capacidad total máxima de la placa, en GB. Vacío si no se sabe; no uses 0.",
+    )
 
     class Meta:
         verbose_name_plural = "Placas Madre"
@@ -184,7 +276,18 @@ class Gabinete(models.Model):
     ventiladores_incluidos = models.BooleanField(default=False)
     
     MATERIAL_CHOICES = [('Acero', 'Acero'), ('Aluminio', 'Aluminio'), ('Plástico', 'Plástico'), ('Vidrio Templado', 'Vidrio Templado')]
-    material = models.CharField(max_length=50, choices=MATERIAL_CHOICES) 
+    material = models.CharField(max_length=50, choices=MATERIAL_CHOICES)
+    largo_max_gpu_mm = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        verbose_name="Largo máximo de GPU (mm)",
+        help_text=(
+            "Largo máximo de tarjeta que admite el gabinete, en milímetros. "
+            "No reserva espacio de radiadores ni limita grosor o altura. "
+            "Déjalo vacío si no se conoce; no uses 0."
+        ),
+    ) 
 
     class Meta:
         verbose_name_plural = "Gabinetes"

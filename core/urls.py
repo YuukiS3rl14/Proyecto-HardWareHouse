@@ -6,6 +6,9 @@ urlpatterns = [
     path('', mostrarIndex, name='index'),
     path('index/', mostrarIndex, name='index'),
     path('armado/', mostrarArmado, name='armado'),
+    path('armado/recomendar/', recomendar_armado, name='recomendar_armado'),
+    path('armado/evaluar/', evaluar_armado, name='evaluar_armado'),
+    path('armado/exportar/', exportar_armado, name='exportar_armado'),
     path('carrito/', mostrarCarrito, name='carrito'),
     path('checkout/', mostrarCheckout, name='checkout'),
     path('contacto/', mostrarContacto, name='contacto'),
@@ -17,6 +20,7 @@ urlpatterns = [
 
     # URLs del Carrito
     path('carrito/agregar/', agregar_al_carrito, name='agregar_al_carrito'),
+    path('carrito/agregar-armado/', agregar_armado_al_carrito, name='agregar_armado_al_carrito'),
     path('carrito/eliminar/<int:item_id>/', eliminar_del_carrito, name='eliminar_del_carrito'),
     path('carrito/actualizar/<int:item_id>/', actualizar_carrito, name='actualizar_carrito'),
 
