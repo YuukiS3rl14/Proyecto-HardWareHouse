@@ -23,7 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(('core.urls', 'core'), namespace='core')),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('', include('paypal.standard.ipn.urls')),
+    path('paypal/', include('paypal.standard.ipn.urls')),
 ]
 
 # SOLO para modo desarrollo: permite a Django servir los archivos multimedia (imágenes)

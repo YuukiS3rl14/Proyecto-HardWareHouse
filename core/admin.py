@@ -152,7 +152,7 @@ class VentiladorAdmin(admin.ModelAdmin):
 
 class ItemPedidoInline(admin.TabularInline):
     model = ItemPedido
-    readonly_fields = ('producto_nombre', 'producto_tipo', 'precio_unitario', 'cantidad', 'get_subtotal')
+    readonly_fields = ('producto_nombre', 'producto_tipo', 'precio_unitario', 'cantidad', 'producto_modelo', 'producto_pk', 'get_subtotal')
     can_delete = False
     extra = 0
 

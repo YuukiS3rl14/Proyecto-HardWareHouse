@@ -189,8 +189,14 @@ ADMIN_HEADER_TITLE = 'Administración de la Tienda'
 
 ADMIN_SITE_HEADER = 'HardWareHouse'
 
-PAYPAL_RECEIVER_EMAIL = 'sb-j1cpn47385379@business.example.com'
-PAYPAL_TEST = True
+# Sandbox: PAYPAL_TEST=True envía el botón a sandbox.paypal.com y solo acepta IPN de prueba.
+# La cuenta Business es la que recibe el pago. La cuenta Personal solo se usa para iniciar
+# sesión en el checkout de PayPal; no se guarda en la aplicación.
+PAYPAL_RECEIVER_EMAIL = os.environ.get(
+    'PAYPAL_RECEIVER_EMAIL',
+    'sb-j1cpn47385379@business.example.com',
+).strip()
+PAYPAL_TEST = env_bool('PAYPAL_TEST', default=True)
 
 # Tasa de cambio de ejemplo (CLP a USD). En un proyecto real, esto debería obtenerse de una API.
 CLP_TO_USD_RATE = 950 

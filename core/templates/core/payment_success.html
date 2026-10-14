@@ -6,13 +6,13 @@
 {% block principal %}
 <div class="container-fluid bg-light mb-5">
     <div class="page-header d-flex flex-column align-items-center justify-content-center">
-        <h1 class="font-weight-semi-bold text-uppercase mb-3 text-success"><i class="fas fa-check-circle"></i> ¡Pago Exitoso!</h1>
+        <h1 class="font-weight-semi-bold text-uppercase mb-3 text-success"><i class="fas fa-check-circle"></i> Pago en verificación</h1>
         <p class="text-muted">Gracias por tu compra en HardWareHouse.</p>
     </div>
 </div>
 
 <div class="container text-center py-5">
-    <p>Tu pedido ha sido confirmado y está siendo procesado. Recibirás una notificación por correo electrónico pronto.</p>
+    <p>PayPal todavía debe confirmar la transacción. El pedido sigue pendiente y el stock no cambia hasta esa confirmación.</p>
     <a href="{% url 'core:mis_pedidos' %}" class="btn btn-success">Ver mis pedidos</a>
 </div>
 {% endblock %}

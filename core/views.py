@@ -31,10 +31,8 @@ from django.conf import settings
 from django.db import transaction 
 from django.db.models import Q, Avg, Count
 from .models import *
-from paypal.standard.forms import PayPalPaymentsForm
-from django.urls import reverse
+from .payments import formulario_paypal
 from django.utils import timezone
-from decimal import Decimal
 
 # Create your views here.
 
@@ -110,8 +108,6 @@ def mostrarCheckout(request):
 
 
     total_clp = carrito.get_total_precio()
-    # Convertimos el total a USD para PayPal, redondeando a 2 decimales
-    total_usd = (total_clp / Decimal(settings.CLP_TO_USD_RATE)).quantize(Decimal('0.01'))
 
     # Creamos un pedido PENDIENTE
     # Usamos transaction.atomic para asegurar que la creación del pedido y sus items sea una operación única
@@ -132,25 +128,15 @@ def mostrarCheckout(request):
                 producto_nombre=producto.nombre,
                 producto_tipo=producto.categoria,
                 precio_unitario=item_carrito.precio_unitario,
-                cantidad=item_carrito.cantidad
+                cantidad=item_carrito.cantidad,
+                producto_modelo=item_carrito.get_model_name() or '',
+                producto_pk=producto.pk,
             )
 
 
 
 
-    # Diccionario para el botón de PayPal
-    paypal_dict = {
-        "business": settings.PAYPAL_RECEIVER_EMAIL,
-        "amount": f"{total_usd:.2f}",
-        "item_name": f"Pedido #{pedido.id} - HardWareHouse",
-        "invoice": str(pedido.id), 
-        "currency_code": "USD",
-        "notify_url": settings.SITE_URL + reverse('paypal-ipn'), 
-        "return_url": settings.SITE_URL + reverse('core:payment_success'),
-        "cancel_return": settings.SITE_URL + reverse('core:payment_failed'),
-    }
-
-    form_paypal = PayPalPaymentsForm(initial=paypal_dict)
+    form_paypal, total_usd = formulario_paypal(pedido)
 
     context = {
         'pedido': pedido,
@@ -171,7 +157,7 @@ def paymentSuccess(request):
     if carrito:
         carrito.items.all().delete()
     
-    messages.success(request, "¡Tu pago ha sido procesado con éxito! Tu pedido está siendo preparado.")
+    messages.success(request, "PayPal registró tu regreso. El pedido sigue pendiente hasta que se confirme el pago.")
     return render(request, 'core/payment_success.html')
 
 @login_required
@@ -1116,18 +1102,7 @@ def detalle_pedido(request, pedido_id):
     
     form_paypal = None
     if pedido.estado == 'PENDIENTE':
-        total_usd = (pedido.total_monto / Decimal(settings.CLP_TO_USD_RATE)).quantize(Decimal('0.01'))
-        paypal_dict = {
-            "business": settings.PAYPAL_RECEIVER_EMAIL,
-            "amount": f"{total_usd:.2f}",
-            "item_name": f"Pedido #{pedido.id} - HardWareHouse",
-            "invoice": str(pedido.id),
-            "currency_code": "USD",
-            "notify_url": settings.SITE_URL + reverse('paypal-ipn'), 
-            "return_url": settings.SITE_URL + reverse('core:payment_success'),
-            "cancel_return": settings.SITE_URL + reverse('core:payment_failed'),
-        }
-        form_paypal = PayPalPaymentsForm(initial=paypal_dict)
+        form_paypal, _total_usd = formulario_paypal(pedido)
 
     context = {
         'pedido': pedido,

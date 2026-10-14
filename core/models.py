@@ -460,6 +460,20 @@ class ItemCarrito(models.Model):
         return f"{self.cantidad} x {nombre_producto} en carrito de {self.carrito.usuario.username}"
 
 
+_MODELOS_DE_PRODUCTO = {
+    'procesador': Procesador,
+    'tarjeta_grafica': TarjetaGrafica,
+    'memoria_ram': MemoriaRam,
+    'placa_madre': PlacaMadre,
+    'almacenamiento_ssd': AlmacenamientoSSD,
+    'almacenamiento_hdd': AlmacenamientoHDD,
+    'gabinete': Gabinete,
+    'fuente_de_poder': FuenteDePoder,
+    'refrigeracion': RefrigeracionCooler,
+    'ventilador': Ventilador,
+}
+
+
 # --- 5. PEDIDOS Y BOLETAS (Post-Pago) ---
 
 class Pedido(models.Model):
@@ -490,9 +504,17 @@ class ItemPedido(models.Model):
     producto_tipo = models.CharField(max_length=50, verbose_name="Tipo") 
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2) 
     cantidad = models.PositiveIntegerField()
+    producto_modelo = models.CharField(max_length=50, blank=True, default='', verbose_name="Modelo del producto")
+    producto_pk = models.PositiveIntegerField(null=True, blank=True, verbose_name="ID del producto")
     
     def get_subtotal(self):
         return self.precio_unitario * self.cantidad
+
+    def get_related_product(self):
+        modelo = _MODELOS_DE_PRODUCTO.get(self.producto_modelo)
+        if modelo is None or not self.producto_pk:
+            return None
+        return modelo.objects.filter(pk=self.producto_pk).first()
         
     def __str__(self):
         return f"{self.cantidad} x {self.producto_nombre} en Pedido #{self.pedido.id}"
