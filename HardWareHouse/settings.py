@@ -85,7 +85,7 @@ ROOT_URLCONF = 'HardWareHouse.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -183,11 +183,108 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # CONFIGURACIÓN DEL PANEL DE ADMINISTRACIÓN
 # ----------------------------------------------------
 
-ADMIN_SITE_TITLE = 'Panel de Administración HardWareHouse' 
+JAZZMIN_SETTINGS = {
+    'site_title': 'Admin HardWareHouse',
+    'site_header': 'HardWareHouse',
+    'site_brand': 'HardWareHouse',
+    'site_logo': 'core/img/admin-logo.png',
+    'login_logo': 'core/img/admin-logo.png',
+    'site_logo_classes': 'hw-admin-logo',
+    'site_icon': 'core/img/admin-icon.png',
+    'welcome_sign': 'Ingresa al panel de la tienda',
+    'copyright': 'HardWareHouse',
+    'search_model': ['core.Pedido', 'auth.User'],
+    'topmenu_links': [
+        {'name': 'Tienda', 'url': '/', 'icon': 'fas fa-store'},
+        {'model': 'core.Pedido'},
+        {'model': 'auth.User'},
+    ],
+    'usermenu_links': [
+        {'name': 'Ver la tienda', 'url': '/', 'icon': 'fas fa-external-link-alt'},
+    ],
+    'show_sidebar': True,
+    'navigation_expanded': True,
+    'order_with_respect_to': [
+        'core',
+        'core.pedido',
+        'core.pagoboleta',
+        'core.carrito',
+        'core.itemcarrito',
+        'core.favorito',
+        'core.comentario',
+        'core.procesador',
+        'core.tarjetagrafica',
+        'core.memoriaram',
+        'core.placamadre',
+        'core.almacenamientossd',
+        'core.almacenamientohdd',
+        'core.gabinete',
+        'core.fuentedepoder',
+        'core.refrigeracioncooler',
+        'core.ventilador',
+        'core.proveedor',
+        'core.region',
+        'core.comuna',
+        'auth',
+        'auth.user',
+        'auth.group',
+        'ipn',
+        'ipn.paypalipn',
+    ],
+    'icons': {
+        'core': 'fas fa-store',
+        'core.pedido': 'fas fa-receipt',
+        'core.pagoboleta': 'fas fa-file-invoice-dollar',
+        'core.carrito': 'fas fa-shopping-cart',
+        'core.itemcarrito': 'fas fa-box-open',
+        'core.favorito': 'fas fa-heart',
+        'core.comentario': 'fas fa-star',
+        'core.procesador': 'fas fa-microchip',
+        'core.tarjetagrafica': 'fas fa-desktop',
+        'core.memoriaram': 'fas fa-memory',
+        'core.placamadre': 'fas fa-th',
+        'core.almacenamientossd': 'fas fa-hdd',
+        'core.almacenamientohdd': 'fas fa-database',
+        'core.gabinete': 'fas fa-server',
+        'core.fuentedepoder': 'fas fa-plug',
+        'core.refrigeracioncooler': 'fas fa-fan',
+        'core.ventilador': 'fas fa-wind',
+        'core.proveedor': 'fas fa-tags',
+        'core.region': 'fas fa-map',
+        'core.comuna': 'fas fa-map-marker-alt',
+        'auth': 'fas fa-users-cog',
+        'auth.user': 'fas fa-user',
+        'auth.group': 'fas fa-users',
+        'ipn': 'fas fa-credit-card',
+        'ipn.paypalipn': 'fas fa-credit-card',
+    },
+    'related_modal_active': True,
+    'custom_css': 'core/css/admin.css',
+    'use_google_fonts_cdn': False,
+    'show_ui_builder': False,
+    'changeform_format': 'collapsible',
+}
 
-ADMIN_HEADER_TITLE = 'Administración de la Tienda' 
-
-ADMIN_SITE_HEADER = 'HardWareHouse'
+JAZZMIN_UI_TWEAKS = {
+    'navbar': 'navbar-white navbar-light',
+    'no_navbar_border': True,
+    'navbar_fixed': True,
+    'sidebar_fixed': True,
+    'sidebar': 'sidebar-light-success',
+    'sidebar_nav_child_indent': True,
+    'sidebar_nav_flat_style': True,
+    'accent': 'accent-success',
+    'theme': 'litera',
+    'actions_sticky_top': True,
+    'button_classes': {
+        'primary': 'btn-success',
+        'secondary': 'btn-outline-secondary',
+        'info': 'btn-outline-success',
+        'warning': 'btn-warning',
+        'danger': 'btn-outline-danger',
+        'success': 'btn-success',
+    },
+}
 
 # Sandbox: PAYPAL_TEST=True envía el botón a sandbox.paypal.com y solo acepta IPN de prueba.
 # La cuenta Business es la que recibe el pago. La cuenta Personal solo se usa para iniciar

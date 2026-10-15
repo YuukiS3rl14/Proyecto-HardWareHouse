@@ -9,6 +9,10 @@ from django.utils import timezone
 class Region(models.Model):
     numero = models.IntegerField(unique=True)
     nombre = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = 'Región'
+        verbose_name_plural = 'Regiones'
     
     def __str__(self):
         return f"{self.numero} - {self.nombre}"
@@ -453,6 +457,10 @@ class ItemCarrito(models.Model):
 
     def get_total(self):
         return self.precio_unitario * self.cantidad
+
+    class Meta:
+        verbose_name = 'Ítem del carrito'
+        verbose_name_plural = 'Ítems del carrito'
         
     def __str__(self):
         producto = self.get_related_product()
@@ -528,6 +536,10 @@ class PagoBoleta(models.Model):
     
     nombre_comprador = models.CharField(max_length=200)
     email_comprador = models.EmailField()
+
+    class Meta:
+        verbose_name = 'Boleta de pago'
+        verbose_name_plural = 'Boletas de pago'
     
     def __str__(self):
         return f"Boleta/Pago Transacción {self.transaccion_id}"
