@@ -122,6 +122,12 @@ DATABASES = {
     }
 }
 
+# En Railway se usa DATABASE_URL (referencia al servicio Postgres).
+_database_url = os.environ.get("DATABASE_URL")
+if _database_url:
+    import dj_database_url
+    DATABASES["default"] = dj_database_url.parse(_database_url, conn_max_age=600)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
