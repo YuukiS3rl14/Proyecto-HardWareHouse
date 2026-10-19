@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
@@ -44,6 +45,14 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '8w96bzrx-8000.brs.devtunnels.ms', 'u
 # Mismo dominio que en ALLOWED_HOSTS, pero aquí con el esquema 'https://'.
 CSRF_TRUSTED_ORIGINS = ['https://8w96bzrx-8000.brs.devtunnels.ms', 'https://url-ejemplo']
 
+railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+if railway_domain:
+    ALLOWED_HOSTS = list(set(ALLOWED_HOSTS + [railway_domain]))
+    CSRF_TRUSTED_ORIGINS = list(
+        set(CSRF_TRUSTED_ORIGINS + [f"https://{railway_domain}"])
+    )
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # Requiere que el sitio se sirva por HTTPS (Nginx debe enviar la cabecera X-Forwarded-Proto).
 # Si en AWS todavía accedes por http://, define USE_HTTPS=False en el .env o no podrás iniciar sesión.
 USE_HTTPS = env_bool('USE_HTTPS', default=not DEBUG)
@@ -72,6 +81,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -122,6 +132,12 @@ DATABASES = {
     }
 }
 
+if os.getenv("DATABASE_URL"):
+    DATABASES["default"] = dj_database_url.parse(
+        os.environ["DATABASE_URL"],
+        conn_max_age=600,
+    )
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -157,10 +173,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
-# Carpeta donde 'python manage.py collectstatic' reúne los estáticos para que Nginx los sirva.
+# Carpeta donde collectstatic reúne los estáticos (WhiteNoise los sirve en producción).
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
