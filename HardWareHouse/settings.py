@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
@@ -39,10 +40,28 @@ DEBUG = env_bool('DEBUG', default=False)
 
 # Reemplaza 'url-ejemplo' por el dominio o la IP pública que te entregue AWS, sin 'https://'.
 # Ejemplo: 'ec2-3-90-12-34.compute-1.amazonaws.com' o 'www.hardwarehouse.cl'
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '8w96bzrx-8000.brs.devtunnels.ms', 'url-ejemplo']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '8w96bzrx-8000.brs.devtunnels.ms',
+    'url-ejemplo',
+    'proyecto-hardwarehouse-production.up.railway.app',
+]
 
 # Mismo dominio que en ALLOWED_HOSTS, pero aquí con el esquema 'https://'.
-CSRF_TRUSTED_ORIGINS = ['https://8w96bzrx-8000.brs.devtunnels.ms', 'https://url-ejemplo']
+CSRF_TRUSTED_ORIGINS = [
+    'https://8w96bzrx-8000.brs.devtunnels.ms',
+    'https://url-ejemplo',
+    'https://proyecto-hardwarehouse-production.up.railway.app',
+]
+
+railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+if railway_domain:
+    ALLOWED_HOSTS = list(set(ALLOWED_HOSTS + [railway_domain]))
+    CSRF_TRUSTED_ORIGINS = list(
+        set(CSRF_TRUSTED_ORIGINS + [f"https://{railway_domain}"])
+    )
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Requiere que el sitio se sirva por HTTPS (Nginx debe enviar la cabecera X-Forwarded-Proto).
 # Si en AWS todavía accedes por http://, define USE_HTTPS=False en el .env o no podrás iniciar sesión.
@@ -72,6 +91,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -163,10 +183,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
-# Carpeta donde 'python manage.py collectstatic' reúne los estáticos para que Nginx los sirva.
+# Carpeta donde collectstatic reúne los estáticos (WhiteNoise los sirve en producción).
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
