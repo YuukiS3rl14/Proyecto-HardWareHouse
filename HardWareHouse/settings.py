@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     'bootstrap5',
     'django.contrib.humanize',
     'paypal.standard.ipn',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -198,16 +199,62 @@ STORAGES = {
     },
 }
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 # Ruta absoluta al directorio donde Django almacenará los archivos subidos por el usuario (imágenes de productos).
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # URL pública que se utilizará para acceder a los archivos multimedia.
 MEDIA_URL = '/media/'
+
+USE_R2 = env_bool('USE_R2', default=False)
+
+if USE_R2:
+    bucket = os.environ['R2_BUCKET_NAME']
+    endpoint = os.environ['R2_ENDPOINT_URL']
+    access_key = os.environ['R2_ACCESS_KEY_ID']
+    secret_key = os.environ['R2_SECRET_ACCESS_KEY']
+    public_domain = os.environ['R2_PUBLIC_DOMAIN'].strip().rstrip('/')
+    if public_domain.startswith('https://'):
+        public_domain = public_domain[len('https://') :]
+    if public_domain.startswith('http://'):
+        public_domain = public_domain[len('http://') :]
+
+    common = {
+        'bucket_name': bucket,
+        'endpoint_url': endpoint,
+        'access_key': access_key,
+        'secret_key': secret_key,
+        'region_name': 'auto',
+        'custom_domain': public_domain,
+        'querystring_auth': False,
+        'default_acl': None,
+        'signature_version': 's3v4',
+    }
+
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                **common,
+                'location': 'media',
+                'file_overwrite': False,
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                **common,
+                'location': 'static',
+            },
+        },
+    }
+
+    STATIC_URL = f'https://{public_domain}/static/'
+    MEDIA_URL = f'https://{public_domain}/media/'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/'  
 LOGOUT_REDIRECT_URL = '/'  

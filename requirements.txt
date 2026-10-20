@@ -3,7 +3,9 @@ beautifulsoup4==4.14.2
 certifi==2025.10.5
 charset-normalizer==3.4.4
 dj-database-url==3.1.2
+boto3==1.40.41
 Django==4.2.25
+django-storages==1.14.6
 django-bootstrap-v5==1.0.11
 django-crispy-forms==2.4
 django-extensions==4.1
