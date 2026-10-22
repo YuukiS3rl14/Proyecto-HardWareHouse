@@ -29,6 +29,7 @@ import uuid
 
 from django.conf import settings
 from django.db import transaction 
+from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Count
 from .models import *
 from .payments import formulario_paypal
@@ -168,6 +169,10 @@ def paymentFailed(request):
 def mostrarContacto(request):
     return render(request, 'core/contacto.html')
 
+
+def mostrarSobreNosotros(request):
+    return render(request, 'core/about_us.html')
+
 PRODUCT_MODEL_MAP = {
     'procesador': Procesador,
     'tarjeta_grafica': TarjetaGrafica,
@@ -216,63 +221,81 @@ def mostrarDetalle(request, model_name, pk):
     }
     return render(request, 'core/detalle.html', context)
 
+TIENDA_PAGE_SIZE = 50
+
+TIENDA_MODELOS = [
+    Procesador,
+    TarjetaGrafica,
+    MemoriaRam,
+    PlacaMadre,
+    AlmacenamientoSSD,
+    AlmacenamientoHDD,
+    Gabinete,
+    FuenteDePoder,
+    RefrigeracionCooler,
+    Ventilador,
+]
+
+
+def _model_name_tienda(modelo):
+    name = modelo._meta.model_name
+    name = (
+        name.replace('tarjetagrafica', 'tarjeta_grafica')
+        .replace('memoriaram', 'memoria_ram')
+        .replace('placamadre', 'placa_madre')
+        .replace('almacenamientossd', 'almacenamiento_ssd')
+        .replace('almacenamientohdd', 'almacenamiento_hdd')
+        .replace('fuentedepoder', 'fuente_de_poder')
+        .replace('refrigeracioncooler', 'refrigeracion')
+    )
+    if modelo is RefrigeracionCooler:
+        return 'refrigeracion'
+    return name
+
+
 def mostrarTienda(request):
     query = request.GET.get('q')
     selected_categorias = request.GET.getlist('categoria')
     selected_proveedores = request.GET.getlist('proveedor')
     selected_precio = request.GET.get('precio')
 
-    productos_con_modelo = [] # Cambiamos el nombre para mayor claridad
-    modelos = [
-        Procesador, TarjetaGrafica, MemoriaRam, PlacaMadre, 
-        AlmacenamientoSSD, AlmacenamientoHDD, Gabinete, FuenteDePoder, 
-        RefrigeracionCooler, Ventilador
-    ]
+    productos_con_modelo = []
 
-    # --- 2. Lógica de Filtrado ---
-    no_filters_applied = not query and not selected_categorias and not selected_proveedores and not selected_precio
-    if no_filters_applied:
-        for modelo in modelos:
-            model_name = modelo._meta.model_name.replace('tarjetagrafica', 'tarjeta_grafica').replace('memoriaram', 'memoria_ram').replace('placamadre', 'placa_madre').replace('almacenamientossd', 'almacenamiento_ssd').replace('almacenamientohdd', 'almacenamiento_hdd').replace('fuentedepoder', 'fuente_de_poder').replace('refrigeracioncooler', 'refrigeracion')
-            if modelo == RefrigeracionCooler: 
-                model_name = 'refrigeracion'
-            productos_recientes = modelo.objects.order_by('-id')[:5]
-            for producto in productos_recientes:
-                productos_con_modelo.append((producto, model_name))
-    else:
-        for modelo in modelos:
-            # a. Filtro por Categoría
-            categoria_modelo = modelo._meta.get_field('categoria').default
-            if selected_categorias and categoria_modelo not in selected_categorias:
-                continue
+    for modelo in TIENDA_MODELOS:
+        categoria_modelo = modelo._meta.get_field('categoria').default
+        if selected_categorias and categoria_modelo not in selected_categorias:
+            continue
 
-            # b. Construcción de la consulta
-            model_name = modelo._meta.model_name.replace('tarjetagrafica', 'tarjeta_grafica').replace('memoriaram', 'memoria_ram').replace('placamadre', 'placa_madre').replace('almacenamientossd', 'almacenamiento_ssd').replace('almacenamientohdd', 'almacenamiento_hdd').replace('fuentedepoder', 'fuente_de_poder').replace('refrigeracioncooler', 'refrigeracion')
-            if modelo == RefrigeracionCooler: 
-                model_name = 'refrigeracion'
-            qs = modelo.objects.all()
-            
-            if query:
-                search_query = (
-                    Q(nombre__icontains=query) | 
-                    Q(proveedor__nombre__icontains=query) |
-                    Q(categoria__icontains=query)
-                )
-                qs = qs.filter(search_query)
+        model_name = _model_name_tienda(modelo)
+        qs = modelo.objects.select_related('proveedor').all()
 
-            # Filtro por Proveedor
-            if selected_proveedores:
-                qs = qs.filter(proveedor__id__in=selected_proveedores)
+        if query:
+            qs = qs.filter(
+                Q(nombre__icontains=query)
+                | Q(proveedor__nombre__icontains=query)
+                | Q(categoria__icontains=query)
+            )
 
-            # Filtro por Precio
-            if selected_precio:
-                if selected_precio == 'p1': qs = qs.filter(precio__lte=100000)
-                elif selected_precio == 'p2': qs = qs.filter(precio__gt=100000, precio__lte=300000)
-                elif selected_precio == 'p3': qs = qs.filter(precio__gt=300000, precio__lte=600000)
-                elif selected_precio == 'p4': qs = qs.filter(precio__gt=600000)
+        if selected_proveedores:
+            qs = qs.filter(proveedor__id__in=selected_proveedores)
 
-            for producto in qs:
-                productos_con_modelo.append((producto, model_name))
+        if selected_precio:
+            if selected_precio == 'p1':
+                qs = qs.filter(precio__lte=100000)
+            elif selected_precio == 'p2':
+                qs = qs.filter(precio__gt=100000, precio__lte=300000)
+            elif selected_precio == 'p3':
+                qs = qs.filter(precio__gt=300000, precio__lte=600000)
+            elif selected_precio == 'p4':
+                qs = qs.filter(precio__gt=600000)
+
+        for producto in qs:
+            productos_con_modelo.append((producto, model_name))
+
+    productos_con_modelo.sort(key=lambda item: item[0].id, reverse=True)
+
+    paginator = Paginator(productos_con_modelo, TIENDA_PAGE_SIZE)
+    productos_page = paginator.get_page(request.GET.get('page'))
 
     # --- 3. Obtener IDs de productos favoritos del usuario ---
     favoritos_ids = {}
@@ -286,20 +309,39 @@ def mostrarTienda(request):
 
     # --- 3. Preparar contexto para la plantilla ---
     # Obtenemos todas las categorías y proveedores para mostrarlos en los filtros
-    categorias_disponibles = sorted(list(set(m._meta.get_field('categoria').default for m in modelos)))
+    categorias_disponibles = sorted(
+        {m._meta.get_field('categoria').default for m in TIENDA_MODELOS}
+    )
     proveedores_disponibles = Proveedor.objects.all().order_by('nombre')
-        
+
+    pagination_params = request.GET.copy()
+    pagination_params.pop('page', None)
+    pagination_query = pagination_params.urlencode()
+
     context = {
-        'productos': productos_con_modelo,
+        'productos': productos_page.object_list,
+        'productos_page': productos_page,
+        'pagination_query': pagination_query,
+        'total_productos': paginator.count,
         'favoritos_ids': favoritos_ids,
         'query': query,
         'categorias': categorias_disponibles,
         'proveedores': proveedores_disponibles,
         'selected_categorias': selected_categorias,
-        'selected_proveedores': [int(p) for p in selected_proveedores], # Convertir a int para la plantilla
+        'selected_proveedores': [int(p) for p in selected_proveedores],
         'selected_precio': selected_precio,
     }
     return render(request, 'core/tienda.html', context)
+
+
+def descargar_productos_csv(request):
+    """Catálogo de componentes en CSV (p. ej. importación en Voiceflow)."""
+    from .productos_csv import generar_csv_bytes
+
+    response = HttpResponse(generar_csv_bytes(), content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="productos_componentes.csv"'
+    return response
+
 
 def mostrarRegistro(request):
     data = {

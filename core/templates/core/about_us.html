@@ -1,0 +1,173 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block tittle %} Sobre nosotros {% endblock %}
+
+{% block principal %}
+<div class="container-fluid pt-5 pb-5">
+    <div class="row px-xl-5">
+        <div class="col-12 text-center mb-5">
+            <h1 class="section-title text-success font-weight-bold">Sobre HardWareHouse</h1>
+            <p class="text-muted col-lg-8 mx-auto mb-0">
+                Conoce quiénes somos, hacia dónde vamos y cómo te acompañamos en la compra de tu próximo equipo.
+            </p>
+        </div>
+
+        <div class="col-lg-10 mx-auto mb-5">
+            <div class="border rounded p-4 bg-light">
+                <h2 class="h4 text-success font-weight-semi-bold mb-3">Quiénes somos</h2>
+                <p class="mb-0">
+                    <strong>HardWareHouse</strong> es una pyme emergente con <strong>cinco años</strong> en el mercado chileno.
+                    Nos dedicamos a la <strong>comercialización de componentes de PC</strong> y estamos especializados en el
+                    <strong>armado de computadores</strong> a medida. Combinamos catálogo digital, asesoría técnica y herramientas
+                    en línea para que elijas piezas compatibles con claridad.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 text-success font-weight-semi-bold"><i class="fas fa-bullseye mr-2"></i>Misión</h3>
+                    <p class="text-muted mb-0">
+                        Ofrecer componentes de calidad con una atención cercana al cliente, ayudando a cada persona a
+                        encontrar el PC que quiere o necesita —ya sea comprando piezas sueltas o armando un equipo completo—
+                        con información clara en todo el proceso de compra.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 text-success font-weight-semi-bold"><i class="fas fa-eye mr-2"></i>Visión</h3>
+                    <p class="text-muted mb-0">
+                        Ser la tienda <strong>número uno</strong> —o consolidarnos entre el <strong>top 3 a nivel nacional</strong>—
+                        en reconocimiento por especialización en hardware, armado de PCs y confianza de nuestros clientes.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 text-success font-weight-semi-bold"><i class="fas fa-heart mr-2"></i>Valores</h3>
+                    <ul class="text-muted pl-3 mb-0">
+                        <li>Trato amigable y respetuoso con quienes nos visitan.</li>
+                        <li>Demostrar conocimiento técnico para orientar con criterio.</li>
+                        <li>Acompañar al cliente en cada etapa: elección, compra y retiro.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-10 mx-auto mt-2">
+            <h2 class="h4 text-success font-weight-semi-bold text-center mb-4">Preguntas frecuentes</h2>
+            <div class="accordion" id="faqSobreNosotros">
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq-ubicacion">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq-ubicacion-body" aria-expanded="true" aria-controls="faq-ubicacion-body">
+                            ¿Dónde están ubicados?
+                        </button>
+                    </h3>
+                    <div id="faq-ubicacion-body" class="accordion-collapse collapse show" aria-labelledby="faq-ubicacion" data-bs-parent="#faqSobreNosotros">
+                        <div class="accordion-body text-muted">
+                            Nuestro punto de referencia para <strong>retiro en tienda</strong> es
+                            <strong>Av. Tecnología 123, Santiago, Región Metropolitana</strong> (dirección de ejemplo para fines
+                            del sitio web). Te confirmaremos horario y disponibilidad al coordinar tu pedido por
+                            <a href="{% url 'core:contacto' %}">contacto</a>.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq-despacho">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-despacho-body" aria-expanded="false" aria-controls="faq-despacho-body">
+                            ¿Realizan despachos o envíos a domicilio?
+                        </button>
+                    </h3>
+                    <div id="faq-despacho-body" class="accordion-collapse collapse" aria-labelledby="faq-despacho" data-bs-parent="#faqSobreNosotros">
+                        <div class="accordion-body text-muted">
+                            <strong>No.</strong> HardWareHouse no ofrece despacho ni delivery. La entrega de los productos es
+                            mediante <strong>retiro en tienda</strong> una vez confirmado el pago. En el checkout pedimos región y
+                            comuna como parte de los datos del pedido; eso no implica envío a domicilio.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq-compra">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-compra-body" aria-expanded="false" aria-controls="faq-compra-body">
+                            ¿Cómo compro en la web?
+                        </button>
+                    </h3>
+                    <div id="faq-compra-body" class="accordion-collapse collapse" aria-labelledby="faq-compra" data-bs-parent="#faqSobreNosotros">
+                        <div class="accordion-body text-muted">
+                            Explora la <a href="{% url 'core:tienda' %}">tienda</a>, agrega productos al carrito e inicia sesión o
+                            regístrate. En el checkout completas tus datos (incluida comuna de referencia) y pagas de forma segura
+                            con <strong>PayPal</strong>. Cuando el pago queda confirmado, coordinamos el retiro en tienda.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq-armado">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-armado-body" aria-expanded="false" aria-controls="faq-armado-body">
+                            ¿Qué es el armado de PC en HardWareHouse?
+                        </button>
+                    </h3>
+                    <div id="faq-armado-body" class="accordion-collapse collapse" aria-labelledby="faq-armado" data-bs-parent="#faqSobreNosotros">
+                        <div class="accordion-body text-muted">
+                            En la sección <a href="{% url 'core:armado' %}">Armado de PC</a> puedes elegir componentes paso a paso.
+                            El sistema te ayuda a revisar compatibilidad (socket, RAM, gabinete, fuente, etc.) antes de agregar el
+                            armado al carrito o exportar un presupuesto.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq-stock">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-stock-body" aria-expanded="false" aria-controls="faq-stock-body">
+                            ¿El stock de la web es en tiempo real?
+                        </button>
+                    </h3>
+                    <div id="faq-stock-body" class="accordion-collapse collapse" aria-labelledby="faq-stock" data-bs-parent="#faqSobreNosotros">
+                        <div class="accordion-body text-muted">
+                            Mostramos el stock disponible en nuestro catálogo. Si un producto se agota durante el proceso de
+                            compra, te avisaremos al confirmar el pedido. Ante dudas, escríbenos antes de pagar.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq-pagos">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-pagos-body" aria-expanded="false" aria-controls="faq-pagos-body">
+                            ¿Qué métodos de pago aceptan?
+                        </button>
+                    </h3>
+                    <div id="faq-pagos-body" class="accordion-collapse collapse" aria-labelledby="faq-pagos" data-bs-parent="#faqSobreNosotros">
+                        <div class="accordion-body text-muted">
+                            Las compras en línea se procesan mediante <strong>PayPal</strong> (incluido el flujo de prueba o
+                            producción según la configuración de la tienda). El pago debe quedar confirmado antes de preparar
+                            tu pedido para retiro.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq-asesoria">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-asesoria-body" aria-expanded="false" aria-controls="faq-asesoria-body">
+                            ¿Puedo recibir ayuda para elegir componentes?
+                        </button>
+                    </h3>
+                    <div id="faq-asesoria-body" class="accordion-collapse collapse" aria-labelledby="faq-asesoria" data-bs-parent="#faqSobreNosotros">
+                        <div class="accordion-body text-muted">
+                            Sí. Puedes usar el armador, el chat de la web y el formulario de
+                            <a href="{% url 'core:contacto' %}">contacto</a>. Nuestro enfoque es orientarte con conocimiento
+                            técnico para que tomes una decisión informada, sin presión.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-center mt-5 mb-0">
+                <a href="{% url 'core:contacto' %}" class="btn btn-success px-4">¿Más preguntas? Escríbenos</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

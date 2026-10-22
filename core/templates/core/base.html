@@ -84,6 +84,7 @@
                         <a href="{% url 'core:index' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">Inicio</a>
                         <a href="{% url 'core:tienda' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'tienda' %}active{% endif %}">Tienda</a>
                         <a href="{% url 'core:armado' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'armado' %}active{% endif %}">Armado de PC</a>
+                        <a href="{% url 'core:sobrenosotros' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'sobrenosotros' %}active{% endif %}">Sobre nosotros</a>
                         <a href="{% url 'core:contacto' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'contacto' %}active{% endif %}">Contacto</a>
                     </div>
                 </nav>
@@ -124,6 +125,7 @@
                     <a href="{% url 'core:index' %}" class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}"><i class="fas fa-home fa-fw mr-2"></i>Inicio</a>
                     <a href="{% url 'core:tienda' %}" class="nav-link {% if request.resolver_match.url_name == 'tienda' %}active{% endif %}"><i class="fas fa-store fa-fw mr-2"></i>Tienda</a>
                     <a href="{% url 'core:armado' %}" class="nav-link {% if request.resolver_match.url_name == 'armado' %}active{% endif %}"><i class="fas fa-desktop fa-fw mr-2"></i>Armado de PC</a>
+                    <a href="{% url 'core:sobrenosotros' %}" class="nav-link {% if request.resolver_match.url_name == 'sobrenosotros' %}active{% endif %}"><i class="fas fa-info-circle fa-fw mr-2"></i>Sobre nosotros</a>
                     <a href="{% url 'core:contacto' %}" class="nav-link {% if request.resolver_match.url_name == 'contacto' %}active{% endif %}"><i class="fas fa-envelope fa-fw mr-2"></i>Contacto</a>
                 </nav>
 
@@ -230,6 +232,7 @@
                             class="fa fa-angle-right mr-2"></i>Tienda</a>
                     <a class="text-light mb-2" href="{% url 'core:armado' %}"><i class="fa fa-angle-right mr-2"></i>Armado de
                         PC</a>
+                    <a class="text-light mb-2" href="{% url 'core:sobrenosotros' %}"><i class="fa fa-angle-right mr-2"></i>Sobre nosotros</a>
                     <a class="text-light" href="{% url 'core:contacto' %}"><i class="fa fa-angle-right mr-2"></i>Contacto</a>
                 </div>
             </div>

@@ -17,6 +17,7 @@
             <div class="offcanvas-body">
             <h5 class="font-weight-semi-bold mb-4 d-none d-lg-block">Filtros</h5>
             <form action="{% url 'core:tienda' %}" method="GET">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
                 <div class="filter-group">
                     <h5 class="font-weight-semi-bold mb-3">Categoría</h5>
                     {% for cat in categorias %}
@@ -74,7 +75,15 @@
                             {% elif selected_categorias or selected_proveedores or selected_precio %}
                                 <h5 class="m-0">Resultados Filtrados</h5>
                             {% else %}
-                                <h5 class="m-0">Productos Recientes</h5>
+                                <h5 class="m-0">Catálogo</h5>
+                            {% endif %}
+                            {% if total_productos %}
+                                <p class="text-muted small mb-0 mt-1">
+                                    {{ total_productos }} producto{{ total_productos|pluralize:"s" }}
+                                    {% if productos_page.paginator.num_pages > 1 %}
+                                        · página {{ productos_page.number }} de {{ productos_page.paginator.num_pages }}
+                                    {% endif %}
+                                </p>
                             {% endif %}
                         </div>
                         <button class="btn btn-outline-success btn-sm d-lg-none flex-shrink-0" type="button"
@@ -135,6 +144,43 @@
                         </div>
                     </div>
                     {% endfor %}
+
+                    {% if productos_page.has_other_pages %}
+                    <div class="col-12 mt-2">
+                        <p class="text-center text-muted small mb-2">
+                            Mostrando {{ productos_page.start_index }}–{{ productos_page.end_index }} de {{ total_productos }} productos
+                        </p>
+                        <nav aria-label="Paginación del catálogo">
+                            <ul class="pagination justify-content-center flex-wrap mb-0">
+                                <li class="page-item {% if not productos_page.has_previous %}disabled{% endif %}">
+                                    {% if productos_page.has_previous %}
+                                    <a class="page-link" href="?page={{ productos_page.previous_page_number }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}">Anterior</a>
+                                    {% else %}
+                                    <span class="page-link">Anterior</span>
+                                    {% endif %}
+                                </li>
+                                {% for num in productos_page.paginator.page_range %}
+                                    {% if num == productos_page.number %}
+                                    <li class="page-item active" aria-current="page">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% elif num > productos_page.number|add:"-3" and num < productos_page.number|add:"3" %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                <li class="page-item {% if not productos_page.has_next %}disabled{% endif %}">
+                                    {% if productos_page.has_next %}
+                                    <a class="page-link" href="?page={{ productos_page.next_page_number }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}">Siguiente</a>
+                                    {% else %}
+                                    <span class="page-link">Siguiente</span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
 
                 {% else %}
                     <div class="col-12 pt-5 text-center">
