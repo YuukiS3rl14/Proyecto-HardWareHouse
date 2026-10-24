@@ -5,18 +5,20 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from core.chatbot.nlp import parse_presupuesto_clp
+from core.chatbot.nlp import normalizar_presupuesto_clp
 
-_LUCAS = re.compile(
-    r'(\d{1,4})\s*(?:lucas|luca|palos|gamba|gambas)\b',
-    re.I,
-)
 _PROPOSITO = re.compile(
     r'\b(gaming|gamer|juegos|oficina|office|edici[oó]n|edicion|video|streaming|trabajo)\b',
     re.I,
 )
 _MAS_BARATO = re.compile(
-    r'\b(mas barato|más barato|mas economico|más económico|bajar presupuesto|achicar)\b',
+    r'\b(mas barato|más barato|mas economico|más económico|bajar presupuesto|achicar|'
+    r'make it cheaper|cheaper|downgrade)\b',
+    re.I,
+)
+_MAS_CARO = re.compile(
+    r'\b(mas caro|más caro|mas potente|más potente|subir presupuesto|upgrade|'
+    r'mejorar el armado|mejora el armado)\b',
     re.I,
 )
 _AMD = re.compile(r'\b(amd|ryzen)\b', re.I)
@@ -30,13 +32,6 @@ class SolicitudArmadoNL:
     preferencia_cpu: str | None = None
     indice_economico: int = 0
     ajuste: str | None = None
-
-
-def _parse_lucas(texto: str) -> int | None:
-    match = _LUCAS.search(texto or '')
-    if not match:
-        return None
-    return int(match.group(1)) * 1000
 
 
 def _detectar_proposito(texto: str) -> str:
@@ -59,7 +54,7 @@ def parsear_solicitud_armado(
     extraido_budget: int | None = None,
 ) -> SolicitudArmadoNL:
     ctx = build_context or {}
-    presupuesto = extraido_budget or _parse_lucas(texto) or parse_presupuesto_clp(texto)
+    presupuesto = normalizar_presupuesto_clp(texto) or extraido_budget
     if presupuesto is None and ctx.get('presupuesto_clp'):
         presupuesto = int(ctx['presupuesto_clp'])
 
@@ -77,13 +72,17 @@ def parsear_solicitud_armado(
 
     indice = int(ctx.get('indice_economico') or 0)
     ajuste = None
+    monto_explicito = normalizar_presupuesto_clp(texto)
     if _MAS_BARATO.search(texto or ''):
         ajuste = 'cheaper'
         indice = min(indice + 1, 4)
-        if presupuesto is None and ctx.get('presupuesto_clp'):
-            presupuesto = int(int(ctx['presupuesto_clp']) * 0.88)
-        elif presupuesto is not None:
+        if presupuesto is not None and monto_explicito is None:
             presupuesto = int(presupuesto * 0.88)
+    elif _MAS_CARO.search(texto or ''):
+        ajuste = 'richer'
+        indice = max(indice - 1, 0)
+        if presupuesto is not None and monto_explicito is None:
+            presupuesto = int(presupuesto * 1.12)
 
     return SolicitudArmadoNL(
         presupuesto_clp=presupuesto,

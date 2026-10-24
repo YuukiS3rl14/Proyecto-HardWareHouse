@@ -128,9 +128,8 @@ class ProposalHomeToArmadoTests(TestCase):
             ]
         }
         out = revalidar_propuesta_armado(propuesta=propuesta)
-        self.assertTrue(out.get('ok'))
-        cpu_row = next(p for p in out['productos'] if p['producto_pk'] == self.cpu.pk)
-        self.assertEqual(cpu_row['stock'], 0)
+        self.assertFalse(out.get('ok'))
+        self.assertIn('stock', (out.get('mensaje') or '').lower())
 
 
 @override_settings(**_SETTINGS)

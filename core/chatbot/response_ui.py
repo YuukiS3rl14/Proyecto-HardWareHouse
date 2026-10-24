@@ -67,11 +67,15 @@ def construir_ui_payload(resultado: dict, response_type: str) -> dict:
         if productos:
             ui['kind'] = 'products'
             ui['products'] = productos
+            ui['warnings'] = list(armado.get('advertencias') or [])
             ui['armado'] = {
                 'total_clp': armado.get('total_clp'),
                 'presupuesto_clp': armado.get('presupuesto_clp'),
                 'estado': armado.get('estado') or armado.get('evaluacion'),
             }
+            if response_type == 'pc_build' and resultado.get('proposal_pending'):
+                ui['apply_build'] = True
+                ui['apply_path'] = reverse('core:armado') + '?aplicar=1'
         return ui
 
     return ui

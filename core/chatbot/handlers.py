@@ -195,10 +195,7 @@ def manejar_intent(
         return out
 
     return {
-        'reply': (
-            f'{config.mensaje_sin_informacion} '
-            f'Tienda: {_path("core:tienda")} · Armado: {_path("core:armado")} · '
-            f'Contacto: {_path("core:contacto")}.'
-        ),
-        'intent': Intent.DESCONOCIDO.value,
+        'intent': 'clarification',
+        'necesita_clarificacion': True,
+        'fallback_reason': 'unrecognized_not_product_search',
     }

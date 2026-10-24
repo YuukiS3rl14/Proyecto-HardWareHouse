@@ -16,10 +16,16 @@ INTENTS_LLM = frozenset(
         'pc_build_analyze',
         'pc_build_replace',
         'store_faq',
+        'company_info',
         'order_status',
         'greeting',
         'clarification',
         'off_topic',
+        'build_upgrade',
+        'build_downgrade',
+        'budget_adjustment',
+        'faq',
+        'orders',
     }
 )
 

@@ -5,7 +5,7 @@ from core.chatbot.assistant_config import AsistenteConfig, get_asistente_config
 from core.chatbot.catalog_nl import extraer_consulta_catalogo
 from core.chatbot.handlers import manejar_intent
 from core.chatbot.intents import Intent, detectar_intent
-from core.chatbot.nlp import parse_presupuesto_clp
+from core.chatbot.nlp import normalizar_presupuesto_clp
 from core.chatbot.armado_builder_chat import comando_armado_por_reglas
 from core.chatbot.armado_chat import ejecutar_armado_chat
 from core.chatbot.nlp_armado import parsear_solicitud_armado
@@ -57,7 +57,15 @@ def ejecutar_motor_reglas(
         or 'luca' in bajo
         or any(
             frase in bajo
-            for frase in ('armar pc', 'armar un pc', 'armado de pc', 'montar pc', 'arma un pc')
+            for frase in (
+                'armar pc',
+                'armar un pc',
+                'armado de pc',
+                'montar pc',
+                'arma un pc',
+                'armame un pc',
+                'ármame un pc',
+            )
         )
         or (solicitud_armado.presupuesto_clp and 'pc' in bajo and solicitud_armado.proposito != 'general')
     )
@@ -72,7 +80,7 @@ def ejecutar_motor_reglas(
         return out
 
     consulta_nl = extraer_consulta_catalogo(texto)
-    presupuesto = parse_presupuesto_clp(texto)
+    presupuesto = normalizar_presupuesto_clp(texto)
     if presupuesto is not None and consulta_nl.categoria:
         if consulta_nl.precio_max is None:
             consulta_nl.precio_max = presupuesto

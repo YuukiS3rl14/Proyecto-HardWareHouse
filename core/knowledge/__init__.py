@@ -1,0 +1,1 @@
+"""Conocimiento institucional de HardWareHouse."""

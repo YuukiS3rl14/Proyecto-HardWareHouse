@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from django.urls import reverse
 
+from core.chatbot.fallbacks import clasificar_motivo_armado, etiquetar
+
 from core.armado_recomendacion import ResultadoArmadoAutomatico, construir_armado_automatico
 from core.armado_servicio import crear_propuesta_pendiente_armado
 from core.chatbot.nlp_armado import SolicitudArmadoNL, parsear_solicitud_armado
@@ -90,15 +92,22 @@ def ejecutar_armado_chat(
             f'Puedes afinar piezas manualmente en {reverse("core:armado")} o escribirnos por '
             f'{reverse("core:contacto")}.'
         )
-        return {
+        fallo = {
             'intent': 'pc_build',
             'response_type': 'pc_build_failed',
             'reply': '\n'.join(lineas),
             'armado': {'ok': False, 'motivo': resultado.motivo_fallo},
             'armado_context': resultado.armado_context() if resultado.componentes else None,
         }
+        codigo = clasificar_motivo_armado(resultado.motivo_fallo or '')
+        if codigo:
+            etiquetar(fallo, codigo)
+        return fallo
 
     productos = _cargar_productos_armado(resultado)
+    cantidades = {(c['tipo'], c['id']): int(c.get('cantidad') or 1) for c in resultado.componentes}
+    for producto in productos:
+        producto['cantidad'] = cantidades.get((producto.get('modelo'), producto.get('producto_pk')), 1)
     lineas = [
         f'Armado sugerido ({solicitud.proposito}) — total {_formato_clp(resultado.total_clp)} CLP '
         f'(presupuesto {_formato_clp(resultado.presupuesto_clp)} CLP). Datos del catálogo con stock verificado:',
@@ -120,6 +129,17 @@ def ejecutar_armado_chat(
     ctx = resultado.armado_context()
     ctx['preferencia_cpu'] = solicitud.preferencia_cpu
     ctx['indice_economico'] = solicitud.indice_economico
+    ctx['presupuesto_original_clp'] = resultado.presupuesto_clp
+    ctx['snapshot'] = [
+        {
+            'tipo': p.get('modelo'),
+            'id': p.get('producto_pk'),
+            'cantidad': p.get('cantidad') or 1,
+            'precio_clp': p.get('precio_clp'),
+            'nombre': p.get('nombre_completo'),
+        }
+        for p in productos
+    ]
 
     propuesta = crear_propuesta_pendiente_armado(
         ctx['componentes'] if 'componentes' in ctx else resultado.componentes,
@@ -137,7 +157,27 @@ def ejecutar_armado_chat(
             'presupuesto_clp': resultado.presupuesto_clp,
             'proposito': solicitud.proposito,
             'evaluacion': resultado.evaluacion_estado,
+            'advertencias': list(resultado.advertencias),
             'productos': productos,
+        },
+        'build_proposal': {
+            'presupuesto_clp': resultado.presupuesto_clp,
+            'proposito': solicitud.proposito,
+            'total_clp': resultado.total_clp,
+            'evaluacion': resultado.evaluacion_estado,
+            'advertencias': list(resultado.advertencias),
+            'componentes': [
+                {
+                    'tipo': p.get('modelo'),
+                    'id': p.get('producto_pk'),
+                    'cantidad': p.get('cantidad') or 1,
+                    'nombre': p.get('nombre_completo'),
+                    'precio_clp': p.get('precio_clp'),
+                    'stock': p.get('stock'),
+                    'url_detalle': p.get('url_detalle'),
+                }
+                for p in productos
+            ],
         },
         'armado_context': ctx,
     }

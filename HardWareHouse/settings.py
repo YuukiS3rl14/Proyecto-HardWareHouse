@@ -468,5 +468,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False, 
         },
+        # Temporal: ruta Ollama vs reglas. No registra el texto del usuario.
+        'hardwarehouse.chat': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }

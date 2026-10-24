@@ -124,6 +124,11 @@ def validar_build_context(payload: dict) -> dict | None:
     from core.armado_servicio import sanitizar_lista_componentes
 
     limpio: dict = {}
+    if 'presupuesto_original_clp' in raw:
+        try:
+            limpio['presupuesto_original_clp'] = max(0, min(int(raw['presupuesto_original_clp']), 50_000_000))
+        except (TypeError, ValueError):
+            pass
     if 'presupuesto_clp' in raw:
         try:
             limpio['presupuesto_clp'] = max(0, min(int(raw['presupuesto_clp']), 50_000_000))
@@ -143,6 +148,25 @@ def validar_build_context(payload: dict) -> dict | None:
         limpio['indice_economico'] = 0
     if isinstance(raw.get('componentes'), list):
         limpio['componentes'] = sanitizar_lista_componentes(raw['componentes'])
+    if isinstance(raw.get('snapshot'), list):
+        fotos = []
+        for item in raw['snapshot'][:12]:
+            if not isinstance(item, dict):
+                continue
+            try:
+                fotos.append(
+                    {
+                        'tipo': str(item.get('tipo') or '')[:40],
+                        'id': int(item.get('id')),
+                        'cantidad': max(1, min(int(item.get('cantidad') or 1), 99)),
+                        'precio_clp': max(0, int(item.get('precio_clp') or 0)),
+                        'nombre': str(item.get('nombre') or '')[:120],
+                    }
+                )
+            except (TypeError, ValueError):
+                continue
+        if fotos:
+            limpio['snapshot'] = fotos
     pending = raw.get('pending_action')
     if isinstance(pending, dict) and isinstance(pending.get('id'), str):
         accion = {
@@ -155,6 +179,13 @@ def validar_build_context(payload: dict) -> dict | None:
             accion['componentes'] = sanitizar_lista_componentes(pending['componentes'])
         if accion.get('componentes'):
             limpio['pending_action'] = accion
+    intent_previo = raw.get('ultimo_intent')
+    if isinstance(intent_previo, str):
+        from core.chatbot.conversation_state import INTENTS_PUBLICOS
+
+        intent_limpio = intent_previo.strip().lower()[:40]
+        if intent_limpio in INTENTS_PUBLICOS:
+            limpio['ultimo_intent'] = intent_limpio
     if 'total_clp' in raw:
         try:
             limpio['total_clp'] = int(raw['total_clp'])

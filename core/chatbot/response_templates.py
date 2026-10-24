@@ -39,15 +39,11 @@ def plantilla_fuera_de_tema(config: AsistenteConfig | None = None) -> str:
 def plantilla_aclaracion(
     interpretacion: str | None = None,
     config: AsistenteConfig | None = None,
+    sugerencia: str | None = None,
 ) -> str:
     config = config or get_asistente_config()
-    base = (
-        'No me quedó del todo claro tu mensaje. ¿Podrías precisar si buscas un producto del catálogo, '
-        'tienes una duda sobre compras o retiro en tienda, o quieres revisar un pedido?'
-    )
-    if interpretacion:
-        return f'{base}\n\nPor lo que entiendo, podrías estar preguntando por: {interpretacion}'
-    return base
+    pista = interpretacion or sugerencia or 'un producto del catálogo, un armado de PC o una duda de la tienda'
+    return f'No entendí bien, ¿quisiste decir {pista}?'
 
 
 def plantilla_saludo(config: AsistenteConfig | None = None) -> str:
@@ -70,6 +66,7 @@ def renderizar(
     faq_texto: str | None = None,
     producto_lineas: list[str] | None = None,
     interpretacion: str | None = None,
+    sugerencia: str | None = None,
     pedidos_texto: str | None = None,
     presupuesto_texto: str | None = None,
     generico: str | None = None,
@@ -81,7 +78,7 @@ def renderizar(
     if tipo == OFF_TOPIC:
         return plantilla_fuera_de_tema(config)
     if tipo == CLARIFICATION:
-        return plantilla_aclaracion(interpretacion, config)
+        return plantilla_aclaracion(interpretacion, config, sugerencia=sugerencia)
     if tipo == GREETING:
         return plantilla_saludo(config)
     if tipo == FAQ and faq_texto:

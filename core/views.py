@@ -174,11 +174,15 @@ def mostrarContacto(request):
 
 def mostrarSobreNosotros(request):
     from core.faq_tienda import faq_items_acordeon
+    from core.knowledge.service import perfil_publico
 
     return render(
         request,
         'core/about_us.html',
-        {'faq_items': faq_items_acordeon()},
+        {
+            'faq_items': faq_items_acordeon(),
+            'empresa': perfil_publico(),
+        },
     )
 
 PRODUCT_MODEL_MAP = {

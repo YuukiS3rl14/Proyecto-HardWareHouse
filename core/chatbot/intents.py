@@ -8,6 +8,7 @@ from enum import Enum
 from django.conf import settings
 
 from core.chatbot.catalog_nl import extraer_consulta_catalogo
+from core.chatbot.nlp import termino_busqueda_especifico
 from core.chatbot.texto import normalizar_texto
 
 
@@ -99,8 +100,9 @@ def _reglas_por_defecto() -> tuple[ReglaIntent, ...]:
         ReglaIntent(
             Intent.EMPRESA,
             (
-                r'\b(mision|misión|vision|visión|quienes son|quiénes son|sobre nosotros|'
-                r'sobre la tienda|acerca de la tienda|que es hardwarehouse)\b',
+                r'\b(mision|misión|vision|visión|valores|historia|servicios|quienes son|quiénes son|'
+                r'quienes somos|sobre nosotros|sobre la tienda|acerca de la tienda|'
+                r'que es hardwarehouse|años|antiguedad|antigüedad)\b',
             ),
             34,
         ),
@@ -140,9 +142,26 @@ def _cargar_reglas_extra() -> tuple[ReglaIntent, ...]:
     return tuple(reglas)
 
 
+_VERBO_BUSQUEDA = re.compile(
+    r'\b(busco|buscar|b[uú]squeda|precio de|cuesta|cuanto cuesta|cuánto cuesta|'
+    r'tienen|hay stock|stock de|mu[eé]strame|me muestras)\b',
+    re.I,
+)
+_MODELO_PRODUCTO = re.compile(
+    r'\b(?=[a-z0-9-]*\d)(?=[a-z0-9-]*[a-z])[a-z0-9][a-z0-9-]{2,}\b',
+    re.I,
+)
+
+
 def _consulta_catalogo_prevalece(texto: str) -> bool:
     consulta = extraer_consulta_catalogo(texto)
     return consulta.requiere_orm_estructurado()
+
+
+def _busqueda_producto_explicita(texto: str) -> bool:
+    if _VERBO_BUSQUEDA.search(texto or '') and termino_busqueda_especifico(texto):
+        return True
+    return bool(_MODELO_PRODUCTO.search(texto or ''))
 
 
 def detectar_intent(texto: str, presupuesto_clp: int | None = None) -> Intent:
@@ -168,6 +187,6 @@ def detectar_intent(texto: str, presupuesto_clp: int | None = None) -> Intent:
             continue
         return regla.intent
 
-    if _consulta_catalogo_prevalece(limpio) or len(limpio) >= 2:
+    if _consulta_catalogo_prevalece(limpio) or _busqueda_producto_explicita(limpio):
         return Intent.BUSCAR_PRODUCTO
     return Intent.DESCONOCIDO

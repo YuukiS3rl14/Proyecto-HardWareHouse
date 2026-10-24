@@ -962,7 +962,23 @@ function iniciarArmado() {
         return true;
     }
 
-    function mostrarBannerPropuestaPendiente(propuesta) {
+    function builderTienePiezas() {
+        return seleccionActual().length > 0;
+    }
+
+    function limpiarPropuestaAplicada() {
+        if (window.HWChatSession) {
+            window.HWChatSession.setProposalPending(null, rootUserKey());
+        }
+        if (window.history && window.history.replaceState) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('aplicar');
+            window.history.replaceState({}, '', url.pathname + url.search);
+        }
+    }
+
+    function mostrarBannerPropuestaPendiente(propuesta, opciones) {
+        opciones = opciones || {};
         if (!propuesta || !Array.isArray(propuesta.componentes)) {
             return;
         }
@@ -972,19 +988,20 @@ function iniciarArmado() {
         }
         contenedor.innerHTML = `
             <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                <span>Tienes una propuesta de armado desde el asistente. ¿Quieres cargarla aquí?</span>
+                <span>${opciones.reemplazar ? 'Ya tienes piezas en el armador. ¿Reemplazo el armado con la propuesta del chat?' : 'Tienes una propuesta de armado desde el asistente. ¿Quieres cargarla aquí?'}</span>
                 <div>
-                    <button type="button" class="btn btn-sm btn-primary" id="armado-apply-pending-btn">Cargar propuesta</button>
+                    <button type="button" class="btn btn-sm btn-primary" id="armado-apply-pending-btn">${opciones.reemplazar ? 'Reemplazar armado' : 'Cargar propuesta'}</button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="armado-dismiss-pending-btn">Descartar</button>
                 </div>
             </div>`;
         contenedor.querySelector('#armado-apply-pending-btn').addEventListener('click', async function () {
             const validada = await revalidarPropuesta(propuesta);
-            const componentes = validada && validada.componentes ? validada.componentes : propuesta.componentes;
-            if (aplicarSeleccionDesdeApi(componentes)) {
-                if (window.HWChatSession) {
-                    window.HWChatSession.setProposalPending(null, rootUserKey());
-                }
+            if (!validada || !validada.componentes) {
+                showToast('La propuesta expiró o ya no tiene stock y compatibilidad válidos.', 'error');
+                return;
+            }
+            if (aplicarSeleccionDesdeApi(validada.componentes)) {
+                limpiarPropuestaAplicada();
                 contenedor.innerHTML = '';
                 showToast('Propuesta cargada en el armador.');
             } else {
@@ -1039,15 +1056,27 @@ function iniciarArmado() {
     downloadExcelBtn.addEventListener('click', downloadAsExcel);
     initializeBuilder();
     const pendiente = leerPropuestaPendienteLocal();
+    const aplicarAlEntrar = new URLSearchParams(window.location.search).get('aplicar') === '1';
     if (pendiente) {
         revalidarPropuesta(pendiente).then(function (validada) {
-            if (validada && validada.proposal_pending) {
-                mostrarBannerPropuestaPendiente(validada.proposal_pending);
-            } else if (validada && validada.componentes) {
-                mostrarBannerPropuestaPendiente({ componentes: validada.componentes });
-            } else {
-                mostrarBannerPropuestaPendiente(pendiente);
+            if (!validada || !validada.componentes) {
+                showToast('La propuesta expiró o ya no es válida con el catálogo actual.', 'error');
+                if (window.HWChatSession) {
+                    window.HWChatSession.setProposalPending(null, rootUserKey());
+                }
+                return;
             }
+            const propuesta = validada.proposal_pending || { componentes: validada.componentes };
+            if (aplicarAlEntrar && !builderTienePiezas()) {
+                if (aplicarSeleccionDesdeApi(validada.componentes)) {
+                    limpiarPropuestaAplicada();
+                    showToast('Armado aplicado. Puedes agregarlo al carrito o exportar el Excel.');
+                }
+                return;
+            }
+            mostrarBannerPropuestaPendiente(propuesta, {
+                reemplazar: aplicarAlEntrar && builderTienePiezas(),
+            });
         });
     }
 }

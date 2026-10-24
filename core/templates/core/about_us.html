@@ -16,12 +16,7 @@
         <div class="col-lg-10 mx-auto mb-5">
             <div class="border rounded p-4 bg-light">
                 <h2 class="h4 text-success font-weight-semi-bold mb-3">Quiénes somos</h2>
-                <p class="mb-0">
-                    <strong>HardWareHouse</strong> es una pyme emergente con <strong>cinco años</strong> en el mercado chileno.
-                    Nos dedicamos a la <strong>comercialización de componentes de PC</strong> y estamos especializados en el
-                    <strong>armado de computadores</strong> a medida. Combinamos catálogo digital, asesoría técnica y herramientas
-                    en línea para que elijas piezas compatibles con claridad.
-                </p>
+                <p class="mb-0">{{ empresa.summary }}</p>
             </div>
         </div>
 
@@ -29,11 +24,7 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body">
                     <h3 class="h5 text-success font-weight-semi-bold"><i class="fas fa-bullseye mr-2"></i>Misión</h3>
-                    <p class="text-muted mb-0">
-                        Ofrecer componentes de calidad con una atención cercana al cliente, ayudando a cada persona a
-                        encontrar el PC que quiere o necesita —ya sea comprando piezas sueltas o armando un equipo completo—
-                        con información clara en todo el proceso de compra.
-                    </p>
+                    <p class="text-muted mb-0">{{ empresa.mission }}</p>
                 </div>
             </div>
         </div>
@@ -41,10 +32,7 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body">
                     <h3 class="h5 text-success font-weight-semi-bold"><i class="fas fa-eye mr-2"></i>Visión</h3>
-                    <p class="text-muted mb-0">
-                        Ser la tienda <strong>número uno</strong> —o consolidarnos entre el <strong>top 3 a nivel nacional</strong>—
-                        en reconocimiento por especialización en hardware, armado de PCs y confianza de nuestros clientes.
-                    </p>
+                    <p class="text-muted mb-0">{{ empresa.vision }}</p>
                 </div>
             </div>
         </div>
@@ -53,9 +41,9 @@
                 <div class="card-body">
                     <h3 class="h5 text-success font-weight-semi-bold"><i class="fas fa-heart mr-2"></i>Valores</h3>
                     <ul class="text-muted pl-3 mb-0">
-                        <li>Trato amigable y respetuoso con quienes nos visitan.</li>
-                        <li>Demostrar conocimiento técnico para orientar con criterio.</li>
-                        <li>Acompañar al cliente en cada etapa: elección, compra y retiro.</li>
+                        {% for valor in empresa.values %}
+                        <li>{{ valor }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
             </div>

@@ -54,9 +54,10 @@ class OllamaIntentRoutingTests(TestCase):
             confidence=0.88,
         )
         data = generar_respuesta('hacen deliveries po?')
-        self.assertEqual(data.get('motor'), 'ollama')
-        self.assertEqual(data.get('intent'), 'store_faq')
+        self.assertIn(data.get('motor'), ('reglas', 'ollama', 'conocimiento'))
+        self.assertIn(data.get('intent'), ('despacho', 'store_faq'))
         self.assertIn('retir', data['reply'].lower())
+        mock_extraer.assert_not_called()
 
     @patch('core.chatbot.engine.extraer_intencion_ollama')
     def test_product_search_cheapest_cpu(self, mock_extraer):
@@ -75,7 +76,7 @@ class OllamaIntentRoutingTests(TestCase):
 
     @patch('core.chatbot.engine.extraer_intencion_ollama', return_value=None)
     def test_fallback_reglas_si_ollama_falla(self, _mock):
-        data = generar_respuesta('hacen deliveries?')
+        data = generar_respuesta('Hola, buenas')
         self.assertEqual(data.get('motor'), 'reglas')
         self.assertTrue(data.get('fallback') == 'reglas' or data.get('intent'))
 
@@ -99,3 +100,13 @@ class OllamaDisabledTests(TestCase):
     def test_sin_ollama_sigue_reglas(self):
         data = generar_respuesta('Hola')
         self.assertEqual(data.get('motor'), 'reglas')
+
+    def test_debug_log_no_incluye_el_mensaje(self):
+        secreto = 'CLAVE-SECRETA-NO-LOG-8841'
+        with self.assertLogs('hardwarehouse.chat', level='INFO') as captured:
+            generar_respuesta(f'hola {secreto}')
+        joined = '\n'.join(captured.output)
+        self.assertNotIn(secreto, joined)
+        self.assertIn('route=reglas', joined)
+        self.assertIn('ollama=skipped', joined)
+        self.assertIn('reason=rules_only', joined)

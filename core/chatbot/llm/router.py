@@ -4,12 +4,12 @@ from __future__ import annotations
 from core.chatbot.assistant_config import AsistenteConfig, get_asistente_config
 from core.chatbot.catalog_nl import ConsultaCatalogoNL
 from core.chatbot.handlers import manejar_buscar_producto, manejar_faq, manejar_presupuesto
-from core.chatbot.intents import Intent
+from core.chatbot.intents import Intent, _busqueda_producto_explicita
 from core.chatbot.llm.intent_schema import IntentoLLM
 from core.armado_servicio import detectar_categoria_armado
 from core.chatbot.armado_builder_chat import ejecutar_intent_armado_builder
 from core.chatbot.armado_builder_chat import intentar_confirmar_accion
-from core.chatbot.nlp import termino_busqueda_especifico
+from core.chatbot.nlp import normalizar_presupuesto_clp, termino_busqueda_especifico
 from core.chatbot.private_data import respuesta_mis_pedidos
 
 _FAQ_TOPIC_A_INTENT: dict[str, Intent] = {
@@ -28,21 +28,24 @@ _FAQ_TOPIC_A_INTENT: dict[str, Intent] = {
 
 def _respuesta_clarificacion(extraido: IntentoLLM) -> dict:
     return {
-        'reply': (
-            'Para ayudarte mejor, ¿puedes indicar si buscas un producto del catálogo, '
-            'una duda sobre compras/retiro en tienda, o el estado de un pedido?'
-        ),
         'intent': 'clarification',
         'necesita_clarificacion': True,
+        'fallback_reason': 'needs_clarification',
         'motor': 'ollama',
         'confidence': extraido.confidence,
     }
 
 
+def _presupuesto_efectivo(extraido: IntentoLLM, texto: str) -> int | None:
+    return normalizar_presupuesto_clp(texto) or extraido.budget_clp
+
+
 def _busqueda_catalogo_ejecutable(consulta: ConsultaCatalogoNL, texto: str) -> bool:
     if consulta.requiere_orm_estructurado():
         return True
-    return termino_busqueda_especifico(texto)
+    if not termino_busqueda_especifico(texto):
+        return False
+    return _busqueda_producto_explicita(texto)
 
 
 def _consulta_desde_llm(extraido: IntentoLLM, texto_usuario: str) -> ConsultaCatalogoNL:
@@ -109,9 +112,9 @@ def ejecutar_ruta_llm(
     if extraido.intent == 'clarification':
         return _respuesta_clarificacion(extraido)
 
-    if extraido.intent == 'order_status':
+    if extraido.intent in ('order_status', 'orders'):
         out = respuesta_mis_pedidos(usuario)
-        out['intent'] = 'order_status'
+        out['intent'] = 'orders' if extraido.intent == 'orders' else 'order_status'
         out['motor'] = 'ollama'
         out['confidence'] = extraido.confidence
         return out
@@ -121,24 +124,54 @@ def ejecutar_ruta_llm(
         'pc_build_modify',
         'pc_build_analyze',
         'pc_build_replace',
+        'build_upgrade',
+        'build_downgrade',
+        'budget_adjustment',
     ):
         categoria = extraido.filters.get('build_category') or detectar_categoria_armado(texto)
+        preferencia = None
+        intent_ruta = extraido.intent
+        if extraido.intent == 'build_upgrade':
+            intent_ruta = 'pc_build_replace'
+            preferencia = 'better'
+        elif extraido.intent == 'build_downgrade':
+            intent_ruta = 'pc_build_replace'
+            preferencia = 'cheaper'
+        elif extraido.intent == 'budget_adjustment':
+            intent_ruta = 'pc_build_modify'
         out = ejecutar_intent_armado_builder(
-            extraido.intent,
+            intent_ruta,
             texto,
             build_context,
             builder_componentes,
             categoria_llm=categoria,
-            presupuesto_llm=extraido.budget_clp,
+            presupuesto_llm=_presupuesto_efectivo(extraido, texto),
             proposito_llm=extraido.filters.get('purpose'),
+            preferencia=preferencia,
         )
         out['intent'] = extraido.intent
         out['motor'] = 'ollama'
         out['confidence'] = extraido.confidence
         return out
 
-    if extraido.intent == 'store_faq':
+    if extraido.intent in ('store_faq', 'company_info', 'faq'):
+        from core.knowledge.service import responder_conocimiento
+
+        tema = extraido.faq_topic or extraido.filters.get('faq_topic')
+        conocido = responder_conocimiento(texto, tema=tema if isinstance(tema, str) else None)
+        if conocido is None and not tema:
+            conocido = responder_conocimiento(texto)
+        if conocido:
+            conocido['motor'] = 'ollama'
+            conocido['confidence'] = extraido.confidence
+            return conocido
+        if extraido.intent == 'company_info':
+            return _respuesta_clarificacion(extraido)
+
+    if extraido.intent in ('store_faq', 'faq'):
         topic = extraido.faq_topic or extraido.filters.get('faq_topic')
+        if topic is None and extraido.intent == 'faq':
+            return _respuesta_clarificacion(extraido)
         intent_faq = _FAQ_TOPIC_A_INTENT.get(topic or '', Intent.DESPACHO)
         if topic is None:
             bajo = texto.lower()
@@ -156,19 +189,19 @@ def ejecutar_ruta_llm(
             return faq
         return _respuesta_clarificacion(extraido)
 
-    if extraido.intent == 'product_recommendation' and extraido.budget_clp:
+    if extraido.intent == 'product_recommendation' and _presupuesto_efectivo(extraido, texto):
         if extraido.category or extraido.filters.get('purpose') in ('gaming', 'office', 'editing'):
             out = ejecutar_intent_armado_builder(
                 'pc_build',
                 texto,
                 build_context,
                 builder_componentes,
-                presupuesto_llm=extraido.budget_clp,
+                presupuesto_llm=_presupuesto_efectivo(extraido, texto),
                 proposito_llm=extraido.filters.get('purpose'),
             )
             out['intent'] = 'product_recommendation'
         else:
-            out = manejar_presupuesto(extraido.budget_clp)
+            out = manejar_presupuesto(_presupuesto_efectivo(extraido, texto) or extraido.budget_clp)
             out['intent'] = 'product_recommendation'
         out['motor'] = 'ollama'
         out['confidence'] = extraido.confidence
@@ -190,9 +223,9 @@ def ejecutar_ruta_llm(
         return out
 
     return {
-        'reply': config.mensaje_sin_informacion,
         'intent': 'clarification',
         'necesita_clarificacion': True,
+        'fallback_reason': 'unrecognized_not_product_search',
         'motor': 'ollama',
         'confidence': extraido.confidence,
     }

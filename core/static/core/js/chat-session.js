@@ -117,12 +117,15 @@
         var limpio = {};
         var campos = [
             'presupuesto_clp',
+            'presupuesto_original_clp',
+            'snapshot',
             'proposito',
             'preferencia_cpu',
             'indice_economico',
             'total_clp',
             'componentes',
             'pending_action',
+            'ultimo_intent',
         ];
         campos.forEach(function (key) {
             if (ctx[key] !== undefined && ctx[key] !== null) {

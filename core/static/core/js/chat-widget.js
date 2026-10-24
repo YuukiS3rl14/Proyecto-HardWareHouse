@@ -223,7 +223,8 @@
             }
         }
 
-        function renderProductsUi(parent, products) {
+        function renderProductsUi(parent, products, options) {
+            options = options || {};
             if (!products || !products.length) {
                 return;
             }
@@ -302,6 +303,31 @@
                 cards.appendChild(card);
             });
             block.appendChild(cards);
+            if (options.warnings && options.warnings.length) {
+                const note = document.createElement('p');
+                note.className = 'hw-chat-empty';
+                note.textContent = 'Compatibilidad: ' + options.warnings.slice(0, 3).join(' ');
+                block.appendChild(note);
+            }
+            if (options.total) {
+                const total = document.createElement('p');
+                total.className = 'hw-chat-card-meta';
+                total.textContent = 'Total ' + formatoClp(options.total) + ' CLP';
+                block.appendChild(total);
+            }
+            if (options.applyBuild && options.proposal) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'hw-chat-apply-build';
+                button.textContent = 'Ir al Armado y aplicar';
+                button.addEventListener('click', function () {
+                    if (sessionApi) {
+                        sessionApi.setProposalPending(options.proposal, userKey);
+                    }
+                    window.location.href = options.applyPath;
+                });
+                block.appendChild(button);
+            }
             parent.appendChild(block);
         }
 
@@ -421,7 +447,13 @@
             const ui = data.ui;
             if (ui) {
                 if (ui.kind === 'products' && ui.products) {
-                    renderProductsUi(bubble, ui.products);
+                    renderProductsUi(bubble, ui.products, {
+                        applyBuild: !!ui.apply_build,
+                        applyPath: ui.apply_path || '/armado/?aplicar=1',
+                        warnings: ui.warnings || [],
+                        proposal: data.proposal_pending || null,
+                        total: ui.armado && ui.armado.total_clp,
+                    });
                 } else if (ui.kind === 'orders') {
                     renderOrdersUi(bubble, ui);
                 } else if (ui.kind === 'products_empty') {
@@ -564,13 +596,20 @@
             let startW = 0;
             let startH = 0;
 
+            function viewportLimits() {
+                const margin = 16;
+                return {
+                    maxW: Math.max(280, Math.min(window.innerWidth - margin, 720)),
+                    maxH: Math.max(320, window.innerHeight - margin * 2),
+                };
+            }
+
             function onMove(clientX, clientY) {
                 const dx = startX - clientX;
                 const dy = startY - clientY;
-                const maxW = Math.min(window.innerWidth - 24, 720);
-                const maxH = window.innerHeight - 48;
-                const w = Math.max(280, Math.min(maxW, startW + dx));
-                const h = Math.max(320, Math.min(maxH, startH + dy));
+                const limits = viewportLimits();
+                const w = Math.max(280, Math.min(limits.maxW, startW + dx));
+                const h = Math.max(320, Math.min(limits.maxH, startH + dy));
                 panel.style.width = w + 'px';
                 panel.style.height = h + 'px';
                 root.classList.remove('hw-chat-size--compact', 'hw-chat-size--expanded');
@@ -578,29 +617,31 @@
 
             function endDrag() {
                 dragging = false;
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', endDrag);
+                root.classList.remove('is-resizing');
+                document.removeEventListener('pointermove', onPointerMove);
+                document.removeEventListener('pointerup', endDrag);
             }
 
-            function onMouseMove(e) {
+            function onPointerMove(e) {
                 if (!dragging) {
                     return;
                 }
                 onMove(e.clientX, e.clientY);
             }
 
-            resizeHandle.addEventListener('mousedown', function (e) {
-                if (root.classList.contains('hw-chat-size--fullscreen')) {
+            resizeHandle.addEventListener('pointerdown', function (e) {
+                if (e.button !== 0 || root.classList.contains('hw-chat-size--fullscreen')) {
                     return;
                 }
                 e.preventDefault();
                 dragging = true;
+                root.classList.add('is-resizing');
                 startX = e.clientX;
                 startY = e.clientY;
                 startW = panel.getBoundingClientRect().width;
                 startH = panel.getBoundingClientRect().height;
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('pointermove', onPointerMove);
+                document.addEventListener('pointerup', endDrag);
             });
 
             resizeHandle.addEventListener('keydown', function (e) {
@@ -630,6 +671,26 @@
 
         restorePanelSize();
         initResize();
+
+        window.addEventListener('resize', function () {
+            if (!panel.style.width && !panel.style.height) {
+                return;
+            }
+            const maxW = Math.max(280, Math.min(window.innerWidth - 16, 720));
+            const maxH = Math.max(320, window.innerHeight - 32);
+            if (panel.style.width) {
+                const current = panel.getBoundingClientRect().width;
+                if (current > maxW) {
+                    panel.style.width = maxW + 'px';
+                }
+            }
+            if (panel.style.height) {
+                const current = panel.getBoundingClientRect().height;
+                if (current > maxH) {
+                    panel.style.height = maxH + 'px';
+                }
+            }
+        });
 
         sizeButtons.forEach(function (btn) {
             btn.addEventListener('click', function () {

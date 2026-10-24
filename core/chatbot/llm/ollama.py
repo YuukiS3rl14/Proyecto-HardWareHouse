@@ -11,6 +11,7 @@ except ImportError:  # pragma: no cover
     requests = None
 
 logger = logging.getLogger(__name__)
+debug_log = logging.getLogger('hardwarehouse.chat')
 
 
 class OllamaClient:
@@ -30,20 +31,47 @@ class OllamaClient:
             cfg.get('timeout') or getattr(settings, 'OLLAMA_TIMEOUT', 25)
         )
         self.tags_timeout = int(cfg.get('tags_timeout') or 2)
+        self._tags_ok: bool | None = None
 
     def disponible(self) -> bool:
+        if self._tags_ok is not None:
+            return self._tags_ok
         if requests is None:
+            debug_log.info('ollama api=tags ok=false model=%s reason=requests_missing', self.model)
+            self._tags_ok = False
             return False
         if not self.base_url:
+            debug_log.info('ollama api=tags ok=false model=%s reason=base_url_empty', self.model)
+            self._tags_ok = False
             return False
         try:
             r = requests.get(f'{self.base_url}/api/tags', timeout=self.tags_timeout)
-            return r.status_code == 200
-        except requests.RequestException:
+            ok = r.status_code == 200
+            debug_log.info(
+                'ollama api=tags ok=%s model=%s status=%s',
+                str(ok).lower(),
+                self.model,
+                r.status_code,
+            )
+            self._tags_ok = ok
+            return ok
+        except requests.RequestException as exc:
+            debug_log.info(
+                'ollama api=tags ok=false model=%s reason=%s',
+                self.model,
+                type(exc).__name__,
+            )
+            self._tags_ok = False
             return False
 
     def _chat(self, messages: list[dict], *, json_mode: bool) -> str | None:
+        modo = 'chat_json' if json_mode else 'chat_text'
         if requests is None or not self.disponible():
+            debug_log.info(
+                'ollama api=%s ok=false model=%s reason=unavailable',
+                modo,
+                self.model,
+            )
             return None
         payload = {
             'model': self.model,
@@ -63,12 +91,34 @@ class OllamaClient:
             data = r.json()
             msg = data.get('message') or {}
             content = (msg.get('content') or '').strip()
+            debug_log.info(
+                'ollama api=%s ok=%s model=%s status=%s chars=%s',
+                modo,
+                'true' if content else 'false',
+                self.model,
+                r.status_code,
+                len(content),
+            )
             return content or None
         except requests.Timeout:
+            debug_log.info(
+                'ollama api=%s ok=false model=%s reason=timeout timeout_s=%s',
+                modo,
+                self.model,
+                self.timeout,
+            )
             logger.warning('Timeout al llamar a Ollama (%ss)', self.timeout)
             return None
         except requests.RequestException as exc:
-            logger.warning('Error Ollama: %s', exc)
+            status = getattr(getattr(exc, 'response', None), 'status_code', None)
+            debug_log.info(
+                'ollama api=%s ok=false model=%s reason=%s status=%s',
+                modo,
+                self.model,
+                type(exc).__name__,
+                status,
+            )
+            logger.warning('Error Ollama: %s', type(exc).__name__)
             return None
 
     def chat_json(self, messages: list[dict]) -> str | None:

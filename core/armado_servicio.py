@@ -7,7 +7,11 @@ from __future__ import annotations
 
 import json
 import secrets
+from datetime import timedelta
 from typing import Any
+
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from django.urls import reverse
 
@@ -45,6 +49,7 @@ _CATEGORIA_UI_POR_TEXTO: dict[str, str] = {
     'case': 'gabinete',
     'cooler': 'refrigeracion_cooler',
     'refrigeracion': 'refrigeracion_cooler',
+    'graphics': 'tarjeta_grafica',
     'ssd': 'almacenamiento',
     'hdd': 'almacenamiento',
     'disco': 'almacenamiento',
@@ -250,7 +255,25 @@ def proponer_reemplazo(
             'mensaje': 'No encontré reemplazos compatibles con el resto del armado.',
         }
 
-    if preferencia == 'cheaper' and actual_id is not None:
+    if preferencia == 'better' and actual_id is not None:
+        precio_actual = next(
+            (c.get('precio') or 0 for c in pool if c.get('id') == actual_id),
+            None,
+        )
+        compatibles.sort(key=lambda c: (c.get('precio') or 0, c.get('nombre') or ''))
+        elegido = None
+        for cand in compatibles:
+            if cand.get('id') == actual_id:
+                continue
+            if precio_actual is None or (cand.get('precio') or 0) > precio_actual:
+                elegido = cand
+                break
+        if elegido is None:
+            return {
+                'ok': False,
+                'mensaje': 'No hay una pieza compatible más capaz que la actual en esa categoría.',
+            }
+    elif preferencia == 'cheaper' and actual_id is not None:
         compatibles.sort(key=lambda c: (c.get('precio') or 0, c.get('nombre') or ''))
         elegido = None
         for cand in compatibles:
@@ -309,15 +332,35 @@ def fusionar_componentes_activos(
     return []
 
 
+_PROPUESTA_TTL = timedelta(minutes=10)
+
+
 def crear_propuesta_pendiente_armado(componentes: list[dict], meta: dict | None = None) -> dict:
     """Propuesta para aplicar al abrir /armado/ (sesión del cliente)."""
     items = sanitizar_lista_componentes(componentes)
+    ahora = timezone.now()
     return {
         'version': 1,
         'componentes': items,
         'meta': meta or {},
         'guardado_en': 'chat',
+        'created_at': ahora.isoformat(),
+        'expires_at': (ahora + _PROPUESTA_TTL).isoformat(),
     }
+
+
+def propuesta_expirada(propuesta: dict | None) -> bool:
+    if not isinstance(propuesta, dict):
+        return False
+    raw = propuesta.get('expires_at')
+    if not raw or not isinstance(raw, str):
+        return False
+    momento = parse_datetime(raw)
+    if momento is None:
+        return False
+    if timezone.is_naive(momento):
+        momento = timezone.make_aware(momento, timezone.get_current_timezone())
+    return timezone.now() > momento
 
 
 def productos_catalogo_desde_componentes(componentes: list[dict]) -> list[dict]:
@@ -340,6 +383,13 @@ def revalidar_propuesta_armado(
     propuesta: dict | None = None,
 ) -> dict:
     """Relee ORM, compatibilidad y stock antes de aplicar una propuesta guardada."""
+    if propuesta_expirada(propuesta if isinstance(propuesta, dict) else None):
+        return {
+            'ok': False,
+            'expired': True,
+            'mensaje': 'La propuesta expiró. Pide un armado nuevo en el chat.',
+        }
+
     items: list[dict] = []
     if isinstance(propuesta, dict) and isinstance(propuesta.get('componentes'), list):
         items = sanitizar_lista_componentes(propuesta['componentes'])
@@ -355,6 +405,12 @@ def revalidar_propuesta_armado(
             'mensaje': analisis.get('mensaje') or 'El armado ya no es válido con el catálogo actual.',
             'analisis': analisis,
         }
+    if analisis.get('estado') in ('incompatible', 'datos_insuficientes'):
+        return {
+            'ok': False,
+            'mensaje': 'La propuesta no pasa las reglas de compatibilidad del armador.',
+            'analisis': analisis,
+        }
 
     productos = productos_catalogo_desde_componentes(items)
     if not productos:
@@ -362,9 +418,25 @@ def revalidar_propuesta_armado(
             'ok': False,
             'mensaje': 'Las piezas de la propuesta ya no están disponibles en el catálogo.',
         }
+    pedidos = {(item['tipo'], item['id']): int(item.get('cantidad') or 1) for item in items}
+    sin_stock = []
+    for producto in productos:
+        necesario = pedidos.get((producto.get('modelo'), producto.get('producto_pk')), 1)
+        producto['cantidad'] = necesario
+        if int(producto.get('stock') or 0) < necesario:
+            sin_stock.append(producto.get('nombre_completo') or producto.get('nombre'))
+    if sin_stock:
+        return {
+            'ok': False,
+            'mensaje': 'Sin stock suficiente: ' + ', '.join(sin_stock),
+            'productos': productos,
+        }
 
     meta = propuesta.get('meta') if isinstance(propuesta, dict) else None
     propuesta_limpia = crear_propuesta_pendiente_armado(items, meta=meta if isinstance(meta, dict) else None)
+    if isinstance(propuesta, dict) and propuesta.get('expires_at'):
+        propuesta_limpia['created_at'] = propuesta.get('created_at')
+        propuesta_limpia['expires_at'] = propuesta.get('expires_at')
     from core.chatbot.session_client import build_context_persistible
 
     ctx = build_context_persistible(
