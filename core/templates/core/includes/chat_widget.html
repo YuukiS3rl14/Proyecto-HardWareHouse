@@ -1,0 +1,88 @@
+{% load static %}
+<div
+    id="hw-chat-root"
+    class="hw-chat-root hw-chat-size--compact"
+    aria-hidden="true"
+    data-chat-url="{% url 'core:chat_api' %}"
+    data-revalidar-url="{% url 'core:armado_revalidar_api' %}"
+    data-restore-url="{% url 'core:chat_sesion_restaurar_api' %}"
+    data-user-key="{% if user.is_authenticated %}u{{ user.id }}{% else %}anon{% endif %}"
+    data-welcome="{{ asistente_config.mensaje_bienvenida|escape }}"
+>
+    <div
+        class="hw-chat-panel"
+        role="dialog"
+        aria-labelledby="hw-chat-title"
+        aria-modal="false"
+    >
+        <header class="hw-chat-header">
+            <div class="hw-chat-header-text">
+                <p class="hw-chat-header-title" id="hw-chat-title">{{ asistente_config.nombre_corto }}</p>
+                <p class="hw-chat-header-sub">{{ asistente_config.subtitulo_widget }}</p>
+            </div>
+            <div class="hw-chat-header-actions" role="toolbar" aria-label="Controles del chat">
+                <button
+                    type="button"
+                    class="hw-chat-icon-btn hw-chat-size-toggle"
+                    data-size="compact"
+                    aria-label="Vista compacta"
+                    title="Vista compacta"
+                >
+                    <i class="fas fa-compress-alt" aria-hidden="true"></i>
+                </button>
+                <button
+                    type="button"
+                    class="hw-chat-icon-btn hw-chat-size-toggle"
+                    data-size="expanded"
+                    aria-label="Vista ampliada"
+                    title="Vista ampliada"
+                >
+                    <i class="fas fa-expand-alt" aria-hidden="true"></i>
+                </button>
+                <button
+                    type="button"
+                    class="hw-chat-icon-btn hw-chat-size-toggle hw-chat-fullscreen-btn"
+                    data-size="fullscreen"
+                    aria-label="Pantalla completa"
+                    title="Pantalla completa"
+                >
+                    <i class="fas fa-external-link-square-alt" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="hw-chat-icon-btn hw-chat-close" aria-label="Cerrar chat">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+        </header>
+        <div class="hw-chat-messages" aria-live="polite" aria-relevant="additions"></div>
+        <div class="hw-chat-loading" aria-hidden="true" role="status">
+            <span class="hw-chat-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span>Escribiendo…</span>
+        </div>
+        <form class="hw-chat-form" autocomplete="off">
+            {% csrf_token %}
+            <label class="visually-hidden" for="hw-chat-input">Tu mensaje</label>
+            <div class="hw-chat-input-wrap">
+                <textarea
+                    id="hw-chat-input"
+                    class="hw-chat-input"
+                    rows="1"
+                    placeholder="{{ asistente_config.placeholder_input }}"
+                    maxlength="2000"
+                ></textarea>
+            </div>
+            <button type="submit" class="hw-chat-send" aria-label="Enviar mensaje">
+                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+            </button>
+        </form>
+        <div
+            class="hw-chat-resize-handle"
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Redimensionar ventana del chat"
+            tabindex="0"
+        ></div>
+    </div>
+    <button type="button" class="hw-chat-launcher" aria-label="Abrir asistente HardWareHouse" aria-expanded="false">
+        <i class="fas fa-comment-dots" aria-hidden="true"></i>
+    </button>
+</div>

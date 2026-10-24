@@ -8,7 +8,7 @@ from core.productos_csv import generar_csv_bytes
 
 class Command(BaseCommand):
     help = (
-        'Genera un CSV solo con componentes del catálogo (para Voiceflow u otros bots). '
+        'Genera un CSV solo con componentes del catálogo (para asistentes o integraciones). '
         'Por defecto escribe data/productos_componentes.csv'
     )
 

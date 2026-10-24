@@ -88,3 +88,46 @@ INFO 2026-10-14 16:48:53,300 payments 21496 8284 IPN recibida. Transacción: TXN-
 INFO 2026-10-14 16:48:53,319 payments 21496 8284 Pedido #12 pagado con la transacción TXN-PEND.
 INFO 2026-10-14 16:48:53,360 payments 21496 8284 IPN recibida. Transacción: TXN-CANCEL. Estado: Completed. Invoice: 13.
 WARNING 2026-10-14 16:48:53,363 payments 21496 8284 El pedido #13 ya no está pendiente (CANCELADO, transacción None). No se vuelve a descontar stock.
+INFO 2026-10-23 21:37:54,568 payments 17068 6984 IPN recibida. Transacción: TXN-UNICA. Estado: Completed. Invoice: 3.
+INFO 2026-10-23 21:37:54,578 payments 17068 6984 Pedido #3 pagado con la transacción TXN-UNICA.
+INFO 2026-10-23 21:37:54,637 payments 17068 6984 IPN recibida. Transacción: TXN-FALLO-0. Estado: Failed. Invoice: 5.
+WARNING 2026-10-23 21:37:54,637 payments 17068 6984 Pago no confirmado (Failed) para la transacción TXN-FALLO-0. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-10-23 21:37:54,648 payments 17068 6984 IPN recibida. Transacción: TXN-FALLO-1. Estado: Denied. Invoice: 5.
+WARNING 2026-10-23 21:37:54,649 payments 17068 6984 Pago no confirmado (Denied) para la transacción TXN-FALLO-1. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-10-23 21:37:54,659 payments 17068 6984 IPN recibida. Transacción: TXN-FALLO-2. Estado: Voided. Invoice: 5.
+WARNING 2026-10-23 21:37:54,659 payments 17068 6984 Pago no confirmado (Voided) para la transacción TXN-FALLO-2. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-10-23 21:37:54,669 payments 17068 6984 IPN recibida. Transacción: TXN-FALLO-3. Estado: Refunded. Invoice: 5.
+WARNING 2026-10-23 21:37:54,669 payments 17068 6984 Pago no confirmado (Refunded) para la transacción TXN-FALLO-3. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-10-23 21:37:54,679 payments 17068 6984 IPN recibida. Transacción: TXN-FALLO-4. Estado: Reversed. Invoice: 5.
+WARNING 2026-10-23 21:37:54,679 payments 17068 6984 Pago no confirmado (Reversed) para la transacción TXN-FALLO-4. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-10-23 21:37:54,725 payments 17068 6984 IPN recibida. Transacción: TXN-MONTO. Estado: Completed. Invoice: 6.
+WARNING 2026-10-23 21:37:54,728 payments 17068 6984 El monto de la transacción TXN-MONTO (1.00 USD) no coincide con el pedido #6.
+ERROR 2026-10-23 21:37:54,728 payments 17068 6984 Pago no aplicado (monto) para la transacción TXN-MONTO.
+INFO 2026-10-23 21:37:54,738 payments 17068 6984 IPN recibida. Transacción: TXN-MONEDA. Estado: Completed. Invoice: 6.
+WARNING 2026-10-23 21:37:54,738 payments 17068 6984 Moneda inesperada: EUR.
+INFO 2026-10-23 21:37:54,747 payments 17068 6984 IPN recibida. Transacción: TXN-OTRO. Estado: Completed. Invoice: 6.
+WARNING 2026-10-23 21:37:54,747 payments 17068 6984 El receptor del pago no es la cuenta configurada. Recibido: otro@business.example.com.
+INFO 2026-10-23 21:37:54,757 payments 17068 6984 IPN recibida. Transacción: TXN-INV. Estado: Completed. Invoice: no-es-un-pedido.
+ERROR 2026-10-23 21:37:54,757 payments 17068 6984 Invoice inválido: no-es-un-pedido.
+INFO 2026-10-23 21:37:54,767 payments 17068 6984 IPN recibida. Transacción: TXN-AUSENTE. Estado: Completed. Invoice: 99999999.
+ERROR 2026-10-23 21:37:54,769 payments 17068 6984 No existe el pedido #99999999 para la transacción TXN-AUSENTE.
+INFO 2026-10-23 21:37:54,813 payments 17068 6984 IPN recibida. Transacción: TXN-STOCK. Estado: Completed. Invoice: 7.
+ERROR 2026-10-23 21:37:54,821 payments 17068 6984 Stock insuficiente de CPU secundaria (hay 0, se piden 1). El pedido #7 sigue pendiente.
+ERROR 2026-10-23 21:37:54,822 payments 17068 6984 Pago no aplicado (stock) para la transacción TXN-STOCK.
+INFO 2026-10-23 21:37:54,842 payments 17068 6984 IPN recibida. Transacción: TXN-HUERFANO. Estado: Completed. Invoice: 8.
+ERROR 2026-10-23 21:37:54,845 payments 17068 6984 El ítem 9 del pedido #8 no apunta a un producto con stock.
+ERROR 2026-10-23 21:37:54,846 payments 17068 6984 Pago no aplicado (producto) para la transacción TXN-HUERFANO.
+INFO 2026-10-23 21:37:54,854 payments 17068 6984 IPN recibida. Transacción: TXN-DOS. Estado: Completed. Invoice: 9.
+INFO 2026-10-23 21:37:54,861 payments 17068 6984 Pedido #9 pagado con la transacción TXN-DOS.
+INFO 2026-10-23 21:37:54,861 payments 17068 6984 IPN recibida. Transacción: TXN-DOS. Estado: Completed. Invoice: 9.
+WARNING 2026-10-23 21:37:54,862 payments 17068 6984 El pedido #9 ya no está pendiente (PAGADO, transacción TXN-DOS). No se vuelve a descontar stock.
+INFO 2026-10-23 21:37:54,944 payments 17068 6984 IPN recibida. Transacción: TXN-SANDBOX. Estado: Completed. Invoice: 10.
+WARNING 2026-10-23 21:37:54,944 payments 17068 6984 IPN de otro entorno (test_ipn=True, PAYPAL_TEST=False). No se confirma el pedido.
+INFO 2026-10-23 21:37:54,987 payments 17068 6984 IPN recibida. Transacción: TXN-PAGADO. Estado: Completed. Invoice: 11.
+INFO 2026-10-23 21:37:54,994 payments 17068 6984 Pedido #11 pagado con la transacción TXN-PAGADO.
+INFO 2026-10-23 21:37:55,043 payments 17068 6984 IPN recibida. Transacción: TXN-PEND. Estado: Pending. Invoice: 12.
+WARNING 2026-10-23 21:37:55,043 payments 17068 6984 Pago no confirmado (Pending) para la transacción TXN-PEND. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-10-23 21:37:55,056 payments 17068 6984 IPN recibida. Transacción: TXN-PEND. Estado: Completed. Invoice: 12.
+INFO 2026-10-23 21:37:55,064 payments 17068 6984 Pedido #12 pagado con la transacción TXN-PEND.
+INFO 2026-10-23 21:37:55,109 payments 17068 6984 IPN recibida. Transacción: TXN-CANCEL. Estado: Completed. Invoice: 13.
+WARNING 2026-10-23 21:37:55,110 payments 17068 6984 El pedido #13 ya no está pendiente (CANCELADO, transacción None). No se vuelve a descontar stock.

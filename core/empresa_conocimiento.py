@@ -1,9 +1,9 @@
 """
-Texto de conocimiento institucional de HardWareHouse para asistentes (p. ej. Voiceflow).
-Regenerar el .txt: python manage.py export_empresa_voiceflow_txt
+Texto de conocimiento institucional de HardWareHouse para asistentes conversacionales.
+Regenerar el .txt: python manage.py export_empresa_conocimiento_txt
 """
 
-EMPRESA_CONOCIMIENTO_VOICEFLOW = """
+EMPRESA_CONOCIMIENTO_ASISTENTE = """
 ================================================================================
 HARDWAREHOUSE — BASE DE CONOCIMIENTO INSTITUCIONAL (EMPRESA Y SERVICIOS)
 ================================================================================
@@ -219,7 +219,7 @@ tiene dudas sobre disponibilidad de piezas concretas.
 --------------------------------------------------------------------------------
 
 El cliente puede obtener ayuda mediante:
-- Chat / asistente virtual en el sitio (Voiceflow u otro integrado).
+- Asistente conversacional en el sitio (cuando esté integrado).
 - Formulario de contacto.
 - Uso del armador de PC con validaciones de compatibilidad.
 - Navegación por categorías y fichas de detalle de cada producto.

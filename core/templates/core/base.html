@@ -27,6 +27,7 @@
     <link href="{% static 'core/css/custom.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/theme.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/chat-widget.css' %}" rel="stylesheet">
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -97,7 +98,7 @@
                         <i class="fas fa-user-circle text-success mr-1"></i> {{ user.username }}
                     </a>
                     <span class="text-muted">|</span>
-                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    <form method="post" action="{% url 'logout' %}" class="hw-chat-logout-form" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="nav-item nav-link py-0 px-2 text-dark border-0 bg-transparent"
                             style="cursor: pointer;">
@@ -147,7 +148,7 @@
                 </nav>
 
                 {% if user.is_authenticated %}
-                <form method="post" action="{% url 'logout' %}" class="mt-auto pt-4">
+                <form method="post" action="{% url 'logout' %}" class="mt-auto pt-4 hw-chat-logout-form">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-outline-danger w-100">
                         <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
@@ -255,6 +256,8 @@
     <a href="#" class="btn btn-success back-to-top" id="back"><i class="fa fa-angle-double-up"></i></a>
     {% endblock %}
 
+    {% include 'core/includes/chat_widget.html' %}
+
     <!-- JS LIBRARIES -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <!-- Bootstrap 5 JS Bundle -->
@@ -263,7 +266,8 @@
     <script src="{% static 'core/lib/owlcarousel/owl.carousel.min.js' %}"></script>
     <script src="{% static 'core/js/main.js' %}"></script>
     <script src="{% static 'core/js/ui.js' %}"></script>
-    <script src="{% static 'core/js/chatbot.js' %}"></script>
+    <script src="{% static 'core/js/chat-session.js' %}" defer></script>
+    <script src="{% static 'core/js/chat-widget.js' %}" defer></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 

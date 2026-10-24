@@ -1,4 +1,4 @@
-"""Exportación CSV del catálogo de componentes (p. ej. base de conocimiento Voiceflow)."""
+"""Exportación CSV del catálogo de componentes (p. ej. base de conocimiento de un asistente)."""
 from __future__ import annotations
 
 import csv
@@ -8,32 +8,9 @@ from decimal import Decimal
 from django.conf import settings
 from django.urls import reverse
 
-from .excel_armado import especificaciones_de
-from .models import (
-    AlmacenamientoHDD,
-    AlmacenamientoSSD,
-    FuenteDePoder,
-    Gabinete,
-    MemoriaRam,
-    PlacaMadre,
-    Procesador,
-    RefrigeracionCooler,
-    TarjetaGrafica,
-    Ventilador,
-)
+from core.catalogo.registry import CATALOGO_MODELOS
 
-CATALOGO_MODELOS = [
-    (Procesador, 'procesador'),
-    (TarjetaGrafica, 'tarjeta_grafica'),
-    (MemoriaRam, 'memoria_ram'),
-    (PlacaMadre, 'placa_madre'),
-    (AlmacenamientoSSD, 'almacenamiento_ssd'),
-    (AlmacenamientoHDD, 'almacenamiento_hdd'),
-    (Gabinete, 'gabinete'),
-    (FuenteDePoder, 'fuente_de_poder'),
-    (RefrigeracionCooler, 'refrigeracion'),
-    (Ventilador, 'ventilador'),
-]
+from .excel_armado import especificaciones_de
 
 CSV_COLUMNS = (
     'id',

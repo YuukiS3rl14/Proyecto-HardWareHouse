@@ -213,7 +213,7 @@ tiene dudas sobre disponibilidad de piezas concretas.
 --------------------------------------------------------------------------------
 
 El cliente puede obtener ayuda mediante:
-- Chat / asistente virtual en el sitio (Voiceflow u otro integrado).
+- Asistente conversacional en el sitio (cuando esté integrado).
 - Formulario de contacto.
 - Uso del armador de PC con validaciones de compatibilidad.
 - Navegación por categorías y fichas de detalle de cada producto.

@@ -31,6 +31,8 @@ from django.conf import settings
 from django.db import transaction 
 from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Count
+from core.catalogo.registry import CATALOGO_MODELOS, model_name_for
+
 from .models import *
 from .payments import formulario_paypal
 from django.utils import timezone
@@ -171,7 +173,13 @@ def mostrarContacto(request):
 
 
 def mostrarSobreNosotros(request):
-    return render(request, 'core/about_us.html')
+    from core.faq_tienda import faq_items_acordeon
+
+    return render(
+        request,
+        'core/about_us.html',
+        {'faq_items': faq_items_acordeon()},
+    )
 
 PRODUCT_MODEL_MAP = {
     'procesador': Procesador,
@@ -223,34 +231,11 @@ def mostrarDetalle(request, model_name, pk):
 
 TIENDA_PAGE_SIZE = 50
 
-TIENDA_MODELOS = [
-    Procesador,
-    TarjetaGrafica,
-    MemoriaRam,
-    PlacaMadre,
-    AlmacenamientoSSD,
-    AlmacenamientoHDD,
-    Gabinete,
-    FuenteDePoder,
-    RefrigeracionCooler,
-    Ventilador,
-]
+TIENDA_MODELOS = [modelo for modelo, _ in CATALOGO_MODELOS]
 
 
 def _model_name_tienda(modelo):
-    name = modelo._meta.model_name
-    name = (
-        name.replace('tarjetagrafica', 'tarjeta_grafica')
-        .replace('memoriaram', 'memoria_ram')
-        .replace('placamadre', 'placa_madre')
-        .replace('almacenamientossd', 'almacenamiento_ssd')
-        .replace('almacenamientohdd', 'almacenamiento_hdd')
-        .replace('fuentedepoder', 'fuente_de_poder')
-        .replace('refrigeracioncooler', 'refrigeracion')
-    )
-    if modelo is RefrigeracionCooler:
-        return 'refrigeracion'
-    return name
+    return model_name_for(modelo)
 
 
 def mostrarTienda(request):
@@ -335,7 +320,7 @@ def mostrarTienda(request):
 
 
 def descargar_productos_csv(request):
-    """Catálogo de componentes en CSV (p. ej. importación en Voiceflow)."""
+    """Catálogo de componentes en CSV (p. ej. base de conocimiento de un asistente)."""
     from .productos_csv import generar_csv_bytes
 
     response = HttpResponse(generar_csv_bytes(), content_type='text/csv; charset=utf-8')
@@ -475,19 +460,12 @@ def _error_armado(message, estado='error', motivos=None, status=400):
         'motivos': motivos if motivos is not None else [message],
     }, status=status)
 
-_RECOMENDACIONES = {
-    'procesador': ((Procesador, 'procesador', 'procesador'),),
-    'placa_madre': ((PlacaMadre, 'placa_madre', 'placa_madre'),),
-    'memoria_ram': ((MemoriaRam, 'memoria_ram', 'memoria_ram'),),
-    'gabinete': ((Gabinete, 'gabinete', 'gabinete'),),
-    'refrigeracion_cooler': ((RefrigeracionCooler, 'refrigeracion', 'refrigeracion'),),
-    'tarjeta_grafica': ((TarjetaGrafica, 'tarjeta_grafica', 'tarjeta_grafica'),),
-    'fuente_de_poder': ((FuenteDePoder, 'fuente_de_poder', 'fuente_de_poder'),),
-    'almacenamiento': (
-        (AlmacenamientoSSD, 'almacenamiento_ssd', 'almacenamiento_ssd'),
-        (AlmacenamientoHDD, 'almacenamiento_hdd', 'almacenamiento_hdd'),
-    ),
-}
+
+from core.armado_recomendacion import (
+    RECOMENDACIONES_POR_CATEGORIA as _RECOMENDACIONES,
+    candidatos_para_categoria,
+    serializar_candidatos_api,
+)
 
 _CLAVE_QUE_REEMPLAZA = {
     'procesador': 'procesador',
@@ -815,11 +793,10 @@ def recomendar_armado(request):
         return error
     seleccion, _sin_regla, memorias = cargado
 
-    candidatos = []
-    for modelo, categoria_regla, model_name in fuentes:
-        for producto in modelo.objects.all():
-            lineas = None
-            if conserva_ram:
+    if conserva_ram:
+        candidatos = []
+        for modelo, categoria_regla, model_name in fuentes:
+            for producto in modelo.objects.all():
                 lineas = _lineas_para_candidato(
                     memorias,
                     producto,
@@ -831,37 +808,33 @@ def recomendar_armado(request):
                         'status': 'error',
                         'message': 'La línea de RAM que quieres reemplazar no está en la selección.',
                     }, status=400)
-            evaluacion = evaluar_candidato(
-                categoria_regla,
-                producto,
-                memorias_ram=lineas if conserva_ram else (memorias or None),
-                **seleccion,
-            )
-            if categoria == 'almacenamiento' and evaluacion.estado == ESTADO_NO_EVALUADA:
-                evaluacion = EvaluacionCandidato(
-                    ESTADO_NO_EVALUADA,
-                    motivos=(MENSAJE_ALMACENAMIENTO,),
+                evaluacion = evaluar_candidato(
+                    categoria_regla,
+                    producto,
+                    memorias_ram=lineas,
+                    **seleccion,
                 )
-            candidatos.append({
-                'id': producto.id,
-                'model_name': model_name,
-                'nombre': producto.nombre,
-                'precio': producto.precio,
-                'stock': producto.stock,
-                'estado': evaluacion.estado,
-                'etiqueta': evaluacion.etiqueta,
-                'coincidencias': list(evaluacion.coincidencias),
-                'motivos': list(evaluacion.motivos),
-                'pendientes': list(evaluacion.pendientes),
-                'advertencias': list(evaluacion.advertencias),
-                'seleccionable': producto.stock > 0,
-            })
+                candidatos.append({
+                    'id': producto.id,
+                    'model_name': model_name,
+                    'nombre': producto.nombre,
+                    'precio': producto.precio,
+                    'stock': producto.stock,
+                    'estado': evaluacion.estado,
+                    'etiqueta': evaluacion.etiqueta,
+                    'coincidencias': list(evaluacion.coincidencias),
+                    'motivos': list(evaluacion.motivos),
+                    'pendientes': list(evaluacion.pendientes),
+                    'advertencias': list(evaluacion.advertencias),
+                    'seleccionable': producto.stock > 0,
+                })
+        candidatos.sort(key=_orden_recomendado)
+        for candidato in candidatos:
+            candidato['precio'] = str(candidato['precio'])
+        return JsonResponse({'status': 'success', 'candidatos': candidatos})
 
-    candidatos.sort(key=_orden_recomendado)
-    for candidato in candidatos:
-        candidato['precio'] = str(candidato['precio'])
-
-    return JsonResponse({'status': 'success', 'candidatos': candidatos})
+    candidatos = candidatos_para_categoria(categoria, seleccion, memorias or None)
+    return JsonResponse({'status': 'success', 'candidatos': serializar_candidatos_api(candidatos)})
 
 
 def _sumar_linea_ram(lineas, producto, cantidad):

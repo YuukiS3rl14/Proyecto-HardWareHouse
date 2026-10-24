@@ -1,9 +1,14 @@
+from core.chatbot.assistant_config import get_asistente_config
+
 from .models import *
 
+
 def extras_context(request):
+    asistente = get_asistente_config()
     context = {
         'cart_item_count': 0,
         'favorite_item_count': 0,
+        'asistente_config': asistente,
     }
     if request.user.is_authenticated:
         carrito, created = Carrito.objects.get_or_create(usuario=request.user)

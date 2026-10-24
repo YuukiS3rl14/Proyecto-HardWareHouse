@@ -1,10 +1,3 @@
 {
-  "mcpServers": {
-    "voiceflow": {
-      "url": "https://mcp.voiceflow.com/mcp"
-    },
-    "voiceflow-knowledge": {
-      "url": "https://www.voiceflow.com/docs/mcp"
-    }
-  }
+  "mcpServers": {}
 }

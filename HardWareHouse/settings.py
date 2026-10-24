@@ -385,6 +385,53 @@ CLP_TO_USD_RATE = 950
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
 
 # ----------------------------------------------------
+# ASISTENTE VIRTUAL (chatbot HardWareHouse)
+# ----------------------------------------------------
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'hardwarehouse-default',
+    },
+}
+
+# Opcional: sobrescribe textos o patrones (claves de core.chatbot.assistant_config.AsistenteConfig).
+# HARDWAREHOUSE_ASISTENTE = {
+#     'mensaje_bienvenida': '¡Hola! Soy el asistente oficial de HardWareHouse…',
+# }
+
+# Motor local (intenciones + FAQ + ORM). Límites por IP vía cache.
+HARDWAREHOUSE_CHAT_RATE_LIMIT = {
+    'chat': {'requests': 30, 'window_seconds': 60},
+    'catalogo': {'requests': 60, 'window_seconds': 60},
+    'metadata': {'requests': 120, 'window_seconds': 60},
+}
+
+# FAQ: claves en core/chatbot/faq_rules.py (despacho, pago, armado, …)
+# HARDWAREHOUSE_CHAT_FAQ = {'despacho': 'Texto personalizado…'}
+
+# Reglas extra de intención: lista de dicts {intent, patrones, prioridad?, max_longitud?}
+# HARDWAREHOUSE_CHAT_INTENT_RULES = []
+
+# Ollama local (intención + clasificación JSON). Ver .env: OLLAMA_BASE_URL, OLLAMA_MODEL.
+OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', '').strip()
+OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen3:4b-instruct').strip()
+OLLAMA_TIMEOUT = int(os.environ.get('OLLAMA_TIMEOUT', '25'))
+HARDWAREHOUSE_CHAT_LLM_BACKEND = 'ollama' if OLLAMA_BASE_URL else ''
+HARDWAREHOUSE_CHAT_INTENT_LLM = env_bool(
+    'HARDWAREHOUSE_CHAT_INTENT_LLM',
+    default=bool(OLLAMA_BASE_URL),
+)
+HARDWAREHOUSE_CHAT_RESPONSE_LLM = env_bool(
+    'HARDWAREHOUSE_CHAT_RESPONSE_LLM',
+    default=bool(OLLAMA_BASE_URL),
+)
+HARDWAREHOUSE_CHAT_OLLAMA = {
+    'base_url': OLLAMA_BASE_URL or 'http://127.0.0.1:11434',
+    'model': OLLAMA_MODEL,
+    'timeout': OLLAMA_TIMEOUT,
+}
+
+# ----------------------------------------------------
 # CONFIGURACIÓN DE LOGGING
 # ----------------------------------------------------
 
