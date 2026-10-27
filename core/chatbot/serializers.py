@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.urls import reverse
 
 from core.catalogo.registry import model_name_for
+from core.demo_catalog import nombre_comercial
 from core.excel_armado import especificaciones_de
 
 
@@ -36,7 +37,7 @@ def producto_a_dict(producto, model_name: str | None = None, score: float | None
         'categoria': producto.categoria,
         'marca': marca,
         'nombre': producto.nombre,
-        'nombre_completo': f'{marca} {producto.nombre}',
+        'nombre_completo': nombre_comercial(marca, producto.nombre),
         'descripcion': (producto.descripcion or '').strip(),
         'precio_clp': precio_a_entero(producto.precio),
         'stock': producto.stock,

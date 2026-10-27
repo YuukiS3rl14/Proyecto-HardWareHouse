@@ -1,9 +1,14 @@
 -- HardWareHouse: datos de prueba (regiones, comunas, proveedores, productos)
 -- Regenerar: python scripts/generate_seed_test_data.py
+-- Precios y stock de productos son sintéticos; no son un precio de mercado verificado.
+-- Este archivo hace TRUNCATE de pedidos, carritos y catálogo. No ejecutarlo en producción.
+-- Para corregir solo el catálogo demo sin borrar pedidos:
+--   python manage.py sincronizar_catalogo_demo --dry-run
+--   python manage.py sincronizar_catalogo_demo --apply
 SET client_encoding = 'UTF8';
 BEGIN;
 
--- Limpia tablas de catálogo (y dependencias de carrito/pedidos sobre productos).
+-- Este TRUNCATE borra pedidos, carritos y catálogo. No sirve para actualizar un catálogo ya cargado.
 TRUNCATE TABLE
   core_itempedido,
   core_pagoboleta,
@@ -474,1025 +479,2028 @@ INSERT INTO core_proveedor (id, nombre, logo) VALUES
 (82, 'Intel Arc', NULL),
 (83, 'Sparkle', NULL);
 
+-- Productos demo. El proveedor se resuelve por nombre, no por un id fijo.
+-- Precio y stock son sintéticos; no son un precio de mercado verificado.
+
+-- procesador
 INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
-(1, 'CPU', 2, 'Intel CPU Serie Test 001 5c', 'Procesador de prueba #1 para catálogo HardWareHouse.', 91240, 6, NULL, 'AM4', 5, 2.60, 66),
-(2, 'CPU', 3, 'AMD CPU Serie Test 002 6c', 'Procesador de prueba #2 para catálogo HardWareHouse.', 92490, 7, NULL, 'AM5', 6, 2.70, 67),
-(3, 'CPU', 4, 'NVIDIA CPU Serie Test 003 7c', 'Procesador de prueba #3 para catálogo HardWareHouse.', 93740, 8, NULL, 'LGA1700', 7, 2.80, 68),
-(4, 'CPU', 5, 'ASUS CPU Serie Test 004 8c', 'Procesador de prueba #4 para catálogo HardWareHouse.', 94990, 9, NULL, 'LGA1200', 8, 2.90, 69),
-(5, 'CPU', 6, 'Gigabyte CPU Serie Test 005 9c', 'Procesador de prueba #5 para catálogo HardWareHouse.', 96240, 10, NULL, 'AM4', 9, 3.00, 70),
-(6, 'CPU', 7, 'MSI CPU Serie Test 006 10c', 'Procesador de prueba #6 para catálogo HardWareHouse.', 97490, 11, NULL, 'AM5', 10, 3.10, 71),
-(7, 'CPU', 8, 'ASRock CPU Serie Test 007 11c', 'Procesador de prueba #7 para catálogo HardWareHouse.', 98740, 12, NULL, 'LGA1700', 11, 3.20, 72),
-(8, 'CPU', 9, 'EVGA CPU Serie Test 008 12c', 'Procesador de prueba #8 para catálogo HardWareHouse.', 99990, 13, NULL, 'LGA1200', 12, 3.30, 73),
-(9, 'CPU', 10, 'Zotac CPU Serie Test 009 13c', 'Procesador de prueba #9 para catálogo HardWareHouse.', 101240, 14, NULL, 'AM4', 13, 3.40, 74),
-(10, 'CPU', 11, 'PNY CPU Serie Test 010 14c', 'Procesador de prueba #10 para catálogo HardWareHouse.', 102490, 15, NULL, 'AM5', 14, 3.50, 75),
-(11, 'CPU', 12, 'Palit CPU Serie Test 011 15c', 'Procesador de prueba #11 para catálogo HardWareHouse.', 103740, 16, NULL, 'LGA1700', 15, 3.60, 76),
-(12, 'CPU', 13, 'Gainward CPU Serie Test 012 16c', 'Procesador de prueba #12 para catálogo HardWareHouse.', 104990, 17, NULL, 'LGA1200', 16, 3.70, 77),
-(13, 'CPU', 14, 'Sapphire CPU Serie Test 013 17c', 'Procesador de prueba #13 para catálogo HardWareHouse.', 106240, 18, NULL, 'AM4', 17, 3.80, 78),
-(14, 'CPU', 15, 'PowerColor CPU Serie Test 014 18c', 'Procesador de prueba #14 para catálogo HardWareHouse.', 107490, 19, NULL, 'AM5', 18, 3.90, 79),
-(15, 'CPU', 16, 'XFX CPU Serie Test 015 19c', 'Procesador de prueba #15 para catálogo HardWareHouse.', 108740, 20, NULL, 'LGA1700', 19, 4.00, 80),
-(16, 'CPU', 17, 'Corsair CPU Serie Test 016 20c', 'Procesador de prueba #16 para catálogo HardWareHouse.', 109990, 21, NULL, 'LGA1200', 20, 4.10, 81),
-(17, 'CPU', 18, 'G.Skill CPU Serie Test 017 4c', 'Procesador de prueba #17 para catálogo HardWareHouse.', 111240, 22, NULL, 'AM4', 4, 4.20, 82),
-(18, 'CPU', 19, 'Kingston CPU Serie Test 018 5c', 'Procesador de prueba #18 para catálogo HardWareHouse.', 112490, 23, NULL, 'AM5', 5, 4.30, 83),
-(19, 'CPU', 20, 'Crucial CPU Serie Test 019 6c', 'Procesador de prueba #19 para catálogo HardWareHouse.', 113740, 24, NULL, 'LGA1700', 6, 4.40, 84),
-(20, 'CPU', 21, 'Samsung CPU Serie Test 020 7c', 'Procesador de prueba #20 para catálogo HardWareHouse.', 114990, 25, NULL, 'LGA1200', 7, 4.50, 85),
-(21, 'CPU', 22, 'Western Digital CPU Serie Test 021 8c', 'Procesador de prueba #21 para catálogo HardWareHouse.', 116240, 26, NULL, 'AM4', 8, 4.60, 86),
-(22, 'CPU', 23, 'Seagate CPU Serie Test 022 9c', 'Procesador de prueba #22 para catálogo HardWareHouse.', 117490, 27, NULL, 'AM5', 9, 4.70, 87),
-(23, 'CPU', 24, 'SanDisk CPU Serie Test 023 10c', 'Procesador de prueba #23 para catálogo HardWareHouse.', 118740, 28, NULL, 'LGA1700', 10, 4.80, 88),
-(24, 'CPU', 25, 'ADATA CPU Serie Test 024 11c', 'Procesador de prueba #24 para catálogo HardWareHouse.', 119990, 29, NULL, 'LGA1200', 11, 4.90, 89),
-(25, 'CPU', 26, 'TeamGroup CPU Serie Test 025 12c', 'Procesador de prueba #25 para catálogo HardWareHouse.', 121240, 30, NULL, 'AM4', 12, 5.00, 90),
-(26, 'CPU', 27, 'Patriot CPU Serie Test 026 13c', 'Procesador de prueba #26 para catálogo HardWareHouse.', 122490, 31, NULL, 'AM5', 13, 5.10, 91),
-(27, 'CPU', 28, 'HyperX CPU Serie Test 027 14c', 'Procesador de prueba #27 para catálogo HardWareHouse.', 123740, 32, NULL, 'LGA1700', 14, 5.20, 92),
-(28, 'CPU', 29, 'Thermaltake CPU Serie Test 028 15c', 'Procesador de prueba #28 para catálogo HardWareHouse.', 124990, 33, NULL, 'LGA1200', 15, 5.30, 93),
-(29, 'CPU', 30, 'Cooler Master CPU Serie Test 029 16c', 'Procesador de prueba #29 para catálogo HardWareHouse.', 126240, 34, NULL, 'AM4', 16, 5.40, 94),
-(30, 'CPU', 31, 'NZXT CPU Serie Test 030 17c', 'Procesador de prueba #30 para catálogo HardWareHouse.', 127490, 35, NULL, 'AM5', 17, 2.50, 95),
-(31, 'CPU', 32, 'be quiet! CPU Serie Test 031 18c', 'Procesador de prueba #31 para catálogo HardWareHouse.', 128740, 36, NULL, 'LGA1700', 18, 2.60, 96),
-(32, 'CPU', 33, 'Seasonic CPU Serie Test 032 19c', 'Procesador de prueba #32 para catálogo HardWareHouse.', 129990, 37, NULL, 'LGA1200', 19, 2.70, 97),
-(33, 'CPU', 34, 'FSP CPU Serie Test 033 20c', 'Procesador de prueba #33 para catálogo HardWareHouse.', 131240, 38, NULL, 'AM4', 20, 2.80, 98),
-(34, 'CPU', 35, 'Lian Li CPU Serie Test 034 4c', 'Procesador de prueba #34 para catálogo HardWareHouse.', 132490, 39, NULL, 'AM5', 4, 2.90, 99),
-(35, 'CPU', 36, 'Fractal Design CPU Serie Test 035 5c', 'Procesador de prueba #35 para catálogo HardWareHouse.', 133740, 40, NULL, 'LGA1700', 5, 3.00, 100),
-(36, 'CPU', 37, 'Phanteks CPU Serie Test 036 6c', 'Procesador de prueba #36 para catálogo HardWareHouse.', 134990, 41, NULL, 'LGA1200', 6, 3.10, 101),
-(37, 'CPU', 38, 'Silverstone CPU Serie Test 037 7c', 'Procesador de prueba #37 para catálogo HardWareHouse.', 136240, 42, NULL, 'AM4', 7, 3.20, 102),
-(38, 'CPU', 39, 'Antec CPU Serie Test 038 8c', 'Procesador de prueba #38 para catálogo HardWareHouse.', 137490, 43, NULL, 'AM5', 8, 3.30, 103),
-(39, 'CPU', 40, 'Montech CPU Serie Test 039 9c', 'Procesador de prueba #39 para catálogo HardWareHouse.', 138740, 44, NULL, 'LGA1700', 9, 3.40, 104),
-(40, 'CPU', 41, 'Noctua CPU Serie Test 040 10c', 'Procesador de prueba #40 para catálogo HardWareHouse.', 139990, 5, NULL, 'LGA1200', 10, 3.50, 105),
-(41, 'CPU', 42, 'Arctic CPU Serie Test 041 11c', 'Procesador de prueba #41 para catálogo HardWareHouse.', 141240, 6, NULL, 'AM4', 11, 3.60, 106),
-(42, 'CPU', 43, 'Deepcool CPU Serie Test 042 12c', 'Procesador de prueba #42 para catálogo HardWareHouse.', 142490, 7, NULL, 'AM5', 12, 3.70, 107),
-(43, 'CPU', 44, 'ID-COOLING CPU Serie Test 043 13c', 'Procesador de prueba #43 para catálogo HardWareHouse.', 143740, 8, NULL, 'LGA1700', 13, 3.80, 108),
-(44, 'CPU', 45, 'Scythe CPU Serie Test 044 14c', 'Procesador de prueba #44 para catálogo HardWareHouse.', 144990, 9, NULL, 'LGA1200', 14, 3.90, 109),
-(45, 'CPU', 46, 'Logitech CPU Serie Test 045 15c', 'Procesador de prueba #45 para catálogo HardWareHouse.', 146240, 10, NULL, 'AM4', 15, 4.00, 110),
-(46, 'CPU', 47, 'Razer CPU Serie Test 046 16c', 'Procesador de prueba #46 para catálogo HardWareHouse.', 147490, 11, NULL, 'AM5', 16, 4.10, 111),
-(47, 'CPU', 48, 'SteelSeries CPU Serie Test 047 17c', 'Procesador de prueba #47 para catálogo HardWareHouse.', 148740, 12, NULL, 'LGA1700', 17, 4.20, 112),
-(48, 'CPU', 49, 'BenQ CPU Serie Test 048 18c', 'Procesador de prueba #48 para catálogo HardWareHouse.', 149990, 13, NULL, 'LGA1200', 18, 4.30, 113),
-(49, 'CPU', 50, 'LG CPU Serie Test 049 19c', 'Procesador de prueba #49 para catálogo HardWareHouse.', 151240, 14, NULL, 'AM4', 19, 4.40, 114),
-(50, 'CPU', 51, 'AOC CPU Serie Test 050 20c', 'Procesador de prueba #50 para catálogo HardWareHouse.', 152490, 15, NULL, 'AM5', 20, 4.50, 115),
-(51, 'CPU', 52, 'Dell CPU Serie Test 051 4c', 'Procesador de prueba #51 para catálogo HardWareHouse.', 153740, 16, NULL, 'LGA1700', 4, 4.60, 116),
-(52, 'CPU', 53, 'HP CPU Serie Test 052 5c', 'Procesador de prueba #52 para catálogo HardWareHouse.', 154990, 17, NULL, 'LGA1200', 5, 4.70, 117),
-(53, 'CPU', 54, 'Lenovo CPU Serie Test 053 6c', 'Procesador de prueba #53 para catálogo HardWareHouse.', 156240, 18, NULL, 'AM4', 6, 4.80, 118),
-(54, 'CPU', 55, 'Acer CPU Serie Test 054 7c', 'Procesador de prueba #54 para catálogo HardWareHouse.', 157490, 19, NULL, 'AM5', 7, 4.90, 119),
-(55, 'CPU', 56, 'Apple CPU Serie Test 055 8c', 'Procesador de prueba #55 para catálogo HardWareHouse.', 158740, 20, NULL, 'LGA1700', 8, 5.00, 120),
-(56, 'CPU', 57, 'Qualcomm CPU Serie Test 056 9c', 'Procesador de prueba #56 para catálogo HardWareHouse.', 159990, 21, NULL, 'LGA1200', 9, 5.10, 121),
-(57, 'CPU', 58, 'MediaTek CPU Serie Test 057 10c', 'Procesador de prueba #57 para catálogo HardWareHouse.', 161240, 22, NULL, 'AM4', 10, 5.20, 122),
-(58, 'CPU', 59, 'Broadcom CPU Serie Test 058 11c', 'Procesador de prueba #58 para catálogo HardWareHouse.', 162490, 23, NULL, 'AM5', 11, 5.30, 123),
-(59, 'CPU', 60, 'Realtek CPU Serie Test 059 12c', 'Procesador de prueba #59 para catálogo HardWareHouse.', 163740, 24, NULL, 'LGA1700', 12, 5.40, 124),
-(60, 'CPU', 61, 'TP-Link CPU Serie Test 060 13c', 'Procesador de prueba #60 para catálogo HardWareHouse.', 164990, 25, NULL, 'LGA1200', 13, 2.50, 125),
-(61, 'CPU', 62, 'D-Link CPU Serie Test 061 14c', 'Procesador de prueba #61 para catálogo HardWareHouse.', 166240, 26, NULL, 'AM4', 14, 2.60, 126),
-(62, 'CPU', 63, 'Netgear CPU Serie Test 062 15c', 'Procesador de prueba #62 para catálogo HardWareHouse.', 167490, 27, NULL, 'AM5', 15, 2.70, 127),
-(63, 'CPU', 64, 'Ubiquiti CPU Serie Test 063 16c', 'Procesador de prueba #63 para catálogo HardWareHouse.', 168740, 28, NULL, 'LGA1700', 16, 2.80, 128),
-(64, 'CPU', 65, 'Synology CPU Serie Test 064 17c', 'Procesador de prueba #64 para catálogo HardWareHouse.', 169990, 29, NULL, 'LGA1200', 17, 2.90, 129),
-(65, 'CPU', 66, 'QNAP CPU Serie Test 065 18c', 'Procesador de prueba #65 para catálogo HardWareHouse.', 171240, 30, NULL, 'AM4', 18, 3.00, 130),
-(66, 'CPU', 67, 'ASUSTOR CPU Serie Test 066 19c', 'Procesador de prueba #66 para catálogo HardWareHouse.', 172490, 31, NULL, 'AM5', 19, 3.10, 131),
-(67, 'CPU', 68, 'Toshiba CPU Serie Test 067 20c', 'Procesador de prueba #67 para catálogo HardWareHouse.', 173740, 32, NULL, 'LGA1700', 20, 3.20, 132),
-(68, 'CPU', 69, 'Hitachi CPU Serie Test 068 4c', 'Procesador de prueba #68 para catálogo HardWareHouse.', 174990, 33, NULL, 'LGA1200', 4, 3.30, 133),
-(69, 'CPU', 70, 'Lexar CPU Serie Test 069 5c', 'Procesador de prueba #69 para catálogo HardWareHouse.', 176240, 34, NULL, 'AM4', 5, 3.40, 134),
-(70, 'CPU', 71, 'PNY Technologies CPU Serie Test 070 6c', 'Procesador de prueba #70 para catálogo HardWareHouse.', 177490, 35, NULL, 'AM5', 6, 3.50, 135),
-(71, 'CPU', 72, 'Inno3D CPU Serie Test 071 7c', 'Procesador de prueba #71 para catálogo HardWareHouse.', 178740, 36, NULL, 'LGA1700', 7, 3.60, 136),
-(72, 'CPU', 73, 'Colorful CPU Serie Test 072 8c', 'Procesador de prueba #72 para catálogo HardWareHouse.', 179990, 37, NULL, 'LGA1200', 8, 3.70, 137),
-(73, 'CPU', 74, 'Biostar CPU Serie Test 073 9c', 'Procesador de prueba #73 para catálogo HardWareHouse.', 181240, 38, NULL, 'AM4', 9, 3.80, 138),
-(74, 'CPU', 75, 'ECS CPU Serie Test 074 10c', 'Procesador de prueba #74 para catálogo HardWareHouse.', 182490, 39, NULL, 'AM5', 10, 3.90, 139),
-(75, 'CPU', 76, 'Supermicro CPU Serie Test 075 11c', 'Procesador de prueba #75 para catálogo HardWareHouse.', 183740, 40, NULL, 'LGA1700', 11, 4.00, 140),
-(76, 'CPU', 77, 'Tyan CPU Serie Test 076 12c', 'Procesador de prueba #76 para catálogo HardWareHouse.', 184990, 41, NULL, 'LGA1200', 12, 4.10, 141),
-(77, 'CPU', 78, 'GALAX CPU Serie Test 077 13c', 'Procesador de prueba #77 para catálogo HardWareHouse.', 186240, 42, NULL, 'AM4', 13, 4.20, 142),
-(78, 'CPU', 79, 'KFA2 CPU Serie Test 078 14c', 'Procesador de prueba #78 para catálogo HardWareHouse.', 187490, 43, NULL, 'AM5', 14, 4.30, 143),
-(79, 'CPU', 80, 'Club 3D CPU Serie Test 079 15c', 'Procesador de prueba #79 para catálogo HardWareHouse.', 188740, 44, NULL, 'LGA1700', 15, 4.40, 144),
-(80, 'CPU', 81, 'VisionTek CPU Serie Test 080 16c', 'Procesador de prueba #80 para catálogo HardWareHouse.', 189990, 5, NULL, 'LGA1200', 16, 4.50, 145),
-(81, 'CPU', 82, 'Matrox CPU Serie Test 081 17c', 'Procesador de prueba #81 para catálogo HardWareHouse.', 191240, 6, NULL, 'AM4', 17, 4.60, 146),
-(82, 'CPU', 83, 'Intel Arc CPU Serie Test 082 18c', 'Procesador de prueba #82 para catálogo HardWareHouse.', 192490, 7, NULL, 'AM5', 18, 4.70, 147),
-(83, 'CPU', 1, 'Sparkle CPU Serie Test 083 19c', 'Procesador de prueba #83 para catálogo HardWareHouse.', 193740, 8, NULL, 'LGA1700', 19, 4.80, 148),
-(84, 'CPU', 2, 'Intel CPU Serie Test 084 20c', 'Procesador de prueba #84 para catálogo HardWareHouse.', 194990, 9, NULL, 'LGA1200', 20, 4.90, 149),
-(85, 'CPU', 3, 'AMD CPU Serie Test 085 4c', 'Procesador de prueba #85 para catálogo HardWareHouse.', 196240, 10, NULL, 'AM4', 4, 5.00, 150),
-(86, 'CPU', 4, 'NVIDIA CPU Serie Test 086 5c', 'Procesador de prueba #86 para catálogo HardWareHouse.', 197490, 11, NULL, 'AM5', 5, 5.10, 151),
-(87, 'CPU', 5, 'ASUS CPU Serie Test 087 6c', 'Procesador de prueba #87 para catálogo HardWareHouse.', 198740, 12, NULL, 'LGA1700', 6, 5.20, 152),
-(88, 'CPU', 6, 'Gigabyte CPU Serie Test 088 7c', 'Procesador de prueba #88 para catálogo HardWareHouse.', 199990, 13, NULL, 'LGA1200', 7, 5.30, 153),
-(89, 'CPU', 7, 'MSI CPU Serie Test 089 8c', 'Procesador de prueba #89 para catálogo HardWareHouse.', 201240, 14, NULL, 'AM4', 8, 5.40, 154),
-(90, 'CPU', 8, 'ASRock CPU Serie Test 090 9c', 'Procesador de prueba #90 para catálogo HardWareHouse.', 202490, 15, NULL, 'AM5', 9, 2.50, 155),
-(91, 'CPU', 9, 'EVGA CPU Serie Test 091 10c', 'Procesador de prueba #91 para catálogo HardWareHouse.', 203740, 16, NULL, 'LGA1700', 10, 2.60, 156),
-(92, 'CPU', 10, 'Zotac CPU Serie Test 092 11c', 'Procesador de prueba #92 para catálogo HardWareHouse.', 204990, 17, NULL, 'LGA1200', 11, 2.70, 157),
-(93, 'CPU', 11, 'PNY CPU Serie Test 093 12c', 'Procesador de prueba #93 para catálogo HardWareHouse.', 206240, 18, NULL, 'AM4', 12, 2.80, 158),
-(94, 'CPU', 12, 'Palit CPU Serie Test 094 13c', 'Procesador de prueba #94 para catálogo HardWareHouse.', 207490, 19, NULL, 'AM5', 13, 2.90, 159),
-(95, 'CPU', 13, 'Gainward CPU Serie Test 095 14c', 'Procesador de prueba #95 para catálogo HardWareHouse.', 208740, 20, NULL, 'LGA1700', 14, 3.00, 160),
-(96, 'CPU', 14, 'Sapphire CPU Serie Test 096 15c', 'Procesador de prueba #96 para catálogo HardWareHouse.', 209990, 21, NULL, 'LGA1200', 15, 3.10, 161),
-(97, 'CPU', 15, 'PowerColor CPU Serie Test 097 16c', 'Procesador de prueba #97 para catálogo HardWareHouse.', 211240, 22, NULL, 'AM4', 16, 3.20, 162),
-(98, 'CPU', 16, 'XFX CPU Serie Test 098 17c', 'Procesador de prueba #98 para catálogo HardWareHouse.', 212490, 23, NULL, 'AM5', 17, 3.30, 163),
-(99, 'CPU', 17, 'Corsair CPU Serie Test 099 18c', 'Procesador de prueba #99 para catálogo HardWareHouse.', 213740, 24, NULL, 'LGA1700', 18, 3.40, 164),
-(100, 'CPU', 18, 'G.Skill CPU Serie Test 100 19c', 'Procesador de prueba #100 para catálogo HardWareHouse.', 214990, 25, NULL, 'LGA1200', 19, 3.50, 165);
+(1, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 3 3100', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 3 3100 para socket AM4.', 90990.00, 5, NULL, 'AM4', 4, 3.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(2, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 3 3300X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 3 3300X para socket AM4.', 111990.00, 6, NULL, 'AM4', 4, 3.80, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(3, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 3 3200G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 3 3200G para socket AM4.', 102990.00, 7, NULL, 'AM4', 4, 3.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(4, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 3600 para socket AM4.', 133990.00, 8, NULL, 'AM4', 6, 3.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(5, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 3600X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 3600X para socket AM4.', 149990.00, 9, NULL, 'AM4', 6, 3.80, 95);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(6, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 3600XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 3600XT para socket AM4.', 160990.00, 10, NULL, 'AM4', 6, 3.80, 95);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(7, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 4500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 4500 para socket AM4.', 101990.00, 11, NULL, 'AM4', 6, 3.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(8, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 4600G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 4600G para socket AM4.', 122990.00, 12, NULL, 'AM4', 6, 3.70, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(9, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 5500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 5500 para socket AM4.', 113990.00, 13, NULL, 'AM4', 6, 3.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(10, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 5600 para socket AM4.', 129990.00, 14, NULL, 'AM4', 6, 3.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(11, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 5600X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 5600X para socket AM4.', 160990.00, 15, NULL, 'AM4', 6, 3.70, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(12, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 5600G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 5600G para socket AM4.', 151990.00, 4, NULL, 'AM4', 6, 3.90, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(13, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 3700X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 3700X para socket AM4.', 202990.00, 5, NULL, 'AM4', 8, 3.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(14, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 3800X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 3800X para socket AM4.', 233990.00, 6, NULL, 'AM4', 8, 3.90, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(15, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 3800XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 3800XT para socket AM4.', 239990.00, 7, NULL, 'AM4', 8, 3.90, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(16, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 5700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 5700 para socket AM4.', 180990.00, 8, NULL, 'AM4', 8, 3.70, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(17, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 5700X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 5700X para socket AM4.', 201990.00, 9, NULL, 'AM4', 8, 3.40, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(18, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 5700G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 5700G para socket AM4.', 192990.00, 10, NULL, 'AM4', 8, 3.80, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(19, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 5800X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 5800X para socket AM4.', 253990.00, 11, NULL, 'AM4', 8, 3.80, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(20, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 5800X3D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 5800X3D para socket AM4.', 299990.00, 12, NULL, 'AM4', 8, 3.40, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(21, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 3900X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 3900X para socket AM4.', 330990.00, 13, NULL, 'AM4', 12, 3.80, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(22, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 3900XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 3900XT para socket AM4.', 351990.00, 14, NULL, 'AM4', 12, 3.80, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(23, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 3950X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 3950X para socket AM4.', 452990.00, 15, NULL, 'AM4', 16, 3.50, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(24, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 5900X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 5900X para socket AM4.', 353990.00, 4, NULL, 'AM4', 12, 3.70, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(25, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 5950X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 5950X para socket AM4.', 499990.00, 5, NULL, 'AM4', 16, 3.40, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(26, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 7500F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 7500F para socket AM5.', 160990.00, 6, NULL, 'AM5', 6, 3.70, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(27, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 7600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 7600 para socket AM5.', 201990.00, 7, NULL, 'AM5', 6, 3.80, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(28, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 7600X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 7600X para socket AM5.', 232990.00, 8, NULL, 'AM5', 6, 4.70, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(29, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 7600X3D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 7600X3D para socket AM5.', 253990.00, 9, NULL, 'AM5', 6, 4.10, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(30, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 8400F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 8400F para socket AM5.', 139990.00, 10, NULL, 'AM5', 6, 4.20, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(31, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 8500G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 8500G para socket AM5.', 170990.00, 11, NULL, 'AM5', 6, 3.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(32, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 8600G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 8600G para socket AM5.', 191990.00, 12, NULL, 'AM5', 6, 4.30, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(33, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 9600X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 9600X para socket AM5.', 252990.00, 13, NULL, 'AM5', 6, 3.90, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(34, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 7700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 7700 para socket AM5.', 283990.00, 14, NULL, 'AM5', 8, 3.80, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(35, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 7700X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 7700X para socket AM5.', 319990.00, 15, NULL, 'AM5', 8, 4.50, 105);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(36, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 7800X3D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 7800X3D para socket AM5.', 400990.00, 4, NULL, 'AM5', 8, 4.20, 120);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(37, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 8700F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 8700F para socket AM5.', 221990.00, 5, NULL, 'AM5', 8, 4.10, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(38, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 8700G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 8700G para socket AM5.', 282990.00, 6, NULL, 'AM5', 8, 4.20, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(39, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 9700X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 9700X para socket AM5.', 363990.00, 7, NULL, 'AM5', 8, 3.80, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(40, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 7 9800X3D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 7 9800X3D para socket AM5.', 499990.00, 8, NULL, 'AM5', 8, 4.70, 120);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(41, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 7900', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 7900 para socket AM5.', 400990.00, 9, NULL, 'AM5', 12, 3.70, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(42, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 7900X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 7900X para socket AM5.', 451990.00, 10, NULL, 'AM5', 12, 4.70, 170);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(43, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 7900X3D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 7900X3D para socket AM5.', 502990.00, 11, NULL, 'AM5', 12, 4.40, 120);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(44, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 9900X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 9900X para socket AM5.', 483990.00, 12, NULL, 'AM5', 12, 4.40, 120);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(45, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 9900X3D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 9900X3D para socket AM5.', 549990.00, 13, NULL, 'AM5', 12, 4.40, 120);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(46, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 7950X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 7950X para socket AM5.', 550990.00, 14, NULL, 'AM5', 16, 4.50, 170);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(47, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 7950X3D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 7950X3D para socket AM5.', 601990.00, 15, NULL, 'AM5', 16, 4.20, 120);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(48, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 9950X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 9950X para socket AM5.', 652990.00, 4, NULL, 'AM5', 16, 4.30, 170);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(49, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 9 9950X3D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 9 9950X3D para socket AM5.', 753990.00, 5, NULL, 'AM5', 16, 4.30, 170);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(50, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'AMD'), 'AMD Ryzen 5 8600F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador AMD Ryzen 5 8600F para socket AM5.', 149990.00, 6, NULL, 'AM5', 6, 4.30, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(51, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i3-10100', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i3-10100 para socket LGA1200.', 100990.00, 7, NULL, 'LGA1200', 4, 3.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(52, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i3-10100F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i3-10100F para socket LGA1200.', 91990.00, 8, NULL, 'LGA1200', 4, 3.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(53, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i3-10105', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i3-10105 para socket LGA1200.', 112990.00, 9, NULL, 'LGA1200', 4, 3.70, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(54, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i3-10300', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i3-10300 para socket LGA1200.', 123990.00, 10, NULL, 'LGA1200', 4, 3.70, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(55, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i3-10320', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i3-10320 para socket LGA1200.', 129990.00, 11, NULL, 'LGA1200', 4, 3.80, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(56, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-10400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-10400 para socket LGA1200.', 150990.00, 12, NULL, 'LGA1200', 6, 2.90, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(57, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-10400F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-10400F para socket LGA1200.', 131990.00, 13, NULL, 'LGA1200', 6, 2.90, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(58, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-10500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-10500 para socket LGA1200.', 172990.00, 14, NULL, 'LGA1200', 6, 3.10, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(59, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-10600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-10600 para socket LGA1200.', 183990.00, 15, NULL, 'LGA1200', 6, 3.30, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(60, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-10600K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-10600K para socket LGA1200.', 199990.00, 4, NULL, 'LGA1200', 6, 4.10, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(61, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-11400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-11400 para socket LGA1200.', 170990.00, 5, NULL, 'LGA1200', 6, 2.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(62, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-11400F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-11400F para socket LGA1200.', 151990.00, 6, NULL, 'LGA1200', 6, 2.60, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(63, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-11500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-11500 para socket LGA1200.', 182990.00, 7, NULL, 'LGA1200', 6, 2.70, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(64, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-11600K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-11600K para socket LGA1200.', 233990.00, 8, NULL, 'LGA1200', 6, 3.90, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(65, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-10700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-10700 para socket LGA1200.', 249990.00, 9, NULL, 'LGA1200', 8, 2.90, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(66, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-10700F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-10700F para socket LGA1200.', 230990.00, 10, NULL, 'LGA1200', 8, 2.90, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(67, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-10700K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-10700K para socket LGA1200.', 281990.00, 11, NULL, 'LGA1200', 8, 3.80, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(68, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-11700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-11700 para socket LGA1200.', 272990.00, 12, NULL, 'LGA1200', 8, 2.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(69, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-11700K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-11700K para socket LGA1200.', 303990.00, 13, NULL, 'LGA1200', 8, 3.60, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(70, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i9-10850K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i9-10850K para socket LGA1200.', 349990.00, 14, NULL, 'LGA1200', 10, 3.60, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(71, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i9-10900', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i9-10900 para socket LGA1200.', 340990.00, 15, NULL, 'LGA1200', 10, 2.80, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(72, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i9-10900F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i9-10900F para socket LGA1200.', 321990.00, 4, NULL, 'LGA1200', 10, 2.80, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(73, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i9-10900K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i9-10900K para socket LGA1200.', 402990.00, 5, NULL, 'LGA1200', 10, 3.70, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(74, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i9-11900', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i9-11900 para socket LGA1200.', 353990.00, 6, NULL, 'LGA1200', 8, 2.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(75, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i9-11900K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i9-11900K para socket LGA1200.', 429990.00, 7, NULL, 'LGA1200', 8, 3.50, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(76, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i3-12100', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i3-12100 para socket LGA1700.', 130990.00, 8, NULL, 'LGA1700', 4, 3.30, 60);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(77, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i3-12100F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i3-12100F para socket LGA1700.', 111990.00, 9, NULL, 'LGA1700', 4, 3.30, 58);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(78, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i3-13100', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i3-13100 para socket LGA1700.', 142990.00, 10, NULL, 'LGA1700', 4, 3.40, 60);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(79, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i3-14100', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i3-14100 para socket LGA1700.', 153990.00, 11, NULL, 'LGA1700', 4, 3.50, 60);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(80, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-12400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-12400 para socket LGA1700.', 179990.00, 12, NULL, 'LGA1700', 6, 2.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(81, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-12400F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-12400F para socket LGA1700.', 160990.00, 13, NULL, 'LGA1700', 6, 2.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(82, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-12600K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-12600K para socket LGA1700.', 251990.00, 14, NULL, 'LGA1700', 10, 3.70, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(83, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-12600KF', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-12600KF para socket LGA1700.', 232990.00, 15, NULL, 'LGA1700', 10, 3.70, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(84, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-13400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-13400 para socket LGA1700.', 223990.00, 4, NULL, 'LGA1700', 10, 2.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(85, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-13400F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-13400F para socket LGA1700.', 199990.00, 5, NULL, 'LGA1700', 10, 2.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(86, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-13500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-13500 para socket LGA1700.', 240990.00, 6, NULL, 'LGA1700', 14, 2.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(87, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-13600K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-13600K para socket LGA1700.', 301990.00, 7, NULL, 'LGA1700', 14, 3.50, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(88, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-13600KF', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-13600KF para socket LGA1700.', 282990.00, 8, NULL, 'LGA1700', 14, 3.50, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(89, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-14400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-14400 para socket LGA1700.', 233990.00, 9, NULL, 'LGA1700', 10, 2.50, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(90, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i5-14600K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i5-14600K para socket LGA1700.', 319990.00, 10, NULL, 'LGA1700', 14, 3.50, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(91, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-12700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-12700 para socket LGA1700.', 300990.00, 11, NULL, 'LGA1700', 12, 2.10, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(92, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-12700F', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-12700F para socket LGA1700.', 281990.00, 12, NULL, 'LGA1700', 12, 2.10, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(93, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-12700K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-12700K para socket LGA1700.', 352990.00, 13, NULL, 'LGA1700', 12, 3.60, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(94, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-13700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-13700 para socket LGA1700.', 363990.00, 14, NULL, 'LGA1700', 16, 2.10, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(95, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-13700K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-13700K para socket LGA1700.', 399990.00, 15, NULL, 'LGA1700', 16, 3.40, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(96, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-14700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-14700 para socket LGA1700.', 390990.00, 4, NULL, 'LGA1700', 20, 2.10, 65);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(97, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i7-14700K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i7-14700K para socket LGA1700.', 431990.00, 5, NULL, 'LGA1700', 20, 3.40, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(98, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i9-12900K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i9-12900K para socket LGA1700.', 452990.00, 6, NULL, 'LGA1700', 16, 3.20, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(99, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i9-13900K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i9-13900K para socket LGA1700.', 553990.00, 7, NULL, 'LGA1700', 24, 3.00, 125);
+INSERT INTO core_procesador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket, nucleos, frecuencia_base, potencia_referencia_watts) VALUES
+(100, 'CPU', (SELECT id FROM core_proveedor WHERE nombre = 'Intel'), 'Intel Core i9-14900K', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Procesador Intel Core i9-14900K para socket LGA1700.', 599990.00, 8, NULL, 'LGA1700', 24, 3.20, 125);
 
+-- tarjeta_grafica
 INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
-(1, 'Tarjeta Gráfica', 3, 'Gigabyte GPU Test 001', 'Tarjeta gráfica de prueba #1.', 153490, 4, NULL, 6, 'GDDR6X', 'PCIe 3.0', 121, 451, 241),
-(2, 'Tarjeta Gráfica', 4, 'MSI GPU Test 002', 'Tarjeta gráfica de prueba #2.', 156990, 5, NULL, 8, 'GDDR5', 'PCIe 5.0', 122, 452, 242),
-(3, 'Tarjeta Gráfica', 5, 'ASRock GPU Test 003', 'Tarjeta gráfica de prueba #3.', 160490, 6, NULL, 10, 'GDDR6', 'PCIe 4.0', 123, 453, 243),
-(4, 'Tarjeta Gráfica', 6, 'EVGA GPU Test 004', 'Tarjeta gráfica de prueba #4.', 163990, 7, NULL, 12, 'GDDR6X', 'PCIe 3.0', 124, 454, 244),
-(5, 'Tarjeta Gráfica', 7, 'Zotac GPU Test 005', 'Tarjeta gráfica de prueba #5.', 167490, 8, NULL, 16, 'GDDR5', 'PCIe 5.0', 125, 455, 245),
-(6, 'Tarjeta Gráfica', 8, 'PNY GPU Test 006', 'Tarjeta gráfica de prueba #6.', 170990, 9, NULL, 24, 'GDDR6', 'PCIe 4.0', 126, 456, 246),
-(7, 'Tarjeta Gráfica', 9, 'Palit GPU Test 007', 'Tarjeta gráfica de prueba #7.', 174490, 10, NULL, 4, 'GDDR6X', 'PCIe 3.0', 127, 457, 247),
-(8, 'Tarjeta Gráfica', 10, 'Gainward GPU Test 008', 'Tarjeta gráfica de prueba #8.', 177990, 11, NULL, 6, 'GDDR5', 'PCIe 5.0', 128, 458, 248),
-(9, 'Tarjeta Gráfica', 11, 'Sapphire GPU Test 009', 'Tarjeta gráfica de prueba #9.', 181490, 12, NULL, 8, 'GDDR6', 'PCIe 4.0', 129, 459, 249),
-(10, 'Tarjeta Gráfica', 12, 'PowerColor GPU Test 010', 'Tarjeta gráfica de prueba #10.', 184990, 13, NULL, 10, 'GDDR6X', 'PCIe 3.0', 130, 460, 250),
-(11, 'Tarjeta Gráfica', 13, 'XFX GPU Test 011', 'Tarjeta gráfica de prueba #11.', 188490, 14, NULL, 12, 'GDDR5', 'PCIe 5.0', 131, 461, 251),
-(12, 'Tarjeta Gráfica', 14, 'Corsair GPU Test 012', 'Tarjeta gráfica de prueba #12.', 191990, 15, NULL, 16, 'GDDR6', 'PCIe 4.0', 132, 462, 252),
-(13, 'Tarjeta Gráfica', 15, 'G.Skill GPU Test 013', 'Tarjeta gráfica de prueba #13.', 195490, 16, NULL, 24, 'GDDR6X', 'PCIe 3.0', 133, 463, 253),
-(14, 'Tarjeta Gráfica', 16, 'Kingston GPU Test 014', 'Tarjeta gráfica de prueba #14.', 198990, 17, NULL, 4, 'GDDR5', 'PCIe 5.0', 134, 464, 254),
-(15, 'Tarjeta Gráfica', 17, 'Crucial GPU Test 015', 'Tarjeta gráfica de prueba #15.', 202490, 18, NULL, 6, 'GDDR6', 'PCIe 4.0', 135, 465, 255),
-(16, 'Tarjeta Gráfica', 18, 'Samsung GPU Test 016', 'Tarjeta gráfica de prueba #16.', 205990, 19, NULL, 8, 'GDDR6X', 'PCIe 3.0', 136, 466, 256),
-(17, 'Tarjeta Gráfica', 19, 'Western Digital GPU Test 017', 'Tarjeta gráfica de prueba #17.', 209490, 20, NULL, 10, 'GDDR5', 'PCIe 5.0', 137, 467, 257),
-(18, 'Tarjeta Gráfica', 20, 'Seagate GPU Test 018', 'Tarjeta gráfica de prueba #18.', 212990, 21, NULL, 12, 'GDDR6', 'PCIe 4.0', 138, 468, 258),
-(19, 'Tarjeta Gráfica', 21, 'SanDisk GPU Test 019', 'Tarjeta gráfica de prueba #19.', 216490, 22, NULL, 16, 'GDDR6X', 'PCIe 3.0', 139, 469, 259),
-(20, 'Tarjeta Gráfica', 22, 'ADATA GPU Test 020', 'Tarjeta gráfica de prueba #20.', 219990, 23, NULL, 24, 'GDDR5', 'PCIe 5.0', 140, 470, 260),
-(21, 'Tarjeta Gráfica', 23, 'TeamGroup GPU Test 021', 'Tarjeta gráfica de prueba #21.', 223490, 24, NULL, 4, 'GDDR6', 'PCIe 4.0', 141, 471, 261),
-(22, 'Tarjeta Gráfica', 24, 'Patriot GPU Test 022', 'Tarjeta gráfica de prueba #22.', 226990, 25, NULL, 6, 'GDDR6X', 'PCIe 3.0', 142, 472, 262),
-(23, 'Tarjeta Gráfica', 25, 'HyperX GPU Test 023', 'Tarjeta gráfica de prueba #23.', 230490, 26, NULL, 8, 'GDDR5', 'PCIe 5.0', 143, 473, 263),
-(24, 'Tarjeta Gráfica', 26, 'Thermaltake GPU Test 024', 'Tarjeta gráfica de prueba #24.', 233990, 27, NULL, 10, 'GDDR6', 'PCIe 4.0', 144, 474, 264),
-(25, 'Tarjeta Gráfica', 27, 'Cooler Master GPU Test 025', 'Tarjeta gráfica de prueba #25.', 237490, 3, NULL, 12, 'GDDR6X', 'PCIe 3.0', 145, 475, 265),
-(26, 'Tarjeta Gráfica', 28, 'NZXT GPU Test 026', 'Tarjeta gráfica de prueba #26.', 240990, 4, NULL, 16, 'GDDR5', 'PCIe 5.0', 146, 476, 266),
-(27, 'Tarjeta Gráfica', 29, 'be quiet! GPU Test 027', 'Tarjeta gráfica de prueba #27.', 244490, 5, NULL, 24, 'GDDR6', 'PCIe 4.0', 147, 477, 267),
-(28, 'Tarjeta Gráfica', 30, 'Seasonic GPU Test 028', 'Tarjeta gráfica de prueba #28.', 247990, 6, NULL, 4, 'GDDR6X', 'PCIe 3.0', 148, 478, 268),
-(29, 'Tarjeta Gráfica', 31, 'FSP GPU Test 029', 'Tarjeta gráfica de prueba #29.', 251490, 7, NULL, 6, 'GDDR5', 'PCIe 5.0', 149, 479, 269),
-(30, 'Tarjeta Gráfica', 32, 'Lian Li GPU Test 030', 'Tarjeta gráfica de prueba #30.', 254990, 8, NULL, 8, 'GDDR6', 'PCIe 4.0', 150, 480, 270),
-(31, 'Tarjeta Gráfica', 33, 'Fractal Design GPU Test 031', 'Tarjeta gráfica de prueba #31.', 258490, 9, NULL, 10, 'GDDR6X', 'PCIe 3.0', 151, 481, 271),
-(32, 'Tarjeta Gráfica', 34, 'Phanteks GPU Test 032', 'Tarjeta gráfica de prueba #32.', 261990, 10, NULL, 12, 'GDDR5', 'PCIe 5.0', 152, 482, 272),
-(33, 'Tarjeta Gráfica', 35, 'Silverstone GPU Test 033', 'Tarjeta gráfica de prueba #33.', 265490, 11, NULL, 16, 'GDDR6', 'PCIe 4.0', 153, 483, 273),
-(34, 'Tarjeta Gráfica', 36, 'Antec GPU Test 034', 'Tarjeta gráfica de prueba #34.', 268990, 12, NULL, 24, 'GDDR6X', 'PCIe 3.0', 154, 484, 274),
-(35, 'Tarjeta Gráfica', 37, 'Montech GPU Test 035', 'Tarjeta gráfica de prueba #35.', 272490, 13, NULL, 4, 'GDDR5', 'PCIe 5.0', 155, 485, 275),
-(36, 'Tarjeta Gráfica', 38, 'Noctua GPU Test 036', 'Tarjeta gráfica de prueba #36.', 275990, 14, NULL, 6, 'GDDR6', 'PCIe 4.0', 156, 486, 276),
-(37, 'Tarjeta Gráfica', 39, 'Arctic GPU Test 037', 'Tarjeta gráfica de prueba #37.', 279490, 15, NULL, 8, 'GDDR6X', 'PCIe 3.0', 157, 487, 277),
-(38, 'Tarjeta Gráfica', 40, 'Deepcool GPU Test 038', 'Tarjeta gráfica de prueba #38.', 282990, 16, NULL, 10, 'GDDR5', 'PCIe 5.0', 158, 488, 278),
-(39, 'Tarjeta Gráfica', 41, 'ID-COOLING GPU Test 039', 'Tarjeta gráfica de prueba #39.', 286490, 17, NULL, 12, 'GDDR6', 'PCIe 4.0', 159, 489, 279),
-(40, 'Tarjeta Gráfica', 42, 'Scythe GPU Test 040', 'Tarjeta gráfica de prueba #40.', 289990, 18, NULL, 16, 'GDDR6X', 'PCIe 3.0', 160, 490, 280),
-(41, 'Tarjeta Gráfica', 43, 'Logitech GPU Test 041', 'Tarjeta gráfica de prueba #41.', 293490, 19, NULL, 24, 'GDDR5', 'PCIe 5.0', 161, 491, 281),
-(42, 'Tarjeta Gráfica', 44, 'Razer GPU Test 042', 'Tarjeta gráfica de prueba #42.', 296990, 20, NULL, 4, 'GDDR6', 'PCIe 4.0', 162, 492, 282),
-(43, 'Tarjeta Gráfica', 45, 'SteelSeries GPU Test 043', 'Tarjeta gráfica de prueba #43.', 300490, 21, NULL, 6, 'GDDR6X', 'PCIe 3.0', 163, 493, 283),
-(44, 'Tarjeta Gráfica', 46, 'BenQ GPU Test 044', 'Tarjeta gráfica de prueba #44.', 303990, 22, NULL, 8, 'GDDR5', 'PCIe 5.0', 164, 494, 284),
-(45, 'Tarjeta Gráfica', 47, 'LG GPU Test 045', 'Tarjeta gráfica de prueba #45.', 307490, 23, NULL, 10, 'GDDR6', 'PCIe 4.0', 165, 495, 285),
-(46, 'Tarjeta Gráfica', 48, 'AOC GPU Test 046', 'Tarjeta gráfica de prueba #46.', 310990, 24, NULL, 12, 'GDDR6X', 'PCIe 3.0', 166, 496, 286),
-(47, 'Tarjeta Gráfica', 49, 'Dell GPU Test 047', 'Tarjeta gráfica de prueba #47.', 314490, 25, NULL, 16, 'GDDR5', 'PCIe 5.0', 167, 497, 287),
-(48, 'Tarjeta Gráfica', 50, 'HP GPU Test 048', 'Tarjeta gráfica de prueba #48.', 317990, 26, NULL, 24, 'GDDR6', 'PCIe 4.0', 168, 498, 288),
-(49, 'Tarjeta Gráfica', 51, 'Lenovo GPU Test 049', 'Tarjeta gráfica de prueba #49.', 321490, 27, NULL, 4, 'GDDR6X', 'PCIe 3.0', 169, 499, 289),
-(50, 'Tarjeta Gráfica', 52, 'Acer GPU Test 050', 'Tarjeta gráfica de prueba #50.', 324990, 3, NULL, 6, 'GDDR5', 'PCIe 5.0', 170, 500, 290),
-(51, 'Tarjeta Gráfica', 53, 'Apple GPU Test 051', 'Tarjeta gráfica de prueba #51.', 328490, 4, NULL, 8, 'GDDR6', 'PCIe 4.0', 171, 501, 291),
-(52, 'Tarjeta Gráfica', 54, 'Qualcomm GPU Test 052', 'Tarjeta gráfica de prueba #52.', 331990, 5, NULL, 10, 'GDDR6X', 'PCIe 3.0', 172, 502, 292),
-(53, 'Tarjeta Gráfica', 55, 'MediaTek GPU Test 053', 'Tarjeta gráfica de prueba #53.', 335490, 6, NULL, 12, 'GDDR5', 'PCIe 5.0', 173, 503, 293),
-(54, 'Tarjeta Gráfica', 56, 'Broadcom GPU Test 054', 'Tarjeta gráfica de prueba #54.', 338990, 7, NULL, 16, 'GDDR6', 'PCIe 4.0', 174, 504, 294),
-(55, 'Tarjeta Gráfica', 57, 'Realtek GPU Test 055', 'Tarjeta gráfica de prueba #55.', 342490, 8, NULL, 24, 'GDDR6X', 'PCIe 3.0', 175, 505, 295),
-(56, 'Tarjeta Gráfica', 58, 'TP-Link GPU Test 056', 'Tarjeta gráfica de prueba #56.', 345990, 9, NULL, 4, 'GDDR5', 'PCIe 5.0', 176, 506, 296),
-(57, 'Tarjeta Gráfica', 59, 'D-Link GPU Test 057', 'Tarjeta gráfica de prueba #57.', 349490, 10, NULL, 6, 'GDDR6', 'PCIe 4.0', 177, 507, 297),
-(58, 'Tarjeta Gráfica', 60, 'Netgear GPU Test 058', 'Tarjeta gráfica de prueba #58.', 352990, 11, NULL, 8, 'GDDR6X', 'PCIe 3.0', 178, 508, 298),
-(59, 'Tarjeta Gráfica', 61, 'Ubiquiti GPU Test 059', 'Tarjeta gráfica de prueba #59.', 356490, 12, NULL, 10, 'GDDR5', 'PCIe 5.0', 179, 509, 299),
-(60, 'Tarjeta Gráfica', 62, 'Synology GPU Test 060', 'Tarjeta gráfica de prueba #60.', 359990, 13, NULL, 12, 'GDDR6', 'PCIe 4.0', 180, 510, 300),
-(61, 'Tarjeta Gráfica', 63, 'QNAP GPU Test 061', 'Tarjeta gráfica de prueba #61.', 363490, 14, NULL, 16, 'GDDR6X', 'PCIe 3.0', 181, 511, 301),
-(62, 'Tarjeta Gráfica', 64, 'ASUSTOR GPU Test 062', 'Tarjeta gráfica de prueba #62.', 366990, 15, NULL, 24, 'GDDR5', 'PCIe 5.0', 182, 512, 302),
-(63, 'Tarjeta Gráfica', 65, 'Toshiba GPU Test 063', 'Tarjeta gráfica de prueba #63.', 370490, 16, NULL, 4, 'GDDR6', 'PCIe 4.0', 183, 513, 303),
-(64, 'Tarjeta Gráfica', 66, 'Hitachi GPU Test 064', 'Tarjeta gráfica de prueba #64.', 373990, 17, NULL, 6, 'GDDR6X', 'PCIe 3.0', 184, 514, 304),
-(65, 'Tarjeta Gráfica', 67, 'Lexar GPU Test 065', 'Tarjeta gráfica de prueba #65.', 377490, 18, NULL, 8, 'GDDR5', 'PCIe 5.0', 185, 515, 305),
-(66, 'Tarjeta Gráfica', 68, 'PNY Technologies GPU Test 066', 'Tarjeta gráfica de prueba #66.', 380990, 19, NULL, 10, 'GDDR6', 'PCIe 4.0', 186, 516, 306),
-(67, 'Tarjeta Gráfica', 69, 'Inno3D GPU Test 067', 'Tarjeta gráfica de prueba #67.', 384490, 20, NULL, 12, 'GDDR6X', 'PCIe 3.0', 187, 517, 307),
-(68, 'Tarjeta Gráfica', 70, 'Colorful GPU Test 068', 'Tarjeta gráfica de prueba #68.', 387990, 21, NULL, 16, 'GDDR5', 'PCIe 5.0', 188, 518, 308),
-(69, 'Tarjeta Gráfica', 71, 'Biostar GPU Test 069', 'Tarjeta gráfica de prueba #69.', 391490, 22, NULL, 24, 'GDDR6', 'PCIe 4.0', 189, 519, 309),
-(70, 'Tarjeta Gráfica', 72, 'ECS GPU Test 070', 'Tarjeta gráfica de prueba #70.', 394990, 23, NULL, 4, 'GDDR6X', 'PCIe 3.0', 190, 520, 310),
-(71, 'Tarjeta Gráfica', 73, 'Supermicro GPU Test 071', 'Tarjeta gráfica de prueba #71.', 398490, 24, NULL, 6, 'GDDR5', 'PCIe 5.0', 191, 521, 311),
-(72, 'Tarjeta Gráfica', 74, 'Tyan GPU Test 072', 'Tarjeta gráfica de prueba #72.', 401990, 25, NULL, 8, 'GDDR6', 'PCIe 4.0', 192, 522, 312),
-(73, 'Tarjeta Gráfica', 75, 'GALAX GPU Test 073', 'Tarjeta gráfica de prueba #73.', 405490, 26, NULL, 10, 'GDDR6X', 'PCIe 3.0', 193, 523, 313),
-(74, 'Tarjeta Gráfica', 76, 'KFA2 GPU Test 074', 'Tarjeta gráfica de prueba #74.', 408990, 27, NULL, 12, 'GDDR5', 'PCIe 5.0', 194, 524, 314),
-(75, 'Tarjeta Gráfica', 77, 'Club 3D GPU Test 075', 'Tarjeta gráfica de prueba #75.', 412490, 3, NULL, 16, 'GDDR6', 'PCIe 4.0', 195, 525, 315),
-(76, 'Tarjeta Gráfica', 78, 'VisionTek GPU Test 076', 'Tarjeta gráfica de prueba #76.', 415990, 4, NULL, 24, 'GDDR6X', 'PCIe 3.0', 196, 526, 316),
-(77, 'Tarjeta Gráfica', 79, 'Matrox GPU Test 077', 'Tarjeta gráfica de prueba #77.', 419490, 5, NULL, 4, 'GDDR5', 'PCIe 5.0', 197, 527, 317),
-(78, 'Tarjeta Gráfica', 80, 'Intel Arc GPU Test 078', 'Tarjeta gráfica de prueba #78.', 422990, 6, NULL, 6, 'GDDR6', 'PCIe 4.0', 198, 528, 318),
-(79, 'Tarjeta Gráfica', 81, 'Sparkle GPU Test 079', 'Tarjeta gráfica de prueba #79.', 426490, 7, NULL, 8, 'GDDR6X', 'PCIe 3.0', 199, 529, 319),
-(80, 'Tarjeta Gráfica', 82, 'Intel GPU Test 080', 'Tarjeta gráfica de prueba #80.', 429990, 8, NULL, 10, 'GDDR5', 'PCIe 5.0', 200, 530, 320),
-(81, 'Tarjeta Gráfica', 83, 'AMD GPU Test 081', 'Tarjeta gráfica de prueba #81.', 433490, 9, NULL, 12, 'GDDR6', 'PCIe 4.0', 201, 531, 321),
-(82, 'Tarjeta Gráfica', 1, 'NVIDIA GPU Test 082', 'Tarjeta gráfica de prueba #82.', 436990, 10, NULL, 16, 'GDDR6X', 'PCIe 3.0', 202, 532, 322),
-(83, 'Tarjeta Gráfica', 2, 'ASUS GPU Test 083', 'Tarjeta gráfica de prueba #83.', 440490, 11, NULL, 24, 'GDDR5', 'PCIe 5.0', 203, 533, 323),
-(84, 'Tarjeta Gráfica', 3, 'Gigabyte GPU Test 084', 'Tarjeta gráfica de prueba #84.', 443990, 12, NULL, 4, 'GDDR6', 'PCIe 4.0', 204, 534, 324),
-(85, 'Tarjeta Gráfica', 4, 'MSI GPU Test 085', 'Tarjeta gráfica de prueba #85.', 447490, 13, NULL, 6, 'GDDR6X', 'PCIe 3.0', 205, 535, 325),
-(86, 'Tarjeta Gráfica', 5, 'ASRock GPU Test 086', 'Tarjeta gráfica de prueba #86.', 450990, 14, NULL, 8, 'GDDR5', 'PCIe 5.0', 206, 536, 326),
-(87, 'Tarjeta Gráfica', 6, 'EVGA GPU Test 087', 'Tarjeta gráfica de prueba #87.', 454490, 15, NULL, 10, 'GDDR6', 'PCIe 4.0', 207, 537, 327),
-(88, 'Tarjeta Gráfica', 7, 'Zotac GPU Test 088', 'Tarjeta gráfica de prueba #88.', 457990, 16, NULL, 12, 'GDDR6X', 'PCIe 3.0', 208, 538, 328),
-(89, 'Tarjeta Gráfica', 8, 'PNY GPU Test 089', 'Tarjeta gráfica de prueba #89.', 461490, 17, NULL, 16, 'GDDR5', 'PCIe 5.0', 209, 539, 329),
-(90, 'Tarjeta Gráfica', 9, 'Palit GPU Test 090', 'Tarjeta gráfica de prueba #90.', 464990, 18, NULL, 24, 'GDDR6', 'PCIe 4.0', 210, 540, 330),
-(91, 'Tarjeta Gráfica', 10, 'Gainward GPU Test 091', 'Tarjeta gráfica de prueba #91.', 468490, 19, NULL, 4, 'GDDR6X', 'PCIe 3.0', 211, 541, 331),
-(92, 'Tarjeta Gráfica', 11, 'Sapphire GPU Test 092', 'Tarjeta gráfica de prueba #92.', 471990, 20, NULL, 6, 'GDDR5', 'PCIe 5.0', 212, 542, 332),
-(93, 'Tarjeta Gráfica', 12, 'PowerColor GPU Test 093', 'Tarjeta gráfica de prueba #93.', 475490, 21, NULL, 8, 'GDDR6', 'PCIe 4.0', 213, 543, 333),
-(94, 'Tarjeta Gráfica', 13, 'XFX GPU Test 094', 'Tarjeta gráfica de prueba #94.', 478990, 22, NULL, 10, 'GDDR6X', 'PCIe 3.0', 214, 544, 334),
-(95, 'Tarjeta Gráfica', 14, 'Corsair GPU Test 095', 'Tarjeta gráfica de prueba #95.', 482490, 23, NULL, 12, 'GDDR5', 'PCIe 5.0', 215, 545, 335),
-(96, 'Tarjeta Gráfica', 15, 'G.Skill GPU Test 096', 'Tarjeta gráfica de prueba #96.', 485990, 24, NULL, 16, 'GDDR6', 'PCIe 4.0', 216, 546, 336),
-(97, 'Tarjeta Gráfica', 16, 'Kingston GPU Test 097', 'Tarjeta gráfica de prueba #97.', 489490, 25, NULL, 24, 'GDDR6X', 'PCIe 3.0', 217, 547, 337),
-(98, 'Tarjeta Gráfica', 17, 'Crucial GPU Test 098', 'Tarjeta gráfica de prueba #98.', 492990, 26, NULL, 4, 'GDDR5', 'PCIe 5.0', 218, 548, 338),
-(99, 'Tarjeta Gráfica', 18, 'Samsung GPU Test 099', 'Tarjeta gráfica de prueba #99.', 496490, 27, NULL, 6, 'GDDR6', 'PCIe 4.0', 219, 549, 339),
-(100, 'Tarjeta Gráfica', 19, 'Western Digital GPU Test 100', 'Tarjeta gráfica de prueba #100.', 499990, 3, NULL, 8, 'GDDR6X', 'PCIe 3.0', 220, 550, 340);
+(1, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 150990.00, 5, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(2, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 191990.00, 6, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(3, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 222990.00, 7, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(4, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 293990.00, 8, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(5, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 349990.00, 9, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(6, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 400990.00, 10, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(7, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 331990.00, 11, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(8, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 152990.00, 12, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(9, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 193990.00, 13, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(10, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 219990.00, 14, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(11, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 290990.00, 15, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(12, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 351990.00, 4, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(13, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 402990.00, 5, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(14, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 333990.00, 6, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(15, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gigabyte GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 149990.00, 7, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(16, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gigabyte GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 190990.00, 8, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(17, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gigabyte GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 221990.00, 9, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(18, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gigabyte GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 292990.00, 10, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(19, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gigabyte GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 353990.00, 11, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(20, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gigabyte GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 399990.00, 12, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(21, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gigabyte GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 330990.00, 13, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(22, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Zotac'), 'Zotac GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Zotac GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 151990.00, 14, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(23, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Zotac'), 'Zotac GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Zotac GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 192990.00, 15, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(24, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Zotac'), 'Zotac GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Zotac GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 223990.00, 4, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(25, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Zotac'), 'Zotac GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Zotac GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 289990.00, 5, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(26, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Zotac'), 'Zotac GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Zotac GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 350990.00, 6, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(27, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Zotac'), 'Zotac GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Zotac GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 401990.00, 7, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(28, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Zotac'), 'Zotac GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Zotac GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 332990.00, 8, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(29, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PNY GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 153990.00, 9, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(30, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PNY GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 189990.00, 10, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(31, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PNY GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 220990.00, 11, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(32, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PNY GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 291990.00, 12, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(33, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PNY GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 352990.00, 13, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(34, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PNY GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 403990.00, 14, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(35, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PNY GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 329990.00, 15, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(36, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Palit'), 'Palit GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Palit GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 150990.00, 4, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(37, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Palit'), 'Palit GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Palit GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 191990.00, 5, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(38, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Palit'), 'Palit GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Palit GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 222990.00, 6, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(39, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Palit'), 'Palit GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Palit GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 293990.00, 7, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(40, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Palit'), 'Palit GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Palit GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 349990.00, 8, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(41, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Palit'), 'Palit GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Palit GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 400990.00, 9, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(42, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Palit'), 'Palit GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Palit GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 331990.00, 10, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(43, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica EVGA GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 152990.00, 11, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(44, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica EVGA GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 193990.00, 12, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(45, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica EVGA GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 219990.00, 13, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(46, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica EVGA GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 290990.00, 14, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(47, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica EVGA GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 351990.00, 15, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(48, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica EVGA GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 402990.00, 4, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(49, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica EVGA GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 333990.00, 5, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(50, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'GALAX'), 'GALAX GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica GALAX GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 149990.00, 6, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(51, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'GALAX'), 'GALAX GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica GALAX GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 190990.00, 7, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(52, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'GALAX'), 'GALAX GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica GALAX GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 221990.00, 8, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(53, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'GALAX'), 'GALAX GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica GALAX GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 292990.00, 9, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(54, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'GALAX'), 'GALAX GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica GALAX GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 353990.00, 10, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(55, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'GALAX'), 'GALAX GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica GALAX GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 399990.00, 11, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(56, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'GALAX'), 'GALAX GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica GALAX GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 330990.00, 12, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(57, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Inno3D'), 'Inno3D GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Inno3D GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 151990.00, 13, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(58, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Inno3D'), 'Inno3D GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Inno3D GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 192990.00, 14, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(59, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Inno3D'), 'Inno3D GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Inno3D GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 223990.00, 15, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(60, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Inno3D'), 'Inno3D GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Inno3D GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 289990.00, 4, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(61, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Inno3D'), 'Inno3D GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Inno3D GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 350990.00, 5, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(62, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Inno3D'), 'Inno3D GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Inno3D GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 401990.00, 6, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(63, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Inno3D'), 'Inno3D GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Inno3D GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 332990.00, 7, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(64, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gainward'), 'Gainward GeForce GTX 1650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gainward GeForce GTX 1650, 4 GB GDDR6, PCIe 3.0.', 153990.00, 8, NULL, 4, 'GDDR6', 'PCIe 3.0', 75, 300, 170);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(65, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gainward'), 'Gainward GeForce GTX 1660 Super', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gainward GeForce GTX 1660 Super, 6 GB GDDR6, PCIe 3.0.', 189990.00, 9, NULL, 6, 'GDDR6', 'PCIe 3.0', 125, 450, 230);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(66, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gainward'), 'Gainward GeForce RTX 2060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gainward GeForce RTX 2060, 6 GB GDDR6, PCIe 3.0.', 220990.00, 10, NULL, 6, 'GDDR6', 'PCIe 3.0', 160, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(67, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gainward'), 'Gainward GeForce RTX 3060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gainward GeForce RTX 3060, 12 GB GDDR6, PCIe 4.0.', 291990.00, 11, NULL, 12, 'GDDR6', 'PCIe 4.0', 170, 550, 242);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(68, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gainward'), 'Gainward GeForce RTX 3060 Ti', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gainward GeForce RTX 3060 Ti, 8 GB GDDR6, PCIe 4.0.', 352990.00, 12, NULL, 8, 'GDDR6', 'PCIe 4.0', 200, 600, 245);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(69, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gainward'), 'Gainward GeForce RTX 3070', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gainward GeForce RTX 3070, 8 GB GDDR6, PCIe 4.0.', 403990.00, 13, NULL, 8, 'GDDR6', 'PCIe 4.0', 220, 650, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(70, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Gainward'), 'Gainward GeForce RTX 4060', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Gainward GeForce RTX 4060, 8 GB GDDR6, PCIe 4.0.', 329990.00, 14, NULL, 8, 'GDDR6', 'PCIe 4.0', 115, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(71, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Sapphire'), 'Sapphire Radeon RX 6600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Sapphire Radeon RX 6600, 8 GB GDDR6, PCIe 4.0.', 220990.00, 15, NULL, 8, 'GDDR6', 'PCIe 4.0', 132, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(72, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Sapphire'), 'Sapphire Radeon RX 6700 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Sapphire Radeon RX 6700 XT, 12 GB GDDR6, PCIe 4.0.', 351990.00, 4, NULL, 12, 'GDDR6', 'PCIe 4.0', 230, 650, 280);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(73, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Sapphire'), 'Sapphire Radeon RX 7600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Sapphire Radeon RX 7600, 8 GB GDDR6, PCIe 4.0.', 282990.00, 5, NULL, 8, 'GDDR6', 'PCIe 4.0', 165, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(74, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Sapphire'), 'Sapphire Radeon RX 7800 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Sapphire Radeon RX 7800 XT, 16 GB GDDR6, PCIe 4.0.', 533990.00, 6, NULL, 16, 'GDDR6', 'PCIe 4.0', 263, 700, 320);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(75, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PowerColor'), 'PowerColor Radeon RX 6600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PowerColor Radeon RX 6600, 8 GB GDDR6, PCIe 4.0.', 219990.00, 7, NULL, 8, 'GDDR6', 'PCIe 4.0', 132, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(76, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PowerColor'), 'PowerColor Radeon RX 6700 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PowerColor Radeon RX 6700 XT, 12 GB GDDR6, PCIe 4.0.', 350990.00, 8, NULL, 12, 'GDDR6', 'PCIe 4.0', 230, 650, 280);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(77, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PowerColor'), 'PowerColor Radeon RX 7600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PowerColor Radeon RX 7600, 8 GB GDDR6, PCIe 4.0.', 281990.00, 9, NULL, 8, 'GDDR6', 'PCIe 4.0', 165, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(78, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'PowerColor'), 'PowerColor Radeon RX 7800 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica PowerColor Radeon RX 7800 XT, 16 GB GDDR6, PCIe 4.0.', 532990.00, 10, NULL, 16, 'GDDR6', 'PCIe 4.0', 263, 700, 320);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(79, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'XFX'), 'XFX Radeon RX 6600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica XFX Radeon RX 6600, 8 GB GDDR6, PCIe 4.0.', 223990.00, 11, NULL, 8, 'GDDR6', 'PCIe 4.0', 132, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(80, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'XFX'), 'XFX Radeon RX 6700 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica XFX Radeon RX 6700 XT, 12 GB GDDR6, PCIe 4.0.', 349990.00, 12, NULL, 12, 'GDDR6', 'PCIe 4.0', 230, 650, 280);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(81, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'XFX'), 'XFX Radeon RX 7600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica XFX Radeon RX 7600, 8 GB GDDR6, PCIe 4.0.', 280990.00, 13, NULL, 8, 'GDDR6', 'PCIe 4.0', 165, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(82, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'XFX'), 'XFX Radeon RX 7800 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica XFX Radeon RX 7800 XT, 16 GB GDDR6, PCIe 4.0.', 531990.00, 14, NULL, 16, 'GDDR6', 'PCIe 4.0', 263, 700, 320);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(83, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Radeon RX 6600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASRock Radeon RX 6600, 8 GB GDDR6, PCIe 4.0.', 222990.00, 15, NULL, 8, 'GDDR6', 'PCIe 4.0', 132, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(84, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Radeon RX 6700 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASRock Radeon RX 6700 XT, 12 GB GDDR6, PCIe 4.0.', 353990.00, 4, NULL, 12, 'GDDR6', 'PCIe 4.0', 230, 650, 280);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(85, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Radeon RX 7600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASRock Radeon RX 7600, 8 GB GDDR6, PCIe 4.0.', 279990.00, 5, NULL, 8, 'GDDR6', 'PCIe 4.0', 165, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(86, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Radeon RX 7800 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASRock Radeon RX 7800 XT, 16 GB GDDR6, PCIe 4.0.', 530990.00, 6, NULL, 16, 'GDDR6', 'PCIe 4.0', 263, 700, 320);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(87, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS Radeon RX 6600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS Radeon RX 6600, 8 GB GDDR6, PCIe 4.0.', 221990.00, 7, NULL, 8, 'GDDR6', 'PCIe 4.0', 132, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(88, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS Radeon RX 6700 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS Radeon RX 6700 XT, 12 GB GDDR6, PCIe 4.0.', 352990.00, 8, NULL, 12, 'GDDR6', 'PCIe 4.0', 230, 650, 280);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(89, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS Radeon RX 7600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS Radeon RX 7600, 8 GB GDDR6, PCIe 4.0.', 283990.00, 9, NULL, 8, 'GDDR6', 'PCIe 4.0', 165, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(90, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS Radeon RX 7800 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASUS Radeon RX 7800 XT, 16 GB GDDR6, PCIe 4.0.', 529990.00, 10, NULL, 16, 'GDDR6', 'PCIe 4.0', 263, 700, 320);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(91, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI Radeon RX 6600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI Radeon RX 6600, 8 GB GDDR6, PCIe 4.0.', 220990.00, 11, NULL, 8, 'GDDR6', 'PCIe 4.0', 132, 500, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(92, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI Radeon RX 6700 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI Radeon RX 6700 XT, 12 GB GDDR6, PCIe 4.0.', 351990.00, 12, NULL, 12, 'GDDR6', 'PCIe 4.0', 230, 650, 280);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(93, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI Radeon RX 7600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI Radeon RX 7600, 8 GB GDDR6, PCIe 4.0.', 282990.00, 13, NULL, 8, 'GDDR6', 'PCIe 4.0', 165, 550, 240);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(94, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI Radeon RX 7800 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica MSI Radeon RX 7800 XT, 16 GB GDDR6, PCIe 4.0.', 533990.00, 14, NULL, 16, 'GDDR6', 'PCIe 4.0', 263, 700, 320);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(95, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Sparkle'), 'Sparkle Arc A750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Sparkle Arc A750, 8 GB GDDR6, PCIe 4.0.', 229990.00, 15, NULL, 8, 'GDDR6', 'PCIe 4.0', 225, 600, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(96, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Sparkle'), 'Sparkle Arc A770', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Sparkle Arc A770, 16 GB GDDR6, PCIe 4.0.', 300990.00, 4, NULL, 16, 'GDDR6', 'PCIe 4.0', 225, 650, 280);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(97, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'Sparkle'), 'Sparkle Arc B580', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica Sparkle Arc B580, 12 GB GDDR6, PCIe 4.0.', 281990.00, 5, NULL, 12, 'GDDR6', 'PCIe 4.0', 190, 600, 272);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(98, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Arc A750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASRock Arc A750, 8 GB GDDR6, PCIe 4.0.', 232990.00, 6, NULL, 8, 'GDDR6', 'PCIe 4.0', 225, 600, 270);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(99, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Arc A770', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASRock Arc A770, 16 GB GDDR6, PCIe 4.0.', 303990.00, 7, NULL, 16, 'GDDR6', 'PCIe 4.0', 225, 650, 280);
+INSERT INTO core_tarjetagrafica (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, vram_gb, tipo_memoria, interfaz, consumo_referencia_watts, potencia_minima_fuente_watts, largo_mm) VALUES
+(100, 'Tarjeta Gráfica', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Arc B580', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Tarjeta gráfica ASRock Arc B580, 12 GB GDDR6, PCIe 4.0.', 279990.00, 8, NULL, 12, 'GDDR6', 'PCIe 4.0', 190, 600, 272);
 
+-- memoria_ram
 INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
-(1, 'Memoria RAM', 4, 'ASRock RAM Test 16GB Kit 001', 'Módulo RAM de prueba #1.', 30880, 11, NULL, 16, 'DDR5', 2600, 2, 8, 'SO-DIMM'),
-(2, 'Memoria RAM', 5, 'EVGA RAM Test 32GB Kit 002', 'Módulo RAM de prueba #2.', 31770, 12, NULL, 32, 'DDR3', 2800, 4, 8, 'DIMM'),
-(3, 'Memoria RAM', 6, 'Zotac RAM Test 64GB Kit 003', 'Módulo RAM de prueba #3.', 32660, 13, NULL, 64, 'DDR4', 3000, 1, 64, 'SO-DIMM'),
-(4, 'Memoria RAM', 7, 'PNY RAM Test 8GB Kit 004', 'Módulo RAM de prueba #4.', 33550, 14, NULL, 8, 'DDR5', 3200, 2, 4, 'DIMM'),
-(5, 'Memoria RAM', 8, 'Palit RAM Test 16GB Kit 005', 'Módulo RAM de prueba #5.', 34440, 15, NULL, 16, 'DDR3', 3400, 4, 4, 'SO-DIMM'),
-(6, 'Memoria RAM', 9, 'Gainward RAM Test 32GB Kit 006', 'Módulo RAM de prueba #6.', 35330, 16, NULL, 32, 'DDR4', 3600, 1, 32, 'DIMM'),
-(7, 'Memoria RAM', 10, 'Sapphire RAM Test 64GB Kit 007', 'Módulo RAM de prueba #7.', 36220, 17, NULL, 64, 'DDR5', 3800, 2, 32, 'SO-DIMM'),
-(8, 'Memoria RAM', 11, 'PowerColor RAM Test 8GB Kit 008', 'Módulo RAM de prueba #8.', 37110, 18, NULL, 8, 'DDR3', 4000, 4, 2, 'DIMM'),
-(9, 'Memoria RAM', 12, 'XFX RAM Test 16GB Kit 009', 'Módulo RAM de prueba #9.', 38000, 19, NULL, 16, 'DDR4', 4200, 1, 16, 'SO-DIMM'),
-(10, 'Memoria RAM', 13, 'Corsair RAM Test 32GB Kit 010', 'Módulo RAM de prueba #10.', 38890, 20, NULL, 32, 'DDR5', 4400, 2, 16, 'DIMM'),
-(11, 'Memoria RAM', 14, 'G.Skill RAM Test 64GB Kit 011', 'Módulo RAM de prueba #11.', 39780, 21, NULL, 64, 'DDR3', 4600, 4, 16, 'SO-DIMM'),
-(12, 'Memoria RAM', 15, 'Kingston RAM Test 8GB Kit 012', 'Módulo RAM de prueba #12.', 40670, 22, NULL, 8, 'DDR4', 4800, 1, 8, 'DIMM'),
-(13, 'Memoria RAM', 16, 'Crucial RAM Test 16GB Kit 013', 'Módulo RAM de prueba #13.', 41560, 23, NULL, 16, 'DDR5', 5000, 2, 8, 'SO-DIMM'),
-(14, 'Memoria RAM', 17, 'Samsung RAM Test 32GB Kit 014', 'Módulo RAM de prueba #14.', 42450, 24, NULL, 32, 'DDR3', 5200, 4, 8, 'DIMM'),
-(15, 'Memoria RAM', 18, 'Western Digital RAM Test 64GB Kit 015', 'Módulo RAM de prueba #15.', 43340, 25, NULL, 64, 'DDR4', 5400, 1, 64, 'SO-DIMM'),
-(16, 'Memoria RAM', 19, 'Seagate RAM Test 8GB Kit 016', 'Módulo RAM de prueba #16.', 44230, 26, NULL, 8, 'DDR5', 5600, 2, 4, 'DIMM'),
-(17, 'Memoria RAM', 20, 'SanDisk RAM Test 16GB Kit 017', 'Módulo RAM de prueba #17.', 45120, 27, NULL, 16, 'DDR3', 5800, 4, 4, 'SO-DIMM'),
-(18, 'Memoria RAM', 21, 'ADATA RAM Test 32GB Kit 018', 'Módulo RAM de prueba #18.', 46010, 28, NULL, 32, 'DDR4', 6000, 1, 32, 'DIMM'),
-(19, 'Memoria RAM', 22, 'TeamGroup RAM Test 64GB Kit 019', 'Módulo RAM de prueba #19.', 46900, 29, NULL, 64, 'DDR5', 6200, 2, 32, 'SO-DIMM'),
-(20, 'Memoria RAM', 23, 'Patriot RAM Test 8GB Kit 020', 'Módulo RAM de prueba #20.', 47790, 30, NULL, 8, 'DDR3', 2400, 4, 2, 'DIMM'),
-(21, 'Memoria RAM', 24, 'HyperX RAM Test 16GB Kit 021', 'Módulo RAM de prueba #21.', 48680, 31, NULL, 16, 'DDR4', 2600, 1, 16, 'SO-DIMM'),
-(22, 'Memoria RAM', 25, 'Thermaltake RAM Test 32GB Kit 022', 'Módulo RAM de prueba #22.', 49570, 32, NULL, 32, 'DDR5', 2800, 2, 16, 'DIMM'),
-(23, 'Memoria RAM', 26, 'Cooler Master RAM Test 64GB Kit 023', 'Módulo RAM de prueba #23.', 50460, 33, NULL, 64, 'DDR3', 3000, 4, 16, 'SO-DIMM'),
-(24, 'Memoria RAM', 27, 'NZXT RAM Test 8GB Kit 024', 'Módulo RAM de prueba #24.', 51350, 34, NULL, 8, 'DDR4', 3200, 1, 8, 'DIMM'),
-(25, 'Memoria RAM', 28, 'be quiet! RAM Test 16GB Kit 025', 'Módulo RAM de prueba #25.', 52240, 35, NULL, 16, 'DDR5', 3400, 2, 8, 'SO-DIMM'),
-(26, 'Memoria RAM', 29, 'Seasonic RAM Test 32GB Kit 026', 'Módulo RAM de prueba #26.', 53130, 36, NULL, 32, 'DDR3', 3600, 4, 8, 'DIMM'),
-(27, 'Memoria RAM', 30, 'FSP RAM Test 64GB Kit 027', 'Módulo RAM de prueba #27.', 54020, 37, NULL, 64, 'DDR4', 3800, 1, 64, 'SO-DIMM'),
-(28, 'Memoria RAM', 31, 'Lian Li RAM Test 8GB Kit 028', 'Módulo RAM de prueba #28.', 54910, 38, NULL, 8, 'DDR5', 4000, 2, 4, 'DIMM'),
-(29, 'Memoria RAM', 32, 'Fractal Design RAM Test 16GB Kit 029', 'Módulo RAM de prueba #29.', 55800, 39, NULL, 16, 'DDR3', 4200, 4, 4, 'SO-DIMM'),
-(30, 'Memoria RAM', 33, 'Phanteks RAM Test 32GB Kit 030', 'Módulo RAM de prueba #30.', 56690, 40, NULL, 32, 'DDR4', 4400, 1, 32, 'DIMM'),
-(31, 'Memoria RAM', 34, 'Silverstone RAM Test 64GB Kit 031', 'Módulo RAM de prueba #31.', 57580, 41, NULL, 64, 'DDR5', 4600, 2, 32, 'SO-DIMM'),
-(32, 'Memoria RAM', 35, 'Antec RAM Test 8GB Kit 032', 'Módulo RAM de prueba #32.', 58470, 42, NULL, 8, 'DDR3', 4800, 4, 2, 'DIMM'),
-(33, 'Memoria RAM', 36, 'Montech RAM Test 16GB Kit 033', 'Módulo RAM de prueba #33.', 59360, 43, NULL, 16, 'DDR4', 5000, 1, 16, 'SO-DIMM'),
-(34, 'Memoria RAM', 37, 'Noctua RAM Test 32GB Kit 034', 'Módulo RAM de prueba #34.', 60250, 44, NULL, 32, 'DDR5', 5200, 2, 16, 'DIMM'),
-(35, 'Memoria RAM', 38, 'Arctic RAM Test 64GB Kit 035', 'Módulo RAM de prueba #35.', 61140, 45, NULL, 64, 'DDR3', 5400, 4, 16, 'SO-DIMM'),
-(36, 'Memoria RAM', 39, 'Deepcool RAM Test 8GB Kit 036', 'Módulo RAM de prueba #36.', 62030, 46, NULL, 8, 'DDR4', 5600, 1, 8, 'DIMM'),
-(37, 'Memoria RAM', 40, 'ID-COOLING RAM Test 16GB Kit 037', 'Módulo RAM de prueba #37.', 62920, 47, NULL, 16, 'DDR5', 5800, 2, 8, 'SO-DIMM'),
-(38, 'Memoria RAM', 41, 'Scythe RAM Test 32GB Kit 038', 'Módulo RAM de prueba #38.', 63810, 48, NULL, 32, 'DDR3', 6000, 4, 8, 'DIMM'),
-(39, 'Memoria RAM', 42, 'Logitech RAM Test 64GB Kit 039', 'Módulo RAM de prueba #39.', 64700, 49, NULL, 64, 'DDR4', 6200, 1, 64, 'SO-DIMM'),
-(40, 'Memoria RAM', 43, 'Razer RAM Test 8GB Kit 040', 'Módulo RAM de prueba #40.', 65590, 50, NULL, 8, 'DDR5', 2400, 2, 4, 'DIMM'),
-(41, 'Memoria RAM', 44, 'SteelSeries RAM Test 16GB Kit 041', 'Módulo RAM de prueba #41.', 66480, 51, NULL, 16, 'DDR3', 2600, 4, 4, 'SO-DIMM'),
-(42, 'Memoria RAM', 45, 'BenQ RAM Test 32GB Kit 042', 'Módulo RAM de prueba #42.', 67370, 52, NULL, 32, 'DDR4', 2800, 1, 32, 'DIMM'),
-(43, 'Memoria RAM', 46, 'LG RAM Test 64GB Kit 043', 'Módulo RAM de prueba #43.', 68260, 53, NULL, 64, 'DDR5', 3000, 2, 32, 'SO-DIMM'),
-(44, 'Memoria RAM', 47, 'AOC RAM Test 8GB Kit 044', 'Módulo RAM de prueba #44.', 69150, 54, NULL, 8, 'DDR3', 3200, 4, 2, 'DIMM'),
-(45, 'Memoria RAM', 48, 'Dell RAM Test 16GB Kit 045', 'Módulo RAM de prueba #45.', 70040, 55, NULL, 16, 'DDR4', 3400, 1, 16, 'SO-DIMM'),
-(46, 'Memoria RAM', 49, 'HP RAM Test 32GB Kit 046', 'Módulo RAM de prueba #46.', 70930, 56, NULL, 32, 'DDR5', 3600, 2, 16, 'DIMM'),
-(47, 'Memoria RAM', 50, 'Lenovo RAM Test 64GB Kit 047', 'Módulo RAM de prueba #47.', 71820, 57, NULL, 64, 'DDR3', 3800, 4, 16, 'SO-DIMM'),
-(48, 'Memoria RAM', 51, 'Acer RAM Test 8GB Kit 048', 'Módulo RAM de prueba #48.', 72710, 58, NULL, 8, 'DDR4', 4000, 1, 8, 'DIMM'),
-(49, 'Memoria RAM', 52, 'Apple RAM Test 16GB Kit 049', 'Módulo RAM de prueba #49.', 73600, 59, NULL, 16, 'DDR5', 4200, 2, 8, 'SO-DIMM'),
-(50, 'Memoria RAM', 53, 'Qualcomm RAM Test 32GB Kit 050', 'Módulo RAM de prueba #50.', 74490, 10, NULL, 32, 'DDR3', 4400, 4, 8, 'DIMM'),
-(51, 'Memoria RAM', 54, 'MediaTek RAM Test 64GB Kit 051', 'Módulo RAM de prueba #51.', 75380, 11, NULL, 64, 'DDR4', 4600, 1, 64, 'SO-DIMM'),
-(52, 'Memoria RAM', 55, 'Broadcom RAM Test 8GB Kit 052', 'Módulo RAM de prueba #52.', 76270, 12, NULL, 8, 'DDR5', 4800, 2, 4, 'DIMM'),
-(53, 'Memoria RAM', 56, 'Realtek RAM Test 16GB Kit 053', 'Módulo RAM de prueba #53.', 77160, 13, NULL, 16, 'DDR3', 5000, 4, 4, 'SO-DIMM'),
-(54, 'Memoria RAM', 57, 'TP-Link RAM Test 32GB Kit 054', 'Módulo RAM de prueba #54.', 78050, 14, NULL, 32, 'DDR4', 5200, 1, 32, 'DIMM'),
-(55, 'Memoria RAM', 58, 'D-Link RAM Test 64GB Kit 055', 'Módulo RAM de prueba #55.', 78940, 15, NULL, 64, 'DDR5', 5400, 2, 32, 'SO-DIMM'),
-(56, 'Memoria RAM', 59, 'Netgear RAM Test 8GB Kit 056', 'Módulo RAM de prueba #56.', 79830, 16, NULL, 8, 'DDR3', 5600, 4, 2, 'DIMM'),
-(57, 'Memoria RAM', 60, 'Ubiquiti RAM Test 16GB Kit 057', 'Módulo RAM de prueba #57.', 80720, 17, NULL, 16, 'DDR4', 5800, 1, 16, 'SO-DIMM'),
-(58, 'Memoria RAM', 61, 'Synology RAM Test 32GB Kit 058', 'Módulo RAM de prueba #58.', 81610, 18, NULL, 32, 'DDR5', 6000, 2, 16, 'DIMM'),
-(59, 'Memoria RAM', 62, 'QNAP RAM Test 64GB Kit 059', 'Módulo RAM de prueba #59.', 82500, 19, NULL, 64, 'DDR3', 6200, 4, 16, 'SO-DIMM'),
-(60, 'Memoria RAM', 63, 'ASUSTOR RAM Test 8GB Kit 060', 'Módulo RAM de prueba #60.', 83390, 20, NULL, 8, 'DDR4', 2400, 1, 8, 'DIMM'),
-(61, 'Memoria RAM', 64, 'Toshiba RAM Test 16GB Kit 061', 'Módulo RAM de prueba #61.', 84280, 21, NULL, 16, 'DDR5', 2600, 2, 8, 'SO-DIMM'),
-(62, 'Memoria RAM', 65, 'Hitachi RAM Test 32GB Kit 062', 'Módulo RAM de prueba #62.', 85170, 22, NULL, 32, 'DDR3', 2800, 4, 8, 'DIMM'),
-(63, 'Memoria RAM', 66, 'Lexar RAM Test 64GB Kit 063', 'Módulo RAM de prueba #63.', 86060, 23, NULL, 64, 'DDR4', 3000, 1, 64, 'SO-DIMM'),
-(64, 'Memoria RAM', 67, 'PNY Technologies RAM Test 8GB Kit 064', 'Módulo RAM de prueba #64.', 86950, 24, NULL, 8, 'DDR5', 3200, 2, 4, 'DIMM'),
-(65, 'Memoria RAM', 68, 'Inno3D RAM Test 16GB Kit 065', 'Módulo RAM de prueba #65.', 87840, 25, NULL, 16, 'DDR3', 3400, 4, 4, 'SO-DIMM'),
-(66, 'Memoria RAM', 69, 'Colorful RAM Test 32GB Kit 066', 'Módulo RAM de prueba #66.', 88730, 26, NULL, 32, 'DDR4', 3600, 1, 32, 'DIMM'),
-(67, 'Memoria RAM', 70, 'Biostar RAM Test 64GB Kit 067', 'Módulo RAM de prueba #67.', 89620, 27, NULL, 64, 'DDR5', 3800, 2, 32, 'SO-DIMM'),
-(68, 'Memoria RAM', 71, 'ECS RAM Test 8GB Kit 068', 'Módulo RAM de prueba #68.', 90510, 28, NULL, 8, 'DDR3', 4000, 4, 2, 'DIMM'),
-(69, 'Memoria RAM', 72, 'Supermicro RAM Test 16GB Kit 069', 'Módulo RAM de prueba #69.', 91400, 29, NULL, 16, 'DDR4', 4200, 1, 16, 'SO-DIMM'),
-(70, 'Memoria RAM', 73, 'Tyan RAM Test 32GB Kit 070', 'Módulo RAM de prueba #70.', 92290, 30, NULL, 32, 'DDR5', 4400, 2, 16, 'DIMM'),
-(71, 'Memoria RAM', 74, 'GALAX RAM Test 64GB Kit 071', 'Módulo RAM de prueba #71.', 93180, 31, NULL, 64, 'DDR3', 4600, 4, 16, 'SO-DIMM'),
-(72, 'Memoria RAM', 75, 'KFA2 RAM Test 8GB Kit 072', 'Módulo RAM de prueba #72.', 94070, 32, NULL, 8, 'DDR4', 4800, 1, 8, 'DIMM'),
-(73, 'Memoria RAM', 76, 'Club 3D RAM Test 16GB Kit 073', 'Módulo RAM de prueba #73.', 94960, 33, NULL, 16, 'DDR5', 5000, 2, 8, 'SO-DIMM'),
-(74, 'Memoria RAM', 77, 'VisionTek RAM Test 32GB Kit 074', 'Módulo RAM de prueba #74.', 95850, 34, NULL, 32, 'DDR3', 5200, 4, 8, 'DIMM'),
-(75, 'Memoria RAM', 78, 'Matrox RAM Test 64GB Kit 075', 'Módulo RAM de prueba #75.', 96740, 35, NULL, 64, 'DDR4', 5400, 1, 64, 'SO-DIMM'),
-(76, 'Memoria RAM', 79, 'Intel Arc RAM Test 8GB Kit 076', 'Módulo RAM de prueba #76.', 97630, 36, NULL, 8, 'DDR5', 5600, 2, 4, 'DIMM'),
-(77, 'Memoria RAM', 80, 'Sparkle RAM Test 16GB Kit 077', 'Módulo RAM de prueba #77.', 98520, 37, NULL, 16, 'DDR3', 5800, 4, 4, 'SO-DIMM'),
-(78, 'Memoria RAM', 81, 'Intel RAM Test 32GB Kit 078', 'Módulo RAM de prueba #78.', 99410, 38, NULL, 32, 'DDR4', 6000, 1, 32, 'DIMM'),
-(79, 'Memoria RAM', 82, 'AMD RAM Test 64GB Kit 079', 'Módulo RAM de prueba #79.', 100300, 39, NULL, 64, 'DDR5', 6200, 2, 32, 'SO-DIMM'),
-(80, 'Memoria RAM', 83, 'NVIDIA RAM Test 8GB Kit 080', 'Módulo RAM de prueba #80.', 101190, 40, NULL, 8, 'DDR3', 2400, 4, 2, 'DIMM'),
-(81, 'Memoria RAM', 1, 'ASUS RAM Test 16GB Kit 081', 'Módulo RAM de prueba #81.', 102080, 41, NULL, 16, 'DDR4', 2600, 1, 16, 'SO-DIMM'),
-(82, 'Memoria RAM', 2, 'Gigabyte RAM Test 32GB Kit 082', 'Módulo RAM de prueba #82.', 102970, 42, NULL, 32, 'DDR5', 2800, 2, 16, 'DIMM'),
-(83, 'Memoria RAM', 3, 'MSI RAM Test 64GB Kit 083', 'Módulo RAM de prueba #83.', 103860, 43, NULL, 64, 'DDR3', 3000, 4, 16, 'SO-DIMM'),
-(84, 'Memoria RAM', 4, 'ASRock RAM Test 8GB Kit 084', 'Módulo RAM de prueba #84.', 104750, 44, NULL, 8, 'DDR4', 3200, 1, 8, 'DIMM'),
-(85, 'Memoria RAM', 5, 'EVGA RAM Test 16GB Kit 085', 'Módulo RAM de prueba #85.', 105640, 45, NULL, 16, 'DDR5', 3400, 2, 8, 'SO-DIMM'),
-(86, 'Memoria RAM', 6, 'Zotac RAM Test 32GB Kit 086', 'Módulo RAM de prueba #86.', 106530, 46, NULL, 32, 'DDR3', 3600, 4, 8, 'DIMM'),
-(87, 'Memoria RAM', 7, 'PNY RAM Test 64GB Kit 087', 'Módulo RAM de prueba #87.', 107420, 47, NULL, 64, 'DDR4', 3800, 1, 64, 'SO-DIMM'),
-(88, 'Memoria RAM', 8, 'Palit RAM Test 8GB Kit 088', 'Módulo RAM de prueba #88.', 108310, 48, NULL, 8, 'DDR5', 4000, 2, 4, 'DIMM'),
-(89, 'Memoria RAM', 9, 'Gainward RAM Test 16GB Kit 089', 'Módulo RAM de prueba #89.', 109200, 49, NULL, 16, 'DDR3', 4200, 4, 4, 'SO-DIMM'),
-(90, 'Memoria RAM', 10, 'Sapphire RAM Test 32GB Kit 090', 'Módulo RAM de prueba #90.', 110090, 50, NULL, 32, 'DDR4', 4400, 1, 32, 'DIMM'),
-(91, 'Memoria RAM', 11, 'PowerColor RAM Test 64GB Kit 091', 'Módulo RAM de prueba #91.', 110980, 51, NULL, 64, 'DDR5', 4600, 2, 32, 'SO-DIMM'),
-(92, 'Memoria RAM', 12, 'XFX RAM Test 8GB Kit 092', 'Módulo RAM de prueba #92.', 111870, 52, NULL, 8, 'DDR3', 4800, 4, 2, 'DIMM'),
-(93, 'Memoria RAM', 13, 'Corsair RAM Test 16GB Kit 093', 'Módulo RAM de prueba #93.', 112760, 53, NULL, 16, 'DDR4', 5000, 1, 16, 'SO-DIMM'),
-(94, 'Memoria RAM', 14, 'G.Skill RAM Test 32GB Kit 094', 'Módulo RAM de prueba #94.', 113650, 54, NULL, 32, 'DDR5', 5200, 2, 16, 'DIMM'),
-(95, 'Memoria RAM', 15, 'Kingston RAM Test 64GB Kit 095', 'Módulo RAM de prueba #95.', 114540, 55, NULL, 64, 'DDR3', 5400, 4, 16, 'SO-DIMM'),
-(96, 'Memoria RAM', 16, 'Crucial RAM Test 8GB Kit 096', 'Módulo RAM de prueba #96.', 115430, 56, NULL, 8, 'DDR4', 5600, 1, 8, 'DIMM'),
-(97, 'Memoria RAM', 17, 'Samsung RAM Test 16GB Kit 097', 'Módulo RAM de prueba #97.', 116320, 57, NULL, 16, 'DDR5', 5800, 2, 8, 'SO-DIMM'),
-(98, 'Memoria RAM', 18, 'Western Digital RAM Test 32GB Kit 098', 'Módulo RAM de prueba #98.', 117210, 58, NULL, 32, 'DDR3', 6000, 4, 8, 'DIMM'),
-(99, 'Memoria RAM', 19, 'Seagate RAM Test 64GB Kit 099', 'Módulo RAM de prueba #99.', 118100, 59, NULL, 64, 'DDR4', 6200, 1, 64, 'SO-DIMM'),
-(100, 'Memoria RAM', 20, 'SanDisk RAM Test 8GB Kit 100', 'Módulo RAM de prueba #100.', 118990, 10, NULL, 8, 'DDR5', 2400, 2, 4, 'DIMM');
+(1, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance LPX 16GB (2x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 40990.00, 5, NULL, 16, 'DDR4', 3200, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(2, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Ripjaws V 16GB (2x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 41990.00, 6, NULL, 16, 'DDR4', 3200, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(3, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 16GB (2x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 42990.00, 7, NULL, 16, 'DDR4', 3200, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(4, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'HyperX'), 'HyperX Fury 16GB (2x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 43990.00, 8, NULL, 16, 'DDR4', 3200, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(5, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Ballistix 16GB (2x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 39990.00, 9, NULL, 16, 'DDR4', 3200, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(6, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Steel 16GB (2x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 40990.00, 10, NULL, 16, 'DDR4', 3200, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(7, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Spectrix D50 16GB (2x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 41990.00, 11, NULL, 16, 'DDR4', 3200, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(8, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Vulcan Z 16GB (2x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 42990.00, 12, NULL, 16, 'DDR4', 3200, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(9, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance LPX 16GB (2x8) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 43990.00, 13, NULL, 16, 'DDR4', 3600, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(10, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Ripjaws V 16GB (2x8) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 39990.00, 14, NULL, 16, 'DDR4', 3600, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(11, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 16GB (2x8) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 40990.00, 15, NULL, 16, 'DDR4', 3600, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(12, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'HyperX'), 'HyperX Fury 16GB (2x8) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 41990.00, 4, NULL, 16, 'DDR4', 3600, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(13, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Ballistix 16GB (2x8) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 42990.00, 5, NULL, 16, 'DDR4', 3600, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(14, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Steel 16GB (2x8) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 43990.00, 6, NULL, 16, 'DDR4', 3600, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(15, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Spectrix D50 16GB (2x8) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 39990.00, 7, NULL, 16, 'DDR4', 3600, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(16, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Vulcan Z 16GB (2x8) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 8 GB.', 40990.00, 8, NULL, 16, 'DDR4', 3600, 2, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(17, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance LPX 32GB (2x16) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 81990.00, 9, NULL, 32, 'DDR4', 3200, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(18, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Ripjaws V 32GB (2x16) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 82990.00, 10, NULL, 32, 'DDR4', 3200, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(19, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 32GB (2x16) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 83990.00, 11, NULL, 32, 'DDR4', 3200, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(20, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'HyperX'), 'HyperX Fury 32GB (2x16) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 79990.00, 12, NULL, 32, 'DDR4', 3200, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(21, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Ballistix 32GB (2x16) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 80990.00, 13, NULL, 32, 'DDR4', 3200, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(22, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Steel 32GB (2x16) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 81990.00, 14, NULL, 32, 'DDR4', 3200, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(23, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Spectrix D50 32GB (2x16) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 82990.00, 15, NULL, 32, 'DDR4', 3200, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(24, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Vulcan Z 32GB (2x16) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 83990.00, 4, NULL, 32, 'DDR4', 3200, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(25, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance LPX 32GB (2x16) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 79990.00, 5, NULL, 32, 'DDR4', 3600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(26, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Ripjaws V 32GB (2x16) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 80990.00, 6, NULL, 32, 'DDR4', 3600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(27, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 32GB (2x16) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 81990.00, 7, NULL, 32, 'DDR4', 3600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(28, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'HyperX'), 'HyperX Fury 32GB (2x16) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 82990.00, 8, NULL, 32, 'DDR4', 3600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(29, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Ballistix 32GB (2x16) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 83990.00, 9, NULL, 32, 'DDR4', 3600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(30, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Steel 32GB (2x16) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 79990.00, 10, NULL, 32, 'DDR4', 3600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(31, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Spectrix D50 32GB (2x16) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 80990.00, 11, NULL, 32, 'DDR4', 3600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(32, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Vulcan Z 32GB (2x16) DDR4-3600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 2 módulo(s) de 16 GB.', 81990.00, 12, NULL, 32, 'DDR4', 3600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(33, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance LPX 16GB DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 1 módulo(s) de 16 GB.', 82990.00, 13, NULL, 16, 'DDR4', 3200, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(34, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Ripjaws V 16GB DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 1 módulo(s) de 16 GB.', 83990.00, 14, NULL, 16, 'DDR4', 3200, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(35, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 16GB DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 1 módulo(s) de 16 GB.', 79990.00, 15, NULL, 16, 'DDR4', 3200, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(36, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'HyperX'), 'HyperX Fury 16GB DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 1 módulo(s) de 16 GB.', 80990.00, 4, NULL, 16, 'DDR4', 3200, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(37, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Ballistix 16GB DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 1 módulo(s) de 16 GB.', 81990.00, 5, NULL, 16, 'DDR4', 3200, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(38, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Steel 16GB DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 1 módulo(s) de 16 GB.', 82990.00, 6, NULL, 16, 'DDR4', 3200, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(39, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Spectrix D50 16GB DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 1 módulo(s) de 16 GB.', 83990.00, 7, NULL, 16, 'DDR4', 3200, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(40, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Vulcan Z 16GB DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 1 módulo(s) de 16 GB.', 79990.00, 8, NULL, 16, 'DDR4', 3200, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(41, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance LPX 32GB (4x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 4 módulo(s) de 8 GB.', 40990.00, 9, NULL, 32, 'DDR4', 3200, 4, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(42, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Ripjaws V 32GB (4x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 4 módulo(s) de 8 GB.', 41990.00, 10, NULL, 32, 'DDR4', 3200, 4, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(43, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 32GB (4x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 4 módulo(s) de 8 GB.', 42990.00, 11, NULL, 32, 'DDR4', 3200, 4, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(44, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'HyperX'), 'HyperX Fury 32GB (4x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 4 módulo(s) de 8 GB.', 43990.00, 12, NULL, 32, 'DDR4', 3200, 4, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(45, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Ballistix 32GB (4x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 4 módulo(s) de 8 GB.', 39990.00, 13, NULL, 32, 'DDR4', 3200, 4, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(46, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Steel 32GB (4x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 4 módulo(s) de 8 GB.', 40990.00, 14, NULL, 32, 'DDR4', 3200, 4, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(47, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Spectrix D50 32GB (4x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 4 módulo(s) de 8 GB.', 41990.00, 15, NULL, 32, 'DDR4', 3200, 4, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(48, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Vulcan Z 32GB (4x8) DDR4-3200', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 DIMM. El producto trae 4 módulo(s) de 8 GB.', 42990.00, 4, NULL, 32, 'DDR4', 3200, 4, 8, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(49, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance 32GB (2x16) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 103990.00, 5, NULL, 32, 'DDR5', 5600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(50, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Trident Z5 32GB (2x16) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 99990.00, 6, NULL, 32, 'DDR5', 5600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(51, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 32GB (2x16) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 100990.00, 7, NULL, 32, 'DDR5', 5600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(52, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Lancer 32GB (2x16) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 101990.00, 8, NULL, 32, 'DDR5', 5600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(53, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Delta 32GB (2x16) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 102990.00, 9, NULL, 32, 'DDR5', 5600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(54, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Venom 32GB (2x16) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 103990.00, 10, NULL, 32, 'DDR5', 5600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(55, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Pro 32GB (2x16) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 99990.00, 11, NULL, 32, 'DDR5', 5600, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(56, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance 32GB (2x16) DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 100990.00, 12, NULL, 32, 'DDR5', 6000, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(57, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Trident Z5 32GB (2x16) DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 101990.00, 13, NULL, 32, 'DDR5', 6000, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(58, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 32GB (2x16) DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 102990.00, 14, NULL, 32, 'DDR5', 6000, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(59, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Lancer 32GB (2x16) DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 103990.00, 15, NULL, 32, 'DDR5', 6000, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(60, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Delta 32GB (2x16) DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 99990.00, 4, NULL, 32, 'DDR5', 6000, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(61, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Venom 32GB (2x16) DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 100990.00, 5, NULL, 32, 'DDR5', 6000, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(62, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Pro 32GB (2x16) DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 16 GB.', 101990.00, 6, NULL, 32, 'DDR5', 6000, 2, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(63, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance 64GB (2x32) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 182990.00, 7, NULL, 64, 'DDR5', 5600, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(64, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Trident Z5 64GB (2x32) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 183990.00, 8, NULL, 64, 'DDR5', 5600, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(65, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 64GB (2x32) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 179990.00, 9, NULL, 64, 'DDR5', 5600, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(66, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Lancer 64GB (2x32) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 180990.00, 10, NULL, 64, 'DDR5', 5600, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(67, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Delta 64GB (2x32) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 181990.00, 11, NULL, 64, 'DDR5', 5600, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(68, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Venom 64GB (2x32) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 182990.00, 12, NULL, 64, 'DDR5', 5600, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(69, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Pro 64GB (2x32) DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 183990.00, 13, NULL, 64, 'DDR5', 5600, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(70, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance 64GB (2x32) DDR5-6400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 179990.00, 14, NULL, 64, 'DDR5', 6400, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(71, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Trident Z5 64GB (2x32) DDR5-6400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 180990.00, 15, NULL, 64, 'DDR5', 6400, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(72, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 64GB (2x32) DDR5-6400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 181990.00, 4, NULL, 64, 'DDR5', 6400, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(73, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Lancer 64GB (2x32) DDR5-6400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 182990.00, 5, NULL, 64, 'DDR5', 6400, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(74, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force Delta 64GB (2x32) DDR5-6400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 183990.00, 6, NULL, 64, 'DDR5', 6400, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(75, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot Viper Venom 64GB (2x32) DDR5-6400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 179990.00, 7, NULL, 64, 'DDR5', 6400, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(76, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Pro 64GB (2x32) DDR5-6400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 2 módulo(s) de 32 GB.', 180990.00, 8, NULL, 64, 'DDR5', 6400, 2, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(77, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Impact 16GB DDR4-3200 SO-DIMM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 SO-DIMM. El producto trae 1 módulo(s) de 16 GB.', 51990.00, 9, NULL, 16, 'DDR4', 3200, 1, 16, 'SO-DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(78, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial DDR4 SODIMM 16GB DDR4-3200 SO-DIMM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 SO-DIMM. El producto trae 1 módulo(s) de 16 GB.', 52990.00, 10, NULL, 16, 'DDR4', 3200, 1, 16, 'SO-DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(79, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance SODIMM 16GB (2x8) DDR4-3200 SO-DIMM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR4 SO-DIMM. El producto trae 2 módulo(s) de 8 GB.', 53990.00, 11, NULL, 16, 'DDR4', 3200, 2, 8, 'SO-DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(80, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Impact 16GB DDR5-4800 SO-DIMM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 SO-DIMM. El producto trae 1 módulo(s) de 16 GB.', 49990.00, 12, NULL, 16, 'DDR5', 4800, 1, 16, 'SO-DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(81, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial DDR5 SODIMM 16GB DDR5-5600 SO-DIMM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 SO-DIMM. El producto trae 1 módulo(s) de 16 GB.', 50990.00, 13, NULL, 16, 'DDR5', 5600, 1, 16, 'SO-DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(82, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance SODIMM 32GB (2x16) DDR5-5600 SO-DIMM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 SO-DIMM. El producto trae 2 módulo(s) de 16 GB.', 51990.00, 14, NULL, 32, 'DDR5', 5600, 2, 16, 'SO-DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(83, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG Lancer SODIMM 16GB DDR5-4800 SO-DIMM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 SO-DIMM. El producto trae 1 módulo(s) de 16 GB.', 52990.00, 15, NULL, 16, 'DDR5', 4800, 1, 16, 'SO-DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(84, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup T-Force SODIMM 32GB (2x16) DDR5-5600 SO-DIMM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 SO-DIMM. El producto trae 2 módulo(s) de 16 GB.', 53990.00, 4, NULL, 32, 'DDR5', 5600, 2, 16, 'SO-DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(85, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance 16GB DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 16 GB.', 69990.00, 5, NULL, 16, 'DDR5', 5600, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(86, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Trident Z5 16GB DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 16 GB.', 70990.00, 6, NULL, 16, 'DDR5', 5600, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(87, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 16GB DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 16 GB.', 71990.00, 7, NULL, 16, 'DDR5', 5600, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(88, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Pro 16GB DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 16 GB.', 72990.00, 8, NULL, 16, 'DDR5', 5600, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(89, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance 32GB DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 32 GB.', 133990.00, 9, NULL, 32, 'DDR5', 5600, 1, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(90, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Trident Z5 32GB DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 32 GB.', 129990.00, 10, NULL, 32, 'DDR5', 5600, 1, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(91, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 32GB DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 32 GB.', 130990.00, 11, NULL, 32, 'DDR5', 5600, 1, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(92, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Pro 32GB DDR5-5600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 32 GB.', 131990.00, 12, NULL, 32, 'DDR5', 5600, 1, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(93, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance 16GB DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 16 GB.', 72990.00, 13, NULL, 16, 'DDR5', 6000, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(94, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Trident Z5 16GB DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 16 GB.', 73990.00, 14, NULL, 16, 'DDR5', 6000, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(95, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 16GB DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 16 GB.', 69990.00, 15, NULL, 16, 'DDR5', 6000, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(96, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Pro 16GB DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 16 GB.', 70990.00, 4, NULL, 16, 'DDR5', 6000, 1, 16, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(97, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Vengeance 32GB DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 32 GB.', 131990.00, 5, NULL, 32, 'DDR5', 6000, 1, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(98, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'G.Skill'), 'G.Skill Trident Z5 32GB DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 32 GB.', 132990.00, 6, NULL, 32, 'DDR5', 6000, 1, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(99, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Beast 32GB DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 32 GB.', 133990.00, 7, NULL, 32, 'DDR5', 6000, 1, 32, 'DIMM');
+INSERT INTO core_memoriaram (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, tipo_ddr, velocidad_mhz, modulos_por_producto, capacidad_modulo_gb, formato_ram) VALUES
+(100, 'Memoria RAM', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial Pro 32GB DDR5-6000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Memoria DDR5 DIMM. El producto trae 1 módulo(s) de 32 GB.', 129990.00, 8, NULL, 32, 'DDR5', 6000, 1, 32, 'DIMM');
 
+-- placa_madre
 INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
-(1, 'Placa Madre', 5, 'Zotac Motherboard Test 001', 'Placa madre de prueba #1.', 102090, 5, NULL, 'AM5', 'B650', 'Micro-ATX', 3, 'DDR5', 'DIMM', 96),
-(2, 'Placa Madre', 6, 'PNY Motherboard Test 002', 'Placa madre de prueba #2.', 104190, 6, NULL, 'LGA1700', 'Z790', 'Mini-ITX', 4, 'DDR4', 'DIMM', 128),
-(3, 'Placa Madre', 7, 'Palit Motherboard Test 003', 'Placa madre de prueba #3.', 106290, 7, NULL, 'LGA1200', 'X670', 'ATX', 2, 'DDR5', 'DIMM', 160),
-(4, 'Placa Madre', 8, 'Gainward Motherboard Test 004', 'Placa madre de prueba #4.', 108390, 8, NULL, 'AM4', 'Otro', 'Micro-ATX', 3, 'DDR4', 'DIMM', 64),
-(5, 'Placa Madre', 9, 'Sapphire Motherboard Test 005', 'Placa madre de prueba #5.', 110490, 9, NULL, 'AM5', 'B550', 'Mini-ITX', 4, 'DDR5', 'DIMM', 96),
-(6, 'Placa Madre', 10, 'PowerColor Motherboard Test 006', 'Placa madre de prueba #6.', 112590, 10, NULL, 'LGA1700', 'B650', 'ATX', 2, 'DDR4', 'DIMM', 128),
-(7, 'Placa Madre', 11, 'XFX Motherboard Test 007', 'Placa madre de prueba #7.', 114690, 11, NULL, 'LGA1200', 'Z790', 'Micro-ATX', 3, 'DDR5', 'DIMM', 160),
-(8, 'Placa Madre', 12, 'Corsair Motherboard Test 008', 'Placa madre de prueba #8.', 116790, 12, NULL, 'AM4', 'X670', 'Mini-ITX', 4, 'DDR4', 'DIMM', 64),
-(9, 'Placa Madre', 13, 'G.Skill Motherboard Test 009', 'Placa madre de prueba #9.', 118890, 13, NULL, 'AM5', 'Otro', 'ATX', 2, 'DDR5', 'DIMM', 96),
-(10, 'Placa Madre', 14, 'Kingston Motherboard Test 010', 'Placa madre de prueba #10.', 120990, 14, NULL, 'LGA1700', 'B550', 'Micro-ATX', 3, 'DDR4', 'DIMM', 128),
-(11, 'Placa Madre', 15, 'Crucial Motherboard Test 011', 'Placa madre de prueba #11.', 123090, 15, NULL, 'LGA1200', 'B650', 'Mini-ITX', 4, 'DDR5', 'DIMM', 160),
-(12, 'Placa Madre', 16, 'Samsung Motherboard Test 012', 'Placa madre de prueba #12.', 125190, 16, NULL, 'AM4', 'Z790', 'ATX', 2, 'DDR4', 'DIMM', 64),
-(13, 'Placa Madre', 17, 'Western Digital Motherboard Test 013', 'Placa madre de prueba #13.', 127290, 17, NULL, 'AM5', 'X670', 'Micro-ATX', 3, 'DDR5', 'DIMM', 96),
-(14, 'Placa Madre', 18, 'Seagate Motherboard Test 014', 'Placa madre de prueba #14.', 129390, 18, NULL, 'LGA1700', 'Otro', 'Mini-ITX', 4, 'DDR4', 'DIMM', 128),
-(15, 'Placa Madre', 19, 'SanDisk Motherboard Test 015', 'Placa madre de prueba #15.', 131490, 19, NULL, 'LGA1200', 'B550', 'ATX', 2, 'DDR5', 'DIMM', 160),
-(16, 'Placa Madre', 20, 'ADATA Motherboard Test 016', 'Placa madre de prueba #16.', 133590, 20, NULL, 'AM4', 'B650', 'Micro-ATX', 3, 'DDR4', 'DIMM', 64),
-(17, 'Placa Madre', 21, 'TeamGroup Motherboard Test 017', 'Placa madre de prueba #17.', 135690, 21, NULL, 'AM5', 'Z790', 'Mini-ITX', 4, 'DDR5', 'DIMM', 96),
-(18, 'Placa Madre', 22, 'Patriot Motherboard Test 018', 'Placa madre de prueba #18.', 137790, 22, NULL, 'LGA1700', 'X670', 'ATX', 2, 'DDR4', 'DIMM', 128),
-(19, 'Placa Madre', 23, 'HyperX Motherboard Test 019', 'Placa madre de prueba #19.', 139890, 23, NULL, 'LGA1200', 'Otro', 'Micro-ATX', 3, 'DDR5', 'DIMM', 160),
-(20, 'Placa Madre', 24, 'Thermaltake Motherboard Test 020', 'Placa madre de prueba #20.', 141990, 24, NULL, 'AM4', 'B550', 'Mini-ITX', 4, 'DDR4', 'DIMM', 64),
-(21, 'Placa Madre', 25, 'Cooler Master Motherboard Test 021', 'Placa madre de prueba #21.', 144090, 25, NULL, 'AM5', 'B650', 'ATX', 2, 'DDR5', 'DIMM', 96),
-(22, 'Placa Madre', 26, 'NZXT Motherboard Test 022', 'Placa madre de prueba #22.', 146190, 26, NULL, 'LGA1700', 'Z790', 'Micro-ATX', 3, 'DDR4', 'DIMM', 128),
-(23, 'Placa Madre', 27, 'be quiet! Motherboard Test 023', 'Placa madre de prueba #23.', 148290, 27, NULL, 'LGA1200', 'X670', 'Mini-ITX', 4, 'DDR5', 'DIMM', 160),
-(24, 'Placa Madre', 28, 'Seasonic Motherboard Test 024', 'Placa madre de prueba #24.', 150390, 28, NULL, 'AM4', 'Otro', 'ATX', 2, 'DDR4', 'DIMM', 64),
-(25, 'Placa Madre', 29, 'FSP Motherboard Test 025', 'Placa madre de prueba #25.', 152490, 29, NULL, 'AM5', 'B550', 'Micro-ATX', 3, 'DDR5', 'DIMM', 96),
-(26, 'Placa Madre', 30, 'Lian Li Motherboard Test 026', 'Placa madre de prueba #26.', 154590, 30, NULL, 'LGA1700', 'B650', 'Mini-ITX', 4, 'DDR4', 'DIMM', 128),
-(27, 'Placa Madre', 31, 'Fractal Design Motherboard Test 027', 'Placa madre de prueba #27.', 156690, 31, NULL, 'LGA1200', 'Z790', 'ATX', 2, 'DDR5', 'DIMM', 160),
-(28, 'Placa Madre', 32, 'Phanteks Motherboard Test 028', 'Placa madre de prueba #28.', 158790, 32, NULL, 'AM4', 'X670', 'Micro-ATX', 3, 'DDR4', 'DIMM', 64),
-(29, 'Placa Madre', 33, 'Silverstone Motherboard Test 029', 'Placa madre de prueba #29.', 160890, 33, NULL, 'AM5', 'Otro', 'Mini-ITX', 4, 'DDR5', 'DIMM', 96),
-(30, 'Placa Madre', 34, 'Antec Motherboard Test 030', 'Placa madre de prueba #30.', 162990, 4, NULL, 'LGA1700', 'B550', 'ATX', 2, 'DDR4', 'DIMM', 128),
-(31, 'Placa Madre', 35, 'Montech Motherboard Test 031', 'Placa madre de prueba #31.', 165090, 5, NULL, 'LGA1200', 'B650', 'Micro-ATX', 3, 'DDR5', 'DIMM', 160),
-(32, 'Placa Madre', 36, 'Noctua Motherboard Test 032', 'Placa madre de prueba #32.', 167190, 6, NULL, 'AM4', 'Z790', 'Mini-ITX', 4, 'DDR4', 'DIMM', 64),
-(33, 'Placa Madre', 37, 'Arctic Motherboard Test 033', 'Placa madre de prueba #33.', 169290, 7, NULL, 'AM5', 'X670', 'ATX', 2, 'DDR5', 'DIMM', 96),
-(34, 'Placa Madre', 38, 'Deepcool Motherboard Test 034', 'Placa madre de prueba #34.', 171390, 8, NULL, 'LGA1700', 'Otro', 'Micro-ATX', 3, 'DDR4', 'DIMM', 128),
-(35, 'Placa Madre', 39, 'ID-COOLING Motherboard Test 035', 'Placa madre de prueba #35.', 173490, 9, NULL, 'LGA1200', 'B550', 'Mini-ITX', 4, 'DDR5', 'DIMM', 160),
-(36, 'Placa Madre', 40, 'Scythe Motherboard Test 036', 'Placa madre de prueba #36.', 175590, 10, NULL, 'AM4', 'B650', 'ATX', 2, 'DDR4', 'DIMM', 64),
-(37, 'Placa Madre', 41, 'Logitech Motherboard Test 037', 'Placa madre de prueba #37.', 177690, 11, NULL, 'AM5', 'Z790', 'Micro-ATX', 3, 'DDR5', 'DIMM', 96),
-(38, 'Placa Madre', 42, 'Razer Motherboard Test 038', 'Placa madre de prueba #38.', 179790, 12, NULL, 'LGA1700', 'X670', 'Mini-ITX', 4, 'DDR4', 'DIMM', 128),
-(39, 'Placa Madre', 43, 'SteelSeries Motherboard Test 039', 'Placa madre de prueba #39.', 181890, 13, NULL, 'LGA1200', 'Otro', 'ATX', 2, 'DDR5', 'DIMM', 160),
-(40, 'Placa Madre', 44, 'BenQ Motherboard Test 040', 'Placa madre de prueba #40.', 183990, 14, NULL, 'AM4', 'B550', 'Micro-ATX', 3, 'DDR4', 'DIMM', 64),
-(41, 'Placa Madre', 45, 'LG Motherboard Test 041', 'Placa madre de prueba #41.', 186090, 15, NULL, 'AM5', 'B650', 'Mini-ITX', 4, 'DDR5', 'DIMM', 96),
-(42, 'Placa Madre', 46, 'AOC Motherboard Test 042', 'Placa madre de prueba #42.', 188190, 16, NULL, 'LGA1700', 'Z790', 'ATX', 2, 'DDR4', 'DIMM', 128),
-(43, 'Placa Madre', 47, 'Dell Motherboard Test 043', 'Placa madre de prueba #43.', 190290, 17, NULL, 'LGA1200', 'X670', 'Micro-ATX', 3, 'DDR5', 'DIMM', 160),
-(44, 'Placa Madre', 48, 'HP Motherboard Test 044', 'Placa madre de prueba #44.', 192390, 18, NULL, 'AM4', 'Otro', 'Mini-ITX', 4, 'DDR4', 'DIMM', 64),
-(45, 'Placa Madre', 49, 'Lenovo Motherboard Test 045', 'Placa madre de prueba #45.', 194490, 19, NULL, 'AM5', 'B550', 'ATX', 2, 'DDR5', 'DIMM', 96),
-(46, 'Placa Madre', 50, 'Acer Motherboard Test 046', 'Placa madre de prueba #46.', 196590, 20, NULL, 'LGA1700', 'B650', 'Micro-ATX', 3, 'DDR4', 'DIMM', 128),
-(47, 'Placa Madre', 51, 'Apple Motherboard Test 047', 'Placa madre de prueba #47.', 198690, 21, NULL, 'LGA1200', 'Z790', 'Mini-ITX', 4, 'DDR5', 'DIMM', 160),
-(48, 'Placa Madre', 52, 'Qualcomm Motherboard Test 048', 'Placa madre de prueba #48.', 200790, 22, NULL, 'AM4', 'X670', 'ATX', 2, 'DDR4', 'DIMM', 64),
-(49, 'Placa Madre', 53, 'MediaTek Motherboard Test 049', 'Placa madre de prueba #49.', 202890, 23, NULL, 'AM5', 'Otro', 'Micro-ATX', 3, 'DDR5', 'DIMM', 96),
-(50, 'Placa Madre', 54, 'Broadcom Motherboard Test 050', 'Placa madre de prueba #50.', 204990, 24, NULL, 'LGA1700', 'B550', 'Mini-ITX', 4, 'DDR4', 'DIMM', 128),
-(51, 'Placa Madre', 55, 'Realtek Motherboard Test 051', 'Placa madre de prueba #51.', 207090, 25, NULL, 'LGA1200', 'B650', 'ATX', 2, 'DDR5', 'DIMM', 160),
-(52, 'Placa Madre', 56, 'TP-Link Motherboard Test 052', 'Placa madre de prueba #52.', 209190, 26, NULL, 'AM4', 'Z790', 'Micro-ATX', 3, 'DDR4', 'DIMM', 64),
-(53, 'Placa Madre', 57, 'D-Link Motherboard Test 053', 'Placa madre de prueba #53.', 211290, 27, NULL, 'AM5', 'X670', 'Mini-ITX', 4, 'DDR5', 'DIMM', 96),
-(54, 'Placa Madre', 58, 'Netgear Motherboard Test 054', 'Placa madre de prueba #54.', 213390, 28, NULL, 'LGA1700', 'Otro', 'ATX', 2, 'DDR4', 'DIMM', 128),
-(55, 'Placa Madre', 59, 'Ubiquiti Motherboard Test 055', 'Placa madre de prueba #55.', 215490, 29, NULL, 'LGA1200', 'B550', 'Micro-ATX', 3, 'DDR5', 'DIMM', 160),
-(56, 'Placa Madre', 60, 'Synology Motherboard Test 056', 'Placa madre de prueba #56.', 217590, 30, NULL, 'AM4', 'B650', 'Mini-ITX', 4, 'DDR4', 'DIMM', 64),
-(57, 'Placa Madre', 61, 'QNAP Motherboard Test 057', 'Placa madre de prueba #57.', 219690, 31, NULL, 'AM5', 'Z790', 'ATX', 2, 'DDR5', 'DIMM', 96),
-(58, 'Placa Madre', 62, 'ASUSTOR Motherboard Test 058', 'Placa madre de prueba #58.', 221790, 32, NULL, 'LGA1700', 'X670', 'Micro-ATX', 3, 'DDR4', 'DIMM', 128),
-(59, 'Placa Madre', 63, 'Toshiba Motherboard Test 059', 'Placa madre de prueba #59.', 223890, 33, NULL, 'LGA1200', 'Otro', 'Mini-ITX', 4, 'DDR5', 'DIMM', 160),
-(60, 'Placa Madre', 64, 'Hitachi Motherboard Test 060', 'Placa madre de prueba #60.', 225990, 4, NULL, 'AM4', 'B550', 'ATX', 2, 'DDR4', 'DIMM', 64),
-(61, 'Placa Madre', 65, 'Lexar Motherboard Test 061', 'Placa madre de prueba #61.', 228090, 5, NULL, 'AM5', 'B650', 'Micro-ATX', 3, 'DDR5', 'DIMM', 96),
-(62, 'Placa Madre', 66, 'PNY Technologies Motherboard Test 062', 'Placa madre de prueba #62.', 230190, 6, NULL, 'LGA1700', 'Z790', 'Mini-ITX', 4, 'DDR4', 'DIMM', 128),
-(63, 'Placa Madre', 67, 'Inno3D Motherboard Test 063', 'Placa madre de prueba #63.', 232290, 7, NULL, 'LGA1200', 'X670', 'ATX', 2, 'DDR5', 'DIMM', 160),
-(64, 'Placa Madre', 68, 'Colorful Motherboard Test 064', 'Placa madre de prueba #64.', 234390, 8, NULL, 'AM4', 'Otro', 'Micro-ATX', 3, 'DDR4', 'DIMM', 64),
-(65, 'Placa Madre', 69, 'Biostar Motherboard Test 065', 'Placa madre de prueba #65.', 236490, 9, NULL, 'AM5', 'B550', 'Mini-ITX', 4, 'DDR5', 'DIMM', 96),
-(66, 'Placa Madre', 70, 'ECS Motherboard Test 066', 'Placa madre de prueba #66.', 238590, 10, NULL, 'LGA1700', 'B650', 'ATX', 2, 'DDR4', 'DIMM', 128),
-(67, 'Placa Madre', 71, 'Supermicro Motherboard Test 067', 'Placa madre de prueba #67.', 240690, 11, NULL, 'LGA1200', 'Z790', 'Micro-ATX', 3, 'DDR5', 'DIMM', 160),
-(68, 'Placa Madre', 72, 'Tyan Motherboard Test 068', 'Placa madre de prueba #68.', 242790, 12, NULL, 'AM4', 'X670', 'Mini-ITX', 4, 'DDR4', 'DIMM', 64),
-(69, 'Placa Madre', 73, 'GALAX Motherboard Test 069', 'Placa madre de prueba #69.', 244890, 13, NULL, 'AM5', 'Otro', 'ATX', 2, 'DDR5', 'DIMM', 96),
-(70, 'Placa Madre', 74, 'KFA2 Motherboard Test 070', 'Placa madre de prueba #70.', 246990, 14, NULL, 'LGA1700', 'B550', 'Micro-ATX', 3, 'DDR4', 'DIMM', 128),
-(71, 'Placa Madre', 75, 'Club 3D Motherboard Test 071', 'Placa madre de prueba #71.', 249090, 15, NULL, 'LGA1200', 'B650', 'Mini-ITX', 4, 'DDR5', 'DIMM', 160),
-(72, 'Placa Madre', 76, 'VisionTek Motherboard Test 072', 'Placa madre de prueba #72.', 251190, 16, NULL, 'AM4', 'Z790', 'ATX', 2, 'DDR4', 'DIMM', 64),
-(73, 'Placa Madre', 77, 'Matrox Motherboard Test 073', 'Placa madre de prueba #73.', 253290, 17, NULL, 'AM5', 'X670', 'Micro-ATX', 3, 'DDR5', 'DIMM', 96),
-(74, 'Placa Madre', 78, 'Intel Arc Motherboard Test 074', 'Placa madre de prueba #74.', 255390, 18, NULL, 'LGA1700', 'Otro', 'Mini-ITX', 4, 'DDR4', 'DIMM', 128),
-(75, 'Placa Madre', 79, 'Sparkle Motherboard Test 075', 'Placa madre de prueba #75.', 257490, 19, NULL, 'LGA1200', 'B550', 'ATX', 2, 'DDR5', 'DIMM', 160),
-(76, 'Placa Madre', 80, 'Intel Motherboard Test 076', 'Placa madre de prueba #76.', 259590, 20, NULL, 'AM4', 'B650', 'Micro-ATX', 3, 'DDR4', 'DIMM', 64),
-(77, 'Placa Madre', 81, 'AMD Motherboard Test 077', 'Placa madre de prueba #77.', 261690, 21, NULL, 'AM5', 'Z790', 'Mini-ITX', 4, 'DDR5', 'DIMM', 96),
-(78, 'Placa Madre', 82, 'NVIDIA Motherboard Test 078', 'Placa madre de prueba #78.', 263790, 22, NULL, 'LGA1700', 'X670', 'ATX', 2, 'DDR4', 'DIMM', 128),
-(79, 'Placa Madre', 83, 'ASUS Motherboard Test 079', 'Placa madre de prueba #79.', 265890, 23, NULL, 'LGA1200', 'Otro', 'Micro-ATX', 3, 'DDR5', 'DIMM', 160),
-(80, 'Placa Madre', 1, 'Gigabyte Motherboard Test 080', 'Placa madre de prueba #80.', 267990, 24, NULL, 'AM4', 'B550', 'Mini-ITX', 4, 'DDR4', 'DIMM', 64),
-(81, 'Placa Madre', 2, 'MSI Motherboard Test 081', 'Placa madre de prueba #81.', 270090, 25, NULL, 'AM5', 'B650', 'ATX', 2, 'DDR5', 'DIMM', 96),
-(82, 'Placa Madre', 3, 'ASRock Motherboard Test 082', 'Placa madre de prueba #82.', 272190, 26, NULL, 'LGA1700', 'Z790', 'Micro-ATX', 3, 'DDR4', 'DIMM', 128),
-(83, 'Placa Madre', 4, 'EVGA Motherboard Test 083', 'Placa madre de prueba #83.', 274290, 27, NULL, 'LGA1200', 'X670', 'Mini-ITX', 4, 'DDR5', 'DIMM', 160),
-(84, 'Placa Madre', 5, 'Zotac Motherboard Test 084', 'Placa madre de prueba #84.', 276390, 28, NULL, 'AM4', 'Otro', 'ATX', 2, 'DDR4', 'DIMM', 64),
-(85, 'Placa Madre', 6, 'PNY Motherboard Test 085', 'Placa madre de prueba #85.', 278490, 29, NULL, 'AM5', 'B550', 'Micro-ATX', 3, 'DDR5', 'DIMM', 96),
-(86, 'Placa Madre', 7, 'Palit Motherboard Test 086', 'Placa madre de prueba #86.', 280590, 30, NULL, 'LGA1700', 'B650', 'Mini-ITX', 4, 'DDR4', 'DIMM', 128),
-(87, 'Placa Madre', 8, 'Gainward Motherboard Test 087', 'Placa madre de prueba #87.', 282690, 31, NULL, 'LGA1200', 'Z790', 'ATX', 2, 'DDR5', 'DIMM', 160),
-(88, 'Placa Madre', 9, 'Sapphire Motherboard Test 088', 'Placa madre de prueba #88.', 284790, 32, NULL, 'AM4', 'X670', 'Micro-ATX', 3, 'DDR4', 'DIMM', 64),
-(89, 'Placa Madre', 10, 'PowerColor Motherboard Test 089', 'Placa madre de prueba #89.', 286890, 33, NULL, 'AM5', 'Otro', 'Mini-ITX', 4, 'DDR5', 'DIMM', 96),
-(90, 'Placa Madre', 11, 'XFX Motherboard Test 090', 'Placa madre de prueba #90.', 288990, 4, NULL, 'LGA1700', 'B550', 'ATX', 2, 'DDR4', 'DIMM', 128),
-(91, 'Placa Madre', 12, 'Corsair Motherboard Test 091', 'Placa madre de prueba #91.', 291090, 5, NULL, 'LGA1200', 'B650', 'Micro-ATX', 3, 'DDR5', 'DIMM', 160),
-(92, 'Placa Madre', 13, 'G.Skill Motherboard Test 092', 'Placa madre de prueba #92.', 293190, 6, NULL, 'AM4', 'Z790', 'Mini-ITX', 4, 'DDR4', 'DIMM', 64),
-(93, 'Placa Madre', 14, 'Kingston Motherboard Test 093', 'Placa madre de prueba #93.', 295290, 7, NULL, 'AM5', 'X670', 'ATX', 2, 'DDR5', 'DIMM', 96),
-(94, 'Placa Madre', 15, 'Crucial Motherboard Test 094', 'Placa madre de prueba #94.', 297390, 8, NULL, 'LGA1700', 'Otro', 'Micro-ATX', 3, 'DDR4', 'DIMM', 128),
-(95, 'Placa Madre', 16, 'Samsung Motherboard Test 095', 'Placa madre de prueba #95.', 299490, 9, NULL, 'LGA1200', 'B550', 'Mini-ITX', 4, 'DDR5', 'DIMM', 160),
-(96, 'Placa Madre', 17, 'Western Digital Motherboard Test 096', 'Placa madre de prueba #96.', 301590, 10, NULL, 'AM4', 'B650', 'ATX', 2, 'DDR4', 'DIMM', 64),
-(97, 'Placa Madre', 18, 'Seagate Motherboard Test 097', 'Placa madre de prueba #97.', 303690, 11, NULL, 'AM5', 'Z790', 'Micro-ATX', 3, 'DDR5', 'DIMM', 96),
-(98, 'Placa Madre', 19, 'SanDisk Motherboard Test 098', 'Placa madre de prueba #98.', 305790, 12, NULL, 'LGA1700', 'X670', 'Mini-ITX', 4, 'DDR4', 'DIMM', 128),
-(99, 'Placa Madre', 20, 'ADATA Motherboard Test 099', 'Placa madre de prueba #99.', 307890, 13, NULL, 'LGA1200', 'Otro', 'ATX', 2, 'DDR5', 'DIMM', 160),
-(100, 'Placa Madre', 21, 'TeamGroup Motherboard Test 100', 'Placa madre de prueba #100.', 309990, 14, NULL, 'AM4', 'B550', 'Micro-ATX', 3, 'DDR4', 'DIMM', 64);
+(1, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF GAMING B550-PLUS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 120990.00, 5, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(2, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG STRIX B550-A GAMING', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 121990.00, 6, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(3, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS PRIME B550-P', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 122990.00, 7, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(4, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS PRIME B550M-A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset B550, socket AM4 y RAM DDR4.', 103990.00, 8, NULL, 'AM4', 'B550', 'Micro-ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(5, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG STRIX B550-I GAMING', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset B550, socket AM4 y RAM DDR4.', 99990.00, 9, NULL, 'AM4', 'B550', 'Mini-ITX', 2, 'DDR4', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(6, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG B550 TOMAHAWK WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 120990.00, 10, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(7, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG B550 CARBON WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 121990.00, 11, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(8, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI PRO B550-P WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 122990.00, 12, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(9, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI PRO B550M-B', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset B550, socket AM4 y RAM DDR4.', 103990.00, 13, NULL, 'AM4', 'B550', 'Micro-ATX', 2, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(10, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG B550I EDGE WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset B550, socket AM4 y RAM DDR4.', 99990.00, 14, NULL, 'AM4', 'B550', 'Mini-ITX', 2, 'DDR4', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(11, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B550 AORUS ELITE AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 120990.00, 15, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(12, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B550 GAMING X AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 121990.00, 4, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(13, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B550 AORUS MASTER', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 122990.00, 5, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(14, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B550M DS3H', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset B550, socket AM4 y RAM DDR4.', 103990.00, 6, NULL, 'AM4', 'B550', 'Micro-ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(15, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B550I AORUS ULTRA', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset B550, socket AM4 y RAM DDR4.', 99990.00, 7, NULL, 'AM4', 'B550', 'Mini-ITX', 2, 'DDR4', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(16, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B550 Steel Legend WiFi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 120990.00, 8, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(17, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B550 Phantom Gaming 4', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 121990.00, 9, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(18, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B550 Pro RS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 122990.00, 10, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(19, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B550M Pro RS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset B550, socket AM4 y RAM DDR4.', 103990.00, 11, NULL, 'AM4', 'B550', 'Micro-ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(20, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B550I Lightning WiFi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset B550, socket AM4 y RAM DDR4.', 99990.00, 12, NULL, 'AM4', 'B550', 'Mini-ITX', 2, 'DDR4', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(21, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ProArt B550-CREATOR', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 120990.00, 13, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(22, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG B550 TOMAHAWK MAX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 121990.00, 14, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(23, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B550 AORUS PRO AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 122990.00, 15, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(24, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B550 Taichi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 123990.00, 4, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(25, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF GAMING B550-PLUS WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B550, socket AM4 y RAM DDR4.', 119990.00, 5, NULL, 'AM4', 'B550', 'ATX', 4, 'DDR4', 'DIMM', 128);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(26, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF GAMING B650-PLUS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 190990.00, 6, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(27, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG STRIX B650-A GAMING', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 191990.00, 7, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(28, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS PRIME B650-P', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 192990.00, 8, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(29, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS PRIME B650M-A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset B650, socket AM5 y RAM DDR5.', 173990.00, 9, NULL, 'AM5', 'B650', 'Micro-ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(30, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG STRIX B650-I GAMING', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset B650, socket AM5 y RAM DDR5.', 169990.00, 10, NULL, 'AM5', 'B650', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(31, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG B650 TOMAHAWK WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 190990.00, 11, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(32, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG B650 CARBON WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 191990.00, 12, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(33, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI PRO B650-P WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 192990.00, 13, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(34, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI PRO B650M-B', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset B650, socket AM5 y RAM DDR5.', 173990.00, 14, NULL, 'AM5', 'B650', 'Micro-ATX', 2, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(35, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG B650I EDGE WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset B650, socket AM5 y RAM DDR5.', 169990.00, 15, NULL, 'AM5', 'B650', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(36, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B650 AORUS ELITE AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 190990.00, 4, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(37, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B650 GAMING X AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 191990.00, 5, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(38, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B650 AORUS MASTER', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 192990.00, 6, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(39, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B650M DS3H', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset B650, socket AM5 y RAM DDR5.', 173990.00, 7, NULL, 'AM5', 'B650', 'Micro-ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(40, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B650I AORUS ULTRA', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset B650, socket AM5 y RAM DDR5.', 169990.00, 8, NULL, 'AM5', 'B650', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(41, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B650 Steel Legend WiFi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 190990.00, 9, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(42, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B650 Phantom Gaming 4', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 191990.00, 10, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(43, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B650 Pro RS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 192990.00, 11, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(44, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B650M Pro RS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset B650, socket AM5 y RAM DDR5.', 173990.00, 12, NULL, 'AM5', 'B650', 'Micro-ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(45, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B650I Lightning WiFi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset B650, socket AM5 y RAM DDR5.', 169990.00, 13, NULL, 'AM5', 'B650', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(46, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ProArt B650-CREATOR', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 190990.00, 14, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(47, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG B650 TOMAHAWK MAX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 191990.00, 15, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(48, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte B650 AORUS PRO AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 192990.00, 4, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(49, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock B650 Taichi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 193990.00, 5, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(50, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF GAMING B650-PLUS WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset B650, socket AM5 y RAM DDR5.', 189990.00, 6, NULL, 'AM5', 'B650', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(51, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF GAMING X670-PLUS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 290990.00, 7, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(52, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG STRIX X670-A GAMING', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 291990.00, 8, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(53, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS PRIME X670-P', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 292990.00, 9, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(54, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS PRIME X670M-A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset X670, socket AM5 y RAM DDR5.', 273990.00, 10, NULL, 'AM5', 'X670', 'Micro-ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(55, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG STRIX X670-I GAMING', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset X670, socket AM5 y RAM DDR5.', 269990.00, 11, NULL, 'AM5', 'X670', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(56, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG X670 TOMAHAWK WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 290990.00, 12, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(57, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG X670 CARBON WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 291990.00, 13, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(58, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI PRO X670-P WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 292990.00, 14, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(59, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI PRO X670M-B', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset X670, socket AM5 y RAM DDR5.', 273990.00, 15, NULL, 'AM5', 'X670', 'Micro-ATX', 2, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(60, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG X670I EDGE WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset X670, socket AM5 y RAM DDR5.', 269990.00, 4, NULL, 'AM5', 'X670', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(61, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte X670 AORUS ELITE AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 290990.00, 5, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(62, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte X670 GAMING X AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 291990.00, 6, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(63, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte X670 AORUS MASTER', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 292990.00, 7, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(64, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte X670M DS3H', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset X670, socket AM5 y RAM DDR5.', 273990.00, 8, NULL, 'AM5', 'X670', 'Micro-ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(65, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte X670I AORUS ULTRA', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset X670, socket AM5 y RAM DDR5.', 269990.00, 9, NULL, 'AM5', 'X670', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(66, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock X670 Steel Legend WiFi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 290990.00, 10, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(67, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock X670 Phantom Gaming 4', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 291990.00, 11, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(68, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock X670 Pro RS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 292990.00, 12, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(69, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock X670M Pro RS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset X670, socket AM5 y RAM DDR5.', 273990.00, 13, NULL, 'AM5', 'X670', 'Micro-ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(70, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock X670I Lightning WiFi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset X670, socket AM5 y RAM DDR5.', 269990.00, 14, NULL, 'AM5', 'X670', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(71, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ProArt X670-CREATOR', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 290990.00, 15, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(72, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG X670 TOMAHAWK MAX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 291990.00, 4, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(73, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte X670 AORUS PRO AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 292990.00, 5, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(74, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock X670 Taichi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 293990.00, 6, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(75, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF GAMING X670-PLUS WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset X670, socket AM5 y RAM DDR5.', 289990.00, 7, NULL, 'AM5', 'X670', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(76, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF GAMING Z790-PLUS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 250990.00, 8, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(77, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG STRIX Z790-A GAMING', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 251990.00, 9, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(78, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS PRIME Z790-P', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 252990.00, 10, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(79, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS PRIME Z790M-A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 233990.00, 11, NULL, 'LGA1700', 'Z790', 'Micro-ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(80, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG STRIX Z790-I GAMING', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset Z790, socket LGA1700 y RAM DDR5.', 229990.00, 12, NULL, 'LGA1700', 'Z790', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(81, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG Z790 TOMAHAWK WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 250990.00, 13, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(82, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG Z790 CARBON WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 251990.00, 14, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(83, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI PRO Z790-P WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 252990.00, 15, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(84, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI PRO Z790M-B', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 233990.00, 4, NULL, 'LGA1700', 'Z790', 'Micro-ATX', 2, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(85, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG Z790I EDGE WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset Z790, socket LGA1700 y RAM DDR5.', 229990.00, 5, NULL, 'LGA1700', 'Z790', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(86, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte Z790 AORUS ELITE AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 250990.00, 6, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(87, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte Z790 GAMING X AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 251990.00, 7, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(88, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte Z790 AORUS MASTER', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 252990.00, 8, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(89, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte Z790M DS3H', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 233990.00, 9, NULL, 'LGA1700', 'Z790', 'Micro-ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(90, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte Z790I AORUS ULTRA', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset Z790, socket LGA1700 y RAM DDR5.', 229990.00, 10, NULL, 'LGA1700', 'Z790', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(91, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Z790 Steel Legend WiFi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 250990.00, 11, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(92, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Z790 Phantom Gaming 4', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 251990.00, 12, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(93, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Z790 Pro RS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 252990.00, 13, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(94, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Z790M Pro RS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Micro-ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 233990.00, 14, NULL, 'LGA1700', 'Z790', 'Micro-ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(95, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Z790I Lightning WiFi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa Mini-ITX con chipset Z790, socket LGA1700 y RAM DDR5.', 229990.00, 15, NULL, 'LGA1700', 'Z790', 'Mini-ITX', 2, 'DDR5', 'DIMM', 64);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(96, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ProArt Z790-CREATOR', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 250990.00, 4, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(97, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG Z790 TOMAHAWK MAX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 251990.00, 5, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(98, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte Z790 AORUS PRO AX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 252990.00, 6, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(99, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASRock'), 'ASRock Z790 Taichi', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 253990.00, 7, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
+INSERT INTO core_placamadre (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, socket_cpu, chipset, formato, ranuras_ram, tipo_ram_soportado, formato_ram_soportado, capacidad_maxima_ram_gb) VALUES
+(100, 'Placa Madre', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF GAMING Z790-PLUS WIFI', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Placa ATX con chipset Z790, socket LGA1700 y RAM DDR5.', 249990.00, 8, NULL, 'LGA1700', 'Z790', 'ATX', 4, 'DDR5', 'DIMM', 192);
 
+-- almacenamiento_ssd
 INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
-(1, 'SSD', 6, 'Palit SSD Test 001', 'SSD de prueba #1.', 41490, 9, NULL, 512, 'NVMe PCIe 3.0', '2.5"'),
-(2, 'SSD', 7, 'Gainward SSD Test 002', 'SSD de prueba #2.', 42990, 10, NULL, 1024, 'SATA III', 'M.2 2280'),
-(3, 'SSD', 8, 'Sapphire SSD Test 003', 'SSD de prueba #3.', 44490, 11, NULL, 2048, 'NVMe PCIe 4.0', '2.5"'),
-(4, 'SSD', 9, 'PowerColor SSD Test 004', 'SSD de prueba #4.', 45990, 12, NULL, 4096, 'NVMe PCIe 3.0', 'M.2 2280'),
-(5, 'SSD', 10, 'XFX SSD Test 005', 'SSD de prueba #5.', 47490, 13, NULL, 256, 'SATA III', '2.5"'),
-(6, 'SSD', 11, 'Corsair SSD Test 006', 'SSD de prueba #6.', 48990, 14, NULL, 512, 'NVMe PCIe 4.0', 'M.2 2280'),
-(7, 'SSD', 12, 'G.Skill SSD Test 007', 'SSD de prueba #7.', 50490, 15, NULL, 1024, 'NVMe PCIe 3.0', '2.5"'),
-(8, 'SSD', 13, 'Kingston SSD Test 008', 'SSD de prueba #8.', 51990, 16, NULL, 2048, 'SATA III', 'M.2 2280'),
-(9, 'SSD', 14, 'Crucial SSD Test 009', 'SSD de prueba #9.', 53490, 17, NULL, 4096, 'NVMe PCIe 4.0', '2.5"'),
-(10, 'SSD', 15, 'Samsung SSD Test 010', 'SSD de prueba #10.', 54990, 18, NULL, 256, 'NVMe PCIe 3.0', 'M.2 2280'),
-(11, 'SSD', 16, 'Western Digital SSD Test 011', 'SSD de prueba #11.', 56490, 19, NULL, 512, 'SATA III', '2.5"'),
-(12, 'SSD', 17, 'Seagate SSD Test 012', 'SSD de prueba #12.', 57990, 20, NULL, 1024, 'NVMe PCIe 4.0', 'M.2 2280'),
-(13, 'SSD', 18, 'SanDisk SSD Test 013', 'SSD de prueba #13.', 59490, 21, NULL, 2048, 'NVMe PCIe 3.0', '2.5"'),
-(14, 'SSD', 19, 'ADATA SSD Test 014', 'SSD de prueba #14.', 60990, 22, NULL, 4096, 'SATA III', 'M.2 2280'),
-(15, 'SSD', 20, 'TeamGroup SSD Test 015', 'SSD de prueba #15.', 62490, 23, NULL, 256, 'NVMe PCIe 4.0', '2.5"'),
-(16, 'SSD', 21, 'Patriot SSD Test 016', 'SSD de prueba #16.', 63990, 24, NULL, 512, 'NVMe PCIe 3.0', 'M.2 2280'),
-(17, 'SSD', 22, 'HyperX SSD Test 017', 'SSD de prueba #17.', 65490, 25, NULL, 1024, 'SATA III', '2.5"'),
-(18, 'SSD', 23, 'Thermaltake SSD Test 018', 'SSD de prueba #18.', 66990, 26, NULL, 2048, 'NVMe PCIe 4.0', 'M.2 2280'),
-(19, 'SSD', 24, 'Cooler Master SSD Test 019', 'SSD de prueba #19.', 68490, 27, NULL, 4096, 'NVMe PCIe 3.0', '2.5"'),
-(20, 'SSD', 25, 'NZXT SSD Test 020', 'SSD de prueba #20.', 69990, 28, NULL, 256, 'SATA III', 'M.2 2280'),
-(21, 'SSD', 26, 'be quiet! SSD Test 021', 'SSD de prueba #21.', 71490, 29, NULL, 512, 'NVMe PCIe 4.0', '2.5"'),
-(22, 'SSD', 27, 'Seasonic SSD Test 022', 'SSD de prueba #22.', 72990, 30, NULL, 1024, 'NVMe PCIe 3.0', 'M.2 2280'),
-(23, 'SSD', 28, 'FSP SSD Test 023', 'SSD de prueba #23.', 74490, 31, NULL, 2048, 'SATA III', '2.5"'),
-(24, 'SSD', 29, 'Lian Li SSD Test 024', 'SSD de prueba #24.', 75990, 32, NULL, 4096, 'NVMe PCIe 4.0', 'M.2 2280'),
-(25, 'SSD', 30, 'Fractal Design SSD Test 025', 'SSD de prueba #25.', 77490, 33, NULL, 256, 'NVMe PCIe 3.0', '2.5"'),
-(26, 'SSD', 31, 'Phanteks SSD Test 026', 'SSD de prueba #26.', 78990, 34, NULL, 512, 'SATA III', 'M.2 2280'),
-(27, 'SSD', 32, 'Silverstone SSD Test 027', 'SSD de prueba #27.', 80490, 35, NULL, 1024, 'NVMe PCIe 4.0', '2.5"'),
-(28, 'SSD', 33, 'Antec SSD Test 028', 'SSD de prueba #28.', 81990, 36, NULL, 2048, 'NVMe PCIe 3.0', 'M.2 2280'),
-(29, 'SSD', 34, 'Montech SSD Test 029', 'SSD de prueba #29.', 83490, 37, NULL, 4096, 'SATA III', '2.5"'),
-(30, 'SSD', 35, 'Noctua SSD Test 030', 'SSD de prueba #30.', 84990, 38, NULL, 256, 'NVMe PCIe 4.0', 'M.2 2280'),
-(31, 'SSD', 36, 'Arctic SSD Test 031', 'SSD de prueba #31.', 86490, 39, NULL, 512, 'NVMe PCIe 3.0', '2.5"'),
-(32, 'SSD', 37, 'Deepcool SSD Test 032', 'SSD de prueba #32.', 87990, 40, NULL, 1024, 'SATA III', 'M.2 2280'),
-(33, 'SSD', 38, 'ID-COOLING SSD Test 033', 'SSD de prueba #33.', 89490, 41, NULL, 2048, 'NVMe PCIe 4.0', '2.5"'),
-(34, 'SSD', 39, 'Scythe SSD Test 034', 'SSD de prueba #34.', 90990, 42, NULL, 4096, 'NVMe PCIe 3.0', 'M.2 2280'),
-(35, 'SSD', 40, 'Logitech SSD Test 035', 'SSD de prueba #35.', 92490, 43, NULL, 256, 'SATA III', '2.5"'),
-(36, 'SSD', 41, 'Razer SSD Test 036', 'SSD de prueba #36.', 93990, 44, NULL, 512, 'NVMe PCIe 4.0', 'M.2 2280'),
-(37, 'SSD', 42, 'SteelSeries SSD Test 037', 'SSD de prueba #37.', 95490, 45, NULL, 1024, 'NVMe PCIe 3.0', '2.5"'),
-(38, 'SSD', 43, 'BenQ SSD Test 038', 'SSD de prueba #38.', 96990, 46, NULL, 2048, 'SATA III', 'M.2 2280'),
-(39, 'SSD', 44, 'LG SSD Test 039', 'SSD de prueba #39.', 98490, 47, NULL, 4096, 'NVMe PCIe 4.0', '2.5"'),
-(40, 'SSD', 45, 'AOC SSD Test 040', 'SSD de prueba #40.', 99990, 48, NULL, 256, 'NVMe PCIe 3.0', 'M.2 2280'),
-(41, 'SSD', 46, 'Dell SSD Test 041', 'SSD de prueba #41.', 101490, 49, NULL, 512, 'SATA III', '2.5"'),
-(42, 'SSD', 47, 'HP SSD Test 042', 'SSD de prueba #42.', 102990, 50, NULL, 1024, 'NVMe PCIe 4.0', 'M.2 2280'),
-(43, 'SSD', 48, 'Lenovo SSD Test 043', 'SSD de prueba #43.', 104490, 51, NULL, 2048, 'NVMe PCIe 3.0', '2.5"'),
-(44, 'SSD', 49, 'Acer SSD Test 044', 'SSD de prueba #44.', 105990, 52, NULL, 4096, 'SATA III', 'M.2 2280'),
-(45, 'SSD', 50, 'Apple SSD Test 045', 'SSD de prueba #45.', 107490, 53, NULL, 256, 'NVMe PCIe 4.0', '2.5"'),
-(46, 'SSD', 51, 'Qualcomm SSD Test 046', 'SSD de prueba #46.', 108990, 54, NULL, 512, 'NVMe PCIe 3.0', 'M.2 2280'),
-(47, 'SSD', 52, 'MediaTek SSD Test 047', 'SSD de prueba #47.', 110490, 55, NULL, 1024, 'SATA III', '2.5"'),
-(48, 'SSD', 53, 'Broadcom SSD Test 048', 'SSD de prueba #48.', 111990, 56, NULL, 2048, 'NVMe PCIe 4.0', 'M.2 2280'),
-(49, 'SSD', 54, 'Realtek SSD Test 049', 'SSD de prueba #49.', 113490, 57, NULL, 4096, 'NVMe PCIe 3.0', '2.5"'),
-(50, 'SSD', 55, 'TP-Link SSD Test 050', 'SSD de prueba #50.', 114990, 58, NULL, 256, 'SATA III', 'M.2 2280'),
-(51, 'SSD', 56, 'D-Link SSD Test 051', 'SSD de prueba #51.', 116490, 59, NULL, 512, 'NVMe PCIe 4.0', '2.5"'),
-(52, 'SSD', 57, 'Netgear SSD Test 052', 'SSD de prueba #52.', 117990, 60, NULL, 1024, 'NVMe PCIe 3.0', 'M.2 2280'),
-(53, 'SSD', 58, 'Ubiquiti SSD Test 053', 'SSD de prueba #53.', 119490, 61, NULL, 2048, 'SATA III', '2.5"'),
-(54, 'SSD', 59, 'Synology SSD Test 054', 'SSD de prueba #54.', 120990, 62, NULL, 4096, 'NVMe PCIe 4.0', 'M.2 2280'),
-(55, 'SSD', 60, 'QNAP SSD Test 055', 'SSD de prueba #55.', 122490, 63, NULL, 256, 'NVMe PCIe 3.0', '2.5"'),
-(56, 'SSD', 61, 'ASUSTOR SSD Test 056', 'SSD de prueba #56.', 123990, 64, NULL, 512, 'SATA III', 'M.2 2280'),
-(57, 'SSD', 62, 'Toshiba SSD Test 057', 'SSD de prueba #57.', 125490, 65, NULL, 1024, 'NVMe PCIe 4.0', '2.5"'),
-(58, 'SSD', 63, 'Hitachi SSD Test 058', 'SSD de prueba #58.', 126990, 66, NULL, 2048, 'NVMe PCIe 3.0', 'M.2 2280'),
-(59, 'SSD', 64, 'Lexar SSD Test 059', 'SSD de prueba #59.', 128490, 67, NULL, 4096, 'SATA III', '2.5"'),
-(60, 'SSD', 65, 'PNY Technologies SSD Test 060', 'SSD de prueba #60.', 129990, 8, NULL, 256, 'NVMe PCIe 4.0', 'M.2 2280'),
-(61, 'SSD', 66, 'Inno3D SSD Test 061', 'SSD de prueba #61.', 131490, 9, NULL, 512, 'NVMe PCIe 3.0', '2.5"'),
-(62, 'SSD', 67, 'Colorful SSD Test 062', 'SSD de prueba #62.', 132990, 10, NULL, 1024, 'SATA III', 'M.2 2280'),
-(63, 'SSD', 68, 'Biostar SSD Test 063', 'SSD de prueba #63.', 134490, 11, NULL, 2048, 'NVMe PCIe 4.0', '2.5"'),
-(64, 'SSD', 69, 'ECS SSD Test 064', 'SSD de prueba #64.', 135990, 12, NULL, 4096, 'NVMe PCIe 3.0', 'M.2 2280'),
-(65, 'SSD', 70, 'Supermicro SSD Test 065', 'SSD de prueba #65.', 137490, 13, NULL, 256, 'SATA III', '2.5"'),
-(66, 'SSD', 71, 'Tyan SSD Test 066', 'SSD de prueba #66.', 138990, 14, NULL, 512, 'NVMe PCIe 4.0', 'M.2 2280'),
-(67, 'SSD', 72, 'GALAX SSD Test 067', 'SSD de prueba #67.', 140490, 15, NULL, 1024, 'NVMe PCIe 3.0', '2.5"'),
-(68, 'SSD', 73, 'KFA2 SSD Test 068', 'SSD de prueba #68.', 141990, 16, NULL, 2048, 'SATA III', 'M.2 2280'),
-(69, 'SSD', 74, 'Club 3D SSD Test 069', 'SSD de prueba #69.', 143490, 17, NULL, 4096, 'NVMe PCIe 4.0', '2.5"'),
-(70, 'SSD', 75, 'VisionTek SSD Test 070', 'SSD de prueba #70.', 144990, 18, NULL, 256, 'NVMe PCIe 3.0', 'M.2 2280'),
-(71, 'SSD', 76, 'Matrox SSD Test 071', 'SSD de prueba #71.', 146490, 19, NULL, 512, 'SATA III', '2.5"'),
-(72, 'SSD', 77, 'Intel Arc SSD Test 072', 'SSD de prueba #72.', 147990, 20, NULL, 1024, 'NVMe PCIe 4.0', 'M.2 2280'),
-(73, 'SSD', 78, 'Sparkle SSD Test 073', 'SSD de prueba #73.', 149490, 21, NULL, 2048, 'NVMe PCIe 3.0', '2.5"'),
-(74, 'SSD', 79, 'Intel SSD Test 074', 'SSD de prueba #74.', 150990, 22, NULL, 4096, 'SATA III', 'M.2 2280'),
-(75, 'SSD', 80, 'AMD SSD Test 075', 'SSD de prueba #75.', 152490, 23, NULL, 256, 'NVMe PCIe 4.0', '2.5"'),
-(76, 'SSD', 81, 'NVIDIA SSD Test 076', 'SSD de prueba #76.', 153990, 24, NULL, 512, 'NVMe PCIe 3.0', 'M.2 2280'),
-(77, 'SSD', 82, 'ASUS SSD Test 077', 'SSD de prueba #77.', 155490, 25, NULL, 1024, 'SATA III', '2.5"'),
-(78, 'SSD', 83, 'Gigabyte SSD Test 078', 'SSD de prueba #78.', 156990, 26, NULL, 2048, 'NVMe PCIe 4.0', 'M.2 2280'),
-(79, 'SSD', 1, 'MSI SSD Test 079', 'SSD de prueba #79.', 158490, 27, NULL, 4096, 'NVMe PCIe 3.0', '2.5"'),
-(80, 'SSD', 2, 'ASRock SSD Test 080', 'SSD de prueba #80.', 159990, 28, NULL, 256, 'SATA III', 'M.2 2280'),
-(81, 'SSD', 3, 'EVGA SSD Test 081', 'SSD de prueba #81.', 161490, 29, NULL, 512, 'NVMe PCIe 4.0', '2.5"'),
-(82, 'SSD', 4, 'Zotac SSD Test 082', 'SSD de prueba #82.', 162990, 30, NULL, 1024, 'NVMe PCIe 3.0', 'M.2 2280'),
-(83, 'SSD', 5, 'PNY SSD Test 083', 'SSD de prueba #83.', 164490, 31, NULL, 2048, 'SATA III', '2.5"'),
-(84, 'SSD', 6, 'Palit SSD Test 084', 'SSD de prueba #84.', 165990, 32, NULL, 4096, 'NVMe PCIe 4.0', 'M.2 2280'),
-(85, 'SSD', 7, 'Gainward SSD Test 085', 'SSD de prueba #85.', 167490, 33, NULL, 256, 'NVMe PCIe 3.0', '2.5"'),
-(86, 'SSD', 8, 'Sapphire SSD Test 086', 'SSD de prueba #86.', 168990, 34, NULL, 512, 'SATA III', 'M.2 2280'),
-(87, 'SSD', 9, 'PowerColor SSD Test 087', 'SSD de prueba #87.', 170490, 35, NULL, 1024, 'NVMe PCIe 4.0', '2.5"'),
-(88, 'SSD', 10, 'XFX SSD Test 088', 'SSD de prueba #88.', 171990, 36, NULL, 2048, 'NVMe PCIe 3.0', 'M.2 2280'),
-(89, 'SSD', 11, 'Corsair SSD Test 089', 'SSD de prueba #89.', 173490, 37, NULL, 4096, 'SATA III', '2.5"'),
-(90, 'SSD', 12, 'G.Skill SSD Test 090', 'SSD de prueba #90.', 174990, 38, NULL, 256, 'NVMe PCIe 4.0', 'M.2 2280'),
-(91, 'SSD', 13, 'Kingston SSD Test 091', 'SSD de prueba #91.', 176490, 39, NULL, 512, 'NVMe PCIe 3.0', '2.5"'),
-(92, 'SSD', 14, 'Crucial SSD Test 092', 'SSD de prueba #92.', 177990, 40, NULL, 1024, 'SATA III', 'M.2 2280'),
-(93, 'SSD', 15, 'Samsung SSD Test 093', 'SSD de prueba #93.', 179490, 41, NULL, 2048, 'NVMe PCIe 4.0', '2.5"'),
-(94, 'SSD', 16, 'Western Digital SSD Test 094', 'SSD de prueba #94.', 180990, 42, NULL, 4096, 'NVMe PCIe 3.0', 'M.2 2280'),
-(95, 'SSD', 17, 'Seagate SSD Test 095', 'SSD de prueba #95.', 182490, 43, NULL, 256, 'SATA III', '2.5"'),
-(96, 'SSD', 18, 'SanDisk SSD Test 096', 'SSD de prueba #96.', 183990, 44, NULL, 512, 'NVMe PCIe 4.0', 'M.2 2280'),
-(97, 'SSD', 19, 'ADATA SSD Test 097', 'SSD de prueba #97.', 185490, 45, NULL, 1024, 'NVMe PCIe 3.0', '2.5"'),
-(98, 'SSD', 20, 'TeamGroup SSD Test 098', 'SSD de prueba #98.', 186990, 46, NULL, 2048, 'SATA III', 'M.2 2280'),
-(99, 'SSD', 21, 'Patriot SSD Test 099', 'SSD de prueba #99.', 188490, 47, NULL, 4096, 'NVMe PCIe 4.0', '2.5"'),
-(100, 'SSD', 22, 'HyperX SSD Test 100', 'SSD de prueba #100.', 189990, 48, NULL, 256, 'NVMe PCIe 3.0', 'M.2 2280');
+(1, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 990 PRO 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 130990.00, 5, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(2, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 990 PRO 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 171990.00, 6, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(3, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 990 PRO 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 252990.00, 7, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(4, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 980 250GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 53990.00, 8, NULL, 250, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(5, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 980 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 49990.00, 9, NULL, 500, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(6, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 980 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 50990.00, 10, NULL, 1000, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(7, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 970 EVO Plus 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 71990.00, 11, NULL, 500, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(8, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 970 EVO Plus 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 72990.00, 12, NULL, 1000, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(9, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 970 EVO Plus 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 113990.00, 13, NULL, 2000, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(10, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 870 EVO 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 59990.00, 14, NULL, 500, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(11, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 870 EVO 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 60990.00, 15, NULL, 1000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(12, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 870 EVO 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 101990.00, 4, NULL, 2000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(13, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 870 EVO 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 182990.00, 5, NULL, 4000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(14, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black SN850X 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 123990.00, 6, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(15, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black SN850X 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 159990.00, 7, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(16, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black SN850X 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 240990.00, 8, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(17, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue SN580 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 56990.00, 9, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(18, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue SN580 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 57990.00, 10, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(19, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue SN580 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 98990.00, 11, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(20, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue SA510 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 49990.00, 12, NULL, 500, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(21, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue SA510 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 50990.00, 13, NULL, 1000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(22, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue SA510 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 91990.00, 14, NULL, 2000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(23, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial P3 Plus 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 52990.00, 15, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(24, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial P3 Plus 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 53990.00, 4, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(25, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial P3 Plus 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 89990.00, 5, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(26, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial P3 Plus 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 170990.00, 6, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(27, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial MX500 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 56990.00, 7, NULL, 500, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(28, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial MX500 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 57990.00, 8, NULL, 1000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(29, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial MX500 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 98990.00, 9, NULL, 2000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(30, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial MX500 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 174990.00, 10, NULL, 4000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(31, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston NV2 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 40990.00, 11, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(32, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston NV2 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 41990.00, 12, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(33, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston NV2 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 82990.00, 13, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(34, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston KC3000 512GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 83990.00, 14, NULL, 512, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(35, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston KC3000 1024GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 79990.00, 15, NULL, 1024, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(36, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston KC3000 2048GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 120990.00, 4, NULL, 2048, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(37, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston A400 240GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 26990.00, 5, NULL, 240, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(38, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston A400 480GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 27990.00, 6, NULL, 480, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(39, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston A400 960GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 28990.00, 7, NULL, 960, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(40, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate FireCuda 530 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 139990.00, 8, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(41, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate FireCuda 530 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 180990.00, 9, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(42, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate FireCuda 530 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 261990.00, 10, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(43, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA Legend 960 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 102990.00, 11, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(44, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA Legend 960 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 143990.00, 12, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(45, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA Legend 960 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 219990.00, 13, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(46, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'SanDisk'), 'SanDisk Ultra 3D 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 55990.00, 14, NULL, 500, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(47, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'SanDisk'), 'SanDisk Ultra 3D 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 56990.00, 15, NULL, 1000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(48, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'SanDisk'), 'SanDisk Ultra 3D 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 97990.00, 4, NULL, 2000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(49, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'SanDisk'), 'SanDisk Ultra 3D 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 178990.00, 5, NULL, 4000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(50, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair MP600 PRO 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 124990.00, 6, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(51, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair MP600 PRO 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 165990.00, 7, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(52, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair MP600 PRO 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 246990.00, 8, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(53, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot P400 Lite 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 47990.00, 9, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(54, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot P400 Lite 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 48990.00, 10, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(55, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Patriot'), 'Patriot P400 Lite 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 84990.00, 11, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(56, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup MP44 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 50990.00, 12, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(57, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup MP44 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 51990.00, 13, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(58, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'TeamGroup'), 'TeamGroup MP44 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 92990.00, 14, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(59, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY CS3140 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 113990.00, 15, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(60, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY CS3140 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 149990.00, 4, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(61, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'PNY'), 'PNY CS3140 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 230990.00, 5, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(62, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte AORUS Gen4 7300 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 121990.00, 6, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(63, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte AORUS Gen4 7300 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 162990.00, 7, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(64, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI Spatium M480 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 118990.00, 8, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(65, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI Spatium M480 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 154990.00, 9, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(66, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA SU650 256GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 30990.00, 10, NULL, 256, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(67, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA SU650 512GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 31990.00, 11, NULL, 512, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(68, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA SU650 1024GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 32990.00, 12, NULL, 1024, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(69, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston NV3 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 48990.00, 13, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(70, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston NV3 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 44990.00, 14, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(71, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston NV3 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 85990.00, 15, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(72, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston NV3 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 166990.00, 4, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(73, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 860 EVO 250GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 47990.00, 5, NULL, 250, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(74, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 860 EVO 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 48990.00, 6, NULL, 500, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(75, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 860 EVO 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 44990.00, 7, NULL, 1000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(76, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 860 EVO 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 85990.00, 8, NULL, 2000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(77, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 860 EVO 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD SATA III en formato 2.5".', 166990.00, 9, NULL, 4000, 'SATA III', '2.5"');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(78, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 990 EVO 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 112990.00, 10, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(79, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Samsung'), 'Samsung 990 EVO 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 153990.00, 11, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(80, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black SN770 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 79990.00, 12, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(81, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black SN770 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 80990.00, 13, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(82, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black SN770 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 121990.00, 14, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(83, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial P5 Plus 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 92990.00, 15, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(84, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial P5 Plus 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 93990.00, 4, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(85, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Crucial'), 'Crucial P5 Plus 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 129990.00, 5, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(86, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Renegade 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 90990.00, 6, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(87, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Renegade 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 91990.00, 7, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(88, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Renegade 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 132990.00, 8, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(89, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Kingston'), 'Kingston Fury Renegade 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 213990.00, 9, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(90, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair MP600 CORE 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 99990.00, 10, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(91, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair MP600 CORE 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 140990.00, 11, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(92, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair MP600 CORE 4000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 221990.00, 12, NULL, 4000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(93, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate FireCuda 520 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 102990.00, 13, NULL, 500, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(94, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate FireCuda 520 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 103990.00, 14, NULL, 1000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(95, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate FireCuda 520 2000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 4.0 en formato M.2 2280.', 139990.00, 15, NULL, 2000, 'NVMe PCIe 4.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(96, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'SanDisk'), 'SanDisk Extreme 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 70990.00, 4, NULL, 500, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(97, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'SanDisk'), 'SanDisk Extreme 1000GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 71990.00, 5, NULL, 1000, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(98, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG SX8200 Pro 512GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 82990.00, 6, NULL, 512, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(99, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG SX8200 Pro 1024GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 83990.00, 7, NULL, 1024, 'NVMe PCIe 3.0', 'M.2 2280');
+INSERT INTO core_almacenamientossd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, interfaz, formato) VALUES
+(100, 'SSD', (SELECT id FROM core_proveedor WHERE nombre = 'ADATA'), 'ADATA XPG SX8200 Pro 2048GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. SSD NVMe PCIe 3.0 en formato M.2 2280.', 119990.00, 8, NULL, 2048, 'NVMe PCIe 3.0', 'M.2 2280');
 
+-- almacenamiento_hdd
 INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
-(1, 'Disco Duro HDD', 7, 'Sapphire HDD Test 001', 'Disco HDD de prueba #1.', 50970, 7, NULL, 2000, 5400, 65),
-(2, 'Disco Duro HDD', 8, 'PowerColor HDD Test 002', 'Disco HDD de prueba #2.', 51950, 8, NULL, 4000, 7200, 66),
-(3, 'Disco Duro HDD', 9, 'XFX HDD Test 003', 'Disco HDD de prueba #3.', 52930, 9, NULL, 8000, 5400, 67),
-(4, 'Disco Duro HDD', 10, 'Corsair HDD Test 004', 'Disco HDD de prueba #4.', 53910, 10, NULL, 1000, 7200, 68),
-(5, 'Disco Duro HDD', 11, 'G.Skill HDD Test 005', 'Disco HDD de prueba #5.', 54890, 11, NULL, 2000, 5400, 69),
-(6, 'Disco Duro HDD', 12, 'Kingston HDD Test 006', 'Disco HDD de prueba #6.', 55870, 12, NULL, 4000, 7200, 70),
-(7, 'Disco Duro HDD', 13, 'Crucial HDD Test 007', 'Disco HDD de prueba #7.', 56850, 13, NULL, 8000, 5400, 71),
-(8, 'Disco Duro HDD', 14, 'Samsung HDD Test 008', 'Disco HDD de prueba #8.', 57830, 14, NULL, 1000, 7200, 72),
-(9, 'Disco Duro HDD', 15, 'Western Digital HDD Test 009', 'Disco HDD de prueba #9.', 58810, 15, NULL, 2000, 5400, 73),
-(10, 'Disco Duro HDD', 16, 'Seagate HDD Test 010', 'Disco HDD de prueba #10.', 59790, 16, NULL, 4000, 7200, 74),
-(11, 'Disco Duro HDD', 17, 'SanDisk HDD Test 011', 'Disco HDD de prueba #11.', 60770, 17, NULL, 8000, 5400, 75),
-(12, 'Disco Duro HDD', 18, 'ADATA HDD Test 012', 'Disco HDD de prueba #12.', 61750, 18, NULL, 1000, 7200, 76),
-(13, 'Disco Duro HDD', 19, 'TeamGroup HDD Test 013', 'Disco HDD de prueba #13.', 62730, 19, NULL, 2000, 5400, 77),
-(14, 'Disco Duro HDD', 20, 'Patriot HDD Test 014', 'Disco HDD de prueba #14.', 63710, 20, NULL, 4000, 7200, 78),
-(15, 'Disco Duro HDD', 21, 'HyperX HDD Test 015', 'Disco HDD de prueba #15.', 64690, 21, NULL, 8000, 5400, 79),
-(16, 'Disco Duro HDD', 22, 'Thermaltake HDD Test 016', 'Disco HDD de prueba #16.', 65670, 22, NULL, 1000, 7200, 80),
-(17, 'Disco Duro HDD', 23, 'Cooler Master HDD Test 017', 'Disco HDD de prueba #17.', 66650, 23, NULL, 2000, 5400, 81),
-(18, 'Disco Duro HDD', 24, 'NZXT HDD Test 018', 'Disco HDD de prueba #18.', 67630, 24, NULL, 4000, 7200, 82),
-(19, 'Disco Duro HDD', 25, 'be quiet! HDD Test 019', 'Disco HDD de prueba #19.', 68610, 25, NULL, 8000, 5400, 83),
-(20, 'Disco Duro HDD', 26, 'Seasonic HDD Test 020', 'Disco HDD de prueba #20.', 69590, 26, NULL, 1000, 7200, 84),
-(21, 'Disco Duro HDD', 27, 'FSP HDD Test 021', 'Disco HDD de prueba #21.', 70570, 27, NULL, 2000, 5400, 85),
-(22, 'Disco Duro HDD', 28, 'Lian Li HDD Test 022', 'Disco HDD de prueba #22.', 71550, 28, NULL, 4000, 7200, 86),
-(23, 'Disco Duro HDD', 29, 'Fractal Design HDD Test 023', 'Disco HDD de prueba #23.', 72530, 29, NULL, 8000, 5400, 87),
-(24, 'Disco Duro HDD', 30, 'Phanteks HDD Test 024', 'Disco HDD de prueba #24.', 73510, 30, NULL, 1000, 7200, 88),
-(25, 'Disco Duro HDD', 31, 'Silverstone HDD Test 025', 'Disco HDD de prueba #25.', 74490, 31, NULL, 2000, 5400, 89),
-(26, 'Disco Duro HDD', 32, 'Antec HDD Test 026', 'Disco HDD de prueba #26.', 75470, 32, NULL, 4000, 7200, 90),
-(27, 'Disco Duro HDD', 33, 'Montech HDD Test 027', 'Disco HDD de prueba #27.', 76450, 33, NULL, 8000, 5400, 91),
-(28, 'Disco Duro HDD', 34, 'Noctua HDD Test 028', 'Disco HDD de prueba #28.', 77430, 34, NULL, 1000, 7200, 92),
-(29, 'Disco Duro HDD', 35, 'Arctic HDD Test 029', 'Disco HDD de prueba #29.', 78410, 35, NULL, 2000, 5400, 93),
-(30, 'Disco Duro HDD', 36, 'Deepcool HDD Test 030', 'Disco HDD de prueba #30.', 79390, 36, NULL, 4000, 7200, 94),
-(31, 'Disco Duro HDD', 37, 'ID-COOLING HDD Test 031', 'Disco HDD de prueba #31.', 80370, 37, NULL, 8000, 5400, 95),
-(32, 'Disco Duro HDD', 38, 'Scythe HDD Test 032', 'Disco HDD de prueba #32.', 81350, 38, NULL, 1000, 7200, 96),
-(33, 'Disco Duro HDD', 39, 'Logitech HDD Test 033', 'Disco HDD de prueba #33.', 82330, 39, NULL, 2000, 5400, 97),
-(34, 'Disco Duro HDD', 40, 'Razer HDD Test 034', 'Disco HDD de prueba #34.', 83310, 40, NULL, 4000, 7200, 98),
-(35, 'Disco Duro HDD', 41, 'SteelSeries HDD Test 035', 'Disco HDD de prueba #35.', 84290, 6, NULL, 8000, 5400, 99),
-(36, 'Disco Duro HDD', 42, 'BenQ HDD Test 036', 'Disco HDD de prueba #36.', 85270, 7, NULL, 1000, 7200, 100),
-(37, 'Disco Duro HDD', 43, 'LG HDD Test 037', 'Disco HDD de prueba #37.', 86250, 8, NULL, 2000, 5400, 101),
-(38, 'Disco Duro HDD', 44, 'AOC HDD Test 038', 'Disco HDD de prueba #38.', 87230, 9, NULL, 4000, 7200, 102),
-(39, 'Disco Duro HDD', 45, 'Dell HDD Test 039', 'Disco HDD de prueba #39.', 88210, 10, NULL, 8000, 5400, 103),
-(40, 'Disco Duro HDD', 46, 'HP HDD Test 040', 'Disco HDD de prueba #40.', 89190, 11, NULL, 1000, 7200, 104),
-(41, 'Disco Duro HDD', 47, 'Lenovo HDD Test 041', 'Disco HDD de prueba #41.', 90170, 12, NULL, 2000, 5400, 105),
-(42, 'Disco Duro HDD', 48, 'Acer HDD Test 042', 'Disco HDD de prueba #42.', 91150, 13, NULL, 4000, 7200, 106),
-(43, 'Disco Duro HDD', 49, 'Apple HDD Test 043', 'Disco HDD de prueba #43.', 92130, 14, NULL, 8000, 5400, 107),
-(44, 'Disco Duro HDD', 50, 'Qualcomm HDD Test 044', 'Disco HDD de prueba #44.', 93110, 15, NULL, 1000, 7200, 108),
-(45, 'Disco Duro HDD', 51, 'MediaTek HDD Test 045', 'Disco HDD de prueba #45.', 94090, 16, NULL, 2000, 5400, 109),
-(46, 'Disco Duro HDD', 52, 'Broadcom HDD Test 046', 'Disco HDD de prueba #46.', 95070, 17, NULL, 4000, 7200, 110),
-(47, 'Disco Duro HDD', 53, 'Realtek HDD Test 047', 'Disco HDD de prueba #47.', 96050, 18, NULL, 8000, 5400, 111),
-(48, 'Disco Duro HDD', 54, 'TP-Link HDD Test 048', 'Disco HDD de prueba #48.', 97030, 19, NULL, 1000, 7200, 112),
-(49, 'Disco Duro HDD', 55, 'D-Link HDD Test 049', 'Disco HDD de prueba #49.', 98010, 20, NULL, 2000, 5400, 113),
-(50, 'Disco Duro HDD', 56, 'Netgear HDD Test 050', 'Disco HDD de prueba #50.', 98990, 21, NULL, 4000, 7200, 114),
-(51, 'Disco Duro HDD', 57, 'Ubiquiti HDD Test 051', 'Disco HDD de prueba #51.', 99970, 22, NULL, 8000, 5400, 115),
-(52, 'Disco Duro HDD', 58, 'Synology HDD Test 052', 'Disco HDD de prueba #52.', 100950, 23, NULL, 1000, 7200, 116),
-(53, 'Disco Duro HDD', 59, 'QNAP HDD Test 053', 'Disco HDD de prueba #53.', 101930, 24, NULL, 2000, 5400, 117),
-(54, 'Disco Duro HDD', 60, 'ASUSTOR HDD Test 054', 'Disco HDD de prueba #54.', 102910, 25, NULL, 4000, 7200, 118),
-(55, 'Disco Duro HDD', 61, 'Toshiba HDD Test 055', 'Disco HDD de prueba #55.', 103890, 26, NULL, 8000, 5400, 119),
-(56, 'Disco Duro HDD', 62, 'Hitachi HDD Test 056', 'Disco HDD de prueba #56.', 104870, 27, NULL, 1000, 7200, 120),
-(57, 'Disco Duro HDD', 63, 'Lexar HDD Test 057', 'Disco HDD de prueba #57.', 105850, 28, NULL, 2000, 5400, 121),
-(58, 'Disco Duro HDD', 64, 'PNY Technologies HDD Test 058', 'Disco HDD de prueba #58.', 106830, 29, NULL, 4000, 7200, 122),
-(59, 'Disco Duro HDD', 65, 'Inno3D HDD Test 059', 'Disco HDD de prueba #59.', 107810, 30, NULL, 8000, 5400, 123),
-(60, 'Disco Duro HDD', 66, 'Colorful HDD Test 060', 'Disco HDD de prueba #60.', 108790, 31, NULL, 1000, 7200, 124),
-(61, 'Disco Duro HDD', 67, 'Biostar HDD Test 061', 'Disco HDD de prueba #61.', 109770, 32, NULL, 2000, 5400, 125),
-(62, 'Disco Duro HDD', 68, 'ECS HDD Test 062', 'Disco HDD de prueba #62.', 110750, 33, NULL, 4000, 7200, 126),
-(63, 'Disco Duro HDD', 69, 'Supermicro HDD Test 063', 'Disco HDD de prueba #63.', 111730, 34, NULL, 8000, 5400, 127),
-(64, 'Disco Duro HDD', 70, 'Tyan HDD Test 064', 'Disco HDD de prueba #64.', 112710, 35, NULL, 1000, 7200, 128),
-(65, 'Disco Duro HDD', 71, 'GALAX HDD Test 065', 'Disco HDD de prueba #65.', 113690, 36, NULL, 2000, 5400, 129),
-(66, 'Disco Duro HDD', 72, 'KFA2 HDD Test 066', 'Disco HDD de prueba #66.', 114670, 37, NULL, 4000, 7200, 130),
-(67, 'Disco Duro HDD', 73, 'Club 3D HDD Test 067', 'Disco HDD de prueba #67.', 115650, 38, NULL, 8000, 5400, 131),
-(68, 'Disco Duro HDD', 74, 'VisionTek HDD Test 068', 'Disco HDD de prueba #68.', 116630, 39, NULL, 1000, 7200, 132),
-(69, 'Disco Duro HDD', 75, 'Matrox HDD Test 069', 'Disco HDD de prueba #69.', 117610, 40, NULL, 2000, 5400, 133),
-(70, 'Disco Duro HDD', 76, 'Intel Arc HDD Test 070', 'Disco HDD de prueba #70.', 118590, 6, NULL, 4000, 7200, 134),
-(71, 'Disco Duro HDD', 77, 'Sparkle HDD Test 071', 'Disco HDD de prueba #71.', 119570, 7, NULL, 8000, 5400, 135),
-(72, 'Disco Duro HDD', 78, 'Intel HDD Test 072', 'Disco HDD de prueba #72.', 120550, 8, NULL, 1000, 7200, 136),
-(73, 'Disco Duro HDD', 79, 'AMD HDD Test 073', 'Disco HDD de prueba #73.', 121530, 9, NULL, 2000, 5400, 137),
-(74, 'Disco Duro HDD', 80, 'NVIDIA HDD Test 074', 'Disco HDD de prueba #74.', 122510, 10, NULL, 4000, 7200, 138),
-(75, 'Disco Duro HDD', 81, 'ASUS HDD Test 075', 'Disco HDD de prueba #75.', 123490, 11, NULL, 8000, 5400, 139),
-(76, 'Disco Duro HDD', 82, 'Gigabyte HDD Test 076', 'Disco HDD de prueba #76.', 124470, 12, NULL, 1000, 7200, 140),
-(77, 'Disco Duro HDD', 83, 'MSI HDD Test 077', 'Disco HDD de prueba #77.', 125450, 13, NULL, 2000, 5400, 141),
-(78, 'Disco Duro HDD', 1, 'ASRock HDD Test 078', 'Disco HDD de prueba #78.', 126430, 14, NULL, 4000, 7200, 142),
-(79, 'Disco Duro HDD', 2, 'EVGA HDD Test 079', 'Disco HDD de prueba #79.', 127410, 15, NULL, 8000, 5400, 143),
-(80, 'Disco Duro HDD', 3, 'Zotac HDD Test 080', 'Disco HDD de prueba #80.', 128390, 16, NULL, 1000, 7200, 144),
-(81, 'Disco Duro HDD', 4, 'PNY HDD Test 081', 'Disco HDD de prueba #81.', 129370, 17, NULL, 2000, 5400, 145),
-(82, 'Disco Duro HDD', 5, 'Palit HDD Test 082', 'Disco HDD de prueba #82.', 130350, 18, NULL, 4000, 7200, 146),
-(83, 'Disco Duro HDD', 6, 'Gainward HDD Test 083', 'Disco HDD de prueba #83.', 131330, 19, NULL, 8000, 5400, 147),
-(84, 'Disco Duro HDD', 7, 'Sapphire HDD Test 084', 'Disco HDD de prueba #84.', 132310, 20, NULL, 1000, 7200, 148),
-(85, 'Disco Duro HDD', 8, 'PowerColor HDD Test 085', 'Disco HDD de prueba #85.', 133290, 21, NULL, 2000, 5400, 149),
-(86, 'Disco Duro HDD', 9, 'XFX HDD Test 086', 'Disco HDD de prueba #86.', 134270, 22, NULL, 4000, 7200, 150),
-(87, 'Disco Duro HDD', 10, 'Corsair HDD Test 087', 'Disco HDD de prueba #87.', 135250, 23, NULL, 8000, 5400, 151),
-(88, 'Disco Duro HDD', 11, 'G.Skill HDD Test 088', 'Disco HDD de prueba #88.', 136230, 24, NULL, 1000, 7200, 152),
-(89, 'Disco Duro HDD', 12, 'Kingston HDD Test 089', 'Disco HDD de prueba #89.', 137210, 25, NULL, 2000, 5400, 153),
-(90, 'Disco Duro HDD', 13, 'Crucial HDD Test 090', 'Disco HDD de prueba #90.', 138190, 26, NULL, 4000, 7200, 154),
-(91, 'Disco Duro HDD', 14, 'Samsung HDD Test 091', 'Disco HDD de prueba #91.', 139170, 27, NULL, 8000, 5400, 155),
-(92, 'Disco Duro HDD', 15, 'Western Digital HDD Test 092', 'Disco HDD de prueba #92.', 140150, 28, NULL, 1000, 7200, 156),
-(93, 'Disco Duro HDD', 16, 'Seagate HDD Test 093', 'Disco HDD de prueba #93.', 141130, 29, NULL, 2000, 5400, 157),
-(94, 'Disco Duro HDD', 17, 'SanDisk HDD Test 094', 'Disco HDD de prueba #94.', 142110, 30, NULL, 4000, 7200, 158),
-(95, 'Disco Duro HDD', 18, 'ADATA HDD Test 095', 'Disco HDD de prueba #95.', 143090, 31, NULL, 8000, 5400, 159),
-(96, 'Disco Duro HDD', 19, 'TeamGroup HDD Test 096', 'Disco HDD de prueba #96.', 144070, 32, NULL, 1000, 7200, 160),
-(97, 'Disco Duro HDD', 20, 'Patriot HDD Test 097', 'Disco HDD de prueba #97.', 145050, 33, NULL, 2000, 5400, 161),
-(98, 'Disco Duro HDD', 21, 'HyperX HDD Test 098', 'Disco HDD de prueba #98.', 146030, 34, NULL, 4000, 7200, 162),
-(99, 'Disco Duro HDD', 22, 'Thermaltake HDD Test 099', 'Disco HDD de prueba #99.', 147010, 35, NULL, 8000, 5400, 163),
-(100, 'Disco Duro HDD', 23, 'Cooler Master HDD Test 100', 'Disco HDD de prueba #100.', 147990, 36, NULL, 1000, 7200, 164);
+(1, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 50990.00, 5, NULL, 500, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(2, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 56990.00, 6, NULL, 1000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(3, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 62990.00, 7, NULL, 2000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(4, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 73990.00, 8, NULL, 4000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(5, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 79990.00, 9, NULL, 6000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(6, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 90990.00, 10, NULL, 8000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(7, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda Pro 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 126990.00, 11, NULL, 1000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(8, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda Pro 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 132990.00, 12, NULL, 2000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(9, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda Pro 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 143990.00, 13, NULL, 4000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(10, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda Pro 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 149990.00, 14, NULL, 6000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(11, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda Pro 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 160990.00, 15, NULL, 8000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(12, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Barracuda Pro 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 171990.00, 4, NULL, 10000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(13, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 97990.00, 5, NULL, 1000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(14, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 103990.00, 6, NULL, 2000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(15, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf 3TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 104990.00, 7, NULL, 3000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(16, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 110990.00, 8, NULL, 4000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(17, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 121990.00, 9, NULL, 6000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(18, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 132990.00, 10, NULL, 8000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(19, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 143990.00, 11, NULL, 10000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(20, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf 12TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 149990.00, 12, NULL, 12000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(21, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf Pro 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 160990.00, 13, NULL, 2000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(22, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf Pro 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 171990.00, 14, NULL, 4000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(23, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf Pro 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 182990.00, 15, NULL, 6000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(24, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf Pro 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 193990.00, 4, NULL, 8000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(25, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf Pro 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 199990.00, 5, NULL, 10000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(26, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf Pro 12TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 210990.00, 6, NULL, 12000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(27, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf Pro 16TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 231990.00, 7, NULL, 16000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(28, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate IronWolf Pro 18TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 242990.00, 8, NULL, 18000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(29, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 88990.00, 9, NULL, 1000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(30, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 89990.00, 10, NULL, 2000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(31, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk 3TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 95990.00, 11, NULL, 3000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(32, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 101990.00, 12, NULL, 4000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(33, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 112990.00, 13, NULL, 6000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(34, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 123990.00, 14, NULL, 8000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(35, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk AI 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 219990.00, 15, NULL, 8000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(36, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk AI 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 230990.00, 4, NULL, 10000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(37, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk AI 12TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 241990.00, 5, NULL, 12000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(38, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate SkyHawk AI 16TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 262990.00, 6, NULL, 16000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(39, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Exos 7E8 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 108990.00, 7, NULL, 1000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(40, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Exos 7E8 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 109990.00, 8, NULL, 2000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(41, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Exos 7E8 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 120990.00, 9, NULL, 4000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(42, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Exos 7E8 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 131990.00, 10, NULL, 6000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(43, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Exos 7E8 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 142990.00, 11, NULL, 8000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(44, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Exos X16 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 303990.00, 12, NULL, 10000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(45, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Exos X16 12TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 309990.00, 13, NULL, 12000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(46, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Exos X16 14TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 320990.00, 14, NULL, 14000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(47, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Seagate'), 'Seagate Exos X16 16TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 331990.00, 15, NULL, 16000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(48, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 52990.00, 4, NULL, 500, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(49, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 58990.00, 5, NULL, 1000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(50, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 59990.00, 6, NULL, 2000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(51, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue 3TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 65990.00, 7, NULL, 3000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(52, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 71990.00, 8, NULL, 4000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(53, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Blue 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 82990.00, 9, NULL, 6000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(54, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 93990.00, 10, NULL, 500, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(55, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 94990.00, 11, NULL, 1000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(56, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 100990.00, 12, NULL, 2000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(57, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 111990.00, 13, NULL, 4000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(58, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 122990.00, 14, NULL, 6000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(59, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 133990.00, 15, NULL, 8000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(60, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Black 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 139990.00, 4, NULL, 10000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(61, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Plus 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 105990.00, 5, NULL, 1000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(62, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Plus 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 111990.00, 6, NULL, 2000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(63, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Plus 3TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 117990.00, 7, NULL, 3000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(64, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Plus 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 123990.00, 8, NULL, 4000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(65, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Plus 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 129990.00, 9, NULL, 6000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(66, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Plus 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 140990.00, 10, NULL, 8000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(67, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Plus 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 151990.00, 11, NULL, 10000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(68, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Plus 12TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 256 MB de caché.', 162990.00, 12, NULL, 12000, 5400, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(69, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Pro 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 173990.00, 13, NULL, 2000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(70, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Pro 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 179990.00, 14, NULL, 4000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(71, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Pro 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 190990.00, 15, NULL, 6000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(72, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Pro 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 201990.00, 4, NULL, 8000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(73, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Pro 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 212990.00, 5, NULL, 10000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(74, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Red Pro 12TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 223990.00, 6, NULL, 12000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(75, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Purple 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 64 MB de caché.', 94990.00, 7, NULL, 1000, 5400, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(76, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Purple 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 64 MB de caché.', 100990.00, 8, NULL, 2000, 5400, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(77, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Purple 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 64 MB de caché.', 111990.00, 9, NULL, 4000, 5400, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(78, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Purple 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 64 MB de caché.', 122990.00, 10, NULL, 6000, 5400, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(79, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Purple 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 64 MB de caché.', 133990.00, 11, NULL, 8000, 5400, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(80, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Purple 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 5400 RPM con 64 MB de caché.', 139990.00, 12, NULL, 10000, 5400, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(81, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Gold 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 155990.00, 13, NULL, 1000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(82, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Gold 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 161990.00, 14, NULL, 2000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(83, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Gold 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 172990.00, 15, NULL, 4000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(84, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Gold 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 183990.00, 4, NULL, 6000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(85, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Gold 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 189990.00, 5, NULL, 8000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(86, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Gold 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 200990.00, 6, NULL, 10000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(87, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Western Digital'), 'Western Digital Gold 12TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 211990.00, 7, NULL, 12000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(88, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba P300 500GB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 64 MB de caché.', 52990.00, 8, NULL, 500, 7200, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(89, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba P300 1TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 64 MB de caché.', 58990.00, 9, NULL, 1000, 7200, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(90, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba P300 2TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 64 MB de caché.', 59990.00, 10, NULL, 2000, 7200, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(91, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba P300 3TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 64 MB de caché.', 65990.00, 11, NULL, 3000, 7200, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(92, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba P300 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 64 MB de caché.', 71990.00, 12, NULL, 4000, 7200, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(93, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba P300 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 64 MB de caché.', 82990.00, 13, NULL, 6000, 7200, 64);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(94, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba X300 4TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 153990.00, 14, NULL, 4000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(95, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba X300 6TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 159990.00, 15, NULL, 6000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(96, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba X300 8TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 170990.00, 4, NULL, 8000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(97, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba X300 10TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 181990.00, 5, NULL, 10000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(98, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba X300 12TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 192990.00, 6, NULL, 12000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(99, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba X300 14TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 203990.00, 7, NULL, 14000, 7200, 256);
+INSERT INTO core_almacenamientohdd (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, capacidad_gb, velocidad_rpm, cache_mb) VALUES
+(100, 'Disco Duro HDD', (SELECT id FROM core_proveedor WHERE nombre = 'Toshiba'), 'Toshiba X300 16TB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Disco mecánico 7200 RPM con 256 MB de caché.', 209990.00, 8, NULL, 16000, 7200, 256);
 
+-- gabinete
 INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
-(1, 'Gabinete', 8, 'XFX Case Test 001', 'Gabinete de prueba #1.', 61090, 6, NULL, 'Micro-ATX', FALSE, 'Aluminio', 301),
-(2, 'Gabinete', 9, 'Corsair Case Test 002', 'Gabinete de prueba #2.', 62190, 7, NULL, 'Mini-ITX', TRUE, 'Vidrio Templado', 302),
-(3, 'Gabinete', 10, 'G.Skill Case Test 003', 'Gabinete de prueba #3.', 63290, 8, NULL, 'ATX', FALSE, 'Plástico', 303),
-(4, 'Gabinete', 11, 'Kingston Case Test 004', 'Gabinete de prueba #4.', 64390, 9, NULL, 'Micro-ATX', TRUE, 'Acero', 304),
-(5, 'Gabinete', 12, 'Crucial Case Test 005', 'Gabinete de prueba #5.', 65490, 10, NULL, 'Mini-ITX', FALSE, 'Aluminio', 305),
-(6, 'Gabinete', 13, 'Samsung Case Test 006', 'Gabinete de prueba #6.', 66590, 11, NULL, 'ATX', TRUE, 'Vidrio Templado', 306),
-(7, 'Gabinete', 14, 'Western Digital Case Test 007', 'Gabinete de prueba #7.', 67690, 12, NULL, 'Micro-ATX', FALSE, 'Plástico', 307),
-(8, 'Gabinete', 15, 'Seagate Case Test 008', 'Gabinete de prueba #8.', 68790, 13, NULL, 'Mini-ITX', TRUE, 'Acero', 308),
-(9, 'Gabinete', 16, 'SanDisk Case Test 009', 'Gabinete de prueba #9.', 69890, 14, NULL, 'ATX', FALSE, 'Aluminio', 309),
-(10, 'Gabinete', 17, 'ADATA Case Test 010', 'Gabinete de prueba #10.', 70990, 15, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 310),
-(11, 'Gabinete', 18, 'TeamGroup Case Test 011', 'Gabinete de prueba #11.', 72090, 16, NULL, 'Mini-ITX', FALSE, 'Plástico', 311),
-(12, 'Gabinete', 19, 'Patriot Case Test 012', 'Gabinete de prueba #12.', 73190, 17, NULL, 'ATX', TRUE, 'Acero', 312),
-(13, 'Gabinete', 20, 'HyperX Case Test 013', 'Gabinete de prueba #13.', 74290, 18, NULL, 'Micro-ATX', FALSE, 'Aluminio', 313),
-(14, 'Gabinete', 21, 'Thermaltake Case Test 014', 'Gabinete de prueba #14.', 75390, 19, NULL, 'Mini-ITX', TRUE, 'Vidrio Templado', 314),
-(15, 'Gabinete', 22, 'Cooler Master Case Test 015', 'Gabinete de prueba #15.', 76490, 20, NULL, 'ATX', FALSE, 'Plástico', 315),
-(16, 'Gabinete', 23, 'NZXT Case Test 016', 'Gabinete de prueba #16.', 77590, 21, NULL, 'Micro-ATX', TRUE, 'Acero', 316),
-(17, 'Gabinete', 24, 'be quiet! Case Test 017', 'Gabinete de prueba #17.', 78690, 22, NULL, 'Mini-ITX', FALSE, 'Aluminio', 317),
-(18, 'Gabinete', 25, 'Seasonic Case Test 018', 'Gabinete de prueba #18.', 79790, 23, NULL, 'ATX', TRUE, 'Vidrio Templado', 318),
-(19, 'Gabinete', 26, 'FSP Case Test 019', 'Gabinete de prueba #19.', 80890, 24, NULL, 'Micro-ATX', FALSE, 'Plástico', 319),
-(20, 'Gabinete', 27, 'Lian Li Case Test 020', 'Gabinete de prueba #20.', 81990, 5, NULL, 'Mini-ITX', TRUE, 'Acero', 320),
-(21, 'Gabinete', 28, 'Fractal Design Case Test 021', 'Gabinete de prueba #21.', 83090, 6, NULL, 'ATX', FALSE, 'Aluminio', 321),
-(22, 'Gabinete', 29, 'Phanteks Case Test 022', 'Gabinete de prueba #22.', 84190, 7, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 322),
-(23, 'Gabinete', 30, 'Silverstone Case Test 023', 'Gabinete de prueba #23.', 85290, 8, NULL, 'Mini-ITX', FALSE, 'Plástico', 323),
-(24, 'Gabinete', 31, 'Antec Case Test 024', 'Gabinete de prueba #24.', 86390, 9, NULL, 'ATX', TRUE, 'Acero', 324),
-(25, 'Gabinete', 32, 'Montech Case Test 025', 'Gabinete de prueba #25.', 87490, 10, NULL, 'Micro-ATX', FALSE, 'Aluminio', 325),
-(26, 'Gabinete', 33, 'Noctua Case Test 026', 'Gabinete de prueba #26.', 88590, 11, NULL, 'Mini-ITX', TRUE, 'Vidrio Templado', 326),
-(27, 'Gabinete', 34, 'Arctic Case Test 027', 'Gabinete de prueba #27.', 89690, 12, NULL, 'ATX', FALSE, 'Plástico', 327),
-(28, 'Gabinete', 35, 'Deepcool Case Test 028', 'Gabinete de prueba #28.', 90790, 13, NULL, 'Micro-ATX', TRUE, 'Acero', 328),
-(29, 'Gabinete', 36, 'ID-COOLING Case Test 029', 'Gabinete de prueba #29.', 91890, 14, NULL, 'Mini-ITX', FALSE, 'Aluminio', 329),
-(30, 'Gabinete', 37, 'Scythe Case Test 030', 'Gabinete de prueba #30.', 92990, 15, NULL, 'ATX', TRUE, 'Vidrio Templado', 330),
-(31, 'Gabinete', 38, 'Logitech Case Test 031', 'Gabinete de prueba #31.', 94090, 16, NULL, 'Micro-ATX', FALSE, 'Plástico', 331),
-(32, 'Gabinete', 39, 'Razer Case Test 032', 'Gabinete de prueba #32.', 95190, 17, NULL, 'Mini-ITX', TRUE, 'Acero', 332),
-(33, 'Gabinete', 40, 'SteelSeries Case Test 033', 'Gabinete de prueba #33.', 96290, 18, NULL, 'ATX', FALSE, 'Aluminio', 333),
-(34, 'Gabinete', 41, 'BenQ Case Test 034', 'Gabinete de prueba #34.', 97390, 19, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 334),
-(35, 'Gabinete', 42, 'LG Case Test 035', 'Gabinete de prueba #35.', 98490, 20, NULL, 'Mini-ITX', FALSE, 'Plástico', 335),
-(36, 'Gabinete', 43, 'AOC Case Test 036', 'Gabinete de prueba #36.', 99590, 21, NULL, 'ATX', TRUE, 'Acero', 336),
-(37, 'Gabinete', 44, 'Dell Case Test 037', 'Gabinete de prueba #37.', 100690, 22, NULL, 'Micro-ATX', FALSE, 'Aluminio', 337),
-(38, 'Gabinete', 45, 'HP Case Test 038', 'Gabinete de prueba #38.', 101790, 23, NULL, 'Mini-ITX', TRUE, 'Vidrio Templado', 338),
-(39, 'Gabinete', 46, 'Lenovo Case Test 039', 'Gabinete de prueba #39.', 102890, 24, NULL, 'ATX', FALSE, 'Plástico', 339),
-(40, 'Gabinete', 47, 'Acer Case Test 040', 'Gabinete de prueba #40.', 103990, 5, NULL, 'Micro-ATX', TRUE, 'Acero', 340),
-(41, 'Gabinete', 48, 'Apple Case Test 041', 'Gabinete de prueba #41.', 105090, 6, NULL, 'Mini-ITX', FALSE, 'Aluminio', 341),
-(42, 'Gabinete', 49, 'Qualcomm Case Test 042', 'Gabinete de prueba #42.', 106190, 7, NULL, 'ATX', TRUE, 'Vidrio Templado', 342),
-(43, 'Gabinete', 50, 'MediaTek Case Test 043', 'Gabinete de prueba #43.', 107290, 8, NULL, 'Micro-ATX', FALSE, 'Plástico', 343),
-(44, 'Gabinete', 51, 'Broadcom Case Test 044', 'Gabinete de prueba #44.', 108390, 9, NULL, 'Mini-ITX', TRUE, 'Acero', 344),
-(45, 'Gabinete', 52, 'Realtek Case Test 045', 'Gabinete de prueba #45.', 109490, 10, NULL, 'ATX', FALSE, 'Aluminio', 345),
-(46, 'Gabinete', 53, 'TP-Link Case Test 046', 'Gabinete de prueba #46.', 110590, 11, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 346),
-(47, 'Gabinete', 54, 'D-Link Case Test 047', 'Gabinete de prueba #47.', 111690, 12, NULL, 'Mini-ITX', FALSE, 'Plástico', 347),
-(48, 'Gabinete', 55, 'Netgear Case Test 048', 'Gabinete de prueba #48.', 112790, 13, NULL, 'ATX', TRUE, 'Acero', 348),
-(49, 'Gabinete', 56, 'Ubiquiti Case Test 049', 'Gabinete de prueba #49.', 113890, 14, NULL, 'Micro-ATX', FALSE, 'Aluminio', 349),
-(50, 'Gabinete', 57, 'Synology Case Test 050', 'Gabinete de prueba #50.', 114990, 15, NULL, 'Mini-ITX', TRUE, 'Vidrio Templado', 350),
-(51, 'Gabinete', 58, 'QNAP Case Test 051', 'Gabinete de prueba #51.', 116090, 16, NULL, 'ATX', FALSE, 'Plástico', 351),
-(52, 'Gabinete', 59, 'ASUSTOR Case Test 052', 'Gabinete de prueba #52.', 117190, 17, NULL, 'Micro-ATX', TRUE, 'Acero', 352),
-(53, 'Gabinete', 60, 'Toshiba Case Test 053', 'Gabinete de prueba #53.', 118290, 18, NULL, 'Mini-ITX', FALSE, 'Aluminio', 353),
-(54, 'Gabinete', 61, 'Hitachi Case Test 054', 'Gabinete de prueba #54.', 119390, 19, NULL, 'ATX', TRUE, 'Vidrio Templado', 354),
-(55, 'Gabinete', 62, 'Lexar Case Test 055', 'Gabinete de prueba #55.', 120490, 20, NULL, 'Micro-ATX', FALSE, 'Plástico', 355),
-(56, 'Gabinete', 63, 'PNY Technologies Case Test 056', 'Gabinete de prueba #56.', 121590, 21, NULL, 'Mini-ITX', TRUE, 'Acero', 356),
-(57, 'Gabinete', 64, 'Inno3D Case Test 057', 'Gabinete de prueba #57.', 122690, 22, NULL, 'ATX', FALSE, 'Aluminio', 357),
-(58, 'Gabinete', 65, 'Colorful Case Test 058', 'Gabinete de prueba #58.', 123790, 23, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 358),
-(59, 'Gabinete', 66, 'Biostar Case Test 059', 'Gabinete de prueba #59.', 124890, 24, NULL, 'Mini-ITX', FALSE, 'Plástico', 359),
-(60, 'Gabinete', 67, 'ECS Case Test 060', 'Gabinete de prueba #60.', 125990, 5, NULL, 'ATX', TRUE, 'Acero', 360),
-(61, 'Gabinete', 68, 'Supermicro Case Test 061', 'Gabinete de prueba #61.', 127090, 6, NULL, 'Micro-ATX', FALSE, 'Aluminio', 361),
-(62, 'Gabinete', 69, 'Tyan Case Test 062', 'Gabinete de prueba #62.', 128190, 7, NULL, 'Mini-ITX', TRUE, 'Vidrio Templado', 362),
-(63, 'Gabinete', 70, 'GALAX Case Test 063', 'Gabinete de prueba #63.', 129290, 8, NULL, 'ATX', FALSE, 'Plástico', 363),
-(64, 'Gabinete', 71, 'KFA2 Case Test 064', 'Gabinete de prueba #64.', 130390, 9, NULL, 'Micro-ATX', TRUE, 'Acero', 364),
-(65, 'Gabinete', 72, 'Club 3D Case Test 065', 'Gabinete de prueba #65.', 131490, 10, NULL, 'Mini-ITX', FALSE, 'Aluminio', 365),
-(66, 'Gabinete', 73, 'VisionTek Case Test 066', 'Gabinete de prueba #66.', 132590, 11, NULL, 'ATX', TRUE, 'Vidrio Templado', 366),
-(67, 'Gabinete', 74, 'Matrox Case Test 067', 'Gabinete de prueba #67.', 133690, 12, NULL, 'Micro-ATX', FALSE, 'Plástico', 367),
-(68, 'Gabinete', 75, 'Intel Arc Case Test 068', 'Gabinete de prueba #68.', 134790, 13, NULL, 'Mini-ITX', TRUE, 'Acero', 368),
-(69, 'Gabinete', 76, 'Sparkle Case Test 069', 'Gabinete de prueba #69.', 135890, 14, NULL, 'ATX', FALSE, 'Aluminio', 369),
-(70, 'Gabinete', 77, 'Intel Case Test 070', 'Gabinete de prueba #70.', 136990, 15, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 370),
-(71, 'Gabinete', 78, 'AMD Case Test 071', 'Gabinete de prueba #71.', 138090, 16, NULL, 'Mini-ITX', FALSE, 'Plástico', 371),
-(72, 'Gabinete', 79, 'NVIDIA Case Test 072', 'Gabinete de prueba #72.', 139190, 17, NULL, 'ATX', TRUE, 'Acero', 372),
-(73, 'Gabinete', 80, 'ASUS Case Test 073', 'Gabinete de prueba #73.', 140290, 18, NULL, 'Micro-ATX', FALSE, 'Aluminio', 373),
-(74, 'Gabinete', 81, 'Gigabyte Case Test 074', 'Gabinete de prueba #74.', 141390, 19, NULL, 'Mini-ITX', TRUE, 'Vidrio Templado', 374),
-(75, 'Gabinete', 82, 'MSI Case Test 075', 'Gabinete de prueba #75.', 142490, 20, NULL, 'ATX', FALSE, 'Plástico', 375),
-(76, 'Gabinete', 83, 'ASRock Case Test 076', 'Gabinete de prueba #76.', 143590, 21, NULL, 'Micro-ATX', TRUE, 'Acero', 376),
-(77, 'Gabinete', 1, 'EVGA Case Test 077', 'Gabinete de prueba #77.', 144690, 22, NULL, 'Mini-ITX', FALSE, 'Aluminio', 377),
-(78, 'Gabinete', 2, 'Zotac Case Test 078', 'Gabinete de prueba #78.', 145790, 23, NULL, 'ATX', TRUE, 'Vidrio Templado', 378),
-(79, 'Gabinete', 3, 'PNY Case Test 079', 'Gabinete de prueba #79.', 146890, 24, NULL, 'Micro-ATX', FALSE, 'Plástico', 379),
-(80, 'Gabinete', 4, 'Palit Case Test 080', 'Gabinete de prueba #80.', 147990, 5, NULL, 'Mini-ITX', TRUE, 'Acero', 380),
-(81, 'Gabinete', 5, 'Gainward Case Test 081', 'Gabinete de prueba #81.', 149090, 6, NULL, 'ATX', FALSE, 'Aluminio', 381),
-(82, 'Gabinete', 6, 'Sapphire Case Test 082', 'Gabinete de prueba #82.', 150190, 7, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 382),
-(83, 'Gabinete', 7, 'PowerColor Case Test 083', 'Gabinete de prueba #83.', 151290, 8, NULL, 'Mini-ITX', FALSE, 'Plástico', 383),
-(84, 'Gabinete', 8, 'XFX Case Test 084', 'Gabinete de prueba #84.', 152390, 9, NULL, 'ATX', TRUE, 'Acero', 384),
-(85, 'Gabinete', 9, 'Corsair Case Test 085', 'Gabinete de prueba #85.', 153490, 10, NULL, 'Micro-ATX', FALSE, 'Aluminio', 385),
-(86, 'Gabinete', 10, 'G.Skill Case Test 086', 'Gabinete de prueba #86.', 154590, 11, NULL, 'Mini-ITX', TRUE, 'Vidrio Templado', 386),
-(87, 'Gabinete', 11, 'Kingston Case Test 087', 'Gabinete de prueba #87.', 155690, 12, NULL, 'ATX', FALSE, 'Plástico', 387),
-(88, 'Gabinete', 12, 'Crucial Case Test 088', 'Gabinete de prueba #88.', 156790, 13, NULL, 'Micro-ATX', TRUE, 'Acero', 388),
-(89, 'Gabinete', 13, 'Samsung Case Test 089', 'Gabinete de prueba #89.', 157890, 14, NULL, 'Mini-ITX', FALSE, 'Aluminio', 389),
-(90, 'Gabinete', 14, 'Western Digital Case Test 090', 'Gabinete de prueba #90.', 158990, 15, NULL, 'ATX', TRUE, 'Vidrio Templado', 390),
-(91, 'Gabinete', 15, 'Seagate Case Test 091', 'Gabinete de prueba #91.', 160090, 16, NULL, 'Micro-ATX', FALSE, 'Plástico', 391),
-(92, 'Gabinete', 16, 'SanDisk Case Test 092', 'Gabinete de prueba #92.', 161190, 17, NULL, 'Mini-ITX', TRUE, 'Acero', 392),
-(93, 'Gabinete', 17, 'ADATA Case Test 093', 'Gabinete de prueba #93.', 162290, 18, NULL, 'ATX', FALSE, 'Aluminio', 393),
-(94, 'Gabinete', 18, 'TeamGroup Case Test 094', 'Gabinete de prueba #94.', 163390, 19, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 394),
-(95, 'Gabinete', 19, 'Patriot Case Test 095', 'Gabinete de prueba #95.', 164490, 20, NULL, 'Mini-ITX', FALSE, 'Plástico', 395),
-(96, 'Gabinete', 20, 'HyperX Case Test 096', 'Gabinete de prueba #96.', 165590, 21, NULL, 'ATX', TRUE, 'Acero', 396),
-(97, 'Gabinete', 21, 'Thermaltake Case Test 097', 'Gabinete de prueba #97.', 166690, 22, NULL, 'Micro-ATX', FALSE, 'Aluminio', 397),
-(98, 'Gabinete', 22, 'Cooler Master Case Test 098', 'Gabinete de prueba #98.', 167790, 23, NULL, 'Mini-ITX', TRUE, 'Vidrio Templado', 398),
-(99, 'Gabinete', 23, 'NZXT Case Test 099', 'Gabinete de prueba #99.', 168890, 24, NULL, 'ATX', FALSE, 'Plástico', 399),
-(100, 'Gabinete', 24, 'be quiet! Case Test 100', 'Gabinete de prueba #100.', 169990, 5, NULL, 'Micro-ATX', TRUE, 'Acero', 400);
+(1, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 4000D Airflow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 360 mm.', 90990.00, 5, NULL, 'ATX', TRUE, 'Acero', 360);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(2, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 4000D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 360 mm.', 81990.00, 6, NULL, 'ATX', TRUE, 'Acero', 360);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(3, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 5000D Airflow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 152990.00, 7, NULL, 'ATX', TRUE, 'Acero', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(4, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 5000D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 143990.00, 8, NULL, 'ATX', TRUE, 'Acero', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(5, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 7000D Airflow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 450 mm.', 219990.00, 9, NULL, 'ATX', TRUE, 'Acero', 450);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(6, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 275R Airflow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 370 mm.', 70990.00, 10, NULL, 'ATX', TRUE, 'Acero', 370);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(7, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 220T RGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 300 mm.', 91990.00, 11, NULL, 'ATX', TRUE, 'Acero', 300);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(8, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 2000D Airflow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Mini-ITX. Admite GPU de hasta 365 mm.', 132990.00, 12, NULL, 'Mini-ITX', TRUE, 'Acero', 365);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(9, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 2500D Airflow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 400 mm.', 123990.00, 13, NULL, 'Micro-ATX', TRUE, 'Acero', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(10, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H5 Flow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 365 mm.', 99990.00, 14, NULL, 'ATX', TRUE, 'Acero', 365);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(11, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H5 Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 365 mm.', 150990.00, 15, NULL, 'ATX', TRUE, 'Vidrio Templado', 365);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(12, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H6 Flow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 365 mm.', 131990.00, 4, NULL, 'ATX', TRUE, 'Acero', 365);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(13, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H7 Flow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 142990.00, 5, NULL, 'ATX', TRUE, 'Acero', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(14, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H7 Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 183990.00, 6, NULL, 'ATX', TRUE, 'Vidrio Templado', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(15, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H9 Flow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 435 mm.', 169990.00, 7, NULL, 'ATX', TRUE, 'Acero', 435);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(16, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H9 Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 435 mm.', 230990.00, 8, NULL, 'ATX', TRUE, 'Vidrio Templado', 435);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(17, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H510', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 381 mm.', 91990.00, 9, NULL, 'ATX', TRUE, 'Acero', 381);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(18, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H510 Flow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 381 mm.', 102990.00, 10, NULL, 'ATX', TRUE, 'Acero', 381);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(19, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H210', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Mini-ITX. Admite GPU de hasta 325 mm.', 93990.00, 11, NULL, 'Mini-ITX', TRUE, 'Acero', 325);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(20, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li Lancool 215', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 370 mm.', 89990.00, 12, NULL, 'ATX', TRUE, 'Acero', 370);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(21, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li Lancool 216', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 392 mm.', 110990.00, 13, NULL, 'ATX', TRUE, 'Acero', 392);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(22, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li Lancool II Mesh', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 384 mm.', 121990.00, 14, NULL, 'ATX', TRUE, 'Acero', 384);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(23, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li O11 Dynamic', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 420 mm.', 152990.00, 15, NULL, 'ATX', FALSE, 'Vidrio Templado', 420);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(24, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li O11 Dynamic EVO', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 442 mm.', 183990.00, 4, NULL, 'ATX', FALSE, 'Vidrio Templado', 442);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(25, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li O11 Air Mini', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 362 mm.', 119990.00, 5, NULL, 'Micro-ATX', TRUE, 'Acero', 362);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(26, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li A4-H2O', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Mini-ITX. Admite GPU de hasta 322 mm.', 150990.00, 6, NULL, 'Mini-ITX', FALSE, 'Aluminio', 322);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(27, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Meshify 2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 440 mm.', 151990.00, 7, NULL, 'ATX', TRUE, 'Acero', 440);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(28, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Meshify 2 Compact', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 360 mm.', 132990.00, 8, NULL, 'ATX', TRUE, 'Acero', 360);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(29, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Meshify C', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 315 mm.', 103990.00, 9, NULL, 'ATX', TRUE, 'Acero', 315);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(30, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Pop Air', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 380 mm.', 89990.00, 10, NULL, 'ATX', TRUE, 'Acero', 380);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(31, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Pop Mini Air', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 365 mm.', 80990.00, 11, NULL, 'Micro-ATX', TRUE, 'Acero', 365);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(32, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design North', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 355 mm.', 151990.00, 12, NULL, 'ATX', TRUE, 'Acero', 355);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(33, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Torrent', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 423 mm.', 202990.00, 13, NULL, 'ATX', TRUE, 'Acero', 423);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(34, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Define 7', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 440 mm.', 173990.00, 14, NULL, 'ATX', FALSE, 'Acero', 440);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(35, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Ridge', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Mini-ITX. Admite GPU de hasta 335 mm.', 129990.00, 15, NULL, 'Mini-ITX', TRUE, 'Aluminio', 335);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(36, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks Eclipse G360A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 90990.00, 4, NULL, 'ATX', TRUE, 'Acero', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(37, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks Eclipse G500A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 435 mm.', 131990.00, 5, NULL, 'ATX', TRUE, 'Acero', 435);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(38, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks Eclipse P400A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 420 mm.', 102990.00, 6, NULL, 'ATX', TRUE, 'Acero', 420);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(39, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks Eclipse P500A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 435 mm.', 143990.00, 7, NULL, 'ATX', TRUE, 'Acero', 435);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(40, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks Evolv Shift XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Mini-ITX. Admite GPU de hasta 335 mm.', 149990.00, 8, NULL, 'Mini-ITX', TRUE, 'Acero', 335);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(41, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master TD500 Mesh', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 410 mm.', 110990.00, 9, NULL, 'ATX', TRUE, 'Acero', 410);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(42, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master NR200P', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Mini-ITX. Admite GPU de hasta 330 mm.', 101990.00, 10, NULL, 'Mini-ITX', TRUE, 'Acero', 330);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(43, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master NR600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 410 mm.', 72990.00, 11, NULL, 'ATX', FALSE, 'Acero', 410);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(44, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MB311L', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 340 mm.', 53990.00, 12, NULL, 'Micro-ATX', TRUE, 'Acero', 340);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(45, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MasterBox Q300L', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 360 mm.', 49990.00, 13, NULL, 'Micro-ATX', FALSE, 'Acero', 360);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(46, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master HAF 500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 410 mm.', 130990.00, 14, NULL, 'ATX', TRUE, 'Acero', 410);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(47, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Base 500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 369 mm.', 101990.00, 15, NULL, 'ATX', TRUE, 'Acero', 369);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(48, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Base 500DX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 369 mm.', 122990.00, 4, NULL, 'ATX', TRUE, 'Vidrio Templado', 369);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(49, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Shadow Base 800', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 430 mm.', 153990.00, 5, NULL, 'ATX', TRUE, 'Acero', 430);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(50, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Base 600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 425 mm.', 109990.00, 6, NULL, 'ATX', TRUE, 'Acero', 425);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(51, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Versa H18', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 350 mm.', 50990.00, 7, NULL, 'Micro-ATX', FALSE, 'Acero', 350);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(52, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake S100 TG', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 330 mm.', 61990.00, 8, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 330);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(53, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake View 170 TG', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 340 mm.', 72990.00, 9, NULL, 'Micro-ATX', TRUE, 'Vidrio Templado', 340);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(54, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Core P3', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 450 mm.', 153990.00, 10, NULL, 'ATX', FALSE, 'Acero', 450);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(55, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Versa H26', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 380 mm.', 69990.00, 11, NULL, 'ATX', TRUE, 'Acero', 380);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(56, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone FARA R1', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 365 mm.', 70990.00, 12, NULL, 'ATX', TRUE, 'Acero', 365);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(57, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone FARA R1 Pro', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 365 mm.', 81990.00, 13, NULL, 'ATX', TRUE, 'Acero', 365);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(58, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone PS15', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 350 mm.', 52990.00, 14, NULL, 'Micro-ATX', TRUE, 'Acero', 350);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(59, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone RL08', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Mini-ITX. Admite GPU de hasta 330 mm.', 133990.00, 15, NULL, 'Mini-ITX', TRUE, 'Aluminio', 330);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(60, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone SETA H1', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 392 mm.', 119990.00, 4, NULL, 'ATX', TRUE, 'Acero', 392);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(61, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech AIR 100', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 330 mm.', 60990.00, 5, NULL, 'Micro-ATX', TRUE, 'Acero', 330);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(62, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech AIR 100 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 330 mm.', 71990.00, 6, NULL, 'Micro-ATX', TRUE, 'Acero', 330);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(63, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech AIR 903 Max', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 92990.00, 7, NULL, 'ATX', TRUE, 'Acero', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(64, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech AIR 903 Base', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 83990.00, 8, NULL, 'ATX', TRUE, 'Acero', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(65, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech SKY TWO', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 109990.00, 9, NULL, 'ATX', TRUE, 'Vidrio Templado', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(66, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec NX410', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 360 mm.', 60990.00, 10, NULL, 'ATX', TRUE, 'Acero', 360);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(67, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec NX416L', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 360 mm.', 71990.00, 11, NULL, 'ATX', TRUE, 'Acero', 360);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(68, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec DF700 Flux', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 405 mm.', 102990.00, 12, NULL, 'ATX', TRUE, 'Acero', 405);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(69, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec P10C', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 415 mm.', 113990.00, 13, NULL, 'ATX', FALSE, 'Acero', 415);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(70, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec NX200M', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 330 mm.', 49990.00, 14, NULL, 'Micro-ATX', TRUE, 'Acero', 330);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(71, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li Lancool 205 Mesh', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 350 mm.', 80990.00, 15, NULL, 'ATX', TRUE, 'Acero', 350);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(72, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks Eclipse G300A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 355 mm.', 71990.00, 4, NULL, 'Micro-ATX', TRUE, 'Acero', 355);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(73, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Focus 2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 405 mm.', 82990.00, 5, NULL, 'ATX', TRUE, 'Acero', 405);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(74, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H1', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Mini-ITX. Admite GPU de hasta 305 mm.', 203990.00, 6, NULL, 'Mini-ITX', TRUE, 'Acero', 305);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(75, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 3000D Airflow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 360 mm.', 79990.00, 7, NULL, 'ATX', TRUE, 'Acero', 360);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(76, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair 3500X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 410 mm.', 120990.00, 8, NULL, 'ATX', TRUE, 'Vidrio Templado', 410);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(77, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG Forge 112R', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 340 mm.', 71990.00, 9, NULL, 'ATX', TRUE, 'Acero', 340);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(78, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG Forge 321R', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 390 mm.', 92990.00, 10, NULL, 'ATX', TRUE, 'Acero', 390);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(79, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG Gungnir 110R', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 340 mm.', 103990.00, 11, NULL, 'ATX', TRUE, 'Acero', 340);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(80, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG Forge M100R', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 300 mm.', 59990.00, 12, NULL, 'Micro-ATX', TRUE, 'Acero', 300);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(81, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF Gaming GT502', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 170990.00, 13, NULL, 'ATX', TRUE, 'Acero', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(82, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS A21', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 380 mm.', 71990.00, 14, NULL, 'Micro-ATX', TRUE, 'Acero', 380);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(83, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS PA602', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 450 mm.', 202990.00, 15, NULL, 'ATX', TRUE, 'Acero', 450);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(84, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MasterBox 520', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 410 mm.', 103990.00, 4, NULL, 'ATX', TRUE, 'Acero', 410);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(85, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Base 500 FX', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 369 mm.', 149990.00, 5, NULL, 'ATX', TRUE, 'Vidrio Templado', 369);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(86, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake View 200 TG', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 390 mm.', 90990.00, 6, NULL, 'ATX', TRUE, 'Vidrio Templado', 390);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(87, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone FARA B1', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 370 mm.', 71990.00, 7, NULL, 'ATX', TRUE, 'Acero', 370);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(88, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech XR', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 390 mm.', 102990.00, 8, NULL, 'ATX', TRUE, 'Vidrio Templado', 390);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(89, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec C8', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 395 mm.', 133990.00, 9, NULL, 'ATX', TRUE, 'Vidrio Templado', 395);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(90, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li Lancool 207', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 375 mm.', 99990.00, 10, NULL, 'ATX', TRUE, 'Acero', 375);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(91, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Pop XL Air', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 430 mm.', 120990.00, 11, NULL, 'ATX', TRUE, 'Acero', 430);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(92, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks XT View', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 415 mm.', 121990.00, 12, NULL, 'ATX', TRUE, 'Vidrio Templado', 415);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(93, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT H3 Flow', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 364 mm.', 82990.00, 13, NULL, 'Micro-ATX', TRUE, 'Acero', 364);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(94, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Frame 4000D', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 397 mm.', 113990.00, 14, NULL, 'ATX', TRUE, 'Acero', 397);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(95, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte C301 Glass', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 400 mm.', 99990.00, 15, NULL, 'ATX', TRUE, 'Vidrio Templado', 400);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(96, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool CC560', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 370 mm.', 60990.00, 4, NULL, 'ATX', TRUE, 'Acero', 370);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(97, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool CH510', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 380 mm.', 71990.00, 5, NULL, 'ATX', TRUE, 'Acero', 380);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(98, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool CK560', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete ATX. Admite GPU de hasta 380 mm.', 82990.00, 6, NULL, 'ATX', TRUE, 'Acero', 380);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(99, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool CH360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Micro-ATX. Admite GPU de hasta 320 mm.', 63990.00, 7, NULL, 'Micro-ATX', TRUE, 'Acero', 320);
+INSERT INTO core_gabinete (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, formato_soporte, ventiladores_incluidos, material, largo_max_gpu_mm) VALUES
+(100, 'Gabinete', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool CH160', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Gabinete Mini-ITX. Admite GPU de hasta 305 mm.', 69990.00, 8, NULL, 'Mini-ITX', TRUE, 'Acero', 305);
 
+-- fuente_de_poder
 INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
-(1, 'Fuente de Poder', 9, 'G.Skill PSU Test 001', 'Fuente de poder de prueba #1.', 71290, 8, NULL, 550, '80+ Bronze', TRUE),
-(2, 'Fuente de Poder', 10, 'Kingston PSU Test 002', 'Fuente de poder de prueba #2.', 72590, 9, NULL, 650, '80+ Silver', TRUE),
-(3, 'Fuente de Poder', 11, 'Crucial PSU Test 003', 'Fuente de poder de prueba #3.', 73890, 10, NULL, 750, '80+ Gold', FALSE),
-(4, 'Fuente de Poder', 12, 'Samsung PSU Test 004', 'Fuente de poder de prueba #4.', 75190, 11, NULL, 850, '80+ Platinum', TRUE),
-(5, 'Fuente de Poder', 13, 'Western Digital PSU Test 005', 'Fuente de poder de prueba #5.', 76490, 12, NULL, 950, '80+ Titanium', TRUE),
-(6, 'Fuente de Poder', 14, 'Seagate PSU Test 006', 'Fuente de poder de prueba #6.', 77790, 13, NULL, 450, '80+ White', FALSE),
-(7, 'Fuente de Poder', 15, 'SanDisk PSU Test 007', 'Fuente de poder de prueba #7.', 79090, 14, NULL, 550, '80+ Bronze', TRUE),
-(8, 'Fuente de Poder', 16, 'ADATA PSU Test 008', 'Fuente de poder de prueba #8.', 80390, 15, NULL, 650, '80+ Silver', TRUE),
-(9, 'Fuente de Poder', 17, 'TeamGroup PSU Test 009', 'Fuente de poder de prueba #9.', 81690, 16, NULL, 750, '80+ Gold', FALSE),
-(10, 'Fuente de Poder', 18, 'Patriot PSU Test 010', 'Fuente de poder de prueba #10.', 82990, 17, NULL, 850, '80+ Platinum', TRUE),
-(11, 'Fuente de Poder', 19, 'HyperX PSU Test 011', 'Fuente de poder de prueba #11.', 84290, 18, NULL, 950, '80+ Titanium', TRUE),
-(12, 'Fuente de Poder', 20, 'Thermaltake PSU Test 012', 'Fuente de poder de prueba #12.', 85590, 19, NULL, 450, '80+ White', FALSE),
-(13, 'Fuente de Poder', 21, 'Cooler Master PSU Test 013', 'Fuente de poder de prueba #13.', 86890, 20, NULL, 550, '80+ Bronze', TRUE),
-(14, 'Fuente de Poder', 22, 'NZXT PSU Test 014', 'Fuente de poder de prueba #14.', 88190, 21, NULL, 650, '80+ Silver', TRUE),
-(15, 'Fuente de Poder', 23, 'be quiet! PSU Test 015', 'Fuente de poder de prueba #15.', 89490, 22, NULL, 750, '80+ Gold', FALSE),
-(16, 'Fuente de Poder', 24, 'Seasonic PSU Test 016', 'Fuente de poder de prueba #16.', 90790, 23, NULL, 850, '80+ Platinum', TRUE),
-(17, 'Fuente de Poder', 25, 'FSP PSU Test 017', 'Fuente de poder de prueba #17.', 92090, 24, NULL, 950, '80+ Titanium', TRUE),
-(18, 'Fuente de Poder', 26, 'Lian Li PSU Test 018', 'Fuente de poder de prueba #18.', 93390, 25, NULL, 450, '80+ White', FALSE),
-(19, 'Fuente de Poder', 27, 'Fractal Design PSU Test 019', 'Fuente de poder de prueba #19.', 94690, 26, NULL, 550, '80+ Bronze', TRUE),
-(20, 'Fuente de Poder', 28, 'Phanteks PSU Test 020', 'Fuente de poder de prueba #20.', 95990, 27, NULL, 650, '80+ Silver', TRUE),
-(21, 'Fuente de Poder', 29, 'Silverstone PSU Test 021', 'Fuente de poder de prueba #21.', 97290, 28, NULL, 750, '80+ Gold', FALSE),
-(22, 'Fuente de Poder', 30, 'Antec PSU Test 022', 'Fuente de poder de prueba #22.', 98590, 29, NULL, 850, '80+ Platinum', TRUE),
-(23, 'Fuente de Poder', 31, 'Montech PSU Test 023', 'Fuente de poder de prueba #23.', 99890, 30, NULL, 950, '80+ Titanium', TRUE),
-(24, 'Fuente de Poder', 32, 'Noctua PSU Test 024', 'Fuente de poder de prueba #24.', 101190, 31, NULL, 450, '80+ White', FALSE),
-(25, 'Fuente de Poder', 33, 'Arctic PSU Test 025', 'Fuente de poder de prueba #25.', 102490, 7, NULL, 550, '80+ Bronze', TRUE),
-(26, 'Fuente de Poder', 34, 'Deepcool PSU Test 026', 'Fuente de poder de prueba #26.', 103790, 8, NULL, 650, '80+ Silver', TRUE),
-(27, 'Fuente de Poder', 35, 'ID-COOLING PSU Test 027', 'Fuente de poder de prueba #27.', 105090, 9, NULL, 750, '80+ Gold', FALSE),
-(28, 'Fuente de Poder', 36, 'Scythe PSU Test 028', 'Fuente de poder de prueba #28.', 106390, 10, NULL, 850, '80+ Platinum', TRUE),
-(29, 'Fuente de Poder', 37, 'Logitech PSU Test 029', 'Fuente de poder de prueba #29.', 107690, 11, NULL, 950, '80+ Titanium', TRUE),
-(30, 'Fuente de Poder', 38, 'Razer PSU Test 030', 'Fuente de poder de prueba #30.', 108990, 12, NULL, 450, '80+ White', FALSE),
-(31, 'Fuente de Poder', 39, 'SteelSeries PSU Test 031', 'Fuente de poder de prueba #31.', 110290, 13, NULL, 550, '80+ Bronze', TRUE),
-(32, 'Fuente de Poder', 40, 'BenQ PSU Test 032', 'Fuente de poder de prueba #32.', 111590, 14, NULL, 650, '80+ Silver', TRUE),
-(33, 'Fuente de Poder', 41, 'LG PSU Test 033', 'Fuente de poder de prueba #33.', 112890, 15, NULL, 750, '80+ Gold', FALSE),
-(34, 'Fuente de Poder', 42, 'AOC PSU Test 034', 'Fuente de poder de prueba #34.', 114190, 16, NULL, 850, '80+ Platinum', TRUE),
-(35, 'Fuente de Poder', 43, 'Dell PSU Test 035', 'Fuente de poder de prueba #35.', 115490, 17, NULL, 950, '80+ Titanium', TRUE),
-(36, 'Fuente de Poder', 44, 'HP PSU Test 036', 'Fuente de poder de prueba #36.', 116790, 18, NULL, 450, '80+ White', FALSE),
-(37, 'Fuente de Poder', 45, 'Lenovo PSU Test 037', 'Fuente de poder de prueba #37.', 118090, 19, NULL, 550, '80+ Bronze', TRUE),
-(38, 'Fuente de Poder', 46, 'Acer PSU Test 038', 'Fuente de poder de prueba #38.', 119390, 20, NULL, 650, '80+ Silver', TRUE),
-(39, 'Fuente de Poder', 47, 'Apple PSU Test 039', 'Fuente de poder de prueba #39.', 120690, 21, NULL, 750, '80+ Gold', FALSE),
-(40, 'Fuente de Poder', 48, 'Qualcomm PSU Test 040', 'Fuente de poder de prueba #40.', 121990, 22, NULL, 850, '80+ Platinum', TRUE),
-(41, 'Fuente de Poder', 49, 'MediaTek PSU Test 041', 'Fuente de poder de prueba #41.', 123290, 23, NULL, 950, '80+ Titanium', TRUE),
-(42, 'Fuente de Poder', 50, 'Broadcom PSU Test 042', 'Fuente de poder de prueba #42.', 124590, 24, NULL, 450, '80+ White', FALSE),
-(43, 'Fuente de Poder', 51, 'Realtek PSU Test 043', 'Fuente de poder de prueba #43.', 125890, 25, NULL, 550, '80+ Bronze', TRUE),
-(44, 'Fuente de Poder', 52, 'TP-Link PSU Test 044', 'Fuente de poder de prueba #44.', 127190, 26, NULL, 650, '80+ Silver', TRUE),
-(45, 'Fuente de Poder', 53, 'D-Link PSU Test 045', 'Fuente de poder de prueba #45.', 128490, 27, NULL, 750, '80+ Gold', FALSE),
-(46, 'Fuente de Poder', 54, 'Netgear PSU Test 046', 'Fuente de poder de prueba #46.', 129790, 28, NULL, 850, '80+ Platinum', TRUE),
-(47, 'Fuente de Poder', 55, 'Ubiquiti PSU Test 047', 'Fuente de poder de prueba #47.', 131090, 29, NULL, 950, '80+ Titanium', TRUE),
-(48, 'Fuente de Poder', 56, 'Synology PSU Test 048', 'Fuente de poder de prueba #48.', 132390, 30, NULL, 450, '80+ White', FALSE),
-(49, 'Fuente de Poder', 57, 'QNAP PSU Test 049', 'Fuente de poder de prueba #49.', 133690, 31, NULL, 550, '80+ Bronze', TRUE),
-(50, 'Fuente de Poder', 58, 'ASUSTOR PSU Test 050', 'Fuente de poder de prueba #50.', 134990, 7, NULL, 650, '80+ Silver', TRUE),
-(51, 'Fuente de Poder', 59, 'Toshiba PSU Test 051', 'Fuente de poder de prueba #51.', 136290, 8, NULL, 750, '80+ Gold', FALSE),
-(52, 'Fuente de Poder', 60, 'Hitachi PSU Test 052', 'Fuente de poder de prueba #52.', 137590, 9, NULL, 850, '80+ Platinum', TRUE),
-(53, 'Fuente de Poder', 61, 'Lexar PSU Test 053', 'Fuente de poder de prueba #53.', 138890, 10, NULL, 950, '80+ Titanium', TRUE),
-(54, 'Fuente de Poder', 62, 'PNY Technologies PSU Test 054', 'Fuente de poder de prueba #54.', 140190, 11, NULL, 450, '80+ White', FALSE),
-(55, 'Fuente de Poder', 63, 'Inno3D PSU Test 055', 'Fuente de poder de prueba #55.', 141490, 12, NULL, 550, '80+ Bronze', TRUE),
-(56, 'Fuente de Poder', 64, 'Colorful PSU Test 056', 'Fuente de poder de prueba #56.', 142790, 13, NULL, 650, '80+ Silver', TRUE),
-(57, 'Fuente de Poder', 65, 'Biostar PSU Test 057', 'Fuente de poder de prueba #57.', 144090, 14, NULL, 750, '80+ Gold', FALSE),
-(58, 'Fuente de Poder', 66, 'ECS PSU Test 058', 'Fuente de poder de prueba #58.', 145390, 15, NULL, 850, '80+ Platinum', TRUE),
-(59, 'Fuente de Poder', 67, 'Supermicro PSU Test 059', 'Fuente de poder de prueba #59.', 146690, 16, NULL, 950, '80+ Titanium', TRUE),
-(60, 'Fuente de Poder', 68, 'Tyan PSU Test 060', 'Fuente de poder de prueba #60.', 147990, 17, NULL, 450, '80+ White', FALSE),
-(61, 'Fuente de Poder', 69, 'GALAX PSU Test 061', 'Fuente de poder de prueba #61.', 149290, 18, NULL, 550, '80+ Bronze', TRUE),
-(62, 'Fuente de Poder', 70, 'KFA2 PSU Test 062', 'Fuente de poder de prueba #62.', 150590, 19, NULL, 650, '80+ Silver', TRUE),
-(63, 'Fuente de Poder', 71, 'Club 3D PSU Test 063', 'Fuente de poder de prueba #63.', 151890, 20, NULL, 750, '80+ Gold', FALSE),
-(64, 'Fuente de Poder', 72, 'VisionTek PSU Test 064', 'Fuente de poder de prueba #64.', 153190, 21, NULL, 850, '80+ Platinum', TRUE),
-(65, 'Fuente de Poder', 73, 'Matrox PSU Test 065', 'Fuente de poder de prueba #65.', 154490, 22, NULL, 950, '80+ Titanium', TRUE),
-(66, 'Fuente de Poder', 74, 'Intel Arc PSU Test 066', 'Fuente de poder de prueba #66.', 155790, 23, NULL, 450, '80+ White', FALSE),
-(67, 'Fuente de Poder', 75, 'Sparkle PSU Test 067', 'Fuente de poder de prueba #67.', 157090, 24, NULL, 550, '80+ Bronze', TRUE),
-(68, 'Fuente de Poder', 76, 'Intel PSU Test 068', 'Fuente de poder de prueba #68.', 158390, 25, NULL, 650, '80+ Silver', TRUE),
-(69, 'Fuente de Poder', 77, 'AMD PSU Test 069', 'Fuente de poder de prueba #69.', 159690, 26, NULL, 750, '80+ Gold', FALSE),
-(70, 'Fuente de Poder', 78, 'NVIDIA PSU Test 070', 'Fuente de poder de prueba #70.', 160990, 27, NULL, 850, '80+ Platinum', TRUE),
-(71, 'Fuente de Poder', 79, 'ASUS PSU Test 071', 'Fuente de poder de prueba #71.', 162290, 28, NULL, 950, '80+ Titanium', TRUE),
-(72, 'Fuente de Poder', 80, 'Gigabyte PSU Test 072', 'Fuente de poder de prueba #72.', 163590, 29, NULL, 450, '80+ White', FALSE),
-(73, 'Fuente de Poder', 81, 'MSI PSU Test 073', 'Fuente de poder de prueba #73.', 164890, 30, NULL, 550, '80+ Bronze', TRUE),
-(74, 'Fuente de Poder', 82, 'ASRock PSU Test 074', 'Fuente de poder de prueba #74.', 166190, 31, NULL, 650, '80+ Silver', TRUE),
-(75, 'Fuente de Poder', 83, 'EVGA PSU Test 075', 'Fuente de poder de prueba #75.', 167490, 7, NULL, 750, '80+ Gold', FALSE),
-(76, 'Fuente de Poder', 1, 'Zotac PSU Test 076', 'Fuente de poder de prueba #76.', 168790, 8, NULL, 850, '80+ Platinum', TRUE),
-(77, 'Fuente de Poder', 2, 'PNY PSU Test 077', 'Fuente de poder de prueba #77.', 170090, 9, NULL, 950, '80+ Titanium', TRUE),
-(78, 'Fuente de Poder', 3, 'Palit PSU Test 078', 'Fuente de poder de prueba #78.', 171390, 10, NULL, 450, '80+ White', FALSE),
-(79, 'Fuente de Poder', 4, 'Gainward PSU Test 079', 'Fuente de poder de prueba #79.', 172690, 11, NULL, 550, '80+ Bronze', TRUE),
-(80, 'Fuente de Poder', 5, 'Sapphire PSU Test 080', 'Fuente de poder de prueba #80.', 173990, 12, NULL, 650, '80+ Silver', TRUE),
-(81, 'Fuente de Poder', 6, 'PowerColor PSU Test 081', 'Fuente de poder de prueba #81.', 175290, 13, NULL, 750, '80+ Gold', FALSE),
-(82, 'Fuente de Poder', 7, 'XFX PSU Test 082', 'Fuente de poder de prueba #82.', 176590, 14, NULL, 850, '80+ Platinum', TRUE),
-(83, 'Fuente de Poder', 8, 'Corsair PSU Test 083', 'Fuente de poder de prueba #83.', 177890, 15, NULL, 950, '80+ Titanium', TRUE),
-(84, 'Fuente de Poder', 9, 'G.Skill PSU Test 084', 'Fuente de poder de prueba #84.', 179190, 16, NULL, 450, '80+ White', FALSE),
-(85, 'Fuente de Poder', 10, 'Kingston PSU Test 085', 'Fuente de poder de prueba #85.', 180490, 17, NULL, 550, '80+ Bronze', TRUE),
-(86, 'Fuente de Poder', 11, 'Crucial PSU Test 086', 'Fuente de poder de prueba #86.', 181790, 18, NULL, 650, '80+ Silver', TRUE),
-(87, 'Fuente de Poder', 12, 'Samsung PSU Test 087', 'Fuente de poder de prueba #87.', 183090, 19, NULL, 750, '80+ Gold', FALSE),
-(88, 'Fuente de Poder', 13, 'Western Digital PSU Test 088', 'Fuente de poder de prueba #88.', 184390, 20, NULL, 850, '80+ Platinum', TRUE),
-(89, 'Fuente de Poder', 14, 'Seagate PSU Test 089', 'Fuente de poder de prueba #89.', 185690, 21, NULL, 950, '80+ Titanium', TRUE),
-(90, 'Fuente de Poder', 15, 'SanDisk PSU Test 090', 'Fuente de poder de prueba #90.', 186990, 22, NULL, 450, '80+ White', FALSE),
-(91, 'Fuente de Poder', 16, 'ADATA PSU Test 091', 'Fuente de poder de prueba #91.', 188290, 23, NULL, 550, '80+ Bronze', TRUE),
-(92, 'Fuente de Poder', 17, 'TeamGroup PSU Test 092', 'Fuente de poder de prueba #92.', 189590, 24, NULL, 650, '80+ Silver', TRUE),
-(93, 'Fuente de Poder', 18, 'Patriot PSU Test 093', 'Fuente de poder de prueba #93.', 190890, 25, NULL, 750, '80+ Gold', FALSE),
-(94, 'Fuente de Poder', 19, 'HyperX PSU Test 094', 'Fuente de poder de prueba #94.', 192190, 26, NULL, 850, '80+ Platinum', TRUE),
-(95, 'Fuente de Poder', 20, 'Thermaltake PSU Test 095', 'Fuente de poder de prueba #95.', 193490, 27, NULL, 950, '80+ Titanium', TRUE),
-(96, 'Fuente de Poder', 21, 'Cooler Master PSU Test 096', 'Fuente de poder de prueba #96.', 194790, 28, NULL, 450, '80+ White', FALSE),
-(97, 'Fuente de Poder', 22, 'NZXT PSU Test 097', 'Fuente de poder de prueba #97.', 196090, 29, NULL, 550, '80+ Bronze', TRUE),
-(98, 'Fuente de Poder', 23, 'be quiet! PSU Test 098', 'Fuente de poder de prueba #98.', 197390, 30, NULL, 650, '80+ Silver', TRUE),
-(99, 'Fuente de Poder', 24, 'Seasonic PSU Test 099', 'Fuente de poder de prueba #99.', 198690, 31, NULL, 750, '80+ Gold', FALSE),
-(100, 'Fuente de Poder', 25, 'FSP PSU Test 100', 'Fuente de poder de prueba #100.', 199990, 7, NULL, 850, '80+ Platinum', TRUE);
+(1, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RM650x', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 104990.00, 5, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(2, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RM750x', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 109990.00, 6, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(3, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RM850x', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 114990.00, 7, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(4, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RM1000x', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Gold.', 121990.00, 8, NULL, 1000, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(5, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair CX550', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 550 W, certificación 80+ Bronze.', 59990.00, 9, NULL, 550, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(6, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair CX650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Bronze.', 64990.00, 10, NULL, 650, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(7, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair CX750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Bronze.', 69990.00, 11, NULL, 750, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(8, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Focus GX-650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 116990.00, 12, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(9, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Focus GX-750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 121990.00, 13, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(10, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Focus GX-850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 121990.00, 14, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(11, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Focus GX-1000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Gold.', 128990.00, 15, NULL, 1000, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(12, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Prime TX-850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Titanium.', 263990.00, 4, NULL, 850, '80+ Titanium', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(13, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Prime TX-1000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Titanium.', 270990.00, 5, NULL, 1000, '80+ Titanium', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(14, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Power 12 M 650W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 117990.00, 6, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(15, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Power 12 M 750W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 117990.00, 7, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(16, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Power 12 M 850W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 122990.00, 8, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(17, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! System Power 10 550W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 550 W, certificación 80+ Bronze.', 61990.00, 9, NULL, 550, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(18, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! System Power 10 650W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Bronze.', 66990.00, 10, NULL, 650, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(19, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! System Power 10 750W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Bronze.', 71990.00, 11, NULL, 750, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(20, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA SuperNOVA 650 G6', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 123990.00, 12, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(21, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA SuperNOVA 750 G6', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 128990.00, 13, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(22, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA SuperNOVA 850 G6', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 133990.00, 14, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(23, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA SuperNOVA 1000 G6', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Gold.', 140990.00, 15, NULL, 1000, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(24, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MWE Bronze 550', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 550 W, certificación 80+ Bronze.', 58990.00, 4, NULL, 550, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(25, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MWE Bronze 650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Bronze.', 58990.00, 5, NULL, 650, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(26, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MWE Bronze 750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Bronze.', 63990.00, 6, NULL, 750, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(27, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master V750 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 139990.00, 7, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(28, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master V850 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 144990.00, 8, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(29, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Toughpower GF1 650W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 107990.00, 9, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(30, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Toughpower GF1 750W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 107990.00, 10, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(31, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Toughpower GF1 850W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 112990.00, 11, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(32, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'FSP'), 'FSP Hydro G 650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 105990.00, 12, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(33, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'FSP'), 'FSP Hydro G 750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 110990.00, 13, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(34, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'FSP'), 'FSP Hydro G 850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 115990.00, 14, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(35, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG Strix 750G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 157990.00, 15, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(36, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG Strix 850G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 162990.00, 4, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(37, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG Strix 1000G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Gold.', 169990.00, 5, NULL, 1000, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(38, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG A750G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 140990.00, 6, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(39, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG A850G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 145990.00, 7, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(40, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG A1000G', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Gold.', 147990.00, 8, NULL, 1000, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(41, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT C750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 128990.00, 9, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(42, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT C850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 133990.00, 10, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(43, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone DA650 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 116990.00, 11, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(44, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone DA750 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 121990.00, 12, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(45, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone DA850 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 121990.00, 13, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(46, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec NE550 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 550 W, certificación 80+ Gold.', 90990.00, 14, NULL, 550, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(47, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec NE650 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 95990.00, 15, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(48, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec NE750 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 100990.00, 4, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(49, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec NE850 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 105990.00, 5, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(50, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec NE1000 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Gold.', 107990.00, 6, NULL, 1000, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(51, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Smart 500W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 500 W, certificación 80+ White.', 38990.00, 7, NULL, 500, '80+ White', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(52, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Smart 600W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 600 W, certificación 80+ White.', 43990.00, 8, NULL, 600, '80+ White', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(53, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Smart 700W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 700 W, certificación 80+ White.', 48990.00, 9, NULL, 700, '80+ White', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(54, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair HX750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Platinum.', 181990.00, 10, NULL, 750, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(55, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair HX850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Platinum.', 181990.00, 11, NULL, 850, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(56, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair HX1000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Platinum.', 188990.00, 12, NULL, 1000, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(57, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Focus PX-750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Platinum.', 169990.00, 13, NULL, 750, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(58, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Focus PX-850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Platinum.', 174990.00, 14, NULL, 850, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(59, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'FSP'), 'FSP Hydro PTM 650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Platinum.', 147990.00, 15, NULL, 650, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(60, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'FSP'), 'FSP Hydro PTM 750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Platinum.', 147990.00, 4, NULL, 750, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(61, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'FSP'), 'FSP Hydro PTM 850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Platinum.', 152990.00, 5, NULL, 850, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(62, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Dark Power 13 750W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Titanium.', 239990.00, 6, NULL, 750, '80+ Titanium', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(63, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Dark Power 13 850W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Titanium.', 244990.00, 7, NULL, 850, '80+ Titanium', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(64, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Dark Power 13 1000W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Titanium.', 251990.00, 8, NULL, 1000, '80+ Titanium', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(65, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA SuperNOVA 750 P6', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Platinum.', 167990.00, 9, NULL, 750, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(66, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA SuperNOVA 850 P6', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Platinum.', 172990.00, 10, NULL, 850, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(67, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RMe650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 95990.00, 11, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(68, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RMe750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 100990.00, 12, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(69, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RMe850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 105990.00, 13, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(70, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RMe1000', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Gold.', 107990.00, 14, NULL, 1000, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(71, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair SF750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Platinum.', 158990.00, 15, NULL, 750, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(72, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair SF850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Platinum.', 163990.00, 4, NULL, 850, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(73, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Core GM-500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 500 W, certificación 80+ Gold.', 70990.00, 5, NULL, 500, '80+ Gold', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(74, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Core GM-650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 77990.00, 6, NULL, 650, '80+ Gold', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(75, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Seasonic'), 'Seasonic Core GM-750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 77990.00, 7, NULL, 750, '80+ Gold', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(76, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Straight Power 12 650W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Platinum.', 164990.00, 8, NULL, 650, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(77, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Straight Power 12 750W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Platinum.', 169990.00, 9, NULL, 750, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(78, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Straight Power 12 850W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Platinum.', 174990.00, 10, NULL, 850, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(79, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Straight Power 12 1000W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Platinum.', 181990.00, 11, NULL, 1000, '80+ Platinum', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(80, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA BQ 500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 500 W, certificación 80+ Bronze.', 47990.00, 12, NULL, 500, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(81, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA BQ 600', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 600 W, certificación 80+ Bronze.', 52990.00, 13, NULL, 600, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(82, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA BQ 700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 700 W, certificación 80+ Bronze.', 57990.00, 14, NULL, 700, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(83, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'EVGA'), 'EVGA BQ 750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Bronze.', 60990.00, 15, NULL, 750, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(84, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MWE Gold 550', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 550 W, certificación 80+ Gold.', 83990.00, 4, NULL, 550, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(85, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MWE Gold 650', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 83990.00, 5, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(86, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MWE Gold 750', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 88990.00, 6, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(87, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MWE Gold 850', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 93990.00, 7, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(88, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Toughpower GF3 750W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Gold.', 140990.00, 8, NULL, 750, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(89, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Toughpower GF3 850W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 850 W, certificación 80+ Gold.', 145990.00, 9, NULL, 850, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(90, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Toughpower GF3 1000W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Gold.', 147990.00, 10, NULL, 1000, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(91, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Toughpower GF3 1200W', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1200 W, certificación 80+ Gold.', 156990.00, 11, NULL, 1200, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(92, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG A550BN', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 550 W, certificación 80+ Bronze.', 51990.00, 12, NULL, 550, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(93, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG A650BN', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Bronze.', 56990.00, 13, NULL, 650, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(94, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG A750BN', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Bronze.', 61990.00, 14, NULL, 750, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(95, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF Gaming 550B', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 550 W, certificación 80+ Bronze.', 69990.00, 15, NULL, 550, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(96, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF Gaming 650B', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Bronze.', 74990.00, 4, NULL, 650, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(97, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF Gaming 750B', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 750 W, certificación 80+ Bronze.', 79990.00, 5, NULL, 750, '80+ Bronze', FALSE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(98, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT C550 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 550 W, certificación 80+ Gold.', 102990.00, 6, NULL, 550, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(99, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT C650 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 650 W, certificación 80+ Gold.', 107990.00, 7, NULL, 650, '80+ Gold', TRUE);
+INSERT INTO core_fuentedepoder (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, potencia_watts, certificacion, modular) VALUES
+(100, 'Fuente de Poder', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT C1000 Gold', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Fuente 1000 W, certificación 80+ Gold.', 117990.00, 8, NULL, 1000, '80+ Gold', TRUE);
 
+-- refrigeracion
 INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
-(1, 'Refrigeración', 10, 'Crucial Cooler Test 001', 'Refrigeración de prueba #1.', 25740, 10, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(2, 'Refrigeración', 11, 'Samsung Cooler Test 002', 'Refrigeración de prueba #2.', 26490, 11, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(3, 'Refrigeración', 12, 'Western Digital Cooler Test 003', 'Refrigeración de prueba #3.', 27240, 12, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(4, 'Refrigeración', 13, 'Seagate Cooler Test 004', 'Refrigeración de prueba #4.', 27990, 13, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(5, 'Refrigeración', 14, 'SanDisk Cooler Test 005', 'Refrigeración de prueba #5.', 28740, 14, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(6, 'Refrigeración', 15, 'ADATA Cooler Test 006', 'Refrigeración de prueba #6.', 29490, 15, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(7, 'Refrigeración', 16, 'TeamGroup Cooler Test 007', 'Refrigeración de prueba #7.', 30240, 16, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(8, 'Refrigeración', 17, 'Patriot Cooler Test 008', 'Refrigeración de prueba #8.', 30990, 17, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(9, 'Refrigeración', 18, 'HyperX Cooler Test 009', 'Refrigeración de prueba #9.', 31740, 18, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(10, 'Refrigeración', 19, 'Thermaltake Cooler Test 010', 'Refrigeración de prueba #10.', 32490, 19, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(11, 'Refrigeración', 20, 'Cooler Master Cooler Test 011', 'Refrigeración de prueba #11.', 33240, 20, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(12, 'Refrigeración', 21, 'NZXT Cooler Test 012', 'Refrigeración de prueba #12.', 33990, 21, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(13, 'Refrigeración', 22, 'be quiet! Cooler Test 013', 'Refrigeración de prueba #13.', 34740, 22, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(14, 'Refrigeración', 23, 'Seasonic Cooler Test 014', 'Refrigeración de prueba #14.', 35490, 23, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(15, 'Refrigeración', 24, 'FSP Cooler Test 015', 'Refrigeración de prueba #15.', 36240, 24, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(16, 'Refrigeración', 25, 'Lian Li Cooler Test 016', 'Refrigeración de prueba #16.', 36990, 25, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(17, 'Refrigeración', 26, 'Fractal Design Cooler Test 017', 'Refrigeración de prueba #17.', 37740, 26, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(18, 'Refrigeración', 27, 'Phanteks Cooler Test 018', 'Refrigeración de prueba #18.', 38490, 27, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(19, 'Refrigeración', 28, 'Silverstone Cooler Test 019', 'Refrigeración de prueba #19.', 39240, 28, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(20, 'Refrigeración', 29, 'Antec Cooler Test 020', 'Refrigeración de prueba #20.', 39990, 29, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(21, 'Refrigeración', 30, 'Montech Cooler Test 021', 'Refrigeración de prueba #21.', 40740, 30, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(22, 'Refrigeración', 31, 'Noctua Cooler Test 022', 'Refrigeración de prueba #22.', 41490, 31, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(23, 'Refrigeración', 32, 'Arctic Cooler Test 023', 'Refrigeración de prueba #23.', 42240, 32, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(24, 'Refrigeración', 33, 'Deepcool Cooler Test 024', 'Refrigeración de prueba #24.', 42990, 33, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(25, 'Refrigeración', 34, 'ID-COOLING Cooler Test 025', 'Refrigeración de prueba #25.', 43740, 34, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(26, 'Refrigeración', 35, 'Scythe Cooler Test 026', 'Refrigeración de prueba #26.', 44490, 35, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(27, 'Refrigeración', 36, 'Logitech Cooler Test 027', 'Refrigeración de prueba #27.', 45240, 36, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(28, 'Refrigeración', 37, 'Razer Cooler Test 028', 'Refrigeración de prueba #28.', 45990, 37, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(29, 'Refrigeración', 38, 'SteelSeries Cooler Test 029', 'Refrigeración de prueba #29.', 46740, 38, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(30, 'Refrigeración', 39, 'BenQ Cooler Test 030', 'Refrigeración de prueba #30.', 47490, 39, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(31, 'Refrigeración', 40, 'LG Cooler Test 031', 'Refrigeración de prueba #31.', 48240, 40, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(32, 'Refrigeración', 41, 'AOC Cooler Test 032', 'Refrigeración de prueba #32.', 48990, 41, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(33, 'Refrigeración', 42, 'Dell Cooler Test 033', 'Refrigeración de prueba #33.', 49740, 42, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(34, 'Refrigeración', 43, 'HP Cooler Test 034', 'Refrigeración de prueba #34.', 50490, 43, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(35, 'Refrigeración', 44, 'Lenovo Cooler Test 035', 'Refrigeración de prueba #35.', 51240, 44, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(36, 'Refrigeración', 45, 'Acer Cooler Test 036', 'Refrigeración de prueba #36.', 51990, 45, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(37, 'Refrigeración', 46, 'Apple Cooler Test 037', 'Refrigeración de prueba #37.', 52740, 46, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(38, 'Refrigeración', 47, 'Qualcomm Cooler Test 038', 'Refrigeración de prueba #38.', 53490, 47, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(39, 'Refrigeración', 48, 'MediaTek Cooler Test 039', 'Refrigeración de prueba #39.', 54240, 48, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(40, 'Refrigeración', 49, 'Broadcom Cooler Test 040', 'Refrigeración de prueba #40.', 54990, 9, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(41, 'Refrigeración', 50, 'Realtek Cooler Test 041', 'Refrigeración de prueba #41.', 55740, 10, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(42, 'Refrigeración', 51, 'TP-Link Cooler Test 042', 'Refrigeración de prueba #42.', 56490, 11, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(43, 'Refrigeración', 52, 'D-Link Cooler Test 043', 'Refrigeración de prueba #43.', 57240, 12, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(44, 'Refrigeración', 53, 'Netgear Cooler Test 044', 'Refrigeración de prueba #44.', 57990, 13, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(45, 'Refrigeración', 54, 'Ubiquiti Cooler Test 045', 'Refrigeración de prueba #45.', 58740, 14, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(46, 'Refrigeración', 55, 'Synology Cooler Test 046', 'Refrigeración de prueba #46.', 59490, 15, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(47, 'Refrigeración', 56, 'QNAP Cooler Test 047', 'Refrigeración de prueba #47.', 60240, 16, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(48, 'Refrigeración', 57, 'ASUSTOR Cooler Test 048', 'Refrigeración de prueba #48.', 60990, 17, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(49, 'Refrigeración', 58, 'Toshiba Cooler Test 049', 'Refrigeración de prueba #49.', 61740, 18, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(50, 'Refrigeración', 59, 'Hitachi Cooler Test 050', 'Refrigeración de prueba #50.', 62490, 19, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(51, 'Refrigeración', 60, 'Lexar Cooler Test 051', 'Refrigeración de prueba #51.', 63240, 20, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(52, 'Refrigeración', 61, 'PNY Technologies Cooler Test 052', 'Refrigeración de prueba #52.', 63990, 21, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(53, 'Refrigeración', 62, 'Inno3D Cooler Test 053', 'Refrigeración de prueba #53.', 64740, 22, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(54, 'Refrigeración', 63, 'Colorful Cooler Test 054', 'Refrigeración de prueba #54.', 65490, 23, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(55, 'Refrigeración', 64, 'Biostar Cooler Test 055', 'Refrigeración de prueba #55.', 66240, 24, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(56, 'Refrigeración', 65, 'ECS Cooler Test 056', 'Refrigeración de prueba #56.', 66990, 25, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(57, 'Refrigeración', 66, 'Supermicro Cooler Test 057', 'Refrigeración de prueba #57.', 67740, 26, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(58, 'Refrigeración', 67, 'Tyan Cooler Test 058', 'Refrigeración de prueba #58.', 68490, 27, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(59, 'Refrigeración', 68, 'GALAX Cooler Test 059', 'Refrigeración de prueba #59.', 69240, 28, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(60, 'Refrigeración', 69, 'KFA2 Cooler Test 060', 'Refrigeración de prueba #60.', 69990, 29, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(61, 'Refrigeración', 70, 'Club 3D Cooler Test 061', 'Refrigeración de prueba #61.', 70740, 30, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(62, 'Refrigeración', 71, 'VisionTek Cooler Test 062', 'Refrigeración de prueba #62.', 71490, 31, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(63, 'Refrigeración', 72, 'Matrox Cooler Test 063', 'Refrigeración de prueba #63.', 72240, 32, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(64, 'Refrigeración', 73, 'Intel Arc Cooler Test 064', 'Refrigeración de prueba #64.', 72990, 33, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(65, 'Refrigeración', 74, 'Sparkle Cooler Test 065', 'Refrigeración de prueba #65.', 73740, 34, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(66, 'Refrigeración', 75, 'Intel Cooler Test 066', 'Refrigeración de prueba #66.', 74490, 35, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(67, 'Refrigeración', 76, 'AMD Cooler Test 067', 'Refrigeración de prueba #67.', 75240, 36, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(68, 'Refrigeración', 77, 'NVIDIA Cooler Test 068', 'Refrigeración de prueba #68.', 75990, 37, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(69, 'Refrigeración', 78, 'ASUS Cooler Test 069', 'Refrigeración de prueba #69.', 76740, 38, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(70, 'Refrigeración', 79, 'Gigabyte Cooler Test 070', 'Refrigeración de prueba #70.', 77490, 39, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(71, 'Refrigeración', 80, 'MSI Cooler Test 071', 'Refrigeración de prueba #71.', 78240, 40, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(72, 'Refrigeración', 81, 'ASRock Cooler Test 072', 'Refrigeración de prueba #72.', 78990, 41, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(73, 'Refrigeración', 82, 'EVGA Cooler Test 073', 'Refrigeración de prueba #73.', 79740, 42, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(74, 'Refrigeración', 83, 'Zotac Cooler Test 074', 'Refrigeración de prueba #74.', 80490, 43, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(75, 'Refrigeración', 1, 'PNY Cooler Test 075', 'Refrigeración de prueba #75.', 81240, 44, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(76, 'Refrigeración', 2, 'Palit Cooler Test 076', 'Refrigeración de prueba #76.', 81990, 45, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(77, 'Refrigeración', 3, 'Gainward Cooler Test 077', 'Refrigeración de prueba #77.', 82740, 46, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(78, 'Refrigeración', 4, 'Sapphire Cooler Test 078', 'Refrigeración de prueba #78.', 83490, 47, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(79, 'Refrigeración', 5, 'PowerColor Cooler Test 079', 'Refrigeración de prueba #79.', 84240, 48, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(80, 'Refrigeración', 6, 'XFX Cooler Test 080', 'Refrigeración de prueba #80.', 84990, 9, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(81, 'Refrigeración', 7, 'Corsair Cooler Test 081', 'Refrigeración de prueba #81.', 85740, 10, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(82, 'Refrigeración', 8, 'G.Skill Cooler Test 082', 'Refrigeración de prueba #82.', 86490, 11, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(83, 'Refrigeración', 9, 'Kingston Cooler Test 083', 'Refrigeración de prueba #83.', 87240, 12, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(84, 'Refrigeración', 10, 'Crucial Cooler Test 084', 'Refrigeración de prueba #84.', 87990, 13, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(85, 'Refrigeración', 11, 'Samsung Cooler Test 085', 'Refrigeración de prueba #85.', 88740, 14, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(86, 'Refrigeración', 12, 'Western Digital Cooler Test 086', 'Refrigeración de prueba #86.', 89490, 15, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(87, 'Refrigeración', 13, 'Seagate Cooler Test 087', 'Refrigeración de prueba #87.', 90240, 16, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(88, 'Refrigeración', 14, 'SanDisk Cooler Test 088', 'Refrigeración de prueba #88.', 90990, 17, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(89, 'Refrigeración', 15, 'ADATA Cooler Test 089', 'Refrigeración de prueba #89.', 91740, 18, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(90, 'Refrigeración', 16, 'TeamGroup Cooler Test 090', 'Refrigeración de prueba #90.', 92490, 19, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(91, 'Refrigeración', 17, 'Patriot Cooler Test 091', 'Refrigeración de prueba #91.', 93240, 20, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(92, 'Refrigeración', 18, 'HyperX Cooler Test 092', 'Refrigeración de prueba #92.', 93990, 21, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(93, 'Refrigeración', 19, 'Thermaltake Cooler Test 093', 'Refrigeración de prueba #93.', 94740, 22, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(94, 'Refrigeración', 20, 'Cooler Master Cooler Test 094', 'Refrigeración de prueba #94.', 95490, 23, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(95, 'Refrigeración', 21, 'NZXT Cooler Test 095', 'Refrigeración de prueba #95.', 96240, 24, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(96, 'Refrigeración', 22, 'be quiet! Cooler Test 096', 'Refrigeración de prueba #96.', 96990, 25, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(97, 'Refrigeración', 23, 'Seasonic Cooler Test 097', 'Refrigeración de prueba #97.', 97740, 26, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(98, 'Refrigeración', 24, 'FSP Cooler Test 098', 'Refrigeración de prueba #98.', 98490, 27, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL),
-(99, 'Refrigeración', 25, 'Lian Li Cooler Test 099', 'Refrigeración de prueba #99.', 99240, 28, NULL, 'Líquida (AIO)', 'AM4, AM5, LGA1700', 120),
-(100, 'Refrigeración', 26, 'Fractal Design Cooler Test 100', 'Refrigeración de prueba #100.', 99990, 29, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL);
+(1, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-D15', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 90990.00, 5, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(2, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-D15S', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 81990.00, 6, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(3, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-U12A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 102990.00, 7, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(4, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-U12S', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 73990.00, 8, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(5, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-U9S', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 59990.00, 9, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(6, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-L9a-AM4', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5.', 50990.00, 10, NULL, 'Aire', 'AM4, AM5', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(7, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-L9i-1700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con LGA1700, LGA1200.', 51990.00, 11, NULL, 'Aire', 'LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(8, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-L12S', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 72990.00, 12, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(9, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-D12L', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 83990.00, 13, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(10, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Freezer 36', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 39990.00, 14, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(11, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Freezer 34 eSports', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 35990.00, 15, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(12, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Freezer 34 eSports Duo', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 46990.00, 4, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(13, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Dark Rock 4', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 72990.00, 5, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(14, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Dark Rock Pro 4', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 93990.00, 6, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(15, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Rock 2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 39990.00, 7, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(16, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Dark Rock Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 100990.00, 8, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(17, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master Hyper 212 Black', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 41990.00, 9, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(18, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master Hyper 212 Halo', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 52990.00, 10, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(19, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MA624 Stealth', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 83990.00, 11, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(20, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool AK400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 29990.00, 12, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(21, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool AK620', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 60990.00, 13, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(22, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool AG400', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 26990.00, 14, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(23, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool AG620', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 52990.00, 15, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(24, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING SE-224-XTS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 28990.00, 4, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(25, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING SE-226-XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 34990.00, 5, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(26, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING IS-55', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700.', 40990.00, 6, NULL, 'Aire', 'AM4, AM5, LGA1700', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(27, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Scythe'), 'Scythe Fuma 2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 61990.00, 7, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(28, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Scythe'), 'Scythe Fuma 3', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 62990.00, 8, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(29, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Scythe'), 'Scythe Mugen 5', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 53990.00, 9, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(30, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake UX200 SE', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 29990.00, 10, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(31, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake TOUGHAIR 510', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 60990.00, 11, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(32, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Freezer 7 X', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con LGA1700, LGA1200.', 21990.00, 12, NULL, 'Aire', 'LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(33, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master Hyper 212 EVO V2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 37990.00, 13, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(34, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NH-U14S', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 83990.00, 14, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(35, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Rock Slim 2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 29990.00, 15, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(36, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool AK500', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 45990.00, 4, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(37, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING SE-214-XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 24990.00, 5, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(38, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Scythe'), 'Scythe Big Shuriken 3', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 52990.00, 6, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(39, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Alpine 23', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5.', 18990.00, 7, NULL, 'Aire', 'AM4, AM5', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(40, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Alpine 17', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con LGA1700.', 14990.00, 8, NULL, 'Aire', 'LGA1700', NULL);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(41, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair iCUE H100i RGB Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 130990.00, 9, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(42, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair iCUE H115i RGB Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 280 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 151990.00, 10, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 280);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(43, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair iCUE H150i RGB Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 172990.00, 11, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(44, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair iCUE LINK H100i', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 163990.00, 12, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(45, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair iCUE LINK H150i', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 199990.00, 13, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(46, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT Kraken 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 130990.00, 14, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(47, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT Kraken 280', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 280 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 151990.00, 15, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 280);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(48, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT Kraken 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 182990.00, 4, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(49, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT Kraken Elite 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 173990.00, 5, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(50, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT Kraken Elite 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 219990.00, 6, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(51, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Liquid Freezer II 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 90990.00, 7, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(52, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Liquid Freezer II 280', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 280 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 101990.00, 8, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 280);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(53, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Liquid Freezer II 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 112990.00, 9, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(54, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Liquid Freezer III 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 103990.00, 10, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(55, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Liquid Freezer III 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 119990.00, 11, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(56, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Liquid Freezer III 280', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 280 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 110990.00, 12, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 280);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(57, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool LS520', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 91990.00, 13, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(58, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool LS720', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 122990.00, 14, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(59, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool LT720', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 133990.00, 15, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(60, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Loop 2 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 109990.00, 4, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(61, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Loop 2 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 140990.00, 5, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(62, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Silent Loop 2 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 131990.00, 6, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(63, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Silent Loop 2 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 162990.00, 7, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(64, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MasterLiquid 240L Core', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 83990.00, 8, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(65, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MasterLiquid 360L Core', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 99990.00, 9, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(66, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake TH240 V2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 90990.00, 10, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(67, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake TH360 V2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 121990.00, 11, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(68, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING ZoomFlow 240 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 72990.00, 12, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(69, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING Dashflow 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 93990.00, 13, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(70, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG Ryujin III 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 249990.00, 14, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(71, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG Ryujin III 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 300990.00, 15, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(72, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG CoreLiquid 240R', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 101990.00, 4, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(73, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAG CoreLiquid 360R', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 132990.00, 5, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(74, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Lumen S24', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 103990.00, 6, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(75, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Lumen S36', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 119990.00, 7, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(76, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li Galahad II Trinity 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 130990.00, 8, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(77, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li Galahad II Trinity 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 161990.00, 9, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(78, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks Glacier One 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 112990.00, 10, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(79, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks Glacier One 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 143990.00, 11, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(80, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone IceGem 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 89990.00, 12, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(81, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone IceGem 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 120990.00, 13, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(82, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec Symphony 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 81990.00, 14, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(83, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec Symphony 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 102990.00, 15, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(84, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech HyperFlow 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 83990.00, 4, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(85, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech HyperFlow 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 99990.00, 5, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(86, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool LS320', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 80990.00, 6, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(87, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MasterLiquid 240 Atmos', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 121990.00, 7, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(88, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Nautilus 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 102990.00, 8, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(89, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair Nautilus 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 133990.00, 9, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(90, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT Kraken 240 RGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 149990.00, 10, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(91, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic Liquid Freezer III 420', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 420 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 140990.00, 11, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 420);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(92, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Loop 2 280', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 280 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 121990.00, 12, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 280);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(93, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake TH280 V2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 280 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 112990.00, 13, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 280);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(94, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING ZoomFlow 360 XT', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 93990.00, 14, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(95, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MPG CoreLiquid K360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 169990.00, 15, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(96, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG Strix LC II 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 150990.00, 4, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(97, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG Strix LC II 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 181990.00, 5, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(98, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li GA II Lite 240', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 240 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 92990.00, 6, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 240);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(99, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li GA II Lite 360', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Refrigeración líquida con radiador de 360 mm. Compatible con AM4, AM5, LGA1700 y LGA1200.', 113990.00, 7, NULL, 'Líquida', 'AM4, AM5, LGA1700, LGA1200', 360);
+INSERT INTO core_refrigeracioncooler (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tipo, socket_compatibles, tamanho_radiador_mm) VALUES
+(100, 'Refrigeración', (SELECT id FROM core_proveedor WHERE nombre = 'Scythe'), 'Scythe Mugen 6 Dual', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Cooler por aire compatible con AM4, AM5, LGA1700, LGA1200.', 69990.00, 8, NULL, 'Aire', 'AM4, AM5, LGA1700, LGA1200', NULL);
 
+-- ventilador
 INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
-(1, 'Ventilador', 11, 'Western Digital Fan Test 001', 'Ventilador de prueba #1.', 10180, 16, NULL, 120, 900, FALSE),
-(2, 'Ventilador', 12, 'Seagate Fan Test 002', 'Ventilador de prueba #2.', 10370, 17, NULL, 140, 1000, TRUE),
-(3, 'Ventilador', 13, 'SanDisk Fan Test 003', 'Ventilador de prueba #3.', 10560, 18, NULL, 120, 1100, FALSE),
-(4, 'Ventilador', 14, 'ADATA Fan Test 004', 'Ventilador de prueba #4.', 10750, 19, NULL, 140, 1200, TRUE),
-(5, 'Ventilador', 15, 'TeamGroup Fan Test 005', 'Ventilador de prueba #5.', 10940, 20, NULL, 120, 1300, FALSE),
-(6, 'Ventilador', 16, 'Patriot Fan Test 006', 'Ventilador de prueba #6.', 11130, 21, NULL, 140, 1400, TRUE),
-(7, 'Ventilador', 17, 'HyperX Fan Test 007', 'Ventilador de prueba #7.', 11320, 22, NULL, 120, 1500, FALSE),
-(8, 'Ventilador', 18, 'Thermaltake Fan Test 008', 'Ventilador de prueba #8.', 11510, 23, NULL, 140, 1600, TRUE),
-(9, 'Ventilador', 19, 'Cooler Master Fan Test 009', 'Ventilador de prueba #9.', 11700, 24, NULL, 120, 1700, FALSE),
-(10, 'Ventilador', 20, 'NZXT Fan Test 010', 'Ventilador de prueba #10.', 11890, 25, NULL, 140, 1800, TRUE),
-(11, 'Ventilador', 21, 'be quiet! Fan Test 011', 'Ventilador de prueba #11.', 12080, 26, NULL, 120, 1900, FALSE),
-(12, 'Ventilador', 22, 'Seasonic Fan Test 012', 'Ventilador de prueba #12.', 12270, 27, NULL, 140, 800, TRUE),
-(13, 'Ventilador', 23, 'FSP Fan Test 013', 'Ventilador de prueba #13.', 12460, 28, NULL, 120, 900, FALSE),
-(14, 'Ventilador', 24, 'Lian Li Fan Test 014', 'Ventilador de prueba #14.', 12650, 29, NULL, 140, 1000, TRUE),
-(15, 'Ventilador', 25, 'Fractal Design Fan Test 015', 'Ventilador de prueba #15.', 12840, 30, NULL, 120, 1100, FALSE),
-(16, 'Ventilador', 26, 'Phanteks Fan Test 016', 'Ventilador de prueba #16.', 13030, 31, NULL, 140, 1200, TRUE),
-(17, 'Ventilador', 27, 'Silverstone Fan Test 017', 'Ventilador de prueba #17.', 13220, 32, NULL, 120, 1300, FALSE),
-(18, 'Ventilador', 28, 'Antec Fan Test 018', 'Ventilador de prueba #18.', 13410, 33, NULL, 140, 1400, TRUE),
-(19, 'Ventilador', 29, 'Montech Fan Test 019', 'Ventilador de prueba #19.', 13600, 34, NULL, 120, 1500, FALSE),
-(20, 'Ventilador', 30, 'Noctua Fan Test 020', 'Ventilador de prueba #20.', 13790, 35, NULL, 140, 1600, TRUE),
-(21, 'Ventilador', 31, 'Arctic Fan Test 021', 'Ventilador de prueba #21.', 13980, 36, NULL, 120, 1700, FALSE),
-(22, 'Ventilador', 32, 'Deepcool Fan Test 022', 'Ventilador de prueba #22.', 14170, 37, NULL, 140, 1800, TRUE),
-(23, 'Ventilador', 33, 'ID-COOLING Fan Test 023', 'Ventilador de prueba #23.', 14360, 38, NULL, 120, 1900, FALSE),
-(24, 'Ventilador', 34, 'Scythe Fan Test 024', 'Ventilador de prueba #24.', 14550, 39, NULL, 140, 800, TRUE),
-(25, 'Ventilador', 35, 'Logitech Fan Test 025', 'Ventilador de prueba #25.', 14740, 40, NULL, 120, 900, FALSE),
-(26, 'Ventilador', 36, 'Razer Fan Test 026', 'Ventilador de prueba #26.', 14930, 41, NULL, 140, 1000, TRUE),
-(27, 'Ventilador', 37, 'SteelSeries Fan Test 027', 'Ventilador de prueba #27.', 15120, 42, NULL, 120, 1100, FALSE),
-(28, 'Ventilador', 38, 'BenQ Fan Test 028', 'Ventilador de prueba #28.', 15310, 43, NULL, 140, 1200, TRUE),
-(29, 'Ventilador', 39, 'LG Fan Test 029', 'Ventilador de prueba #29.', 15500, 44, NULL, 120, 1300, FALSE),
-(30, 'Ventilador', 40, 'AOC Fan Test 030', 'Ventilador de prueba #30.', 15690, 45, NULL, 140, 1400, TRUE),
-(31, 'Ventilador', 41, 'Dell Fan Test 031', 'Ventilador de prueba #31.', 15880, 46, NULL, 120, 1500, FALSE),
-(32, 'Ventilador', 42, 'HP Fan Test 032', 'Ventilador de prueba #32.', 16070, 47, NULL, 140, 1600, TRUE),
-(33, 'Ventilador', 43, 'Lenovo Fan Test 033', 'Ventilador de prueba #33.', 16260, 48, NULL, 120, 1700, FALSE),
-(34, 'Ventilador', 44, 'Acer Fan Test 034', 'Ventilador de prueba #34.', 16450, 49, NULL, 140, 1800, TRUE),
-(35, 'Ventilador', 45, 'Apple Fan Test 035', 'Ventilador de prueba #35.', 16640, 50, NULL, 120, 1900, FALSE),
-(36, 'Ventilador', 46, 'Qualcomm Fan Test 036', 'Ventilador de prueba #36.', 16830, 51, NULL, 140, 800, TRUE),
-(37, 'Ventilador', 47, 'MediaTek Fan Test 037', 'Ventilador de prueba #37.', 17020, 52, NULL, 120, 900, FALSE),
-(38, 'Ventilador', 48, 'Broadcom Fan Test 038', 'Ventilador de prueba #38.', 17210, 53, NULL, 140, 1000, TRUE),
-(39, 'Ventilador', 49, 'Realtek Fan Test 039', 'Ventilador de prueba #39.', 17400, 54, NULL, 120, 1100, FALSE),
-(40, 'Ventilador', 50, 'TP-Link Fan Test 040', 'Ventilador de prueba #40.', 17590, 55, NULL, 140, 1200, TRUE),
-(41, 'Ventilador', 51, 'D-Link Fan Test 041', 'Ventilador de prueba #41.', 17780, 56, NULL, 120, 1300, FALSE),
-(42, 'Ventilador', 52, 'Netgear Fan Test 042', 'Ventilador de prueba #42.', 17970, 57, NULL, 140, 1400, TRUE),
-(43, 'Ventilador', 53, 'Ubiquiti Fan Test 043', 'Ventilador de prueba #43.', 18160, 58, NULL, 120, 1500, FALSE),
-(44, 'Ventilador', 54, 'Synology Fan Test 044', 'Ventilador de prueba #44.', 18350, 59, NULL, 140, 1600, TRUE),
-(45, 'Ventilador', 55, 'QNAP Fan Test 045', 'Ventilador de prueba #45.', 18540, 60, NULL, 120, 1700, FALSE),
-(46, 'Ventilador', 56, 'ASUSTOR Fan Test 046', 'Ventilador de prueba #46.', 18730, 61, NULL, 140, 1800, TRUE),
-(47, 'Ventilador', 57, 'Toshiba Fan Test 047', 'Ventilador de prueba #47.', 18920, 62, NULL, 120, 1900, FALSE),
-(48, 'Ventilador', 58, 'Hitachi Fan Test 048', 'Ventilador de prueba #48.', 19110, 63, NULL, 140, 800, TRUE),
-(49, 'Ventilador', 59, 'Lexar Fan Test 049', 'Ventilador de prueba #49.', 19300, 64, NULL, 120, 900, FALSE),
-(50, 'Ventilador', 60, 'PNY Technologies Fan Test 050', 'Ventilador de prueba #50.', 19490, 65, NULL, 140, 1000, TRUE),
-(51, 'Ventilador', 61, 'Inno3D Fan Test 051', 'Ventilador de prueba #51.', 19680, 66, NULL, 120, 1100, FALSE),
-(52, 'Ventilador', 62, 'Colorful Fan Test 052', 'Ventilador de prueba #52.', 19870, 67, NULL, 140, 1200, TRUE),
-(53, 'Ventilador', 63, 'Biostar Fan Test 053', 'Ventilador de prueba #53.', 20060, 68, NULL, 120, 1300, FALSE),
-(54, 'Ventilador', 64, 'ECS Fan Test 054', 'Ventilador de prueba #54.', 20250, 69, NULL, 140, 1400, TRUE),
-(55, 'Ventilador', 65, 'Supermicro Fan Test 055', 'Ventilador de prueba #55.', 20440, 70, NULL, 120, 1500, FALSE),
-(56, 'Ventilador', 66, 'Tyan Fan Test 056', 'Ventilador de prueba #56.', 20630, 71, NULL, 140, 1600, TRUE),
-(57, 'Ventilador', 67, 'GALAX Fan Test 057', 'Ventilador de prueba #57.', 20820, 72, NULL, 120, 1700, FALSE),
-(58, 'Ventilador', 68, 'KFA2 Fan Test 058', 'Ventilador de prueba #58.', 21010, 73, NULL, 140, 1800, TRUE),
-(59, 'Ventilador', 69, 'Club 3D Fan Test 059', 'Ventilador de prueba #59.', 21200, 74, NULL, 120, 1900, FALSE),
-(60, 'Ventilador', 70, 'VisionTek Fan Test 060', 'Ventilador de prueba #60.', 21390, 75, NULL, 140, 800, TRUE),
-(61, 'Ventilador', 71, 'Matrox Fan Test 061', 'Ventilador de prueba #61.', 21580, 76, NULL, 120, 900, FALSE),
-(62, 'Ventilador', 72, 'Intel Arc Fan Test 062', 'Ventilador de prueba #62.', 21770, 77, NULL, 140, 1000, TRUE),
-(63, 'Ventilador', 73, 'Sparkle Fan Test 063', 'Ventilador de prueba #63.', 21960, 78, NULL, 120, 1100, FALSE),
-(64, 'Ventilador', 74, 'Intel Fan Test 064', 'Ventilador de prueba #64.', 22150, 79, NULL, 140, 1200, TRUE),
-(65, 'Ventilador', 75, 'AMD Fan Test 065', 'Ventilador de prueba #65.', 22340, 80, NULL, 120, 1300, FALSE),
-(66, 'Ventilador', 76, 'NVIDIA Fan Test 066', 'Ventilador de prueba #66.', 22530, 81, NULL, 140, 1400, TRUE),
-(67, 'Ventilador', 77, 'ASUS Fan Test 067', 'Ventilador de prueba #67.', 22720, 82, NULL, 120, 1500, FALSE),
-(68, 'Ventilador', 78, 'Gigabyte Fan Test 068', 'Ventilador de prueba #68.', 22910, 83, NULL, 140, 1600, TRUE),
-(69, 'Ventilador', 79, 'MSI Fan Test 069', 'Ventilador de prueba #69.', 23100, 84, NULL, 120, 1700, FALSE),
-(70, 'Ventilador', 80, 'ASRock Fan Test 070', 'Ventilador de prueba #70.', 23290, 85, NULL, 140, 1800, TRUE),
-(71, 'Ventilador', 81, 'EVGA Fan Test 071', 'Ventilador de prueba #71.', 23480, 86, NULL, 120, 1900, FALSE),
-(72, 'Ventilador', 82, 'Zotac Fan Test 072', 'Ventilador de prueba #72.', 23670, 87, NULL, 140, 800, TRUE),
-(73, 'Ventilador', 83, 'PNY Fan Test 073', 'Ventilador de prueba #73.', 23860, 88, NULL, 120, 900, FALSE),
-(74, 'Ventilador', 1, 'Palit Fan Test 074', 'Ventilador de prueba #74.', 24050, 89, NULL, 140, 1000, TRUE),
-(75, 'Ventilador', 2, 'Gainward Fan Test 075', 'Ventilador de prueba #75.', 24240, 90, NULL, 120, 1100, FALSE),
-(76, 'Ventilador', 3, 'Sapphire Fan Test 076', 'Ventilador de prueba #76.', 24430, 91, NULL, 140, 1200, TRUE),
-(77, 'Ventilador', 4, 'PowerColor Fan Test 077', 'Ventilador de prueba #77.', 24620, 92, NULL, 120, 1300, FALSE),
-(78, 'Ventilador', 5, 'XFX Fan Test 078', 'Ventilador de prueba #78.', 24810, 93, NULL, 140, 1400, TRUE),
-(79, 'Ventilador', 6, 'Corsair Fan Test 079', 'Ventilador de prueba #79.', 25000, 94, NULL, 120, 1500, FALSE),
-(80, 'Ventilador', 7, 'G.Skill Fan Test 080', 'Ventilador de prueba #80.', 25190, 15, NULL, 140, 1600, TRUE),
-(81, 'Ventilador', 8, 'Kingston Fan Test 081', 'Ventilador de prueba #81.', 25380, 16, NULL, 120, 1700, FALSE),
-(82, 'Ventilador', 9, 'Crucial Fan Test 082', 'Ventilador de prueba #82.', 25570, 17, NULL, 140, 1800, TRUE),
-(83, 'Ventilador', 10, 'Samsung Fan Test 083', 'Ventilador de prueba #83.', 25760, 18, NULL, 120, 1900, FALSE),
-(84, 'Ventilador', 11, 'Western Digital Fan Test 084', 'Ventilador de prueba #84.', 25950, 19, NULL, 140, 800, TRUE),
-(85, 'Ventilador', 12, 'Seagate Fan Test 085', 'Ventilador de prueba #85.', 26140, 20, NULL, 120, 900, FALSE),
-(86, 'Ventilador', 13, 'SanDisk Fan Test 086', 'Ventilador de prueba #86.', 26330, 21, NULL, 140, 1000, TRUE),
-(87, 'Ventilador', 14, 'ADATA Fan Test 087', 'Ventilador de prueba #87.', 26520, 22, NULL, 120, 1100, FALSE),
-(88, 'Ventilador', 15, 'TeamGroup Fan Test 088', 'Ventilador de prueba #88.', 26710, 23, NULL, 140, 1200, TRUE),
-(89, 'Ventilador', 16, 'Patriot Fan Test 089', 'Ventilador de prueba #89.', 26900, 24, NULL, 120, 1300, FALSE),
-(90, 'Ventilador', 17, 'HyperX Fan Test 090', 'Ventilador de prueba #90.', 27090, 25, NULL, 140, 1400, TRUE),
-(91, 'Ventilador', 18, 'Thermaltake Fan Test 091', 'Ventilador de prueba #91.', 27280, 26, NULL, 120, 1500, FALSE),
-(92, 'Ventilador', 19, 'Cooler Master Fan Test 092', 'Ventilador de prueba #92.', 27470, 27, NULL, 140, 1600, TRUE),
-(93, 'Ventilador', 20, 'NZXT Fan Test 093', 'Ventilador de prueba #93.', 27660, 28, NULL, 120, 1700, FALSE),
-(94, 'Ventilador', 21, 'be quiet! Fan Test 094', 'Ventilador de prueba #94.', 27850, 29, NULL, 140, 1800, TRUE),
-(95, 'Ventilador', 22, 'Seasonic Fan Test 095', 'Ventilador de prueba #95.', 28040, 30, NULL, 120, 1900, FALSE),
-(96, 'Ventilador', 23, 'FSP Fan Test 096', 'Ventilador de prueba #96.', 28230, 31, NULL, 140, 800, TRUE),
-(97, 'Ventilador', 24, 'Lian Li Fan Test 097', 'Ventilador de prueba #97.', 28420, 32, NULL, 120, 900, FALSE),
-(98, 'Ventilador', 25, 'Fractal Design Fan Test 098', 'Ventilador de prueba #98.', 28610, 33, NULL, 140, 1000, TRUE),
-(99, 'Ventilador', 26, 'Phanteks Fan Test 099', 'Ventilador de prueba #99.', 28800, 34, NULL, 120, 1100, FALSE),
-(100, 'Ventilador', 27, 'Silverstone Fan Test 100', 'Ventilador de prueba #100.', 28990, 35, NULL, 140, 1200, TRUE);
+(1, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-A12x25 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 30990.00, 5, NULL, 120, 2000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(2, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-A14 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 31990.00, 6, NULL, 140, 1500, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(3, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-P12 redux-1700', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 17990.00, 7, NULL, 120, 1700, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(4, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-F12 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 28990.00, 8, NULL, 120, 1500, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(5, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-S12A PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 24990.00, 9, NULL, 120, 1200, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(6, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-A12x15 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 25990.00, 10, NULL, 120, 1850, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(7, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P12 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 11990.00, 11, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(8, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P14 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 13990.00, 12, NULL, 140, 1700, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(9, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P12 PWM PST', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 15990.00, 13, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(10, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P14 PWM PST', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 12990.00, 14, NULL, 140, 1700, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(11, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P12 Max', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 15990.00, 15, NULL, 120, 3300, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(12, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic BioniX P120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 14990.00, 4, NULL, 120, 2100, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(13, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair AF120 Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 22990.00, 5, NULL, 120, 1850, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(14, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair AF140 Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 26990.00, 6, NULL, 140, 1600, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(15, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair iCUE AF120 RGB Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 24990.00, 7, NULL, 120, 1850, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(16, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair iCUE AF140 RGB Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm con RGB.', 28990.00, 8, NULL, 140, 1600, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(17, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair ML120 RGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 31990.00, 9, NULL, 120, 2400, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(18, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair SP120 RGB Elite', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 22990.00, 10, NULL, 120, 1500, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(19, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Silent Wings 4 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 28990.00, 11, NULL, 120, 2500, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(20, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Silent Wings 4 140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 27990.00, 12, NULL, 140, 1900, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(21, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Wings 2 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 13990.00, 13, NULL, 120, 1500, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(22, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Wings 2 140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 16990.00, 14, NULL, 140, 1000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(23, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Light Wings 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 27990.00, 15, NULL, 120, 1700, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(24, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Light Wings 140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm con RGB.', 31990.00, 4, NULL, 140, 1500, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(25, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master SickleFlow 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 12990.00, 5, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(26, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master SickleFlow 120 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 17990.00, 6, NULL, 120, 1800, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(27, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master Mobius 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 21990.00, 7, NULL, 120, 2050, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(28, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master Mobius 120 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 27990.00, 8, NULL, 120, 2050, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(29, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master Mobius 140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 26990.00, 9, NULL, 140, 1900, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(30, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT F120 RGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 19990.00, 10, NULL, 120, 1800, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(31, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT F140 RGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm con RGB.', 23990.00, 11, NULL, 140, 1500, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(32, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT F120Q', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 16990.00, 12, NULL, 120, 1700, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(33, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Toughfan 12', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 22990.00, 13, NULL, 120, 2000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(34, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Toughfan 14', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 26990.00, 14, NULL, 140, 2000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(35, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake Pure 12 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 14990.00, 15, NULL, 120, 1500, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(36, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake SWAFAN EX12', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 25990.00, 4, NULL, 120, 2000, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(37, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool RF120 FS', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 14990.00, 5, NULL, 120, 1500, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(38, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool FK120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 15990.00, 6, NULL, 120, 1850, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(39, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool FC120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 20990.00, 7, NULL, 120, 1800, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(40, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING ZF-12025', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 12990.00, 8, NULL, 120, 1500, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(41, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING NO-12015', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 15990.00, 9, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(42, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks T30-120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 36990.00, 10, NULL, 120, 3000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(43, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks SK120 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 17990.00, 11, NULL, 120, 1500, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(44, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P12 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 18990.00, 12, NULL, 120, 2000, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(45, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P14 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm con RGB.', 16990.00, 13, NULL, 140, 1900, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(46, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-A14 chromax', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 33990.00, 14, NULL, 140, 1500, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(47, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RS120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 16990.00, 15, NULL, 120, 2100, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(48, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair RS140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 19990.00, 4, NULL, 140, 1700, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(49, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li UNI FAN SL120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 28990.00, 5, NULL, 120, 1900, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(50, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li UNI FAN SL140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm con RGB.', 27990.00, 6, NULL, 140, 1600, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(51, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li UNI FAN P28', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 30990.00, 7, NULL, 120, 2600, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(52, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Aspect 12', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 16990.00, 8, NULL, 120, 2000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(53, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Aspect 14', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 19990.00, 9, NULL, 140, 1700, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(54, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Dynamic X2 GP-12', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 16990.00, 10, NULL, 120, 1200, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(55, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone Air Blazer 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 12990.00, 11, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(56, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec Fusion 120 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 15990.00, 12, NULL, 120, 1500, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(57, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech AX120 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 11990.00, 13, NULL, 120, 1600, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(58, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Silent Wings Pro 4 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 35990.00, 14, NULL, 120, 3000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(59, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-A12x25 G2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 38990.00, 15, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(60, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic F12 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 8990.00, 4, NULL, 120, 1350, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(61, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master SickleFlow 140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 15990.00, 5, NULL, 140, 1400, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(62, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT F120 RGB Core', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 24990.00, 6, NULL, 120, 1800, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(63, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool FL120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 17990.00, 7, NULL, 120, 1800, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(64, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake CT120 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 20990.00, 8, NULL, 120, 2000, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(65, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING DF-12025', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 14990.00, 9, NULL, 120, 1800, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(66, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks M25-120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 13990.00, 10, NULL, 120, 2000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(67, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair iCUE LINK QX120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 41990.00, 11, NULL, 120, 2400, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(68, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair iCUE LINK QX140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm con RGB.', 47990.00, 12, NULL, 140, 2000, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(69, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Wings 3 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 18990.00, 13, NULL, 120, 1600, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(70, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Pure Wings 3 140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 16990.00, 14, NULL, 140, 1200, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(71, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-A9 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 92 mm.', 20990.00, 15, NULL, 92, 2000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(72, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P8 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 80 mm.', 10990.00, 4, NULL, 80, 3000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(73, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Scythe'), 'Scythe Kaze Flex 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 17990.00, 5, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(74, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Scythe'), 'Scythe Wonder Tornado 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 23990.00, 6, NULL, 120, 2500, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(75, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li UNI FAN SL-INF 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 29990.00, 7, NULL, 120, 2100, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(76, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MEG SILENT GALE P12', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 25990.00, 8, NULL, 120, 2000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(77, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS TUF Gaming TF120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 21990.00, 9, NULL, 120, 1900, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(78, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte AORUS GP-ARGB 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 22990.00, 10, NULL, 120, 1700, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(79, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Momentum 12', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 20990.00, 11, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(80, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Fractal Design'), 'Fractal Design Momentum 14', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 18990.00, 12, NULL, 140, 1600, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(81, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Silverstone'), 'Silverstone Air Penetrator 120i', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 15990.00, 13, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(82, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Thermaltake'), 'Thermaltake SWAFAN EX14', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm con RGB.', 29990.00, 14, NULL, 140, 2000, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(83, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool FC120 A-RGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 20990.00, 15, NULL, 120, 1800, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(84, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Cooler Master'), 'Cooler Master MasterFan MF120 Halo', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 23990.00, 4, NULL, 120, 2000, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(85, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Corsair'), 'Corsair AF120 Slim', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 19990.00, 5, NULL, 120, 2000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(86, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Noctua'), 'Noctua NF-A14x25 G2', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 40990.00, 6, NULL, 140, 1500, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(87, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P12 Pro', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 14990.00, 7, NULL, 120, 3000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(88, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'be quiet!'), 'be quiet! Light Wings 120 High Speed', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 30990.00, 8, NULL, 120, 2500, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(89, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Phanteks'), 'Phanteks D30-120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 28990.00, 9, NULL, 120, 2000, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(90, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'NZXT'), 'NZXT F140Q', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 16990.00, 10, NULL, 140, 1500, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(91, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Montech'), 'Montech AX140 PWM', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 13990.00, 11, NULL, 140, 1600, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(92, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Antec'), 'Antec Fusion 140 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm con RGB.', 18990.00, 12, NULL, 140, 1400, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(93, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'ID-COOLING'), 'ID-COOLING AS-120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 15990.00, 13, NULL, 120, 1800, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(94, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Scythe'), 'Scythe Kaze Flex 140', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 20990.00, 14, NULL, 140, 1200, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(95, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Lian Li'), 'Lian Li UNI FAN TL 120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm con RGB.', 32990.00, 15, NULL, 120, 2600, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(96, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'MSI'), 'MSI MAX F12A', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 15990.00, 4, NULL, 120, 2000, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(97, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'ASUS'), 'ASUS ROG Strix XF120', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 31990.00, 5, NULL, 120, 1800, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(98, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Gigabyte'), 'Gigabyte AORUS 140 ARGB', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm con RGB.', 25990.00, 6, NULL, 140, 1500, TRUE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(99, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Deepcool'), 'Deepcool FK120 Triple', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 120 mm.', 28990.00, 7, NULL, 120, 1850, FALSE);
+INSERT INTO core_ventilador (id, categoria, proveedor_id, nombre, descripcion, precio, stock, imagen, tamanho_mm, velocidad_rpm, rgb) VALUES
+(100, 'Ventilador', (SELECT id FROM core_proveedor WHERE nombre = 'Arctic'), 'Arctic P14 Pro', 'Precio y stock sintéticos de demostración; no son un precio de mercado verificado. Ventilador de 140 mm.', 14990.00, 8, NULL, 140, 2500, FALSE);
 
 SELECT setval(pg_get_serial_sequence('core_region', 'id'), (SELECT COALESCE(MAX(id), 1) FROM core_region));
 SELECT setval(pg_get_serial_sequence('core_comuna', 'id'), (SELECT COALESCE(MAX(id), 1) FROM core_comuna));

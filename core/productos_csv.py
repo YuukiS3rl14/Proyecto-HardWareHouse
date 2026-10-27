@@ -9,6 +9,7 @@ from django.conf import settings
 from django.urls import reverse
 
 from core.catalogo.registry import CATALOGO_MODELOS
+from core.demo_catalog import nombre_comercial
 
 from .excel_armado import especificaciones_de
 
@@ -52,7 +53,7 @@ def _url_detalle(model_name: str, pk: int) -> str:
 
 def _contenido_fila(row: dict) -> str:
     lineas = [
-        f"Producto: {row['marca']} {row['nombre']}",
+        f"Producto: {nombre_comercial(row['marca'], row['nombre'])}",
         f"Categoría: {row['categoria']}",
         f"ID interno: {row['id']}",
         f"Precio (CLP): {row['precio_clp']}",
@@ -83,7 +84,7 @@ def iter_filas_producto():
                 'stock': producto.stock,
                 'especificaciones': specs,
                 'url_detalle': _url_detalle(model_name, producto.pk),
-                'titulo': f'{marca} {producto.nombre} ({producto.categoria})',
+                'titulo': f"{nombre_comercial(marca, producto.nombre)} ({producto.categoria})",
                 'contenido': '',
             }
             fila['contenido'] = _contenido_fila(fila)

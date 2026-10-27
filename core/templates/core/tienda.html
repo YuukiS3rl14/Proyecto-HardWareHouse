@@ -1,6 +1,7 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load humanize %} 
+{% load humanize %}
+{% load producto_extras %} 
 
 {% block tittle %} Tienda {% endblock %}
 
@@ -108,7 +109,7 @@
                                 </a>
                             </div>
                             <div class="card-body text-center px-2 pt-3 pt-sm-4 pb-3 flex-grow-1 d-flex flex-column justify-content-between">
-                                <h6 class="text-truncate mb-3">{{ producto.proveedor.nombre }} {{ producto.nombre }}</h6>
+                                <h6 class="text-truncate mb-3">{{ producto|nombre_visible }}</h6>
                                 <div class="d-flex justify-content-center">
                                     <h6>${{ producto.precio|floatformat:"0"|intcomma }}</h6>
                                 </div>

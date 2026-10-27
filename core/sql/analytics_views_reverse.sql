@@ -1,0 +1,9 @@
+DROP VIEW IF EXISTS analytics.metodo_pago;
+DROP VIEW IF EXISTS analytics.producto_top;
+DROP VIEW IF EXISTS analytics.ingreso_por_categoria;
+DROP VIEW IF EXISTS analytics.componente_comprado;
+DROP VIEW IF EXISTS analytics.venta_por_fecha;
+DROP VIEW IF EXISTS analytics.pedido_pagado;
+DROP VIEW IF EXISTS analytics.fact_venta_item;
+DROP VIEW IF EXISTS analytics.inventario_actual;
+DROP SCHEMA IF EXISTS analytics;

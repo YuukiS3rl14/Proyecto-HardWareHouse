@@ -9,8 +9,9 @@ from core.seed_sql import load_sql_file
 
 class Command(BaseCommand):
     help = (
-        "Carga data/seed_test_data.sql en la base de datos configurada en Django "
-        "(no requiere psql). Borra catálogo, pedidos y carritos asociados."
+        "Carga data/seed_test_data.sql. Borra catálogo, pedidos y carritos. "
+        "No usarlo sobre una base con pedidos reales. Para corregir solo el "
+        "catálogo demo, usa sincronizar_catalogo_demo."
     )
 
     def add_arguments(self, parser):
