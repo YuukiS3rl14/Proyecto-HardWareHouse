@@ -90,9 +90,20 @@ INSTALLED_APPS = [
     'storages',
 ]
 
+def middleware_estaticos(middleware, usar_r2):
+    """WhiteNoise sirve el disco local. Con R2 los estáticos salen del bucket."""
+    cadena = [
+        item for item in middleware
+        if item != 'whitenoise.middleware.WhiteNoiseMiddleware'
+    ]
+    if not usar_r2:
+        seguridad = cadena.index('django.middleware.security.SecurityMiddleware')
+        cadena.insert(seguridad + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    return cadena
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -187,7 +198,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# Carpeta donde collectstatic reúne los estáticos (WhiteNoise los sirve en producción).
+# Destino local de collectstatic. WhiteNoise lo sirve solo cuando USE_R2 es falso.
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STORAGES = {
@@ -206,6 +217,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 USE_R2 = env_bool('USE_R2', default=False)
+MIDDLEWARE = middleware_estaticos(MIDDLEWARE, USE_R2)
 
 if USE_R2:
     bucket = os.environ['R2_BUCKET_NAME']
