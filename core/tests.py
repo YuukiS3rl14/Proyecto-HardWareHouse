@@ -408,5 +408,5 @@ class CarritoSinImagenTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'CPU sin foto de prueba')
-        self.assertContains(response, 'Sin imagen')
-        self.assertContains(response, 'core/img/placeholder.webp')
+        self.assertContains(response, 'core/img/categorias/01_CPU.webp')
+        self.assertNotContains(response, 'core/img/placeholder.webp')

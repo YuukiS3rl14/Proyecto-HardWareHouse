@@ -32,8 +32,18 @@ from django.db import transaction
 from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Count
 from core.catalogo.registry import CATALOGO_MODELOS, model_name_for
+from core.tienda_filtros import (
+    BANDAS_PRECIO,
+    ORDENES,
+    ORDENES_VALIDAS,
+    filtro_precio,
+    ids_validos,
+    opciones_catalogo,
+    ordenar_catalogo,
+)
 
 from .models import *
+from .imagenes import url_imagen_producto, urls_imagen_armado
 from .payments import formulario_paypal
 from django.utils import timezone
 
@@ -54,7 +64,7 @@ def mostrarArmado(request):
             data = {'id': item.id, 'model_name': model_name}
             for field in fields:
                 data[field] = getattr(item, field)
-            data['imagen'] = item.imagen.url if item.imagen else None
+            data['imagen'] = url_imagen_producto(item)
             components.append(data)
         return components
 
@@ -76,7 +86,10 @@ def mostrarArmado(request):
         for componente in componentes[categoria]:
             componente['precio'] = str(componente['precio'])
 
-    context = {'componentes': componentes}
+    context = {
+        'componentes': componentes,
+        'imagenes_categoria': urls_imagen_armado(),
+    }
     return render(request, 'core/armado.html', context)
 
 @login_required
@@ -244,9 +257,14 @@ def _model_name_tienda(modelo):
 
 def mostrarTienda(request):
     query = request.GET.get('q')
-    selected_categorias = request.GET.getlist('categoria')
-    selected_proveedores = request.GET.getlist('proveedor')
-    selected_precio = request.GET.get('precio')
+    selected_categorias = [categoria for categoria in request.GET.getlist('categoria') if categoria]
+    selected_proveedores = ids_validos(request.GET.getlist('proveedor'))
+    selected_precio = request.GET.get('precio') or ''
+    selected_orden = request.GET.get('orden') or 'relevancia'
+    if selected_orden not in ORDENES_VALIDAS:
+        selected_orden = 'relevancia'
+    if filtro_precio(selected_precio) is None:
+        selected_precio = ''
 
     productos_con_modelo = []
 
@@ -268,20 +286,14 @@ def mostrarTienda(request):
         if selected_proveedores:
             qs = qs.filter(proveedor__id__in=selected_proveedores)
 
-        if selected_precio:
-            if selected_precio == 'p1':
-                qs = qs.filter(precio__lte=100000)
-            elif selected_precio == 'p2':
-                qs = qs.filter(precio__gt=100000, precio__lte=300000)
-            elif selected_precio == 'p3':
-                qs = qs.filter(precio__gt=300000, precio__lte=600000)
-            elif selected_precio == 'p4':
-                qs = qs.filter(precio__gt=600000)
+        banda = filtro_precio(selected_precio)
+        if banda is not None:
+            qs = qs.filter(banda)
 
         for producto in qs:
             productos_con_modelo.append((producto, model_name))
 
-    productos_con_modelo.sort(key=lambda item: item[0].id, reverse=True)
+    ordenar_catalogo(productos_con_modelo, selected_orden, query)
 
     paginator = Paginator(productos_con_modelo, TIENDA_PAGE_SIZE)
     productos_page = paginator.get_page(request.GET.get('page'))
@@ -296,15 +308,14 @@ def mostrarTienda(request):
                 model_name_template = prod._meta.model_name.replace('_', '')
                 favoritos_ids[f"{model_name_template}-{prod.id}"] = True
 
-    # --- 3. Preparar contexto para la plantilla ---
-    # Obtenemos todas las categorías y proveedores para mostrarlos en los filtros
-    categorias_disponibles = sorted(
-        {m._meta.get_field('categoria').default for m in TIENDA_MODELOS}
-    )
-    proveedores_disponibles = Proveedor.objects.all().order_by('nombre')
+    categorias_disponibles, proveedores_disponibles = opciones_catalogo(TIENDA_MODELOS)
 
     pagination_params = request.GET.copy()
     pagination_params.pop('page', None)
+    if selected_orden == 'relevancia':
+        pagination_params.pop('orden', None)
+    if not selected_precio:
+        pagination_params.pop('precio', None)
     pagination_query = pagination_params.urlencode()
 
     context = {
@@ -316,9 +327,12 @@ def mostrarTienda(request):
         'query': query,
         'categorias': categorias_disponibles,
         'proveedores': proveedores_disponibles,
+        'bandas_precio': BANDAS_PRECIO,
+        'ordenes': ORDENES,
         'selected_categorias': selected_categorias,
-        'selected_proveedores': [int(p) for p in selected_proveedores],
+        'selected_proveedores': selected_proveedores,
         'selected_precio': selected_precio,
+        'selected_orden': selected_orden,
     }
     return render(request, 'core/tienda.html', context)
 

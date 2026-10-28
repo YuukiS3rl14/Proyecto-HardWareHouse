@@ -1,7 +1,15 @@
 function iniciarArmado() {
     // --- 1. OBTENER DATOS Y ELEMENTOS DEL DOM ---
     const allComponentsData = JSON.parse(document.getElementById('componentes-data').textContent);
+    const imagenesCategoria = JSON.parse(document.getElementById('imagenes-categoria').textContent);
     const urls = document.getElementById('builder-urls').dataset;
+
+    function imagenComponente(component, clave) {
+        if (component && component.imagen) {
+            return component.imagen;
+        }
+        return imagenesCategoria[clave] || '';
+    }
     const builderContainer = document.getElementById('pc-builder');
     const summaryList = document.getElementById('summary-list');
     const totalPriceEl = document.getElementById('total-price');
@@ -90,7 +98,7 @@ function iniciarArmado() {
                     <div class="component-card">
                         <div class="info">
                             <h5 class="font-weight-bold ${visual.status}">${visual.icon}${label}</h5>
-                            <img src="${urls.placeholderImg}" alt="Almacenamiento">
+                            <img src="${hay ? (discos[0].imagen || imagenesCategoria.almacenamiento) : imagenesCategoria.almacenamiento}" alt="Almacenamiento">
                             ${lineas}
                             ${detalle}
                         </div>
@@ -135,7 +143,7 @@ function iniciarArmado() {
                     <div class="component-card">
                         <div class="info">
                             <h5 class="font-weight-bold ${visual.status}">${visual.icon}${label}</h5>
-                            <img src="${urls.placeholderImg}" alt="Memoria RAM">
+                            <img src="${hay ? (memorias[0].imagen || imagenesCategoria.memoria_ram) : imagenesCategoria.memoria_ram}" alt="Memoria RAM">
                             ${lineas}
                             ${conteo}
                             ${detalle}
@@ -184,7 +192,7 @@ function iniciarArmado() {
         }
         const price = component ? `$${parseInt(component.precio).toLocaleString('es-CL')}` : '-';
         const name = component ? component.nombre : `No seleccionado`;
-        const image = component && component.imagen ? component.imagen : urls.placeholderImg;
+        const image = imagenComponente(component, key);
 
         let compatibilityStatus = '';
         let compatibilityIcon = '';
@@ -338,7 +346,7 @@ function iniciarArmado() {
                     String(componente.id) === String(candidato.id) && componente.model_name === candidato.model_name
                 )) || candidato;
                 const price = parseInt(local.precio).toLocaleString('es-CL');
-                const image = local.imagen ? local.imagen : urls.placeholderImg;
+                const image = local.imagen || imagenesCategoria[categoriaModal] || '';
                 const detalle = detalleRecomendacion(candidato);
                 const etiquetaStock = candidato.seleccionable ? '' : '<span class="badge badge-secondary ml-2">Sin stock</span>';
                 const clase = candidato.seleccionable ? 'list-group-item list-group-item-action' : 'list-group-item disabled';

@@ -2,6 +2,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -11,6 +12,7 @@ from core.models import Carrito, ItemCarrito, ItemPedido, PagoBoleta, Pedido, Pr
 from core.payments import clp_a_usd, confirmar_pago_paypal
 
 RECEPTOR = 'sb-merchant@business.example.com'
+SITIO = 'https://proyecto-hardwarehouse-production.up.railway.app'
 
 
 @override_settings(PAYPAL_TEST=True, PAYPAL_RECEIVER_EMAIL=RECEPTOR, CLP_TO_USD_RATE=950)
@@ -69,6 +71,8 @@ class PayPalSandboxTests(TestCase):
             'test_ipn': '1',
             'charset': 'utf-8',
         }
+        if cambios.pop('omitir_test_ipn', False):
+            datos.pop('test_ipn', None)
         datos.update(cambios)
         cuerpo = urlencode(datos)
         with patch('paypal.standard.ipn.models.PayPalIPN._postback', return_value=verificado):
@@ -312,6 +316,108 @@ class PayPalSandboxTests(TestCase):
         self.cpu.refresh_from_db()
         self.assertEqual(pedido.estado, 'PENDIENTE')
         self.assertEqual(self.cpu.stock, 5)
+
+    @override_settings(SITE_URL=SITIO)
+    def test_el_checkout_firma_las_urls_del_dominio_publico(self):
+        self.cpu.stock = 5
+        self.cpu.save(update_fields=['stock'])
+        carrito = Carrito.objects.create(usuario=self.user)
+        ItemCarrito.objects.create(
+            carrito=carrito, procesador=self.cpu, cantidad=1, precio_unitario=self.cpu.precio,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('core:checkout'))
+
+        self.assertContains(response, 'https://www.sandbox.paypal.com/cgi-bin/webscr')
+        self.assertContains(response, SITIO + reverse('paypal-ipn'))
+        self.assertContains(response, SITIO + reverse('core:payment_success'))
+        self.assertContains(response, SITIO + reverse('core:payment_failed'))
+        self.assertNotContains(response, '127.0.0.1')
+        self.assertNotContains(response, 'localhost')
+
+    @override_settings(SITE_URL=SITIO)
+    def test_reintentar_el_pago_usa_las_mismas_urls(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('core:detalle_pedido', args=[pedido.id]))
+
+        self.assertContains(response, SITIO + reverse('paypal-ipn'))
+        self.assertContains(response, SITIO + reverse('core:payment_success'))
+        self.assertContains(response, SITIO + reverse('core:payment_failed'))
+
+    def test_el_regreso_exitoso_vacia_el_carrito_y_el_cancelado_no_toca_el_pedido(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+        carrito = Carrito.objects.create(usuario=self.user)
+        ItemCarrito.objects.create(
+            carrito=carrito, procesador=self.cpu, cantidad=1, precio_unitario=self.cpu.precio,
+        )
+        self.client.force_login(self.user)
+
+        exito = self.client.get(reverse('core:payment_success'))
+        self.assertContains(exito, 'sigue pendiente')
+        self.assertFalse(carrito.items.exists())
+
+        ItemCarrito.objects.create(
+            carrito=carrito, procesador=self.cpu, cantidad=1, precio_unitario=self.cpu.precio,
+        )
+        fallo = self.client.get(reverse('core:payment_failed'))
+        self.assertContains(fallo, 'no se descontó stock')
+        self.assertEqual(carrito.items.count(), 1)
+
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertIsNone(pedido.paypal_transaccion_id)
+        self.assertEqual(self.cpu.stock, 5)
+        self.assertFalse(PagoBoleta.objects.exists())
+
+    def test_el_regreso_sin_sesion_no_confirma_el_pago(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+
+        response = self.client.get(reverse('core:payment_success'))
+
+        pedido.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertEqual(self.cpu.stock, 5)
+
+    def test_un_ipn_real_no_se_acepta_en_sandbox(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+
+        self.notificar(pedido, txn_id='TXN-REAL', omitir_test_ipn=True)
+
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertEqual(self.cpu.stock, 5)
+        self.assertFalse(PagoBoleta.objects.exists())
+
+    def test_un_completed_sin_transaccion_no_descuenta_stock(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+
+        response = self.notificar(pedido, txn_id='', payment_status='Completed')
+
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(response.content, b'OKAY')
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertEqual(self.cpu.stock, 5)
+
+    def test_si_la_boleta_no_se_guarda_el_stock_vuelve_atras(self):
+        pedido = self.pedido(cantidad=2, stock=5)
+
+        with patch('core.payments.PagoBoleta.objects.create', side_effect=IntegrityError('duplicada')):
+            response = self.notificar(pedido, txn_id='TXN-ATOMIC')
+
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(response.content, b'OKAY')
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertIsNone(pedido.paypal_transaccion_id)
+        self.assertEqual(self.cpu.stock, 5)
+        self.assertFalse(PagoBoleta.objects.exists())
 
     def test_el_inicio_no_es_el_endpoint_de_paypal(self):
         response = self.client.get(reverse('core:index'))

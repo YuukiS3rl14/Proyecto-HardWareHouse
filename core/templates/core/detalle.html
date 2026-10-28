@@ -1,6 +1,7 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load humanize %}
+{% load producto_extras %}
 
 {% block tittle %}{{ producto.nombre }} - Detalle{% endblock %}
 
@@ -25,11 +26,7 @@
     <div class="row">
         <!-- Columna de Imagen -->
         <div class="col-lg-5 mb-4 detail-img-container">
-            {% if producto.imagen %}
-                <img src="{{ producto.imagen.url }}" class="border rounded bg-white" alt="{{ producto.nombre }}" data-zoom="{{ producto.imagen.url }}">
-            {% else %}
-                <img src="{% static 'core/img/placeholder.webp' %}" class="border rounded bg-white" alt="Producto Sin Imagen">
-            {% endif %}
+            <img src="{{ producto|imagen_producto }}" class="border rounded bg-white" alt="{{ producto.nombre }}" data-zoom="{{ producto|imagen_producto }}">
         </div>
         
         <!-- Columna de Información -->

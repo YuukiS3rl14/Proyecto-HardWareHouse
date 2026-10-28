@@ -2,6 +2,7 @@ from django.contrib import admin
 from django import forms
 from django.utils.html import format_html
 
+from .imagenes import url_imagen_producto
 from .models import *
 
 # ----------------------------------------------------------------------
@@ -30,14 +31,10 @@ class ProductoAdminBase(admin.ModelAdmin):
 
     @admin.display(description='Imagen')
     def miniatura(self, obj):
-        imagen = getattr(obj, 'imagen', None)
-        if not imagen:
-            return '—'
-        try:
-            url = imagen.url
-        except ValueError:
-            return '—'
-        return format_html('<img src="{}" alt="" class="hw-admin-thumb">', url)
+        return format_html(
+            '<img src="{}" alt="" class="hw-admin-thumb">',
+            url_imagen_producto(obj),
+        )
 
 class ProcesadorAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts')
