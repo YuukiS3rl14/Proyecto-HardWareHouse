@@ -501,6 +501,11 @@ class Pedido(models.Model):
     
     estado = models.CharField(max_length=20, choices=ESTADOS, default='PENDIENTE')
     paypal_transaccion_id = models.CharField(max_length=100, blank=True, null=True, verbose_name="ID Transacción PayPal")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['estado', 'fecha_pedido'], name='pedido_estado_fecha_idx'),
+        ]
     
     def __str__(self):
         return f"Pedido #{self.id} de {self.usuario.username} - {self.estado}"
@@ -514,6 +519,11 @@ class ItemPedido(models.Model):
     cantidad = models.PositiveIntegerField()
     producto_modelo = models.CharField(max_length=50, blank=True, default='', verbose_name="Modelo del producto")
     producto_pk = models.PositiveIntegerField(null=True, blank=True, verbose_name="ID del producto")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['producto_modelo', 'producto_pk'], name='itempedido_producto_idx'),
+        ]
     
     def get_subtotal(self):
         return self.precio_unitario * self.cantidad
@@ -540,6 +550,9 @@ class PagoBoleta(models.Model):
     class Meta:
         verbose_name = 'Boleta de pago'
         verbose_name_plural = 'Boletas de pago'
+        indexes = [
+            models.Index(fields=['fecha_pago'], name='boleta_fecha_pago_idx'),
+        ]
     
     def __str__(self):
         return f"Boleta/Pago Transacción {self.transaccion_id}"
