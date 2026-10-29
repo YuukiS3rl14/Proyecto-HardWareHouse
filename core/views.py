@@ -25,6 +25,7 @@ from .compatibilidad import (
 )
 from .forms import *
 import json
+import logging
 import uuid
 
 from django.conf import settings
@@ -44,7 +45,9 @@ from core.tienda_filtros import (
 
 from .models import *
 from .imagenes import url_imagen_producto, urls_imagen_armado
-from .payments import formulario_paypal
+from .payments import SESION_VERIFICANDO, formulario_paypal, preparar_pedido_checkout
+
+paypal_logger = logging.getLogger('paypal.ipn')
 from django.utils import timezone
 
 # Create your views here.
@@ -124,62 +127,92 @@ def mostrarCheckout(request):
 
 
     total_clp = carrito.get_total_precio()
-
-    # Creamos un pedido PENDIENTE
-    # Usamos transaction.atomic para asegurar que la creación del pedido y sus items sea una operación única
-    with transaction.atomic():
-        # Siempre creamos un nuevo pedido para cada checkout.
-        # Esto evita reutilizar pedidos antiguos y asegura un invoice único.
-        pedido = Pedido.objects.create(
-            usuario=request.user,
-            estado='PENDIENTE',
-            total_monto=total_clp,
-            direccion_envio="Por definir" # O la dirección que tengas del usuario
-        )
-
-        for item_carrito in items_carrito:
-            producto = item_carrito.get_related_product()
-            ItemPedido.objects.create(
-                pedido=pedido,
-                producto_nombre=producto.nombre,
-                producto_tipo=producto.categoria,
-                precio_unitario=item_carrito.precio_unitario,
-                cantidad=item_carrito.cantidad,
-                producto_modelo=item_carrito.get_model_name() or '',
-                producto_pk=producto.pk,
-            )
-
-
-
-
+    pedidos_antes = set(
+        Pedido.objects.filter(usuario=request.user, estado='PENDIENTE').values_list('id', flat=True)
+    )
+    pedido = preparar_pedido_checkout(request.user, items_carrito)
     form_paypal, total_usd = formulario_paypal(pedido)
 
     context = {
         'pedido': pedido,
+        'pedido_reutilizado': pedido.id in pedidos_antes,
         'items_pedido': pedido.items_pedido.all(),
         'total_clp': total_clp,
         'total_usd': total_usd,
         'clp_to_usd_rate': settings.CLP_TO_USD_RATE,
         'form_paypal': form_paypal,
+        'estado_pago': 'esperando',
     }
     return render(request, 'core/checkout.html', context)
 
+def _pedido_del_retorno(request):
+    bruto = (request.GET.get('pedido') or '').strip()
+    if not bruto.isdigit():
+        return None
+    return Pedido.objects.filter(pk=int(bruto), usuario=request.user).first()
+
+
+def _olvidar_verificacion(request, pedido):
+    if pedido is not None and request.session.get(SESION_VERIFICANDO) == pedido.id:
+        request.session.pop(SESION_VERIFICANDO, None)
+
+
 @login_required
 def paymentSuccess(request):
-    # Aquí es donde PayPal redirige al usuario después de un pago exitoso.
-    # La lógica de actualización del pedido se maneja mejor con la señal de IPN de django-paypal.
-    # Por ahora, solo vaciamos el carrito y mostramos un mensaje.
-    carrito = Carrito.objects.filter(usuario=request.user).first()
-    if carrito:
-        carrito.items.all().delete()
-    
-    messages.success(request, "PayPal registró tu regreso. El pedido sigue pendiente hasta que se confirme el pago.")
-    return render(request, 'core/payment_success.html')
+    pedido = _pedido_del_retorno(request)
+    if pedido is not None and pedido.estado == 'PAGADO':
+        _olvidar_verificacion(request, pedido)
+        paypal_logger.info(
+            'Regreso del navegador a payment_success. Pedido #%s del usuario %s ya estaba pagado.',
+            pedido.id,
+            request.user.pk,
+        )
+        messages.info(request, "PayPal ya confirmó este pedido. El regreso del navegador no vuelve a marcarlo.")
+        return render(request, 'core/payment_success.html', {
+            'pedido': pedido,
+            'estado_pago': 'pagado',
+        })
+
+    if pedido is not None and pedido.estado == 'CANCELADO':
+        _olvidar_verificacion(request, pedido)
+        paypal_logger.info(
+            'Regreso del navegador a payment_success. Pedido #%s del usuario %s está cancelado.',
+            pedido.id,
+            request.user.pk,
+        )
+        return render(request, 'core/payment_success.html', {
+            'pedido': pedido,
+            'estado_pago': 'cancelado',
+        })
+
+    if pedido is not None and pedido.estado == 'PENDIENTE' and not (pedido.paypal_transaccion_id or '').strip():
+        request.session[SESION_VERIFICANDO] = pedido.id
+    paypal_logger.info(
+        'Regreso del navegador a payment_success. Pedido %s del usuario %s sigue sin confirmarse por IPN.',
+        pedido.id if pedido is not None else 'desconocido',
+        request.user.pk,
+    )
+    messages.info(request, "PayPal registró tu regreso. El pedido sigue pendiente hasta que se confirme el pago.")
+    return render(request, 'core/payment_success.html', {
+        'pedido': pedido,
+        'estado_pago': 'verificando',
+    })
 
 @login_required
 def paymentFailed(request):
-    messages.error(request, "El pago falló o fue cancelado. Puedes intentarlo de nuevo desde 'Mis Pedidos'.")
-    return render(request, 'core/payment_failed.html')
+    pedido = _pedido_del_retorno(request)
+    _olvidar_verificacion(request, pedido)
+    paypal_logger.info(
+        'Regreso del navegador a payment_failed. Pedido %s del usuario %s no se marca como pagado.',
+        pedido.id if pedido is not None else 'desconocido',
+        request.user.pk,
+    )
+    messages.warning(request, "El pago fue cancelado en PayPal. El pedido sigue pendiente y puedes reintentarlo.")
+    return render(request, 'core/payment_failed.html', {
+        'pedido': pedido,
+        'estado_pago': 'cancelado',
+        'reintento_disponible': pedido is not None and pedido.estado == 'PENDIENTE' and not (pedido.paypal_transaccion_id or '').strip(),
+    })
 
 def mostrarContacto(request):
     return render(request, 'core/contacto.html')
@@ -1121,25 +1154,52 @@ def agregar_comentario(request, model_name, pk):
 
 # --- VISTAS DE PEDIDOS ---
 
+def _estado_visible(pedido, verificando_id):
+    if pedido.estado == 'PAGADO':
+        return 'pagado'
+    if pedido.estado == 'CANCELADO':
+        return 'cancelado'
+    if pedido.estado == 'PENDIENTE' and verificando_id == pedido.id and not (pedido.paypal_transaccion_id or '').strip():
+        return 'verificando'
+    if pedido.estado == 'PENDIENTE':
+        return 'esperando'
+    return 'otro'
+
+
+def _puede_reintentar(pedido):
+    return (
+        pedido.estado == 'PENDIENTE'
+        and not (pedido.paypal_transaccion_id or '').strip()
+        and not PagoBoleta.objects.filter(pedido_id=pedido.id).exists()
+    )
+
+
 @login_required
 def mis_pedidos(request):
     pedidos = Pedido.objects.filter(usuario=request.user).order_by('-fecha_pedido')
+    verificando_id = request.session.get(SESION_VERIFICANDO)
     context = {
-        'pedidos': pedidos
+        'pedidos': pedidos,
+        'verificando_id': verificando_id,
     }
     return render(request, 'core/mis_pedidos.html', context)
 
 @login_required
 def detalle_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
-    
+    if request.session.get(SESION_VERIFICANDO) == pedido.id and pedido.estado != 'PENDIENTE':
+        request.session.pop(SESION_VERIFICANDO, None)
+
+    reintento = _puede_reintentar(pedido)
     form_paypal = None
-    if pedido.estado == 'PENDIENTE':
+    if reintento:
         form_paypal, _total_usd = formulario_paypal(pedido)
 
     context = {
         'pedido': pedido,
         'form_paypal': form_paypal,
+        'estado_pago': _estado_visible(pedido, request.session.get(SESION_VERIFICANDO)),
+        'reintento_disponible': reintento,
     }
     return render(request, 'core/detalle_pedido.html', context)
 

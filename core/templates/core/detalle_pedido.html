@@ -41,12 +41,28 @@
                 </div>
                 <div class="card-body">
                     <p><strong>Fecha:</strong> {{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</p>
-                    <p><strong>Estado:</strong> 
-                        <span class="badge 
-                            {% if pedido.estado == 'PAGADO' %}badge-success{% elif pedido.estado == 'PENDIENTE' %}badge-warning{% elif pedido.estado == 'CANCELADO' %}badge-danger{% else %}badge-info{% endif %}">
-                            {{ pedido.get_estado_display }}
-                        </span>
+                    <p><strong>Estado:</strong>
+                        {% if estado_pago == 'pagado' %}
+                        <span class="badge badge-success">Pagado</span>
+                        {% elif estado_pago == 'cancelado' %}
+                        <span class="badge badge-danger">Cancelado</span>
+                        {% elif estado_pago == 'verificando' %}
+                        <span class="badge badge-info">Verificando pago</span>
+                        {% elif estado_pago == 'esperando' %}
+                        <span class="badge badge-warning">Esperando pago</span>
+                        {% else %}
+                        <span class="badge badge-info">{{ pedido.get_estado_display }}</span>
+                        {% endif %}
                     </p>
+                    {% if estado_pago == 'verificando' %}
+                    <p>PayPal todavía no confirma este cobro. El pedido sigue pendiente.</p>
+                    {% elif estado_pago == 'esperando' %}
+                    <p>Este pedido espera el pago. Puedes reintentarlo con el mismo número de pedido.</p>
+                    {% elif estado_pago == 'pagado' %}
+                    <p>El pago ya fue confirmado. No se genera otro cobro para este pedido.</p>
+                    {% elif estado_pago == 'cancelado' %}
+                    <p>Este pedido fue cancelado y no se puede volver a pagar.</p>
+                    {% endif %}
                     {% if pedido.paypal_transaccion_id %}
                     <p class="text-break"><strong>ID Transacción:</strong> {{ pedido.paypal_transaccion_id }}</p>
                     {% endif %}
@@ -56,9 +72,12 @@
                         <span>${{ pedido.total_monto|floatformat:"0"|intcomma }} CLP</span>
                     </h5>
                 </div>
-                {% if pedido.estado == 'PENDIENTE' %}
+                {% if reintento_disponible %}
                 <div class="card-footer text-center">
-                    <h6 class="mb-3">¿Deseas completar tu compra?</h6>
+                    <h6 class="mb-3">Reintentar pago</h6>
+                    {% if estado_pago == 'verificando' %}
+                    <p class="text-muted">Usa el botón solo si PayPal no llegó a cobrar. Un pedido ya pagado no se vuelve a enviar.</p>
+                    {% endif %}
                     <div id="paypal-button-container">
                         {{ form_paypal.render }}
                     </div>

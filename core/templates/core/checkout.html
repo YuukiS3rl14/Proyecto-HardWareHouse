@@ -88,7 +88,8 @@
                     <h4 class="font-weight-semi-bold m-0">Pagar con PayPal</h4>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Serás redirigido a PayPal para completar tu pago de forma segura. El monto se convertirá a USD.</p>
+                    <p class="mb-2"><strong>Estado:</strong> Esperando pago</p>
+                    <p class="text-muted">Pedido #{{ pedido.id }}. {% if pedido_reutilizado %}Seguimos con este pedido pendiente.{% else %}Este carrito abrió un pedido nuevo.{% endif %} Serás redirigido a PayPal para completar el pago. El monto se convertirá a USD.</p>
                     <p><strong>Total a pagar: ${{ total_usd|floatformat:2 }} USD</strong> <small>(Tasa de cambio: 1 USD ≈ {{ clp_to_usd_rate }} CLP)</small></p>
                 </div>
                 <div class="card-footer border-success bg-transparent">

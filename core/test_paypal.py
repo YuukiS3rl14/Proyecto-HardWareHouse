@@ -1,8 +1,10 @@
+import importlib
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.apps import apps
 from django.contrib.auth.models import User
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -60,7 +62,7 @@ class PayPalSandboxTests(TestCase):
         datos = {
             'payment_status': 'Completed',
             'txn_id': txn_id,
-            'invoice': str(pedido.id) if pedido is not None else '999999',
+            'invoice': str(pedido.paypal_invoice) if pedido is not None else '999999',
             'mc_gross': f'{clp_a_usd(pedido.total_monto):.2f}' if pedido is not None else '10.00',
             'mc_currency': 'USD',
             'receiver_email': RECEPTOR,
@@ -136,7 +138,7 @@ class PayPalSandboxTests(TestCase):
         self.assertEqual(response.content, b'OKAY')
         self.assertFalse(ipn.flag)
         self.assertEqual(ipn.payment_status, 'Completed')
-        self.assertEqual(ipn.invoice, str(pedido.id))
+        self.assertEqual(ipn.invoice, str(pedido.paypal_invoice))
         self.assertEqual(ipn.mc_gross, Decimal('200.00'))
         self.assertEqual(ipn.receiver_email, RECEPTOR)
         self.assertTrue(ipn.test_ipn)
@@ -154,7 +156,7 @@ class PayPalSandboxTests(TestCase):
         ipn = PayPalIPN.objects.create(
             payment_status='Completed',
             txn_id='TXN-DOS',
-            invoice=str(pedido.id),
+            invoice=str(pedido.paypal_invoice),
             mc_gross=clp_a_usd(pedido.total_monto),
             mc_currency='USD',
             receiver_email=RECEPTOR,
@@ -347,7 +349,7 @@ class PayPalSandboxTests(TestCase):
         self.assertContains(response, SITIO + reverse('core:payment_success'))
         self.assertContains(response, SITIO + reverse('core:payment_failed'))
 
-    def test_el_regreso_exitoso_vacia_el_carrito_y_el_cancelado_no_toca_el_pedido(self):
+    def test_el_regreso_exitoso_conserva_el_carrito_y_el_cancelado_no_toca_el_pedido(self):
         pedido = self.pedido(cantidad=1, stock=5)
         carrito = Carrito.objects.create(usuario=self.user)
         ItemCarrito.objects.create(
@@ -355,15 +357,14 @@ class PayPalSandboxTests(TestCase):
         )
         self.client.force_login(self.user)
 
-        exito = self.client.get(reverse('core:payment_success'))
+        exito = self.client.get(reverse('core:payment_success'), {'pedido': pedido.id})
         self.assertContains(exito, 'sigue pendiente')
-        self.assertFalse(carrito.items.exists())
+        self.assertContains(exito, 'Verificando pago')
+        self.assertEqual(carrito.items.count(), 1)
 
-        ItemCarrito.objects.create(
-            carrito=carrito, procesador=self.cpu, cantidad=1, precio_unitario=self.cpu.precio,
-        )
-        fallo = self.client.get(reverse('core:payment_failed'))
+        fallo = self.client.get(reverse('core:payment_failed'), {'pedido': pedido.id})
         self.assertContains(fallo, 'no se descontó stock')
+        self.assertContains(fallo, 'Reintentar pago')
         self.assertEqual(carrito.items.count(), 1)
 
         pedido.refresh_from_db()
@@ -425,3 +426,337 @@ class PayPalSandboxTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(response.content, b'OKAY')
         self.assertEqual(reverse('paypal-ipn'), '/paypal/')
+
+    def _carrito(self, cantidad=1, precio=None):
+        carrito, _creado = Carrito.objects.get_or_create(usuario=self.user)
+        ItemCarrito.objects.filter(carrito=carrito).delete()
+        ItemCarrito.objects.create(
+            carrito=carrito,
+            procesador=self.cpu,
+            cantidad=cantidad,
+            precio_unitario=precio if precio is not None else self.cpu.precio,
+        )
+        return carrito
+
+    def test_repetir_el_checkout_reutiliza_el_pendiente_igual(self):
+        self.cpu.stock = 5
+        self.cpu.save(update_fields=['stock'])
+        self._carrito(cantidad=2)
+        self.client.force_login(self.user)
+
+        with self.assertLogs('paypal.ipn', level='INFO') as primera:
+            self.client.get(reverse('core:checkout'))
+        primero = Pedido.objects.get(usuario=self.user)
+        with self.assertLogs('paypal.ipn', level='INFO') as segunda:
+            respuesta = self.client.get(reverse('core:checkout'))
+
+        self.assertEqual(Pedido.objects.filter(usuario=self.user).count(), 1)
+        self.assertEqual(primero.estado, 'PENDIENTE')
+        self.assertEqual(Pedido.objects.get(pk=primero.id).paypal_invoice, primero.paypal_invoice)
+        self.assertIsNone(primero.paypal_invoice_legado)
+        self.assertContains(respuesta, f'Pedido #{primero.id}')
+        self.assertContains(respuesta, f'name="invoice" value="{primero.paypal_invoice}"')
+        self.assertNotContains(respuesta, f'name="invoice" value="{primero.id}"')
+        self.assertContains(respuesta, 'Esperando pago')
+        self.assertTrue(any(f'pedido pendiente #{primero.id}' in linea for linea in primera.output))
+        self.assertTrue(any('reutiliza el pedido pendiente' in linea for linea in segunda.output))
+        self.assertNotIn('comprador@example.com', '\n'.join(primera.output + segunda.output))
+
+    def test_un_carrito_distinto_abre_otro_pedido(self):
+        self.cpu.stock = 5
+        self.cpu.save(update_fields=['stock'])
+        carrito = self._carrito(cantidad=1)
+        self.client.force_login(self.user)
+        self.client.get(reverse('core:checkout'))
+        primero = Pedido.objects.get(usuario=self.user)
+
+        carrito.items.update(cantidad=2)
+        self.client.get(reverse('core:checkout'))
+
+        pedidos = list(Pedido.objects.filter(usuario=self.user).order_by('id'))
+        self.assertEqual(len(pedidos), 2)
+        self.assertEqual(pedidos[0].items_pedido.get().cantidad, 1)
+        self.assertEqual(pedidos[1].items_pedido.get().cantidad, 2)
+        self.assertNotEqual(pedidos[0].paypal_invoice, pedidos[1].paypal_invoice)
+        self.assertNotEqual(str(pedidos[0].paypal_invoice), str(pedidos[0].id))
+        self.assertIsNone(pedidos[1].paypal_invoice_legado)
+        self.assertNotEqual(pedidos[0].total_monto, pedidos[1].total_monto)
+
+        carrito.items.update(cantidad=2, precio_unitario=Decimal('1000'))
+        self.client.get(reverse('core:checkout'))
+        self.assertEqual(Pedido.objects.filter(usuario=self.user).count(), 3)
+        reciente = Pedido.objects.filter(usuario=self.user).order_by('-id').first()
+        self.assertEqual(reciente.items_pedido.get().precio_unitario, Decimal('1000'))
+
+    def test_no_reutiliza_el_pendiente_de_otro_usuario_ni_un_pedido_pagado(self):
+        self.cpu.stock = 5
+        self.cpu.save(update_fields=['stock'])
+        otro = User.objects.create_user('otro', 'otro@example.com', 'clave-paypal-123')
+        ajeno = self.pedido(cantidad=1, stock=5)
+        ajeno.usuario = otro
+        ajeno.save(update_fields=['usuario'])
+        pagado = self.pedido(cantidad=1, stock=5, estado='PAGADO')
+        pagado.paypal_transaccion_id = 'TXN-YA-PAGADO'
+        pagado.save(update_fields=['paypal_transaccion_id'])
+
+        self._carrito(cantidad=1)
+        self.client.force_login(self.user)
+        self.client.get(reverse('core:checkout'))
+
+        nuevo = Pedido.objects.get(usuario=self.user, estado='PENDIENTE')
+        ajeno.refresh_from_db()
+        pagado.refresh_from_db()
+        self.assertNotEqual(nuevo.id, ajeno.id)
+        self.assertEqual(ajeno.usuario, otro)
+        self.assertEqual(pagado.estado, 'PAGADO')
+        self.assertEqual(pagado.paypal_transaccion_id, 'TXN-YA-PAGADO')
+        self.assertIsNone(nuevo.paypal_transaccion_id)
+
+    def test_el_reintento_usa_el_invoice_pendiente_y_el_pagado_no_se_vuelve_a_cobrar(self):
+        pendiente = self.pedido(cantidad=1, stock=5)
+        pagado = self.pedido(cantidad=1, stock=5, estado='PAGADO')
+        pagado.paypal_transaccion_id = 'TXN-CERRADO'
+        pagado.save(update_fields=['paypal_transaccion_id'])
+        self.client.force_login(self.user)
+
+        reintento = self.client.get(reverse('core:detalle_pedido', args=[pendiente.id]))
+        cerrado = self.client.get(reverse('core:detalle_pedido', args=[pagado.id]))
+
+        self.assertContains(reintento, 'Esperando pago')
+        self.assertContains(reintento, 'Reintentar pago')
+        self.assertContains(reintento, f'Pedido #{pendiente.id}')
+        self.assertContains(reintento, f'name="invoice" value="{pendiente.paypal_invoice}"')
+        self.assertNotContains(reintento, f'name="invoice" value="{pendiente.id}"')
+        self.assertNotContains(reintento, f'name="invoice" value="{pagado.paypal_invoice}"')
+        self.assertContains(cerrado, 'Pagado')
+        self.assertNotContains(cerrado, 'https://www.sandbox.paypal.com/cgi-bin/webscr')
+        self.assertNotContains(cerrado, 'name="invoice"')
+
+    def test_el_regreso_espera_al_ipn_y_un_ipn_tardio_confirma_una_sola_vez(self):
+        self.cpu.stock = 5
+        self.cpu.save(update_fields=['stock'])
+        carrito = self._carrito(cantidad=1)
+        self.client.force_login(self.user)
+        self.client.get(reverse('core:checkout'))
+        pedido = Pedido.objects.get(usuario=self.user)
+
+        regreso = self.client.get(reverse('core:payment_success'), {'pedido': pedido.id})
+        pedido.refresh_from_db()
+        self.assertContains(regreso, 'Verificando pago')
+        self.assertContains(regreso, 'sigue pendiente')
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertEqual(carrito.items.count(), 1)
+        self.assertEqual(self.cpu.stock, 5)
+
+        lista = self.client.get(reverse('core:mis_pedidos'))
+        self.assertContains(lista, 'Verificando pago')
+
+        self.notificar(pedido, txn_id='TXN-TARDE')
+        self.notificar(pedido, txn_id='TXN-TARDE')
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(pedido.estado, 'PAGADO')
+        self.assertEqual(pedido.paypal_transaccion_id, 'TXN-TARDE')
+        self.assertEqual(PagoBoleta.objects.filter(transaccion_id='TXN-TARDE').count(), 1)
+        self.assertEqual(self.cpu.stock, 4)
+        self.assertFalse(carrito.items.exists())
+
+        detalle = self.client.get(reverse('core:detalle_pedido', args=[pedido.id]))
+        self.assertContains(detalle, 'Pagado')
+        self.assertNotContains(detalle, 'https://www.sandbox.paypal.com/cgi-bin/webscr')
+
+    def test_un_ipn_tardio_no_vacia_un_carrito_que_ya_cambio(self):
+        self.cpu.stock = 5
+        self.cpu.save(update_fields=['stock'])
+        carrito = self._carrito(cantidad=1)
+        self.client.force_login(self.user)
+        self.client.get(reverse('core:checkout'))
+        pedido = Pedido.objects.get(usuario=self.user)
+        carrito.items.update(cantidad=3)
+
+        self.notificar(pedido, txn_id='TXN-CARRITO')
+
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(pedido.estado, 'PAGADO')
+        self.assertEqual(carrito.items.get().cantidad, 3)
+        self.assertEqual(self.cpu.stock, 4)
+
+    def test_cancelar_en_paypal_deja_el_reintento_sin_cobrar(self):
+        self.cpu.stock = 5
+        self.cpu.save(update_fields=['stock'])
+        carrito = self._carrito(cantidad=1)
+        self.client.force_login(self.user)
+        self.client.get(reverse('core:checkout'))
+        pedido = Pedido.objects.get(usuario=self.user)
+        self.client.get(reverse('core:payment_success'), {'pedido': pedido.id})
+
+        fallo = self.client.get(reverse('core:payment_failed'), {'pedido': pedido.id})
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertContains(fallo, 'Pago cancelado')
+        self.assertContains(fallo, 'Reintentar pago')
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertIsNone(pedido.paypal_transaccion_id)
+        self.assertEqual(carrito.items.count(), 1)
+        self.assertEqual(self.cpu.stock, 5)
+        self.assertFalse(PagoBoleta.objects.exists())
+
+        reintento = self.client.get(reverse('core:detalle_pedido', args=[pedido.id]))
+        self.assertContains(reintento, 'Esperando pago')
+        self.assertContains(reintento, f'name="invoice" value="{pedido.paypal_invoice}"')
+        self.assertNotContains(reintento, f'name="invoice" value="{pedido.id}"')
+
+    def test_el_regreso_sin_sesion_no_confirma_ni_el_exito_ni_la_cancelacion(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+
+        exito = self.client.get(reverse('core:payment_success'), {'pedido': pedido.id})
+        fallo = self.client.get(reverse('core:payment_failed'), {'pedido': pedido.id})
+
+        pedido.refresh_from_db()
+        self.assertEqual(exito.status_code, 302)
+        self.assertEqual(fallo.status_code, 302)
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertIsNone(pedido.paypal_transaccion_id)
+        self.assertEqual(self.cpu.stock, 5)
+
+    def test_transaction_refused_no_lo_resuelve_django(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+
+        with self.assertLogs('paypal.ipn', level='INFO') as logs:
+            response = self.notificar(pedido, txn_id='TXN-REFUSED', payment_status='Refused')
+
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        texto = '\n'.join(logs.output)
+        self.assertEqual(response.content, b'OKAY')
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertIsNone(pedido.paypal_transaccion_id)
+        self.assertEqual(self.cpu.stock, 5)
+        self.assertFalse(PagoBoleta.objects.exists())
+        self.assertIn('Refused', texto)
+        self.assertNotIn('sb-buyer@personal.example.com', texto)
+
+    def test_el_numero_de_pedido_no_sirve_como_invoice(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+        self.assertNotEqual(str(pedido.paypal_invoice), str(pedido.id))
+        self.assertIsNone(pedido.paypal_invoice_legado)
+
+        with self.assertLogs('paypal.ipn', level='ERROR') as logs:
+            self.notificar(pedido, txn_id='TXN-ID', invoice=str(pedido.id))
+
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertIsNone(pedido.paypal_transaccion_id)
+        self.assertEqual(self.cpu.stock, 5)
+        self.assertFalse(PagoBoleta.objects.exists())
+        self.assertIn('conciliación manual', '\n'.join(logs.output))
+
+    def test_el_invoice_desconocido_no_confirma_ningun_pedido(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+
+        with self.assertLogs('paypal.ipn', level='ERROR') as logs:
+            self.notificar(pedido, txn_id='TXN-RARO', invoice='no-es-uuid')
+
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, 'PENDIENTE')
+        self.assertEqual(self.cpu.stock, 5)
+        self.assertIn('Invoice desconocido', '\n'.join(logs.output))
+        self.assertNotIn('sb-buyer@personal.example.com', '\n'.join(logs.output))
+
+    def test_el_ipn_legado_solo_cobra_el_pedido_que_guardo_ese_invoice(self):
+        historico = self.pedido(cantidad=1, stock=5)
+        historico.paypal_invoice_legado = '9001'
+        historico.save(update_fields=['paypal_invoice_legado'])
+        otro = self.pedido(cantidad=1, stock=5)
+
+        self.notificar(historico, txn_id='TXN-LEGADO', invoice='9001')
+        self.notificar(historico, txn_id='TXN-LEGADO', invoice='9001')
+
+        historico.refresh_from_db()
+        otro.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(historico.estado, 'PAGADO')
+        self.assertEqual(historico.paypal_transaccion_id, 'TXN-LEGADO')
+        self.assertEqual(otro.estado, 'PENDIENTE')
+        self.assertIsNone(otro.paypal_transaccion_id)
+        self.assertEqual(PagoBoleta.objects.filter(transaccion_id='TXN-LEGADO').count(), 1)
+        self.assertEqual(self.cpu.stock, 4)
+
+    def test_un_ipn_legado_tardio_no_vuelve_a_cobrar_un_pedido_pagado(self):
+        historico = self.pedido(cantidad=1, stock=5)
+        historico.paypal_invoice_legado = '9002'
+        historico.save(update_fields=['paypal_invoice_legado'])
+        self.notificar(historico, txn_id='TXN-YA', invoice=str(historico.paypal_invoice))
+
+        resultado = confirmar_pago_paypal(PayPalIPN.objects.create(
+            payment_status='Completed',
+            txn_id='TXN-TARDE-LEGADO',
+            invoice='9002',
+            mc_gross=clp_a_usd(historico.total_monto),
+            mc_currency='USD',
+            receiver_email=RECEPTOR,
+            test_ipn=True,
+        ))
+
+        historico.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(resultado, 'ya_procesado')
+        self.assertEqual(historico.paypal_transaccion_id, 'TXN-YA')
+        self.assertEqual(self.cpu.stock, 4)
+        self.assertEqual(PagoBoleta.objects.count(), 1)
+
+    def test_reiniciar_los_ids_no_reutiliza_un_invoice_pagado(self):
+        original = self.pedido(cantidad=1, stock=5)
+        invoice_pagado = str(original.paypal_invoice)
+        id_pagado = original.id
+        self.notificar(original, txn_id='TXN-ORIGINAL')
+        self.assertEqual(original.pago_boleta.transaccion_id, 'TXN-ORIGINAL')
+
+        PagoBoleta.objects.all().delete()
+        ItemPedido.objects.all().delete()
+        Pedido.objects.all().delete()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT setval(pg_get_serial_sequence('core_pedido', 'id'), %s, false)",
+                [id_pagado],
+            )
+        nuevo = self.pedido(cantidad=1, stock=5)
+
+        self.assertEqual(nuevo.id, id_pagado)
+        self.assertNotEqual(str(nuevo.paypal_invoice), invoice_pagado)
+        self.assertIsNone(nuevo.paypal_invoice_legado)
+
+        with self.assertLogs('paypal.ipn', level='ERROR') as logs:
+            self.notificar(nuevo, txn_id='TXN-VIEJO-UUID', invoice=invoice_pagado)
+            self.notificar(nuevo, txn_id='TXN-VIEJO-NUMERO', invoice=str(id_pagado))
+
+        nuevo.refresh_from_db()
+        self.cpu.refresh_from_db()
+        texto = '\n'.join(logs.output)
+        self.assertEqual(nuevo.estado, 'PENDIENTE')
+        self.assertIsNone(nuevo.paypal_transaccion_id)
+        self.assertEqual(self.cpu.stock, 5)
+        self.assertFalse(PagoBoleta.objects.exists())
+        self.assertIn('Invoice desconocido', texto)
+        self.assertIn('conciliación manual', texto)
+
+    def test_el_relleno_asigna_un_uuid_distinto_y_conserva_el_legado(self):
+        primero = self.pedido(cantidad=1, stock=5)
+        segundo = self.pedido(cantidad=1, stock=5)
+        invoice_inicial = primero.paypal_invoice
+
+        rellenar = importlib.import_module(
+            'core.migrations.0012_pedido_paypal_invoice'
+        ).rellenar_invoices_existentes
+        rellenar(apps, None)
+
+        primero.refresh_from_db()
+        segundo.refresh_from_db()
+        self.assertNotEqual(primero.paypal_invoice, invoice_inicial)
+        self.assertNotEqual(primero.paypal_invoice, segundo.paypal_invoice)
+        self.assertEqual(primero.paypal_invoice_legado, str(primero.id))
+        self.assertEqual(segundo.paypal_invoice_legado, str(segundo.id))
+        self.assertNotEqual(str(primero.paypal_invoice), primero.paypal_invoice_legado)
+        self.assertEqual(Pedido.objects.count(), 2)

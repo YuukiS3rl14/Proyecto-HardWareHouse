@@ -171,16 +171,19 @@ class ItemPedidoInline(admin.TabularInline):
     extra = 0
 
 class PedidoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'usuario', 'fecha_pedido', 'total_monto', 'estado', 'paypal_transaccion_id')
+    list_display = ('id', 'usuario', 'fecha_pedido', 'total_monto', 'estado', 'paypal_transaccion_id', 'paypal_invoice')
     list_display_links = ('id',)
     list_filter = ('estado', 'fecha_pedido')
     date_hierarchy = 'fecha_pedido'
     list_per_page = 20
-    search_fields = ('usuario__username', 'id', 'paypal_transaccion_id')
+    search_fields = ('usuario__username', 'id', 'paypal_transaccion_id', 'paypal_invoice', 'paypal_invoice_legado')
     list_select_related = ('usuario',)
     ordering = ('-fecha_pedido',)
     inlines = [ItemPedidoInline]
-    readonly_fields = ('usuario', 'total_monto', 'fecha_pedido', 'paypal_transaccion_id')
+    readonly_fields = (
+        'usuario', 'total_monto', 'fecha_pedido', 'paypal_transaccion_id',
+        'paypal_invoice', 'paypal_invoice_legado',
+    )
     save_on_top = True
 
 # ----------------------------------------------------------------------

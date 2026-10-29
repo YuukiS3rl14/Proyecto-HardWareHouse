@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -501,6 +503,21 @@ class Pedido(models.Model):
     
     estado = models.CharField(max_length=20, choices=ESTADOS, default='PENDIENTE')
     paypal_transaccion_id = models.CharField(max_length=100, blank=True, null=True, verbose_name="ID Transacción PayPal")
+    paypal_invoice = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False,
+        verbose_name='Invoice PayPal',
+    )
+    paypal_invoice_legado = models.CharField(
+        max_length=32,
+        unique=True,
+        null=True,
+        blank=True,
+        editable=False,
+        verbose_name='Invoice PayPal legado',
+        help_text='Invoice numérico ya enviado a PayPal antes del UUID. Los pedidos nuevos lo dejan vacío.',
+    )
 
     class Meta:
         indexes = [
