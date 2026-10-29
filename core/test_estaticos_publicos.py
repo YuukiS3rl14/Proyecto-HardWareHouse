@@ -59,6 +59,9 @@ class PaginasPublicasSinImagenRotaTests(TestCase):
             html = respuesta.content.decode()
             self.assertNotIn('placeholder.png', html)
             self.assertNotIn('placeholder.webp', html)
+            self.assertNotIn('Hardware House', html)
+            self.assertNotIn('core/img/logo.ico', html)
+            self.assertNotIn('core/img/admin-logo.png', html)
             rutas.update(_rutas_de_html(html))
             for css in re.findall(r'/static/([^"\']+\.css)', html):
                 archivo = finders.find(css)
@@ -68,8 +71,11 @@ class PaginasPublicasSinImagenRotaTests(TestCase):
 
         self.assertIn('core/img/carrusel_armado.webp', rutas)
         self.assertIn('core/img/ofertas_pc_gamer.webp', rutas)
-        self.assertIn('core/img/logo.ico', rutas)
+        self.assertIn('core/img/HWH_banner.png', rutas)
+        self.assertIn('core/img/HWH_logo.png', rutas)
+        self.assertIn('core/img/HWH_logo_ampliado.png', rutas)
         self.assertIn('core/img/cpu.webp', rutas)
+        self.assertNotIn('core/img/logo.ico', rutas)
         for ruta in sorted(rutas):
             self.assertTrue(ruta.lower().endswith(EXTENSIONES), ruta)
             self.assertTrue(finders.find(ruta), ruta)

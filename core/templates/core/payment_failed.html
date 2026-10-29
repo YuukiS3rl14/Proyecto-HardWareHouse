@@ -15,6 +15,9 @@
     <p>No se ha realizado ningún cargo. Tu pedido sigue pendiente y no se descontó stock.</p>
     {% if reintento_disponible %}
     <p>Puedes reintentar el pago del pedido #{{ pedido.id }}.</p>
+    <div class="mx-auto" style="max-width: 36rem;">
+        {% include 'core/includes/conversion_paypal.html' %}
+    </div>
     <a href="{% url 'core:detalle_pedido' pedido.id %}" class="btn btn-warning">Reintentar pago</a>
     {% endif %}
     <a href="{% url 'core:mis_pedidos' %}" class="btn btn-outline-secondary">Ir a mis pedidos</a>

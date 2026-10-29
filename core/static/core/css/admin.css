@@ -61,12 +61,25 @@ a:hover {
 
 .hw-admin-logo,
 .brand-link .hw-admin-logo {
-    width: 2rem;
+    width: auto;
     height: 2rem;
     max-height: 2rem;
-    border-radius: 0.5rem;
+    max-width: 2.5rem;
+    object-fit: contain;
+    border-radius: 0;
+    background: transparent;
     box-shadow: none;
     opacity: 1 !important;
+}
+
+.jazzmin-login-page .login-logo img {
+    display: block;
+    height: 7rem;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+    object-fit: contain;
+    background: transparent;
 }
 
 .brand-link {

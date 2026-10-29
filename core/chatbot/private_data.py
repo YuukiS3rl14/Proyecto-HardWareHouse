@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from django.contrib.auth.models import AbstractBaseUser
 from django.urls import reverse
+from django.utils import timezone
 
 from core.models import Pedido
 
@@ -40,10 +41,11 @@ def respuesta_mis_pedidos(usuario: AbstractBaseUser | None, limite: int = 5) -> 
     lineas = ['Tus pedidos más recientes (solo tu cuenta):']
     pedidos_json = []
     for pedido in qs:
+        en_chile = timezone.localtime(pedido.fecha_pedido)
         lineas.append(
             f'• Pedido #{pedido.id} — {pedido.get_estado_display()} — '
             f'{_formato_clp(pedido.total_monto)} CLP — '
-            f'{pedido.fecha_pedido.strftime("%d-%m-%Y %H:%M")}'
+            f'{en_chile.strftime("%d-%m-%Y %H:%M")}'
         )
         pedidos_json.append(
             {
@@ -51,7 +53,7 @@ def respuesta_mis_pedidos(usuario: AbstractBaseUser | None, limite: int = 5) -> 
                 'estado': pedido.estado,
                 'estado_etiqueta': pedido.get_estado_display(),
                 'total_clp': int(pedido.total_monto),
-                'fecha': pedido.fecha_pedido.isoformat(),
+                'fecha': en_chile.isoformat(),
             }
         )
     lineas.append(f'Detalle completo: {reverse("core:mis_pedidos")}.')

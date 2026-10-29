@@ -9,8 +9,8 @@
     <meta content="Hardware, PC, Componentes, Armado de PC, Tienda" name="keywords">
     <meta content="Tienda online de piezas de computador y armado personalizado de PC." name="description">
 
-    <!-- Favicon -->
-    <link href="{% static 'core/img/logo.ico' %}" rel="icon">
+    <link rel="icon" type="image/png" href="{% static 'core/img/HWH_logo.png' %}" sizes="any">
+    <link rel="apple-touch-icon" href="{% static 'core/img/HWH_logo.png' %}">
     <!-- Google Web Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -65,10 +65,8 @@
     <div class="container-fluid">
         <div class="row py-3 px-xl-5 align-items-center bg-light">
             <div class="col-lg-3 col d-flex align-items-center">
-                <a href="{% url 'core:index' %}" class="text-decoration-none">
-                    <h1 class="m-0 brand-logo font-weight-semi-bold">
-                        <span class="text-success font-weight-bold border px-2 px-sm-3 mr-1">H</span>ardware House
-                    </h1>
+                <a href="{% url 'core:index' %}" class="brand-home">
+                    {% include 'core/includes/marca_horizontal.html' %}
                 </a>
             </div>
 
@@ -218,7 +216,9 @@
     <div class="container-fluid bg-dark text-light mt-5 pt-5 pb-3">
         <div class="row px-xl-5">
             <div class="col-md-6 col-lg-4 mb-5">
-                <h5 class="font-weight-bold text-success mb-4">HardWareHouse</h5>
+                <a href="{% url 'core:index' %}" class="brand-home mb-4">
+                    {% include 'core/includes/marca_completa.html' %}
+                </a>
                 <p>Tu tienda de confianza en hardware de computador. Ofrecemos calidad, asesoría y armado personalizado.
                 </p>
                 <p><i class="fa fa-map-marker-alt text-success mr-2"></i>Av. Tecnología 123, Santiago, Chile</p>

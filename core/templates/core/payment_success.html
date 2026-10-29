@@ -1,5 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block tittle %} Pago Exitoso {% endblock %}
 
@@ -14,12 +15,18 @@
 <div class="container text-center py-5">
     {% if estado_pago == 'pagado' %}
     <p>PayPal ya confirmó el pedido #{{ pedido.id }}. El regreso del navegador no vuelve a marcarlo como pagado.</p>
+    <div class="mx-auto" style="max-width: 36rem;">
+        {% include 'core/includes/conversion_paypal.html' %}
+    </div>
     <a href="{% url 'core:ver_boleta' pedido.id %}" class="btn btn-success">Ver boleta</a>
     {% elif estado_pago == 'cancelado' %}
     <p>El pedido #{{ pedido.id }} está cancelado. Este regreso no lo reactiva ni lo marca como pagado.</p>
     {% else %}
     <p>PayPal todavía debe confirmar la transacción. El pedido sigue pendiente y el stock no cambia hasta esa confirmación.</p>
     {% if pedido %}
+    <div class="mx-auto" style="max-width: 36rem;">
+        {% include 'core/includes/conversion_paypal.html' %}
+    </div>
     <p>Pedido #{{ pedido.id }}: verificando pago.</p>
     <a href="{% url 'core:detalle_pedido' pedido.id %}" class="btn btn-outline-success">Ver el pedido</a>
     {% endif %}

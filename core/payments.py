@@ -28,6 +28,19 @@ def clp_a_usd(total_clp):
     return (Decimal(total_clp) / tasa).quantize(Decimal('0.01'))
 
 
+def contexto_conversion(pedido):
+    """Montos para mostrar. El USD es el mismo centavo que se envía a PayPal."""
+    total_clp = pedido.total_monto
+    total_usd = clp_a_usd(total_clp)
+    return {
+        'total_clp': total_clp,
+        'total_usd': total_usd,
+        'total_usd_texto': f'{total_usd:.2f}',
+        'clp_to_usd_rate': settings.CLP_TO_USD_RATE,
+        'verbo_paypal': 'cobrará' if pedido.estado == 'PENDIENTE' else 'cobró',
+    }
+
+
 def _dinero(valor):
     return Decimal(valor).quantize(Decimal('0.01'))
 

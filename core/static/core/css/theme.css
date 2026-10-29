@@ -765,16 +765,13 @@ label,
     transform: scaleX(1);
 }
 
-.brand-logo span {
-    display: inline-block;
-    border-radius: var(--hw-radius-sm);
-    transition: transform var(--hw-normal) var(--hw-ease), background-color var(--hw-normal) ease, color var(--hw-normal) ease;
+.brand-home .brand-mark {
+    transition: opacity var(--hw-fast) ease;
 }
 
-a:hover > .brand-logo span {
-    transform: rotate(-6deg) scale(1.05);
-    background-color: var(--hw-green);
-    color: #fff !important;
+.brand-home:hover .brand-mark,
+.brand-home:focus-visible .brand-mark {
+    opacity: 0.85;
 }
 
 .bg-dark a.text-light {

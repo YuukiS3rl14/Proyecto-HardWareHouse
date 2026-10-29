@@ -28,7 +28,6 @@ import json
 import logging
 import uuid
 
-from django.conf import settings
 from django.db import transaction 
 from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Count
@@ -45,7 +44,7 @@ from core.tienda_filtros import (
 
 from .models import *
 from .imagenes import url_imagen_producto, urls_imagen_armado
-from .payments import SESION_VERIFICANDO, formulario_paypal, preparar_pedido_checkout
+from .payments import SESION_VERIFICANDO, contexto_conversion, formulario_paypal, preparar_pedido_checkout
 
 paypal_logger = logging.getLogger('paypal.ipn')
 from django.utils import timezone
@@ -126,22 +125,19 @@ def mostrarCheckout(request):
             return redirect('core:carrito')
 
 
-    total_clp = carrito.get_total_precio()
     pedidos_antes = set(
         Pedido.objects.filter(usuario=request.user, estado='PENDIENTE').values_list('id', flat=True)
     )
     pedido = preparar_pedido_checkout(request.user, items_carrito)
-    form_paypal, total_usd = formulario_paypal(pedido)
+    form_paypal, _total_usd = formulario_paypal(pedido)
 
     context = {
         'pedido': pedido,
         'pedido_reutilizado': pedido.id in pedidos_antes,
         'items_pedido': pedido.items_pedido.all(),
-        'total_clp': total_clp,
-        'total_usd': total_usd,
-        'clp_to_usd_rate': settings.CLP_TO_USD_RATE,
         'form_paypal': form_paypal,
         'estado_pago': 'esperando',
+        **contexto_conversion(pedido),
     }
     return render(request, 'core/checkout.html', context)
 
@@ -171,6 +167,7 @@ def paymentSuccess(request):
         return render(request, 'core/payment_success.html', {
             'pedido': pedido,
             'estado_pago': 'pagado',
+            **contexto_conversion(pedido),
         })
 
     if pedido is not None and pedido.estado == 'CANCELADO':
@@ -193,10 +190,13 @@ def paymentSuccess(request):
         request.user.pk,
     )
     messages.info(request, "PayPal registró tu regreso. El pedido sigue pendiente hasta que se confirme el pago.")
-    return render(request, 'core/payment_success.html', {
+    context = {
         'pedido': pedido,
         'estado_pago': 'verificando',
-    })
+    }
+    if pedido is not None:
+        context.update(contexto_conversion(pedido))
+    return render(request, 'core/payment_success.html', context)
 
 @login_required
 def paymentFailed(request):
@@ -208,11 +208,15 @@ def paymentFailed(request):
         request.user.pk,
     )
     messages.warning(request, "El pago fue cancelado en PayPal. El pedido sigue pendiente y puedes reintentarlo.")
-    return render(request, 'core/payment_failed.html', {
+    reintento = pedido is not None and pedido.estado == 'PENDIENTE' and not (pedido.paypal_transaccion_id or '').strip()
+    context = {
         'pedido': pedido,
         'estado_pago': 'cancelado',
-        'reintento_disponible': pedido is not None and pedido.estado == 'PENDIENTE' and not (pedido.paypal_transaccion_id or '').strip(),
-    })
+        'reintento_disponible': reintento,
+    }
+    if reintento:
+        context.update(contexto_conversion(pedido))
+    return render(request, 'core/payment_failed.html', context)
 
 def mostrarContacto(request):
     return render(request, 'core/contacto.html')
@@ -1200,6 +1204,7 @@ def detalle_pedido(request, pedido_id):
         'form_paypal': form_paypal,
         'estado_pago': _estado_visible(pedido, request.session.get(SESION_VERIFICANDO)),
         'reintento_disponible': reintento,
+        **contexto_conversion(pedido),
     }
     return render(request, 'core/detalle_pedido.html', context)
 
@@ -1222,9 +1227,12 @@ def cancelar_pedido(request, pedido_id):
 def ver_boleta(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user, estado='PAGADO')
     
+    boleta = PagoBoleta.objects.filter(pedido_id=pedido.id).first()
     context = {
         'pedido': pedido,
         'items_pedido': pedido.items_pedido.all(),
+        'fecha_pago': None if boleta is None else boleta.fecha_pago,
+        **contexto_conversion(pedido),
     }
     
     return render(request, 'core/boleta.html', context)

@@ -40,7 +40,7 @@
                     <h5 class="m-0">Resumen del Pedido</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Fecha:</strong> {{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Fecha:</strong> {{ pedido.fecha_pedido|date:"d/m/Y H:i" }} <span class="text-muted">(hora de Chile)</span></p>
                     <p><strong>Estado:</strong>
                         {% if estado_pago == 'pagado' %}
                         <span class="badge badge-success">Pagado</span>
@@ -67,10 +67,14 @@
                     <p class="text-break"><strong>ID Transacción:</strong> {{ pedido.paypal_transaccion_id }}</p>
                     {% endif %}
                     <hr>
+                    {% if estado_pago != 'cancelado' %}
+                    {% include 'core/includes/conversion_paypal.html' %}
+                    {% else %}
                     <h5 class="d-flex justify-content-between">
                         <span>Total:</span>
                         <span>${{ pedido.total_monto|floatformat:"0"|intcomma }} CLP</span>
                     </h5>
+                    {% endif %}
                 </div>
                 {% if reintento_disponible %}
                 <div class="card-footer text-center">
