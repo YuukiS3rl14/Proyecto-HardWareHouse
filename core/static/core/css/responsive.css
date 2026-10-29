@@ -3,48 +3,25 @@
 
 /* --- Global --- */
 
-.brand-home {
-    display: inline-flex;
-    align-items: center;
-    max-width: 100%;
-    line-height: 0;
-    text-decoration: none;
+.brand-logo {
+    font-size: clamp(1.4rem, 1rem + 2.2vw, 2.5rem);
+    white-space: nowrap;
 }
 
-.brand-mark {
-    display: block;
-    height: 2.75rem;
-    width: auto;
-    max-width: min(100%, 12.5rem);
-    object-fit: contain;
-    background: transparent;
-}
-
-.brand-mark-login {
-    height: 3.5rem;
-    max-width: min(100%, 16rem);
-}
-
-.brand-mark-completa {
-    height: 6.5rem;
-    max-width: min(100%, 9rem);
+/* En lg+ el logo comparte la fila con el menú y ocupa solo 3 de 12 columnas. */
+@media (min-width: 992px) {
+    .row > .col-lg-3 .brand-logo {
+        font-size: clamp(1.2rem, 0.2rem + 1.6vw, 2.5rem);
+    }
 }
 
 .brand-mark-boleta {
+    display: block;
     height: 2.25rem;
+    width: auto;
     max-width: 8rem;
-}
-
-@media (max-width: 575.98px) {
-    .brand-mark:not(.brand-mark-completa) {
-        height: 2.25rem;
-        max-width: min(58vw, 10rem);
-    }
-
-    .brand-mark-completa {
-        height: 5rem;
-        max-width: min(42vw, 8rem);
-    }
+    object-fit: contain;
+    background: transparent;
 }
 
 .page-header {

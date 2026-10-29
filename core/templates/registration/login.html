@@ -7,8 +7,10 @@
 {% block navbar %}
 <div class="container-fluid py-3 px-xl-5 bg-light">
     <div class="text-center">
-        <a href="{% url 'core:index' %}" class="brand-home">
-            {% include 'core/includes/marca_horizontal.html' with clase='brand-mark-login' %}
+        <a href="{% url 'core:index' %}" class="text-decoration-none">
+            <h1 class="m-0 brand-logo font-weight-semi-bold">
+                <span class="text-success font-weight-bold border px-3 mr-1">H</span>ardware House
+            </h1>
         </a>
     </div>
 </div>
