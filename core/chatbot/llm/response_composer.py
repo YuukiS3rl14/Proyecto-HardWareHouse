@@ -8,7 +8,7 @@ from django.conf import settings
 
 from core.chatbot.llm.ollama import OllamaClient
 from core.chatbot.response_sanitize import sanitizar_dato_catalogo
-from core.chatbot.security import historial_para_llm
+from core.chatbot.security import historial_para_llm, texto_para_llm
 
 logger = logging.getLogger(__name__)
 debug_log = logging.getLogger('hardwarehouse.chat')
@@ -19,7 +19,7 @@ _MAX_RESPUESTA = 1200
 def response_llm_activo() -> bool:
     if not getattr(settings, 'HARDWAREHOUSE_CHAT_INTENT_LLM', False):
         return False
-    if not getattr(settings, 'HARDWAREHOUSE_CHAT_RESPONSE_LLM', True):
+    if not getattr(settings, 'HARDWAREHOUSE_CHAT_RESPONSE_LLM', False):
         return False
     return bool(getattr(settings, 'OLLAMA_BASE_URL', '') or '')
 
@@ -62,7 +62,7 @@ def componer_con_ollama(
     )
     user_block = (
         f'TIPO_RESPUESTA: {tipo}\n'
-        f'MENSAJE_USUARIO: {sanitizar_dato_catalogo(mensaje_usuario)}\n'
+        f'MENSAJE_USUARIO: {texto_para_llm(sanitizar_dato_catalogo(mensaje_usuario), limite=500)}\n'
     )
     if interpretacion:
         user_block += f'INTERPRETACION_SUGERIDA: {sanitizar_dato_catalogo(interpretacion)}\n'

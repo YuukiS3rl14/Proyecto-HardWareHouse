@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from core.chatbot.assistant_config import AsistenteConfig, get_asistente_config
-from core.chatbot.catalog_nl import ConsultaCatalogoNL
+from core.chatbot.catalog_nl import ConsultaCatalogoNL, extraer_consulta_catalogo, limpiar_q_catalogo
 from core.chatbot.handlers import manejar_buscar_producto, manejar_faq, manejar_presupuesto
 from core.chatbot.intents import Intent, _busqueda_producto_explicita
 from core.chatbot.llm.intent_schema import IntentoLLM
@@ -61,8 +61,14 @@ def _consulta_desde_llm(extraido: IntentoLLM, texto_usuario: str) -> ConsultaCat
         precio_max = extraido.budget_clp
 
     q = extraido.query_text or filtros.get('query') or ''
+    if not isinstance(q, str):
+        q = ''
     if not q and extraido.brand and not extraido.category:
         q = extraido.brand.lower()
+    pista = extraer_consulta_catalogo(texto_usuario)
+    if not solo_stock:
+        solo_stock = pista.solo_con_stock
+    q = limpiar_q_catalogo(q, extraido.category or pista.categoria)
 
     return ConsultaCatalogoNL(
         categoria=extraido.category,
@@ -71,7 +77,7 @@ def _consulta_desde_llm(extraido: IntentoLLM, texto_usuario: str) -> ConsultaCat
         precio_min=precio_min,
         precio_max=precio_max,
         solo_con_stock=solo_stock,
-        q=q if isinstance(q, str) else '',
+        q=q,
     )
 
 

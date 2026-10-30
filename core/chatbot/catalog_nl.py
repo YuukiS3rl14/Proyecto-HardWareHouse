@@ -29,6 +29,8 @@ _ALIAS_CATEGORIA.update(
         'grafica': 'Tarjeta Gráfica',
         'graficas': 'Tarjeta Gráfica',
         'tarjeta grafica': 'Tarjeta Gráfica',
+        'tarjetas graficas': 'Tarjeta Gráfica',
+        'tarjetas': 'Tarjeta Gráfica',
         'tarjeta de video': 'Tarjeta Gráfica',
         'video': 'Tarjeta Gráfica',
         'ram': 'Memoria RAM',
@@ -98,8 +100,9 @@ _STOCK_DISPONIBLE = re.compile(
 )
 
 _STOPWORDS = re.compile(
-    r'\b(busco|quiero|necesito|precio de|cuanto cuesta|cuánto cuesta|hay|tienen|'
-    r'me interesa|algun|algún|una|un|el|la|los|las|de|para|del|al|en|'
+    r'\b(busco|buscar|quiero|necesito|precio de|cuanto cuesta|cuánto cuesta|hay|tienen|tiene|'
+    r'me interesa|algun|algún|una|un|el|la|los|las|de|para|del|al|en|que|cual|cuales|'
+    r'muestrame|muestra|mostrar|ver|dime|ensename|'
     r'mas barata|más barata|mas barato|más barato|mas cara|más cara|'
     r'mas caro|más caro|mas economic[ao]|más economic[ao]|'
     r'menor precio|mayor precio|cheapest|disponible|disponibles|con stock|en stock|'
@@ -165,6 +168,21 @@ def _resolver_categoria(norm: str) -> str | None:
     return None
 
 
+def limpiar_q_catalogo(q: str, categoria: str | None = None) -> str:
+    """Deja el nombre del producto. La categoría y el pedido no se buscan en el nombre."""
+    norm = normalizar_texto(q or '')
+    norm = re.sub(r'[^\w\s]+', ' ', norm)
+    norm = _STOPWORDS.sub(' ', norm)
+    if categoria:
+        for alias, cat in _ALIAS_CATEGORIA.items():
+            if cat == categoria and alias:
+                norm = re.sub(rf'\b{re.escape(alias)}\b', ' ', norm)
+    norm = re.sub(r'\s+', ' ', norm).strip()
+    if not norm or norm in _ALIAS_CATEGORIA or len(norm) < 2:
+        return ''
+    return norm
+
+
 def extraer_consulta_catalogo(texto: str) -> ConsultaCatalogoNL:
     original = (texto or '').strip()
     norm = normalizar_texto(original)
@@ -207,5 +225,6 @@ def extraer_consulta_catalogo(texto: str) -> ConsultaCatalogoNL:
     resto = re.sub(r'\s+', ' ', resto).strip()
     if resto and len(resto) >= 2 and not consulta.q:
         consulta.q = resto
+    consulta.q = limpiar_q_catalogo(consulta.q, consulta.categoria)
 
     return consulta

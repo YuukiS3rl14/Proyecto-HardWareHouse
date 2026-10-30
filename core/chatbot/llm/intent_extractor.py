@@ -8,7 +8,7 @@ from django.conf import settings
 
 from core.chatbot.llm.intent_schema import IntentoLLM, validar_intento_llm
 from core.chatbot.llm.ollama import OllamaClient
-from core.chatbot.security import historial_para_llm
+from core.chatbot.security import historial_para_llm, texto_para_llm
 
 logger = logging.getLogger(__name__)
 debug_log = logging.getLogger('hardwarehouse.chat')
@@ -103,9 +103,17 @@ def extraer_intencion_ollama(
     cliente = OllamaClient()
     if not cliente.disponible():
         debug_log.info(
-            'chat route=reglas intent=- model=%s ollama=failed reason=tags_unavailable chars=%s',
+            'chat route=reglas intent=- model=%s ollama=failed reason=provider_unavailable chars=%s',
             cliente.model,
             len(mensaje or ''),
+        )
+        return None
+
+    usuario = texto_para_llm((mensaje or '').strip(), limite=500)
+    if not usuario:
+        debug_log.info(
+            'chat route=reglas intent=- model=%s ollama=skipped reason=context_redacted chars=0',
+            cliente.model,
         )
         return None
 
@@ -115,7 +123,7 @@ def extraer_intencion_ollama(
         mensajes.append({'role': 'system', 'content': nota})
     for item in historial_para_llm(historial):
         mensajes.append({'role': item['role'], 'content': item['content']})
-    mensajes.append({'role': 'user', 'content': mensaje})
+    mensajes.append({'role': 'user', 'content': usuario})
 
     raw = cliente.chat_json(mensajes)
     if not raw:

@@ -216,9 +216,11 @@ def _pulir(
 ) -> str:
     if tipo == PRODUCT_RESULTS or tipo == PRODUCT_NOT_FOUND or not reply:
         return reply
+    if tipo in (ORDER_STATUS, ORDER_LOGIN, BUDGET) or tipo in _TIPOS_ARMADO:
+        return reply
     if not response_llm_activo():
         return reply
-    if tipo not in OLLAMA_POLISH_TIPOS and tipo not in _TIPOS_ARMADO and tipo not in _FALLBACKS_CON_TEXTO:
+    if tipo not in OLLAMA_POLISH_TIPOS:
         return reply
     nota = _nota_contexto(resultado)
     hechos = f'{reply}\n{nota}' if nota else reply
