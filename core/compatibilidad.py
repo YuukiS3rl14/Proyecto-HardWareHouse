@@ -50,6 +50,17 @@ incompleta.
 Mezclar productos o kits distintos avisa que no se garantiza la estabilidad
 ni el perfil XMP/EXPO, aunque compartan DDR y velocidad. Esa advertencia no
 bloquea. No se promete dual channel ni una velocidad final.
+
+Almacenamiento
+--------------
+Un SSD NVMe ocupa una ranura M.2 que acepte NVMe. Un SSD M.2 SATA ocupa una
+ranura M.2 que acepte SATA. Un SSD de 2,5" y un HDD SATA ocupan un puerto
+SATA cada uno. Una ranura que acepta NVMe o SATA es una sola ranura física:
+se asigna a uno de los dos y no se cuenta en los dos grupos a la vez.
+
+PCIe 3.0 y PCIe 4.0 no se comparan. Un NVMe de otra generación no se rechaza
+por eso. Si la placa no tiene los conteos, o el disco no tiene interfaz, el
+almacenamiento queda sin evaluar y no bloquea el carrito.
 """
 
 import re
@@ -72,6 +83,12 @@ MENSAJE_ALMACENAMIENTO = (
     'Compatibilidad no evaluada. No se comprueban puertos SATA, ranuras M.2 '
     'ni bahías. La reserva de potencia es un margen fijo para placa, memoria, '
     'discos y ventiladores; no suma el consumo de cada unidad.'
+)
+ACLARACION_ALMACENAMIENTO = (
+    'Cada SSD NVMe usa una ranura M.2 NVMe y cada SSD M.2 SATA usa una ranura M.2 SATA. '
+    'Un SSD de 2,5" y un HDD SATA usan un puerto SATA cada uno. '
+    'Una ranura que admite NVMe o SATA cuenta una sola vez. '
+    'No se compara PCIe 3.0 con PCIe 4.0. Las bahías del gabinete no se comprueban.'
 )
 MENSAJE_ELEGIR_GABINETE = 'Selecciona un gabinete para comprobar el largo.'
 MENSAJE_ELEGIR_GPU = 'Selecciona una GPU para comprobar el largo.'
@@ -141,10 +158,20 @@ class LineaRam:
     cantidad: int = 1
 
 
+@dataclass(frozen=True)
+class LineaDisco:
+    """Una línea de almacenamiento: producto, cantidad y tipo SSD o HDD."""
+
+    producto: object
+    cantidad: int = 1
+    tipo: str = ''
+
+
 @dataclass
 class ResultadoCompatibilidad:
     hallazgos: list = field(default_factory=list)
     advertencias: list = field(default_factory=list)
+    almacenamiento: object = None
 
     @property
     def estado(self):
@@ -211,12 +238,18 @@ def evaluar_candidato(
     fuente_de_poder=None,
     politica=None,
     memorias_ram=None,
+    almacenamientos=None,
 ):
     """Clasifica un candidato reemplazando la pieza previa de su categoría.
 
     Usa validar_armado() como única fuente de las reglas. Una categoría sin
     regla queda como no evaluada: no se afirma que sea compatible.
+    Un disco se evalúa sumado a los que ya están elegidos.
     """
+    if categoria in ('almacenamiento_ssd', 'almacenamiento_hdd'):
+        lineas = _sumar_disco(_normalizar_discos(almacenamientos), candidato, categoria)
+        return _evaluacion_discos(lineas, placa_madre)
+
     if categoria not in REGLAS_POR_CATEGORIA:
         return EvaluacionCandidato(
             ESTADO_NO_EVALUADA,
@@ -245,6 +278,7 @@ def evaluar_candidato(
         **argumentos,
         politica=politica_activa,
         memorias_ram=piezas.get('memorias_ram'),
+        almacenamientos=almacenamientos,
     )
     hallazgos_por_regla = {}
     for hallazgo in resultado.hallazgos:
@@ -277,13 +311,27 @@ def evaluar_candidato(
     avisos = ()
     if categoria in ('memoria_ram', 'placa_madre'):
         avisos = tuple(resultado.advertencias)
-    return EvaluacionCandidato(
+    evaluacion = EvaluacionCandidato(
         _estado_de_candidato(estados),
         tuple(coincidencias),
         tuple(motivos),
         tuple(pendientes),
         avisos,
     )
+    discos = resultado.almacenamiento
+    if (
+        categoria == 'placa_madre'
+        and discos is not None
+        and discos.estado == ESTADO_INCOMPATIBLE
+    ):
+        return EvaluacionCandidato(
+            ESTADO_INCOMPATIBLE,
+            evaluacion.coincidencias,
+            tuple(evaluacion.motivos) + tuple(discos.motivos),
+            evaluacion.pendientes,
+            evaluacion.advertencias,
+        )
+    return evaluacion
 
 
 def _estado_de_candidato(estados):
@@ -369,7 +417,7 @@ _TEXTO_ARMADO = {
 }
 
 
-def evaluaciones_de_seleccion(piezas, memorias_ram=None):
+def evaluaciones_de_seleccion(piezas, memorias_ram=None, almacenamientos=None):
     """Evalúa cada pieza presente con las reglas de su categoría.
 
     La única fuente es validar_armado(), a través de evaluar_candidato().
@@ -378,7 +426,11 @@ def evaluaciones_de_seleccion(piezas, memorias_ram=None):
     presentes = {clave: pieza for clave, pieza in piezas.items() if pieza is not None}
     if memorias_ram is not None:
         presentes.pop('memoria_ram', None)
-    resultado = validar_armado(**presentes, memorias_ram=memorias_ram)
+    resultado = validar_armado(
+        **presentes,
+        memorias_ram=memorias_ram,
+        almacenamientos=almacenamientos,
+    )
     por_categoria = {}
     for clave, pieza in presentes.items():
         otras = {nombre: valor for nombre, valor in presentes.items() if nombre != clave}
@@ -386,6 +438,7 @@ def evaluaciones_de_seleccion(piezas, memorias_ram=None):
             _CATEGORIA_POR_CLAVE[clave],
             pieza,
             memorias_ram=memorias_ram,
+            almacenamientos=almacenamientos,
             **otras,
         )
     if memorias_ram:
@@ -393,8 +446,10 @@ def evaluaciones_de_seleccion(piezas, memorias_ram=None):
             'memoria_ram',
             memorias_ram[0].producto,
             memorias_ram=memorias_ram,
+            almacenamientos=almacenamientos,
             **presentes,
         )
+    publicar_almacenamiento(por_categoria, resultado)
     return resultado, por_categoria
 
 
@@ -407,6 +462,30 @@ def texto_del_armado(resultado, hay_pieza_sin_regla, hay_pieza_con_regla):
     return _TEXTO_ARMADO[resultado.estado]
 
 
+def texto_para_armado(resultado, hay_otras_piezas):
+    """Texto del armado. Un disco sin datos no se presenta como compatible."""
+    evaluacion = resultado.almacenamiento
+    sin_regla = evaluacion is not None and evaluacion.estado == ESTADO_NO_EVALUADA
+    con_regla = bool(hay_otras_piezas) or (
+        evaluacion is not None and evaluacion.estado != ESTADO_NO_EVALUADA
+    )
+    return texto_del_armado(resultado, sin_regla, con_regla)
+
+
+def publicar_almacenamiento(por_categoria, resultado):
+    """Copia la evaluación de discos. Si no hubo datos, conserva el aviso anterior."""
+    evaluacion = resultado.almacenamiento
+    if evaluacion is None:
+        return
+    if evaluacion.estado == ESTADO_NO_EVALUADA:
+        por_categoria['almacenamiento'] = EvaluacionCandidato(
+            ESTADO_NO_EVALUADA,
+            motivos=(MENSAJE_ALMACENAMIENTO,),
+        )
+        return
+    por_categoria['almacenamiento'] = evaluacion
+
+
 def validar_armado(
     procesador=None,
     placa_madre=None,
@@ -417,11 +496,15 @@ def validar_armado(
     fuente_de_poder=None,
     politica=None,
     memorias_ram=None,
+    almacenamientos=None,
 ):
     """Valida las piezas presentes. Las que no participan en estas reglas se ignoran.
 
     ``memoria_ram`` es una sola pieza con cantidad 1. ``memorias_ram`` es el
     conjunto de líneas y, si viene, reemplaza a esa pieza suelta.
+    ``almacenamientos`` son líneas de SSD o HDD con cantidad. Si faltan los
+    conteos de la placa o la interfaz del disco, no se agrega un hallazgo:
+    el almacenamiento queda sin evaluar y no bloquea el carrito.
     Devuelve compatible solo si cada regla aplicable quedó resuelta con datos conocidos.
     Una pieza sin su par es selección incompleta y no se trata como conflicto.
     """
@@ -435,7 +518,264 @@ def validar_armado(
     hallazgos = [hallazgo for hallazgo in candidatos if hallazgo is not None]
     hallazgos.extend(_evaluar_cooler(refrigeracion, procesador, placa_madre))
     hallazgos.extend(_evaluar_memorias(lineas, placa_madre))
-    return ResultadoCompatibilidad(hallazgos, _advertencias_ram(lineas))
+    discos = _evaluacion_discos(_normalizar_discos(almacenamientos), placa_madre)
+    if discos is not None and discos.estado == ESTADO_INCOMPATIBLE:
+        hallazgos.append(Hallazgo('almacenamiento', ESTADO_INCOMPATIBLE, ' '.join(discos.motivos)))
+    return ResultadoCompatibilidad(hallazgos, _advertencias_ram(lineas), discos)
+
+
+def _normalizar_discos(almacenamientos):
+    if not almacenamientos:
+        return []
+    lineas = []
+    for item in almacenamientos:
+        if isinstance(item, LineaDisco):
+            lineas.append(item)
+            continue
+        tipo = item.get('tipo') or ''
+        lineas.append(LineaDisco(item['producto'], int(item.get('cantidad') or 1), tipo))
+    return lineas
+
+
+def _misma_pieza_disco(izquierda, derecha):
+    if izquierda.tipo != derecha.tipo:
+        return False
+    id_izq = getattr(izquierda.producto, 'pk', None)
+    id_der = getattr(derecha.producto, 'pk', None)
+    if id_izq is not None and id_der is not None:
+        return id_izq == id_der
+    return izquierda.producto is derecha.producto
+
+
+def _sumar_disco(lineas, producto, tipo):
+    candidato = LineaDisco(producto, 1, tipo)
+    nuevas = []
+    sumada = False
+    for linea in lineas:
+        if _misma_pieza_disco(linea, candidato):
+            nuevas.append(LineaDisco(linea.producto, linea.cantidad + 1, linea.tipo))
+            sumada = True
+        else:
+            nuevas.append(linea)
+    if not sumada:
+        nuevas.append(candidato)
+    return nuevas
+
+
+def _clase_disco(producto, tipo):
+    """m2_nvme, m2_sata o sata. None si el dato no alcanza para clasificarlo."""
+    interfaz = normalizar_spec(getattr(producto, 'interfaz', None))
+    formato = normalizar_spec(getattr(producto, 'formato', None))
+    if tipo == 'almacenamiento_ssd':
+        nvme = interfaz.startswith('NVME')
+        sata = interfaz.startswith('SATA')
+        m2 = formato.startswith('M.2') or formato.startswith('M2')
+        dos_y_medio = formato.startswith('2.5') or formato.startswith('2,5')
+        if nvme and m2:
+            return 'm2_nvme'
+        if sata and m2:
+            return 'm2_sata'
+        if sata and dos_y_medio:
+            return 'sata'
+        return None
+    if tipo == 'almacenamiento_hdd':
+        if interfaz.startswith('SATA'):
+            return 'sata'
+        return None
+    return None
+
+
+def _conteo_conocido(valor):
+    """0 es un cero registrado. NULL no es un dato."""
+    if isinstance(valor, bool) or valor is None:
+        return None
+    if isinstance(valor, float):
+        return None
+    try:
+        numero = int(valor)
+    except (TypeError, ValueError):
+        return None
+    if numero < 0:
+        return None
+    return numero
+
+
+def _estado_m2(nvme, sata_m2, solo_nvme, solo_sata, compartidas):
+    """True si cabe, False si no, None si falta un conteo para decidir."""
+    if nvme == 0 and sata_m2 == 0:
+        return True
+    conocidos = solo_nvme is not None and solo_sata is not None and compartidas is not None
+    dedicadas_nvme = 0 if solo_nvme is None else solo_nvme
+    dedicadas_sata = 0 if solo_sata is None else solo_sata
+    compartidas_conocidas = 0 if compartidas is None else compartidas
+    resto_nvme = max(0, nvme - dedicadas_nvme)
+    resto_sata = max(0, sata_m2 - dedicadas_sata)
+    if resto_nvme + resto_sata <= compartidas_conocidas:
+        return True
+    if conocidos:
+        return False
+    return None
+
+
+def _mensaje_discos(cuenta, solo_nvme, solo_sata, compartidas, puertos):
+    partes = []
+    if puertos is not None and cuenta['sata'] > puertos:
+        unidad = 'unidad SATA' if cuenta['sata'] == 1 else 'unidades SATA'
+        puerto = 'puerto SATA' if puertos == 1 else 'puertos SATA'
+        partes.append(
+            f"Se piden {cuenta['sata']} {unidad} y la placa tiene {puertos} {puerto}."
+        )
+    if solo_nvme is not None and solo_sata is not None and compartidas is not None:
+        resto_nvme = max(0, cuenta['m2_nvme'] - solo_nvme)
+        resto_sata = max(0, cuenta['m2_sata'] - solo_sata)
+        if resto_nvme + resto_sata > compartidas:
+            if cuenta['m2_nvme'] and not cuenta['m2_sata']:
+                partes.append(
+                    f"Se piden {cuenta['m2_nvme']} SSD NVMe y la placa ofrece "
+                    f"{solo_nvme + compartidas} ranuras M.2 compatibles con NVMe."
+                )
+            elif cuenta['m2_sata'] and not cuenta['m2_nvme']:
+                partes.append(
+                    f"Se piden {cuenta['m2_sata']} SSD M.2 SATA y la placa ofrece "
+                    f"{solo_sata + compartidas} ranuras M.2 compatibles con SATA."
+                )
+            else:
+                partes.append(
+                    'Las ranuras M.2 compartidas no alcanzan: '
+                    f"{cuenta['m2_nvme']} NVMe y {cuenta['m2_sata']} M.2 SATA "
+                    f"frente a {solo_nvme} solo NVMe, {solo_sata} solo SATA "
+                    f"y {compartidas} que admite cualquiera de los dos."
+                )
+    if not partes:
+        partes.append('Las unidades de almacenamiento superan las conexiones registradas en la placa.')
+    return ' '.join(partes)
+
+
+def _texto_discos_ok(cuenta):
+    trozos = []
+    if cuenta['m2_nvme']:
+        trozos.append(f"{cuenta['m2_nvme']} SSD NVMe en ranura M.2")
+    if cuenta['m2_sata']:
+        trozos.append(f"{cuenta['m2_sata']} SSD M.2 SATA")
+    if cuenta['sata']:
+        trozos.append(f"{cuenta['sata']} unidades en puerto SATA")
+    texto = 'Cabe: ' + ', '.join(trozos)
+    if cuenta['m2_nvme']:
+        texto += '. No se compara PCIe 3.0 con PCIe 4.0'
+    return texto
+
+
+def _nombre_disco(producto, tipo):
+    clase = 'SSD' if tipo == 'almacenamiento_ssd' else 'HDD'
+    nombre = getattr(producto, 'nombre', None)
+    if nombre:
+        return f'{clase} «{nombre}»'
+    return clase
+
+
+def _lista_es(partes):
+    if len(partes) == 1:
+        return partes[0]
+    if len(partes) == 2:
+        return f'{partes[0]} y {partes[1]}'
+    return ', '.join(partes[:-1]) + ' y ' + partes[-1]
+
+
+def _motivo_disco_sin_clase(producto, tipo):
+    """Explica el dato que impide clasificar el disco. No inventa SATA ni NVMe."""
+    interfaz = normalizar_spec(getattr(producto, 'interfaz', None))
+    formato = normalizar_spec(getattr(producto, 'formato', None))
+    nombre = _nombre_disco(producto, tipo)
+    if tipo == 'almacenamiento_hdd':
+        if not interfaz:
+            return f'Falta la interfaz del {nombre}.'
+        visible = getattr(producto, 'interfaz', None) or interfaz
+        return (
+            f'La interfaz «{visible}» del {nombre} no es SATA, '
+            'así que no se compara con los puertos SATA.'
+        )
+    faltan = []
+    if not interfaz:
+        faltan.append('la interfaz')
+    if not formato:
+        faltan.append('el formato')
+    if faltan:
+        verbo = 'Falta' if len(faltan) == 1 else 'Faltan'
+        return f'{verbo} {_lista_es(faltan)} del {nombre}.'
+    return (
+        f'No se reconoce la interfaz «{getattr(producto, "interfaz", None)}» '
+        f'ni el formato «{getattr(producto, "formato", None)}» del {nombre}.'
+    )
+
+
+def _motivos_conteos_faltantes(cuenta, solo_nvme, solo_sata, compartidas, puertos):
+    faltan = []
+    if cuenta['sata'] and puertos is None:
+        faltan.append('Falta la cantidad de puertos SATA de la placa.')
+    if cuenta['m2_nvme'] or cuenta['m2_sata']:
+        if _estado_m2(cuenta['m2_nvme'], cuenta['m2_sata'], solo_nvme, solo_sata, compartidas) is None:
+            nombres = []
+            if solo_nvme is None:
+                nombres.append('ranuras M.2 solo NVMe')
+            if solo_sata is None:
+                nombres.append('ranuras M.2 solo SATA')
+            if compartidas is None:
+                nombres.append('ranuras M.2 NVMe o SATA')
+            if nombres:
+                faltan.append(f'Falta la cantidad de {_lista_es(nombres)} de la placa.')
+    if not faltan:
+        faltan.append(MENSAJE_NO_EVALUADA)
+    return tuple(faltan)
+
+
+def _evaluacion_discos(lineas, placa_madre):
+    if not lineas:
+        return None
+    if placa_madre is None:
+        return EvaluacionCandidato(
+            ESTADO_NO_EVALUADA,
+            motivos=('Selecciona una placa madre para comprobar el almacenamiento.',),
+        )
+    cuenta = {'m2_nvme': 0, 'm2_sata': 0, 'sata': 0}
+    sin_clase = []
+    for linea in lineas:
+        clase = _clase_disco(linea.producto, linea.tipo)
+        if clase is None:
+            sin_clase.append(_motivo_disco_sin_clase(linea.producto, linea.tipo))
+            continue
+        cuenta[clase] += linea.cantidad
+    if sin_clase:
+        return EvaluacionCandidato(
+            ESTADO_NO_EVALUADA,
+            motivos=tuple(dict.fromkeys(sin_clase)),
+        )
+    solo_nvme = _conteo_conocido(getattr(placa_madre, 'ranuras_m2_solo_nvme', None))
+    solo_sata = _conteo_conocido(getattr(placa_madre, 'ranuras_m2_solo_sata', None))
+    compartidas = _conteo_conocido(getattr(placa_madre, 'ranuras_m2_nvme_o_sata', None))
+    puertos = _conteo_conocido(getattr(placa_madre, 'puertos_sata', None))
+    if cuenta['sata'] == 0:
+        sata_ok = True
+    elif puertos is None:
+        sata_ok = None
+    elif cuenta['sata'] > puertos:
+        sata_ok = False
+    else:
+        sata_ok = True
+    m2_ok = _estado_m2(cuenta['m2_nvme'], cuenta['m2_sata'], solo_nvme, solo_sata, compartidas)
+    if sata_ok is False or m2_ok is False:
+        return EvaluacionCandidato(
+            ESTADO_INCOMPATIBLE,
+            motivos=(_mensaje_discos(cuenta, solo_nvme, solo_sata, compartidas, puertos),),
+        )
+    if sata_ok is None or m2_ok is None:
+        return EvaluacionCandidato(
+            ESTADO_NO_EVALUADA,
+            motivos=_motivos_conteos_faltantes(cuenta, solo_nvme, solo_sata, compartidas, puertos),
+        )
+    return EvaluacionCandidato(
+        ESTADO_COMPATIBLE,
+        coincidencias=(_texto_discos_ok(cuenta),),
+    )
 
 
 def _evaluar_socket(procesador, placa_madre):

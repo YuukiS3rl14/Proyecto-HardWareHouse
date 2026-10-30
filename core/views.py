@@ -13,14 +13,13 @@ from .excel_armado import (
     texto_de_estado,
 )
 from .compatibilidad import (
+    ACLARACION_ALMACENAMIENTO,
     ACLARACION_RAM,
     ESTADO_NO_EVALUADA,
-    MENSAJE_ALMACENAMIENTO,
-    EvaluacionCandidato,
     LineaRam,
     evaluar_candidato,
     evaluaciones_de_seleccion,
-    texto_del_armado,
+    texto_para_armado,
     validar_armado,
 )
 from .recomendador_pc import (
@@ -85,13 +84,13 @@ def mostrarArmado(request):
         return components
 
     componentes = {
-        'placa_madre': get_component_data(PlacaMadre, ['nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'chipset', 'ranuras_ram', 'formato_ram_soportado', 'capacidad_maxima_ram_gb', 'stock'], 'placa_madre'),
+        'placa_madre': get_component_data(PlacaMadre, ['nombre', 'precio', 'socket_cpu', 'tipo_ram_soportado', 'formato', 'chipset', 'ranuras_ram', 'formato_ram_soportado', 'capacidad_maxima_ram_gb', 'ranuras_m2_solo_nvme', 'ranuras_m2_solo_sata', 'ranuras_m2_nvme_o_sata', 'puertos_sata', 'stock'], 'placa_madre'),
         'procesador': get_component_data(Procesador, ['nombre', 'precio', 'socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts', 'stock'], 'procesador'),
         'memoria_ram': get_component_data(MemoriaRam, ['nombre', 'precio', 'tipo_ddr', 'capacidad_gb', 'modulos_por_producto', 'capacidad_modulo_gb', 'formato_ram', 'velocidad_mhz', 'stock'], 'memoria_ram'),
         'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'largo_mm', 'stock'], 'tarjeta_grafica'),
         'almacenamiento': (
             get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'interfaz', 'formato', 'stock'], 'almacenamiento_ssd')
-            + get_component_data(AlmacenamientoHDD, ['nombre', 'precio', 'capacidad_gb', 'stock'], 'almacenamiento_hdd')
+            + get_component_data(AlmacenamientoHDD, ['nombre', 'precio', 'capacidad_gb', 'interfaz', 'formato', 'stock'], 'almacenamiento_hdd')
         ),
         'gabinete': get_component_data(Gabinete, ['nombre', 'precio', 'formato_soporte', 'largo_max_gpu_mm', 'stock'], 'gabinete'),
         'fuente_de_poder': get_component_data(FuenteDePoder, ['nombre', 'precio', 'potencia_watts', 'certificacion', 'modular', 'stock'], 'fuente_de_poder'),
@@ -671,17 +670,13 @@ def evaluar_armado(request):
     resultado, por_categoria = evaluaciones_de_seleccion(
         seleccion,
         memorias_ram=memorias or None,
+        almacenamientos=almacenamientos or None,
     )
-    if almacenamientos:
-        por_categoria['almacenamiento'] = EvaluacionCandidato(
-            ESTADO_NO_EVALUADA,
-            motivos=(MENSAJE_ALMACENAMIENTO,),
-        )
 
     return JsonResponse({
         'status': 'success',
         'estado': resultado.estado,
-        'texto': texto_del_armado(resultado, bool(almacenamientos), bool(seleccion) or bool(memorias)),
+        'texto': texto_para_armado(resultado, bool(seleccion) or bool(memorias)),
         'motivos': resultado.motivos_de_rechazo,
         'advertencias': resultado.advertencias,
         'piezas': {
@@ -786,12 +781,8 @@ def exportar_armado(request):
     resultado, por_categoria = evaluaciones_de_seleccion(
         seleccion,
         memorias_ram=memorias or None,
+        almacenamientos=almacenamientos or None,
     )
-    if almacenamientos:
-        por_categoria['almacenamiento'] = EvaluacionCandidato(
-            ESTADO_NO_EVALUADA,
-            motivos=(MENSAJE_ALMACENAMIENTO,),
-        )
     try:
         filas, aclaraciones = _filas_de_exportacion(
             seleccion, almacenamientos, memorias, por_categoria,
@@ -804,6 +795,12 @@ def exportar_armado(request):
                 aclaraciones.append(pendiente)
     if memorias and ACLARACION_RAM not in aclaraciones:
         aclaraciones.append(ACLARACION_RAM)
+    if (
+        resultado.almacenamiento is not None
+        and resultado.almacenamiento.estado != ESTADO_NO_EVALUADA
+        and ACLARACION_ALMACENAMIENTO not in aclaraciones
+    ):
+        aclaraciones.append(ACLARACION_ALMACENAMIENTO)
     for aviso in resultado.advertencias:
         if aviso not in aclaraciones:
             aclaraciones.append(aviso)
@@ -812,7 +809,7 @@ def exportar_armado(request):
         filas,
         {
             'estado': resultado.estado,
-            'texto': texto_del_armado(resultado, bool(almacenamientos), bool(seleccion) or bool(memorias)),
+            'texto': texto_para_armado(resultado, bool(seleccion) or bool(memorias)),
             'motivos': resultado.motivos_de_rechazo,
             'aclaraciones': aclaraciones,
         },
@@ -862,7 +859,7 @@ def recomendar_armado(request):
     )
     if error:
         return error
-    seleccion, _sin_regla, memorias = cargado
+    seleccion, almacenamientos, memorias = cargado
 
     if conserva_ram:
         candidatos = []
@@ -907,7 +904,9 @@ def recomendar_armado(request):
             candidato['precio'] = str(candidato['precio'])
         return JsonResponse({'status': 'success', 'candidatos': candidatos})
 
-    candidatos = candidatos_para_categoria(categoria, seleccion, memorias or None)
+    candidatos = candidatos_para_categoria(
+        categoria, seleccion, memorias or None, almacenamientos or None,
+    )
     return JsonResponse({'status': 'success', 'candidatos': serializar_candidatos_api(candidatos)})
 
 
@@ -1073,7 +1072,20 @@ def agregar_armado_al_carrito(request):
         for clave in orden
         if clave[0] == 'memoria_ram'
     ]
-    resultado = validar_armado(**seleccion, memorias_ram=memorias or None)
+    almacenamientos = [
+        {
+            'tipo': clave[0],
+            'producto': grupos[clave]['producto'],
+            'cantidad': grupos[clave]['cantidad'],
+        }
+        for clave in orden
+        if clave[0] in _TIPOS_ALMACENAMIENTO
+    ]
+    resultado = validar_armado(
+        **seleccion,
+        memorias_ram=memorias or None,
+        almacenamientos=almacenamientos or None,
+    )
     if resultado.bloquea_agregar:
         return _error_armado(
             'No se agregó el armado al carrito.',

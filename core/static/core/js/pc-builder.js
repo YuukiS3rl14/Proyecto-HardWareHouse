@@ -513,25 +513,23 @@ function iniciarArmado() {
                 const local = productoDeCandidato(candidato);
                 const price = parseInt(local.precio).toLocaleString('es-CL');
                 const image = local.imagen || imagenesCategoria[categoriaModal] || '';
-                const detalle = detalleRecomendacion(candidato);
+                const detalle = detalleRecomendacion(candidato, local);
                 const etiquetaStock = candidato.seleccionable ? '' : '<span class="badge badge-secondary ml-2">Sin stock</span>';
                 const clase = candidato.seleccionable ? 'list-group-item list-group-item-action' : 'list-group-item disabled';
-                const tag = candidato.seleccionable ? 'a' : 'div';
-                const href = candidato.seleccionable ? ' href="#"' : '';
+                const accion = candidato.seleccionable ? ' role="button" tabindex="0"' : '';
                 html += `
-                    <${tag}${href} class="${clase}" data-id="${candidato.id}" data-type="${categoriaModal}" data-model-name="${escaparHtml(candidato.model_name)}" data-seleccionable="${candidato.seleccionable ? '1' : '0'}">
+                    <div class="${clase} armado-opcion" data-id="${candidato.id}" data-type="${categoriaModal}" data-model-name="${escaparHtml(candidato.model_name)}" data-seleccionable="${candidato.seleccionable ? '1' : '0'}"${accion}>
                         <div class="d-flex w-100">
                             <img src="${escaparHtml(image)}" alt="${escaparHtml(local.nombre)}" style="width: 60px; height: 60px; object-fit: contain; margin-right: 15px;">
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="mb-1">${escaparHtml(local.nombre)}${etiquetaStock}</h6>
-                                    <strong class="text-success">$${price}</strong>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between gap-2">
+                                    <h6 class="mb-1 armado-opcion-nombre">${escaparHtml(local.nombre)}${etiquetaStock}</h6>
+                                    <strong class="armado-opcion-precio flex-shrink-0">$${price}</strong>
                                 </div>
-                                <small class="text-muted">${getComponentSpecs(local, false)}</small>
                                 ${detalle}
                             </div>
                         </div>
-                    </${tag}>
+                    </div>
                 `;
             });
             html += '</div>';
@@ -547,7 +545,8 @@ function iniciarArmado() {
             });
         }
         modalBody.querySelectorAll('[data-seleccionable="1"]').forEach(item => {
-            item.addEventListener('click', handleSelectionChange);
+            item.addEventListener('click', activarSeleccion);
+            item.addEventListener('keydown', activarSeleccion);
         });
         modalBody.querySelectorAll('[data-filtro]').forEach(select => {
             select.addEventListener('change', () => {
@@ -575,36 +574,155 @@ function iniciarArmado() {
         return '<p class="text-muted mb-0">No hay piezas en esta categoría.</p>';
     }
 
-    function htmlFaltanComponentes() {
-        return `<p class="mb-0 text-muted armado-estado-breve"><small>${MENSAJE_FALTAN}</small></p>`;
+    function activarSeleccion(evento) {
+        if (evento.type === 'keydown' && evento.key !== 'Enter' && evento.key !== ' ') {
+            return;
+        }
+        if (evento.target.closest('.armado-detalles')) {
+            return;
+        }
+        handleSelectionChange(evento);
     }
 
-    function detalleRecomendacion(candidato) {
-        const avisos = (candidato.advertencias || []).map(texto => (
-            `<p class="mb-0 text-warning"><small>${escaparHtml(texto)}</small></p>`
-        )).join('');
-        const faltan = (candidato.pendientes || []).length ? htmlFaltanComponentes() : '';
-        if (candidato.estado === 'compatible') {
-            return `<p class="mb-0 mt-1 text-success"><small>${escaparHtml(candidato.etiqueta)}</small></p>${avisos}${faltan}`;
+    function tokenSpec(texto) {
+        return String(texto || '')
+            .toLowerCase()
+            .replace(/\s+/g, '')
+            .replace(/(gb|mhz|ghz|mm|w)$/, '');
+    }
+
+    function specYaVisible(linea, principales) {
+        const valor = linea.includes(':') ? linea.split(':').slice(1).join(':').trim() : linea;
+        const token = tokenSpec(valor);
+        if (!token) {
+            return true;
         }
-        if (candidato.estado === 'incompleto') {
-            return `${avisos}${htmlFaltanComponentes()}`;
+        return principales.some(parte => tokenSpec(parte) === token);
+    }
+
+    function caracteristicasPrincipales(producto) {
+        const partes = [];
+        const agregar = (valor, formatear) => {
+            if (valor === null || valor === undefined || valor === '') {
+                return;
+            }
+            partes.push(formatear ? formatear(valor) : String(valor));
+        };
+        if (categoriaModal === 'memoria_ram') {
+            agregar(producto.tipo_ddr);
+            agregar(producto.capacidad_gb, valor => `${textoNumero(valor)} GB`);
+            agregar(producto.velocidad_mhz, valor => `${textoNumero(valor)} MHz`);
+            agregar(producto.formato_ram);
+        } else if (categoriaModal === 'procesador') {
+            agregar(producto.socket);
+            agregar(producto.nucleos, valor => `${textoNumero(valor)} núcleos`);
+            agregar(producto.frecuencia_base, valor => `${textoNumero(valor)} GHz`);
+        } else if (categoriaModal === 'placa_madre') {
+            agregar(producto.socket_cpu);
+            agregar(producto.chipset);
+            agregar(producto.tipo_ram_soportado);
+            agregar(producto.formato);
+        } else if (categoriaModal === 'tarjeta_grafica') {
+            agregar(producto.vram_gb, valor => `${textoNumero(valor)} GB`);
+            agregar(producto.largo_mm, valor => `${textoNumero(valor)} mm`);
+            agregar(producto.consumo_referencia_watts, valor => `${textoNumero(valor)} W`);
+        } else if (categoriaModal === 'fuente_de_poder') {
+            agregar(producto.potencia_watts, valor => `${textoNumero(valor)} W`);
+            agregar(producto.certificacion);
+            agregar(textoModular(producto.modular));
+        } else if (categoriaModal === 'gabinete') {
+            agregar(producto.formato_soporte);
+            agregar(producto.largo_max_gpu_mm, valor => `GPU máx. ${textoNumero(valor)} mm`);
+        } else if (categoriaModal === 'refrigeracion_cooler') {
+            agregar(producto.tipo);
+            agregar(producto.socket_compatibles);
+        } else if (categoriaModal === 'almacenamiento') {
+            agregar(textoTipoDisco(producto.model_name));
+            agregar(producto.capacidad_gb, valor => `${textoNumero(valor)} GB`);
+            agregar(producto.interfaz);
+            agregar(producto.formato);
+        }
+        return partes;
+    }
+
+    function specsSecundarias(producto, principales) {
+        return lineasEspecificacion(producto).filter(linea => !specYaVisible(linea, principales));
+    }
+
+    function textosServidor(candidato) {
+        const textos = [];
+        const agregar = (valor) => {
+            const limpio = String(valor || '').trim();
+            if (limpio && !textos.includes(limpio)) {
+                textos.push(limpio);
+            }
+        };
+        const coincidencias = candidato.coincidencias || [];
+        const resumen = coincidencias.length ? `Coincide: ${coincidencias.join(', ')}` : '';
+        if (candidato.etiqueta && candidato.etiqueta !== resumen) {
+            agregar(candidato.etiqueta);
+        }
+        coincidencias.forEach(agregar);
+        (candidato.motivos || []).forEach(agregar);
+        (candidato.pendientes || []).forEach(agregar);
+        (candidato.advertencias || []).forEach(agregar);
+        if ((candidato.pendientes || []).length) {
+            agregar(MENSAJE_FALTAN);
+        }
+        return textos;
+    }
+
+    function estadoVisual(candidato) {
+        if (candidato.estado === 'compatible') {
+            return { texto: 'Compatible', clase: 'armado-estado-ok', motivo: false };
         }
         if (candidato.estado === 'incompatible') {
-            const motivos = (candidato.motivos || []).map(motivo => `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(motivo)}</small></p>`).join('');
-            return `<p class="mb-0 mt-1 text-danger"><small>${escaparHtml(candidato.etiqueta)}</small></p>${motivos}${avisos}`;
+            return { texto: 'Incompatible', clase: 'armado-estado-no', motivo: true };
         }
         if (candidato.estado === 'datos_insuficientes') {
-            const motivos = (candidato.motivos || []).map(motivo => `<p class="mb-0 mt-1 text-warning"><small>${escaparHtml(motivo)}</small></p>`).join('');
-            return `<p class="mb-0 mt-1 text-warning"><small>Revisar compatibilidad</small></p>${motivos}${avisos}`;
+            return { texto: 'No verificada', clase: 'armado-estado-revisar', motivo: true };
         }
-        if (candidato.estado === 'no_evaluada') {
-            return `<p class="mb-0 mt-1 text-info"><small>Compatibilidad no verificada</small></p>${avisos}`;
+        if (candidato.estado === 'incompleto') {
+            return { texto: 'Disponible', clase: 'armado-estado-disponible', motivo: false };
         }
-        return `<p class="mb-0 mt-1 text-muted"><small>${escaparHtml(candidato.etiqueta)}</small></p>${avisos}`;
+        if (candidato.estado === 'no_evaluada' && categoriaModal === 'almacenamiento' && !currentBuild.placa_madre) {
+            return { texto: 'Disponible', clase: 'armado-estado-disponible', motivo: false };
+        }
+        return { texto: 'No verificada', clase: 'armado-estado-revisar', motivo: true };
+    }
+
+    function detalleRecomendacion(candidato, producto) {
+        const visual = estadoVisual(candidato);
+        const estado = `<p class="armado-estado-badge ${visual.clase} mb-0">${escaparHtml(visual.texto)}</p>`;
+        const principales = producto ? caracteristicasPrincipales(producto) : [];
+        const secundarias = producto ? specsSecundarias(producto, principales) : [];
+        const textos = textosServidor(candidato);
+        const specs = principales.length
+            ? `<p class="armado-specs mb-0">${escaparHtml(principales.join(' · '))}</p>`
+            : '';
+        if (secundarias.length === 0 && textos.length === 0) {
+            return `${specs}${estado}`;
+        }
+        const titulo = visual.motivo ? 'Ver motivo' : 'Ver detalles';
+        const listaSpecs = secundarias.map(linea => `<li>${escaparHtml(linea)}</li>`).join('');
+        const listaTextos = textos.map(texto => `<p class="armado-detalle-texto">${escaparHtml(texto)}</p>`).join('');
+        return `
+            ${specs}
+            ${estado}
+            <details class="armado-detalles">
+                <summary>${titulo}</summary>
+                ${listaSpecs ? `<ul class="armado-detalle-specs">${listaSpecs}</ul>` : ''}
+                ${listaTextos}
+            </details>
+        `;
     }
 
     function getComponentSpecs(component, isCard) {
+        const specs = lineasEspecificacion(component);
+        return isCard ? specs.map(s => `<li>${s}</li>`).join('') : specs.join(' | ');
+    }
+
+    function lineasEspecificacion(component) {
         let specs = [];
         // Procesador
         if (component.socket) specs.push(`Socket: ${component.socket}`);
@@ -618,6 +736,10 @@ function iniciarArmado() {
         if (component.formato_ram_soportado) specs.push(`Formato RAM: ${component.formato_ram_soportado}`);
         if (component.ranuras_ram) specs.push(`Slots RAM: ${component.ranuras_ram}`);
         if (component.capacidad_maxima_ram_gb) specs.push(`RAM máx.: ${component.capacidad_maxima_ram_gb}GB`);
+        if (component.ranuras_m2_solo_nvme != null) specs.push(`M.2 solo NVMe: ${component.ranuras_m2_solo_nvme}`);
+        if (component.ranuras_m2_solo_sata != null) specs.push(`M.2 solo SATA: ${component.ranuras_m2_solo_sata}`);
+        if (component.ranuras_m2_nvme_o_sata != null) specs.push(`M.2 NVMe o SATA: ${component.ranuras_m2_nvme_o_sata}`);
+        if (component.puertos_sata != null) specs.push(`Puertos SATA: ${component.puertos_sata}`);
         // RAM
         if (component.tipo_ddr) specs.push(`Tipo: ${component.tipo_ddr}`);
         if (component.formato_ram) specs.push(`Formato: ${component.formato_ram}`);
@@ -642,7 +764,7 @@ function iniciarArmado() {
         if (component.tipo) specs.push(`Tipo: ${component.tipo}`);
         if (component.tamanho_radiador_mm) specs.push(`Radiador: ${component.tamanho_radiador_mm}mm`);
 
-        return isCard ? specs.map(s => `<li>${s}</li>`).join('') : specs.join(' | ');
+        return specs;
     }
 
     function handleSelectionChange(e) {

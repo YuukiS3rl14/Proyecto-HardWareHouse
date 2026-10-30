@@ -69,7 +69,12 @@ class PlacaMadreAdmin(ProductoAdminBase):
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('socket_cpu', 'chipset', 'formato', 'tipo_ram_soportado', 'ranuras_ram', 'formato_ram_soportado', 'capacidad_maxima_ram_gb')}),
+        ('Especificaciones Técnicas', {'fields': (
+            'socket_cpu', 'chipset', 'formato', 'tipo_ram_soportado', 'ranuras_ram',
+            'formato_ram_soportado', 'capacidad_maxima_ram_gb',
+            'ranuras_m2_solo_nvme', 'ranuras_m2_solo_sata', 'ranuras_m2_nvme_o_sata',
+            'puertos_sata',
+        )}),
     )
 
 class AlmacenamientoAdminForm(forms.ModelForm):
@@ -113,14 +118,20 @@ class AlmacenamientoSSDAdmin(ProductoAdminBase):
         ('Especificaciones Técnicas', {'fields': (('capacidad_valor', 'capacidad_unidad'), 'interfaz', 'formato')}),
     )
 
+class AlmacenamientoHDDAdminForm(AlmacenamientoAdminForm):
+    class Meta:
+        model = AlmacenamientoHDD
+        fields = '__all__'
+
+
 class AlmacenamientoHDDAdmin(ProductoAdminBase):
-    form = AlmacenamientoAdminForm
-    list_display = PRODUCTO_LIST_DISPLAY + ('capacidad_gb', 'velocidad_rpm', 'cache_mb')
+    form = AlmacenamientoHDDAdminForm
+    list_display = PRODUCTO_LIST_DISPLAY + ('capacidad_gb', 'velocidad_rpm', 'cache_mb', 'interfaz', 'formato')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': (('capacidad_valor', 'capacidad_unidad'), 'velocidad_rpm', 'cache_mb')}),
+        ('Especificaciones Técnicas', {'fields': (('capacidad_valor', 'capacidad_unidad'), 'velocidad_rpm', 'cache_mb', 'interfaz', 'formato')}),
     )
     
 class GabineteAdmin(ProductoAdminBase):

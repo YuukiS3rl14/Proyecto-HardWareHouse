@@ -2,8 +2,9 @@
 
 No llama a servicios externos ni estima FPS. Cada candidato se acepta o se
 descarta con ``validar_armado()``. Una configuración solo se recomienda si
-esas reglas quedan en estado compatible. El almacenamiento no tiene regla:
-si se incluye, la respuesta lo dice y no lo marca como compatible.
+esas reglas quedan en estado compatible. El almacenamiento se comprueba
+solo cuando la placa tiene ranuras y puertos y el disco tiene interfaz.
+Si falta ese dato, no se marca compatible ni se bloquea el armado.
 
 Búsqueda
 --------
@@ -53,7 +54,6 @@ from core.compatibilidad import (
     ESTADO_INCOMPATIBLE,
     ESTADO_NO_EVALUADA,
     MENSAJE_ALMACENAMIENTO,
-    EvaluacionCandidato,
     LineaRam,
     evaluaciones_de_seleccion,
     validar_armado,
@@ -283,7 +283,11 @@ def generar_recomendaciones(
     verificados = []
     pendientes = []
     for candidato in haz:
-        resultado = validar_armado(**candidato.seleccion, memorias_ram=candidato.memorias or None)
+        resultado = validar_armado(
+            **candidato.seleccion,
+            memorias_ram=candidato.memorias or None,
+            almacenamientos=candidato.discos or None,
+        )
         if resultado.estado == ESTADO_COMPATIBLE:
             verificados.append(candidato)
         elif resultado.estado in _ESTADOS_QUE_DESCARTAN:
@@ -436,7 +440,11 @@ def _rechazo_inicial(parcial, presupuesto):
         )
     if not parcial.seleccion and not parcial.memorias and not parcial.discos:
         return None
-    resultado = validar_armado(**parcial.seleccion, memorias_ram=parcial.memorias or None)
+    resultado = validar_armado(
+        **parcial.seleccion,
+        memorias_ram=parcial.memorias or None,
+        almacenamientos=parcial.discos or None,
+    )
     if resultado.estado in _ESTADOS_QUE_DESCARTAN:
         return ' '.join(resultado.motivos_de_rechazo) or 'La selección actual no se puede completar.'
     return None
@@ -492,11 +500,14 @@ def _ampliar(haz, etapa, obligatoria, catalogo, presupuesto, uso, resolucion, in
                 if ETIQUETAS[etapa] not in local.sin_presupuesto:
                     local.sin_presupuesto.append(ETIQUETAS[etapa])
                 continue
-            if etapa != 'almacenamiento':
-                resultado = validar_armado(**nuevo.seleccion, memorias_ram=nuevo.memorias or None)
-                if resultado.estado in _ESTADOS_QUE_DESCARTAN:
-                    local.anotar(resultado.motivos_de_rechazo)
-                    continue
+            resultado = validar_armado(
+                **nuevo.seleccion,
+                memorias_ram=nuevo.memorias or None,
+                almacenamientos=nuevo.discos or None,
+            )
+            if resultado.estado in _ESTADOS_QUE_DESCARTAN:
+                local.anotar(resultado.motivos_de_rechazo)
+                continue
             nuevo.puntaje = _puntaje(nuevo, uso, resolucion)
             siguientes.append(nuevo)
             acepto_alguna = True
@@ -564,7 +575,11 @@ def _cooler_aceptado(parcial, cooler):
         return False
     seleccion = dict(parcial.seleccion)
     seleccion['refrigeracion'] = cooler
-    resultado = validar_armado(**seleccion, memorias_ram=parcial.memorias or None)
+    resultado = validar_armado(
+        **seleccion,
+        memorias_ram=parcial.memorias or None,
+        almacenamientos=parcial.discos or None,
+    )
     return resultado.estado not in _ESTADOS_QUE_DESCARTAN
 
 
@@ -946,15 +961,15 @@ def _serializar(parcial, presupuesto, uso, resolucion, indice, rol):
     resultado, por_categoria = evaluaciones_de_seleccion(
         parcial.seleccion,
         memorias_ram=parcial.memorias or None,
+        almacenamientos=parcial.discos or None,
     )
-    if parcial.discos:
-        por_categoria['almacenamiento'] = EvaluacionCandidato(
-            ESTADO_NO_EVALUADA,
-            motivos=(MENSAJE_ALMACENAMIENTO,),
-        )
     componentes = _componentes_serializados(parcial, por_categoria)
     limitaciones = []
-    if parcial.discos:
+    if (
+        parcial.discos
+        and resultado.almacenamiento is not None
+        and resultado.almacenamiento.estado == ESTADO_NO_EVALUADA
+    ):
         limitaciones.append(MENSAJE_ALMACENAMIENTO)
     aviso_cooler = _aviso_refrigeracion(parcial)
     if aviso_cooler:

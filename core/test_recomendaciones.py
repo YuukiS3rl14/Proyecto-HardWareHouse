@@ -88,7 +88,8 @@ class EvaluarCandidatoTests(TestCase):
         for categoria in ('almacenamiento_ssd', 'almacenamiento_hdd'):
             evaluacion = evaluar_candidato(categoria, pieza(nombre='Pieza'), procesador=cpu, placa_madre=placa)
             self.assertEqual(evaluacion.estado, 'no_evaluada')
-            self.assertEqual(evaluacion.etiqueta, 'Compatibilidad no evaluada')
+            self.assertIn('interfaz', evaluacion.etiqueta)
+            self.assertNotIn('Coincide', evaluacion.etiqueta)
 
         gpu = evaluar_candidato('tarjeta_grafica', pieza(largo_mm=300), procesador=cpu, placa_madre=placa)
         self.assertEqual(gpu.estado, 'incompleto')
@@ -234,7 +235,7 @@ class RecomendarArmadoTests(TestCase):
         self.assertEqual(por_nombre['SSD demo']['model_name'], 'almacenamiento_ssd')
         self.assertEqual(por_nombre['HDD demo']['model_name'], 'almacenamiento_hdd')
         self.assertEqual(por_nombre['SSD demo']['estado'], 'no_evaluada')
-        self.assertIn('SATA', por_nombre['HDD demo']['etiqueta'])
-        self.assertIn('M.2', por_nombre['SSD demo']['etiqueta'])
-        self.assertIn('bahías', por_nombre['SSD demo']['etiqueta'])
+        self.assertIn('interfaz', por_nombre['HDD demo']['etiqueta'])
+        self.assertNotIn('SATA', por_nombre['HDD demo']['etiqueta'])
+        self.assertIn('ranuras M.2', por_nombre['SSD demo']['etiqueta'])
         self.assertNotEqual(por_nombre['SSD demo']['estado'], 'compatible')

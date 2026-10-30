@@ -242,6 +242,49 @@ class PlacaMadre(models.Model):
         verbose_name="Capacidad máxima de RAM (GB)",
         help_text="Capacidad total máxima de la placa, en GB. Vacío si no se sabe; no uses 0.",
     )
+    ranuras_m2_solo_nvme = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        verbose_name="Ranuras M.2 solo NVMe",
+        help_text=(
+            "Ranuras M.2 físicas que aceptan NVMe y no SATA. "
+            "No incluyas aquí las que también aceptan SATA. "
+            "0 significa que no hay ninguna. Vacío si no se sabe."
+        ),
+    )
+    ranuras_m2_solo_sata = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        verbose_name="Ranuras M.2 solo SATA",
+        help_text=(
+            "Ranuras M.2 físicas que aceptan SATA y no NVMe. "
+            "No incluyas aquí las compartidas. "
+            "0 significa que no hay ninguna. Vacío si no se sabe."
+        ),
+    )
+    ranuras_m2_nvme_o_sata = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        verbose_name="Ranuras M.2 NVMe o SATA",
+        help_text=(
+            "Ranuras M.2 físicas que aceptan NVMe o SATA, una unidad a la vez. "
+            "No las sumes otra vez en los campos exclusivos. "
+            "0 significa que no hay ninguna. Vacío si no se sabe."
+        ),
+    )
+    puertos_sata = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        verbose_name="Puertos SATA",
+        help_text=(
+            "Puertos SATA para SSD de 2,5 pulgadas y discos duros. "
+            "No cuenta las ranuras M.2. 0 significa que no hay ninguno. Vacío si no se sabe."
+        ),
+    )
 
     class Meta:
         verbose_name_plural = "Placas Madre"
@@ -280,7 +323,25 @@ class AlmacenamientoHDD(models.Model):
     capacidad_gb = models.IntegerField(verbose_name="Capacidad (GB)")
     velocidad_rpm = models.IntegerField(verbose_name="Velocidad (RPM)")
     cache_mb = models.IntegerField(verbose_name="Cache (MB)")
-    
+    INTERFAZ_HDD_CHOICES = [('SATA III', 'SATA III')]
+    interfaz = models.CharField(
+        max_length=20,
+        choices=INTERFAZ_HDD_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Interfaz",
+        help_text="SATA III si el disco usa un puerto SATA. Vacío si no se sabe; no se deduce del nombre.",
+    )
+    FORMATO_HDD_CHOICES = [('3.5"', '3.5"'), ('2.5"', '2.5"')]
+    formato = models.CharField(
+        max_length=10,
+        choices=FORMATO_HDD_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Formato",
+        help_text='3.5" o 2.5". Vacío si no se sabe. No cambia el puerto: un HDD SATA usa un puerto SATA.',
+    )
+
     class Meta:
         verbose_name_plural = "Almacenamiento HDD"
     def __str__(self):
