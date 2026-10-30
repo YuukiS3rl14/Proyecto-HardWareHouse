@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db.models import Q
 
 from .models import Proveedor
+from .piezas_demo import sin_demo
 
 # El límite superior queda fuera de la banda, salvo «1.000.000 o más».
 # Así 50.000 pertenece a 50–100 mil y 1.000.000 pertenece a 1 millón o más.
@@ -49,11 +50,12 @@ def opciones_catalogo(modelos):
     categorias = set()
     proveedor_ids = set()
     for modelo in modelos:
+        visibles = sin_demo(modelo.objects.all())
         categorias.update(
-            modelo.objects.order_by().values_list('categoria', flat=True).distinct()
+            visibles.order_by().values_list('categoria', flat=True).distinct()
         )
         proveedor_ids.update(
-            modelo.objects.order_by().values_list('proveedor_id', flat=True).distinct()
+            visibles.order_by().values_list('proveedor_id', flat=True).distinct()
         )
     categorias.discard(None)
     categorias.discard('')

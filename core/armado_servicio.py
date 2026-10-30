@@ -17,11 +17,8 @@ from django.urls import reverse
 
 from core.armado_recomendacion import candidatos_para_categoria
 from core.compatibilidad import (
-    MENSAJE_ALMACENAMIENTO,
-    ESTADO_NO_EVALUADA,
-    EvaluacionCandidato,
     evaluaciones_de_seleccion,
-    texto_del_armado,
+    texto_para_armado,
 )
 from core.views import (
     PRODUCT_MODEL_MAP,
@@ -150,17 +147,13 @@ def analizar_armado(componentes: list[dict]) -> dict:
     resultado, por_categoria = evaluaciones_de_seleccion(
         seleccion,
         memorias_ram=memorias or None,
+        almacenamientos=almacenamientos or None,
     )
-    if almacenamientos:
-        por_categoria['almacenamiento'] = EvaluacionCandidato(
-            ESTADO_NO_EVALUADA,
-            motivos=(MENSAJE_ALMACENAMIENTO,),
-        )
 
     total = _total_clp(seleccion, almacenamientos, memorias)
     lineas = [
         f'Estado del armado: {resultado.estado}.',
-        texto_del_armado(resultado, bool(almacenamientos), bool(seleccion) or bool(memorias)),
+        texto_para_armado(resultado, bool(seleccion) or bool(memorias)),
         f'Total estimado (catálogo): {_formato_clp(total)} CLP.',
     ]
     for clave, producto in seleccion.items():

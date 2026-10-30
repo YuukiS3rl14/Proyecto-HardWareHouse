@@ -50,6 +50,10 @@ _CAMPOS = {
         ('formato_ram_soportado', 'Formato de RAM admitido'),
         ('ranuras_ram', 'Ranuras de RAM'),
         ('capacidad_maxima_ram_gb', 'Capacidad máxima de RAM (GB)'),
+        ('ranuras_m2_solo_nvme', 'Ranuras M.2 solo NVMe'),
+        ('ranuras_m2_solo_sata', 'Ranuras M.2 solo SATA'),
+        ('ranuras_m2_nvme_o_sata', 'Ranuras M.2 NVMe o SATA'),
+        ('puertos_sata', 'Puertos SATA'),
     ),
     'memoria_ram': (
         ('tipo_ddr', 'Tipo DDR'),
@@ -81,6 +85,8 @@ _CAMPOS = {
         ('capacidad_gb', 'Capacidad (GB)'),
         ('velocidad_rpm', 'Velocidad (RPM)'),
         ('cache_mb', 'Caché (MB)'),
+        ('interfaz', 'Interfaz'),
+        ('formato', 'Formato'),
     ),
     'gabinete': (
         ('formato_soporte', 'Formato admitido'),

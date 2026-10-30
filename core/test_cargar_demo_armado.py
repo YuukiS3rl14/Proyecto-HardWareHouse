@@ -8,6 +8,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from core.management.commands.cargar_demo_armado import CATALOGO_DEMO, PROVEEDOR_DEMO
+from core.recomendador_pc import generar_recomendaciones
 from core.management.commands.cargar_demo_armado import (
     FUENTES_DEMO,
     GPU_DEMO,
@@ -17,6 +18,10 @@ from core.management.commands.cargar_demo_armado import (
     POTENCIA_CPU_DEMO,
     RAM_DEMO,
 )
+
+
+def _cantidad(modelo):
+    return sum(1 for item in CATALOGO_DEMO if item['modelo'] is modelo)
 from core.models import (
     AlmacenamientoHDD,
     AlmacenamientoSSD,
@@ -80,12 +85,15 @@ class CargarDemoArmadoTests(TestCase):
         self.assertEqual(Procesador.objects.filter(nombre='DEMO CPU AM5').count(), 1)
         self.assertEqual(Procesador.objects.filter(nombre='DEMO CPU AM4').count(), 1)
         self.assertEqual(Proveedor.objects.filter(nombre=PROVEEDOR_DEMO).count(), 1)
-        self.assertEqual(PlacaMadre.objects.count(), 2)
-        self.assertEqual(MemoriaRam.objects.count(), 2)
-        self.assertEqual(Gabinete.objects.count(), 2)
-        self.assertEqual(RefrigeracionCooler.objects.count(), 2)
-        self.assertEqual(AlmacenamientoSSD.objects.count(), 1)
-        self.assertEqual(AlmacenamientoHDD.objects.count(), 1)
+        self.assertEqual(Procesador.objects.count(), _cantidad(Procesador) + 1)
+        self.assertEqual(PlacaMadre.objects.count(), _cantidad(PlacaMadre))
+        self.assertEqual(MemoriaRam.objects.count(), _cantidad(MemoriaRam))
+        self.assertEqual(Gabinete.objects.count(), _cantidad(Gabinete))
+        self.assertEqual(RefrigeracionCooler.objects.count(), _cantidad(RefrigeracionCooler))
+        self.assertEqual(AlmacenamientoSSD.objects.count(), _cantidad(AlmacenamientoSSD))
+        self.assertEqual(AlmacenamientoHDD.objects.count(), _cantidad(AlmacenamientoHDD))
+        self.assertEqual(TarjetaGrafica.objects.count(), _cantidad(TarjetaGrafica))
+        self.assertEqual(FuenteDePoder.objects.count(), _cantidad(FuenteDePoder))
 
     def test_crea_el_catalogo_con_stock_y_especificaciones(self):
         call_command('cargar_demo_armado')
@@ -113,8 +121,10 @@ class CargarDemoArmadoTests(TestCase):
         self.assertIsNone(
             PlacaMadre.objects.get(nombre='DEMO Placa AM5 DDR5 ATX').capacidad_maxima_ram_gb
         )
-        self.assertEqual(TarjetaGrafica.objects.count(), 0)
-        self.assertEqual(FuenteDePoder.objects.count(), 0)
+        self.assertEqual(TarjetaGrafica.objects.count(), _cantidad(TarjetaGrafica))
+        self.assertEqual(FuenteDePoder.objects.count(), _cantidad(FuenteDePoder))
+        self.assertFalse(TarjetaGrafica.objects.filter(nombre='DEMO GPU').exists())
+        self.assertFalse(FuenteDePoder.objects.filter(nombre='DEMO Fuente 550W').exists())
 
 
 @override_settings(DEBUG=True)
@@ -255,7 +265,10 @@ class CargarDemoPotenciaTests(TestCase):
         self.assertEqual(gpu_previa.consumo_referencia_watts, GPU_DEMO['consumo_referencia_watts'])
         self.assertEqual(gpu_previa.potencia_minima_fuente_watts, GPU_DEMO['potencia_minima_fuente_watts'])
         self.assertEqual(TarjetaGrafica.objects.filter(nombre=GPU_DEMO['nombre']).count(), 1)
-        self.assertEqual(FuenteDePoder.objects.count(), len(FUENTES_DEMO))
+        self.assertEqual(
+            FuenteDePoder.objects.count(),
+            _cantidad(FuenteDePoder) + len(FUENTES_DEMO),
+        )
         for item in FUENTES_DEMO:
             fuente = FuenteDePoder.objects.get(nombre=item['nombre'])
             self.assertEqual(fuente.potencia_watts, item['potencia_watts'])
@@ -384,3 +397,63 @@ class CargarDemoRamTests(TestCase):
                 call_command('cargar_demo_armado', ram=True)
 
         self.assertEqual(MemoriaRam.objects.count(), 0)
+
+
+@override_settings(DEBUG=True)
+class CatalogoDemoPublicoTests(TestCase):
+    def test_la_tienda_y_el_detalle_no_muestran_piezas_demo(self):
+        marca = Proveedor.objects.create(nombre='Marca de vitrina')
+        real = Procesador.objects.create(
+            proveedor=marca, nombre='CPU de vitrina', precio=Decimal('100000.00'), stock=2,
+            socket='AM5', nucleos=6, frecuencia_base=Decimal('3.50'),
+        )
+        call_command('cargar_demo_armado')
+        real.refresh_from_db()
+        self.assertEqual(real.precio, Decimal('100000.00'))
+
+        tienda = self.client.get(reverse('core:tienda'))
+        self.assertContains(tienda, 'CPU de vitrina')
+        self.assertNotContains(tienda, 'DEMO CPU')
+        self.assertNotContains(tienda, 'Precio ficticio de prueba')
+
+        demo = Procesador.objects.get(nombre='DEMO CPU AM4 básica')
+        detalle_demo = self.client.get(reverse('core:detalle', args=['procesador', demo.pk]))
+        detalle_real = self.client.get(reverse('core:detalle', args=['procesador', real.pk]))
+        self.assertEqual(detalle_demo.status_code, 404)
+        self.assertEqual(detalle_real.status_code, 200)
+
+
+@override_settings(DEBUG=True)
+class CatalogoDemoEscenariosTests(TestCase):
+    def test_cinco_presupuestos_no_arman_el_mismo_equipo(self):
+        call_command('cargar_demo_armado')
+        pedidos = (
+            (600_000, 'gaming', '1080p'),
+            (1_200_000, 'gaming', '1440p'),
+            (2_500_000, 'gaming', '4k'),
+            (1_500_000, 'trabajo', ''),
+            (2_000_000, 'edicion', ''),
+        )
+        armados = []
+        for presupuesto, uso, resolucion in pedidos:
+            resultado = generar_recomendaciones(presupuesto, uso, resolucion=resolucion)
+            self.assertEqual(resultado['status'], 'success', resultado.get('mensaje'))
+            opcion = resultado['recomendaciones'][0]
+            self.assertLessEqual(opcion['total'], presupuesto)
+            self.assertGreater(opcion['total'], 0)
+            tipos = {item['tipo'] for item in opcion['componentes']}
+            nombres = ' '.join(item['nombre'] for item in opcion['componentes'])
+            self.assertIn('almacenamiento_ssd', tipos, f'{presupuesto} {uso} {nombres} total={opcion["total"]}')
+            self.assertNotIn('almacenamiento_hdd', tipos)
+            self.assertNotIn('SO-DIMM', nombres)
+            self.assertTrue(any('SATA' in texto for texto in opcion['limitaciones']))
+            self.assertIn('No se estiman FPS', opcion['explicacion'])
+            armados.append({item['tipo']: item['nombre'] for item in opcion['componentes']})
+
+        gpus = [armado['tarjeta_grafica'] for armado in armados[:3]]
+        self.assertEqual(len(set(gpus)), 3)
+        self.assertIn('4GB', gpus[0])
+        self.assertIn('8GB', gpus[1])
+        self.assertIn('16GB', gpus[2])
+        self.assertNotEqual(armados[3]['procesador'], armados[0]['procesador'])
+        self.assertNotEqual(armados[4]['tarjeta_grafica'], armados[2]['tarjeta_grafica'])

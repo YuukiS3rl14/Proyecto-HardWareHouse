@@ -86,6 +86,10 @@
                 {% if producto.ranuras_ram %} <li><strong>Ranuras RAM:</strong> {{ producto.ranuras_ram }}</li> {% endif %}
                 {% if producto.formato_ram_soportado %} <li><strong>Formato de RAM:</strong> {{ producto.formato_ram_soportado }}</li> {% endif %}
                 {% if producto.capacidad_maxima_ram_gb %} <li><strong>RAM máxima:</strong> {{ producto.capacidad_maxima_ram_gb }} GB</li> {% endif %}
+                {% if producto.ranuras_m2_solo_nvme or producto.ranuras_m2_solo_nvme == 0 %} <li><strong>M.2 solo NVMe:</strong> {{ producto.ranuras_m2_solo_nvme }}</li> {% endif %}
+                {% if producto.ranuras_m2_solo_sata or producto.ranuras_m2_solo_sata == 0 %} <li><strong>M.2 solo SATA:</strong> {{ producto.ranuras_m2_solo_sata }}</li> {% endif %}
+                {% if producto.ranuras_m2_nvme_o_sata or producto.ranuras_m2_nvme_o_sata == 0 %} <li><strong>M.2 NVMe o SATA:</strong> {{ producto.ranuras_m2_nvme_o_sata }}</li> {% endif %}
+                {% if producto.puertos_sata or producto.puertos_sata == 0 %} <li><strong>Puertos SATA:</strong> {{ producto.puertos_sata }}</li> {% endif %}
 
                 {# Atributos de Almacenamiento (SSD/HDD) #}
                 {% if producto.interfaz and producto.formato and producto.categoria != 'Memoria RAM' %} {# Evitar duplicar interfaz/formato si ya se mostró para GPU/MB #}

@@ -118,8 +118,8 @@ class FiltrosCombinadosTests(TestCase):
         cpu(self.amd, 'Otro Ryzen', Decimal('61000'))
         respuesta = self.client.get(self.url)
         html = respuesta.content.decode()
-        self.assertEqual(html.count(f'value="{self.amd.pk}"'), 1)
-        self.assertEqual(html.count(f'value="{self.intel.pk}"'), 1)
+        self.assertEqual(html.count(f'option value="{self.amd.pk}"'), 1)
+        self.assertEqual(html.count(f'option value="{self.intel.pk}"'), 1)
         self.assertNotContains(respuesta, 'custom-checkbox')
 
     def test_un_filtro_sin_coincidencias_muestra_el_vacio(self):

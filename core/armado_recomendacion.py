@@ -9,16 +9,16 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
+from django.conf import settings
+
 from core.compatibilidad import (
     ESTADO_DATOS_INSUFICIENTES,
     ESTADO_INCOMPATIBLE,
-    ESTADO_NO_EVALUADA,
     LineaRam,
-    MENSAJE_ALMACENAMIENTO,
-    EvaluacionCandidato,
     evaluar_candidato,
     validar_armado,
 )
+from core.piezas_demo import sin_demo
 from core.models import (
     AlmacenamientoHDD,
     AlmacenamientoSSD,
@@ -124,6 +124,7 @@ def candidatos_para_categoria(
     categoria: str,
     seleccion: dict,
     memorias: list[LineaRam] | None = None,
+    almacenamientos: list | None = None,
 ) -> list[dict]:
     """Misma clasificación que POST /armado/recomendar/."""
     fuentes = RECOMENDACIONES_POR_CATEGORIA.get(categoria)
@@ -132,18 +133,17 @@ def candidatos_para_categoria(
 
     candidatos: list[dict] = []
     for modelo, categoria_regla, model_name in fuentes:
-        for producto in modelo.objects.select_related('proveedor').all():
+        consulta = modelo.objects.select_related('proveedor')
+        if not settings.DEBUG:
+            consulta = sin_demo(consulta)
+        for producto in consulta:
             evaluacion = evaluar_candidato(
                 categoria_regla,
                 producto,
                 memorias_ram=memorias or None,
+                almacenamientos=almacenamientos,
                 **seleccion,
             )
-            if categoria == 'almacenamiento' and evaluacion.estado == ESTADO_NO_EVALUADA:
-                evaluacion = EvaluacionCandidato(
-                    ESTADO_NO_EVALUADA,
-                    motivos=(MENSAJE_ALMACENAMIENTO,),
-                )
             candidatos.append(
                 {
                     'id': producto.id,
@@ -281,7 +281,9 @@ def construir_armado_automatico(
                 tradeoffs=tradeoffs,
             )
 
-        candidatos = candidatos_para_categoria(categoria, seleccion, memorias or None)
+        candidatos = candidatos_para_categoria(
+            categoria, seleccion, memorias or None, almacenamientos or None,
+        )
         if categoria == 'procesador':
             candidatos = _filtrar_cpu_preferencia(candidatos, preferencia_cpu)
 
@@ -328,7 +330,11 @@ def construir_armado_automatico(
             seleccion[clave] = producto
             componentes_api.append({'tipo': elegido['model_name'], 'id': producto.id, 'cantidad': 1})
 
-    resultado = validar_armado(**seleccion, memorias_ram=memorias or None)
+    resultado = validar_armado(
+        **seleccion,
+        memorias_ram=memorias or None,
+        almacenamientos=almacenamientos or None,
+    )
     advertencias = list(resultado.advertencias)
     if resultado.estado in (ESTADO_INCOMPATIBLE, ESTADO_DATOS_INSUFICIENTES):
         return ResultadoArmadoAutomatico(

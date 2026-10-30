@@ -11,6 +11,7 @@ from core.catalogo.registry import CATALOGO_MODELOS, categorias_disponibles
 from core.chatbot.ranking import puntuar_producto
 from core.chatbot.serializers import producto_a_dict
 from core.models import Proveedor
+from core.piezas_demo import sin_demo
 
 OrdenCatalogo = Literal['relevancia', 'precio_asc', 'precio_desc', 'stock_desc']
 
@@ -112,7 +113,7 @@ def buscar_catalogo(filtros: FiltrosCatalogo) -> dict:
         if filtros.categoria and categoria_modelo != filtros.categoria:
             continue
 
-        qs = modelo.objects.select_related('proveedor').all()
+        qs = sin_demo(modelo.objects.select_related('proveedor'))
 
         if filtros.q:
             qs = qs.filter(

@@ -9,6 +9,7 @@ from django.conf import settings
 from django.urls import reverse
 
 from core.catalogo.registry import CATALOGO_MODELOS
+from core.piezas_demo import sin_demo
 from core.demo_catalog import nombre_comercial
 
 from .excel_armado import especificaciones_de
@@ -69,7 +70,7 @@ def _contenido_fila(row: dict) -> str:
 
 def iter_filas_producto():
     for modelo, model_name in CATALOGO_MODELOS:
-        for producto in modelo.objects.select_related('proveedor').order_by('id'):
+        for producto in sin_demo(modelo.objects.select_related('proveedor')).order_by('id'):
             marca = producto.proveedor.nombre
             descripcion = (producto.descripcion or '').strip()
             specs = _especificaciones_texto(producto)
