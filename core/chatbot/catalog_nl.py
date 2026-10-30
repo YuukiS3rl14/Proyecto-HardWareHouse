@@ -136,6 +136,7 @@ class ConsultaCatalogoNL:
     precio_max: int | None = None
     solo_con_stock: bool = False
     q: str = ''
+    pks_por_modelo: dict | None = None
 
     def requiere_orm_estructurado(self) -> bool:
         return bool(
@@ -162,6 +163,7 @@ class ConsultaCatalogoNL:
             solo_con_stock=self.solo_con_stock,
             limit=lim,
             orden=self.orden,
+            pks_por_modelo=self.pks_por_modelo,
         )
 
 

@@ -141,6 +141,19 @@ def recordar_turno(resultado: dict, build_context: dict | None, texto: str) -> d
     if not base.get('presupuesto_original_clp') and base.get('presupuesto_clp'):
         base['presupuesto_original_clp'] = base['presupuesto_clp']
 
+    from core.chatbot.catalogo_contexto import snapshot_busqueda
+
+    if resultado.get('conservar_busqueda'):
+        pass
+    elif clasificado == 'product_search':
+        busqueda = snapshot_busqueda(resultado)
+        if busqueda:
+            base['catalogo_busqueda'] = busqueda
+        else:
+            base.pop('catalogo_busqueda', None)
+    elif clasificado != 'clarification':
+        base.pop('catalogo_busqueda', None)
+
     if resultado.get('necesita_clarificacion') or clasificado == 'clarification':
         resultado['sugerencia'] = sugerencia_contextual(
             (build_context or {}).get('ultimo_intent') if isinstance(build_context, dict) else None,

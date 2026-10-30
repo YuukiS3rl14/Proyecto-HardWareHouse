@@ -210,6 +210,11 @@ def validar_build_context(payload: dict) -> dict | None:
             accion['componentes'] = sanitizar_lista_componentes(pending['componentes'])
         if accion.get('componentes'):
             limpio['pending_action'] = accion
+    from core.chatbot.catalogo_contexto import sanear_busqueda_catalogo
+
+    busqueda = sanear_busqueda_catalogo(raw.get('catalogo_busqueda'))
+    if busqueda:
+        limpio['catalogo_busqueda'] = busqueda
     intent_previo = raw.get('ultimo_intent')
     if isinstance(intent_previo, str):
         from core.chatbot.conversation_state import INTENTS_PUBLICOS

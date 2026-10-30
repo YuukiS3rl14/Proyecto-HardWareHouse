@@ -28,6 +28,7 @@ class FiltrosCatalogo:
     modelos: list[str] | None = None
     limit: int = 20
     orden: OrdenCatalogo = 'relevancia'
+    pks_por_modelo: dict | None = None
 
     @classmethod
     def desde_dict(cls, data: dict) -> 'FiltrosCatalogo':
@@ -112,8 +113,16 @@ def buscar_catalogo(filtros: FiltrosCatalogo) -> dict:
         categoria_modelo = modelo._meta.get_field('categoria').default
         if filtros.categoria and categoria_modelo != filtros.categoria:
             continue
+        if filtros.pks_por_modelo is not None:
+            pks = filtros.pks_por_modelo.get(model_name) or []
+            if not pks:
+                continue
+        else:
+            pks = None
 
         qs = sin_demo(modelo.objects.select_related('proveedor'))
+        if pks is not None:
+            qs = qs.filter(pk__in=pks)
 
         if filtros.q:
             qs = qs.filter(

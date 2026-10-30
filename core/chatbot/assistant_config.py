@@ -112,7 +112,8 @@ class AsistenteConfig:
     patrones_datos_sensibles: tuple[str, ...] = field(
         default_factory=lambda: (
             r'\b(contraseña|password|clave secreta|secret_key|api[_\s]?key)\b',
-            r'\b(tarjeta|cvv|cvc|datos bancarios|cuenta bancaria|rut\b.*\bcliente)\b',
+            r'\b(cvv|cvc|datos bancarios|cuenta bancaria|rut\b.*\bcliente)\b',
+            r'\btarjetas?\b(?!\s+(?:gr[aá]ficas?|madres?|de\s+video|de\s+sonido|sonido))',
             r'\b(datos personales|información de otro|otros usuarios|base de datos interna)\b',
             r'\b(admin|panel admin|credencial)\b',
         )

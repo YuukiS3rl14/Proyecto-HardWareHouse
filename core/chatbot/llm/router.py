@@ -51,12 +51,13 @@ def _busqueda_catalogo_ejecutable(consulta: ConsultaCatalogoNL, texto: str) -> b
 
 def _consulta_desde_llm(extraido: IntentoLLM, texto_usuario: str) -> ConsultaCatalogoNL:
     filtros = extraido.filters or {}
-    orden = extraido.price_sort or 'relevancia'
-    solo_stock = bool(filtros.get('solo_stock'))
-    if extraido.intent == 'product_search' and orden == 'precio_asc':
-        solo_stock = True
-
     pista = extraer_consulta_catalogo(texto_usuario)
+    # Un tope de precio es un filtro. El orden de un solo producto solo sale del texto
+    # («la más barata», «la más cara»), no de price_sort del modelo.
+    orden = pista.orden
+    solo_stock = bool(filtros.get('solo_stock')) or pista.solo_con_stock
+    if orden == 'precio_asc':
+        solo_stock = True
     categoria = pista.categoria or extraido.category
     precio_max = pista.precio_max
     precio_min = pista.precio_min

@@ -10,6 +10,7 @@ from core.chatbot.llm.intent_extractor import extraer_intencion_ollama, intent_l
 from core.chatbot.llm.router import ejecutar_ruta_llm
 from core.chatbot.policy import solicita_datos_sensibles
 from core.chatbot.armado_builder_chat import intentar_confirmar_accion
+from core.chatbot.catalogo_contexto import responder_seguimiento_catalogo
 from core.chatbot.compatibilidad_chat import responder_si_compatibilidad
 from core.chatbot.reglas_engine import ejecutar_motor_reglas
 from core.knowledge.service import responder_conocimiento
@@ -77,6 +78,14 @@ def ejecutar_motor(
             len(texto),
         )
         return _cerrar(compatibilidad, texto, historial, config, build_context)
+
+    seguimiento = responder_seguimiento_catalogo(texto, build_context)
+    if seguimiento:
+        debug_log.info(
+            'chat route=reglas intent=product_search model=- ollama=skipped reason=catalog_followup chars=%s',
+            len(texto),
+        )
+        return _cerrar(seguimiento, texto, historial, config, build_context)
 
     conocimiento = responder_conocimiento(texto, historial=historial)
     if conocimiento:
