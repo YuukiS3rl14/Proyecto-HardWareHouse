@@ -15,6 +15,15 @@
     }
 }
 
+.brand-mark-boleta {
+    display: block;
+    height: 2.25rem;
+    width: auto;
+    max-width: 8rem;
+    object-fit: contain;
+    background: transparent;
+}
+
 .page-header {
     min-height: 250px;
     padding: 1.5rem 1rem;

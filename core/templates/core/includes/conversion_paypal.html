@@ -1,0 +1,7 @@
+{% load humanize %}
+<div class="conversion-paypal border rounded p-3 mb-3 text-start">
+    <p class="mb-1"><strong>Total de la compra:</strong> ${{ total_clp|floatformat:"0"|intcomma }} CLP</p>
+    <p class="h5 mb-1"><strong>PayPal {{ verbo_paypal }}:</strong> {{ total_usd_texto }} USD</p>
+    <p class="mb-1"><strong>Tipo de cambio:</strong> 1 USD = {{ clp_to_usd_rate }} CLP</p>
+    <p class="small text-muted mb-0">Los precios, el pedido y la boleta quedan en pesos chilenos. PayPal no acepta CLP en este cobro, así que el pago se hace en dólares. {{ total_usd_texto }} USD es el monto que se envía a PayPal, redondeado al centavo con la tasa de arriba. El total en CLP no se reemplaza ni se oculta.</p>
+</div>

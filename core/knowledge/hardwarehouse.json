@@ -1,0 +1,180 @@
+{
+  "identity": {
+    "name": "HardWareHouse",
+    "country": "Chile",
+    "business_type": "Pyme emergente dedicada al comercio de hardware de computación en Chile.",
+    "years_in_business": 5,
+    "history": "HardWareHouse es una pyme emergente con cinco años en el mercado chileno. Se dedica a la comercialización de componentes de PC y está especializada en el armado de computadores a medida.",
+    "summary": "HardWareHouse es una pyme emergente con cinco años en el mercado chileno. Nos dedicamos a la comercialización de componentes de PC y estamos especializados en el armado de computadores a medida. Combinamos catálogo digital, asesoría técnica y herramientas en línea para que elijas piezas compatibles con claridad.",
+    "value_proposition": "HardWareHouse combina catálogo digital, herramientas de compatibilidad para armar PCs y atención orientada al cliente, para que las personas elijan componentes con criterio técnico y compren con claridad."
+  },
+  "mission": "Ofrecer componentes de calidad con una atención cercana al cliente, ayudando a cada persona a encontrar el PC que quiere o necesita —ya sea comprando piezas sueltas o armando un equipo completo— con información clara en todo el proceso de compra.",
+  "vision": "Ser la tienda número uno en Chile, o consolidarse entre el top 3 a nivel nacional, en reconocimiento por especialización en hardware, armado de PCs y confianza de los clientes.",
+  "values": [
+    "Trato amigable y respetuoso con quienes nos visitan o nos escriben.",
+    "Demostrar conocimiento técnico para orientar con criterio, sin presión de venta.",
+    "Acompañar al cliente en cada etapa: elección de piezas, compra y retiro en tienda."
+  ],
+  "services": [
+    "Venta de componentes de PC por categorías en la tienda en línea.",
+    "Armado de computadores a medida con revisión de compatibilidad en el sitio.",
+    "Asesoría para elegir piezas, usando el armador y el formulario de contacto.",
+    "Compra en línea con PayPal y retiro en tienda una vez confirmado el pago."
+  ],
+  "policies": {
+    "delivery": "HardWareHouse no ofrece despacho, delivery ni envíos a domicilio. La entrega es solo mediante retiro en tienda una vez confirmado el pago.",
+    "pickup": "Solo entregamos con retiro en tienda tras confirmar el pago con PayPal. Coordinamos día y hora al confirmar la compra.",
+    "payment": "Las compras en línea se procesan con PayPal. El pago debe quedar confirmado antes de preparar el pedido para retiro en tienda.",
+    "checkout_address": "Los datos de región y comuna en el checkout son para el pedido y la facturación. No implican envío a domicilio.",
+    "stock": "El sitio muestra el stock del catálogo en cada ficha. Si un producto se agota durante la compra, se avisa al confirmar el pedido.",
+    "warranty": "Para garantías o cambios, hay que escribir por contacto con el número de pedido y el detalle del producto."
+  },
+  "contact": {
+    "address": {
+      "value": "Av. Tecnología 123, Santiago, Región Metropolitana, Chile",
+      "placeholder": true,
+      "note": "Dirección de ejemplo publicada en el sitio. No confirmarla como sucursal real."
+    },
+    "email": {
+      "value": "contacto@hardwarehouse.cl",
+      "placeholder": true,
+      "note": "Correo de ejemplo en la página de contacto. El pie del sitio muestra contacto@techparts.cl; ambos son datos de ejemplo."
+    },
+    "phone": {
+      "value": "+56 9 1234 5678",
+      "placeholder": true,
+      "note": "Teléfono de ejemplo publicado en el sitio."
+    },
+    "channels": [
+      "Formulario de contacto del sitio.",
+      "Asistente del sitio, limitado a información publicada y al catálogo.",
+      "Armador de PC para revisar compatibilidad."
+    ]
+  },
+  "sections": [
+    {
+      "id": "identidad",
+      "title": "Quiénes somos",
+      "intent": "empresa",
+      "text": "{identity.summary}",
+      "aliases": ["quienes son", "quiénes son", "quienes somos", "sobre nosotros", "sobre la tienda", "acerca de", "que es hardwarehouse", "qué es hardwarehouse", "historia", "años", "cuantos años", "cuántos años", "antiguedad", "antigüedad", "pyme", "de que se trata", "de qué se trata"]
+    },
+    {
+      "id": "mision",
+      "title": "Misión",
+      "intent": "empresa",
+      "text": "Misión de HardWareHouse: {mission}",
+      "aliases": ["mision", "misión", "para que existen", "para qué existen", "objetivo de la empresa"]
+    },
+    {
+      "id": "vision",
+      "title": "Visión",
+      "intent": "empresa",
+      "text": "Visión de HardWareHouse: {vision}",
+      "aliases": ["vision", "visión", "hacia donde van", "hacia dónde van", "meta de la empresa", "top 3"]
+    },
+    {
+      "id": "valores",
+      "title": "Valores",
+      "intent": "empresa",
+      "text": "Valores de HardWareHouse: {values}",
+      "aliases": ["valores", "principios", "como atienden", "cómo atienden", "trato"]
+    },
+    {
+      "id": "servicios",
+      "title": "Servicios",
+      "intent": "empresa",
+      "text": "Servicios de HardWareHouse: {services}",
+      "aliases": ["servicios", "que ofrecen", "qué ofrecen", "que hacen", "qué hacen", "a que se dedican", "a qué se dedican"]
+    },
+    {
+      "id": "contacto",
+      "title": "Contacto",
+      "intent": "contacto",
+      "text": "{contact_block}",
+      "aliases": ["contacto", "correo", "email", "mail", "telefono", "teléfono", "whatsapp", "donde estan", "dónde están", "donde quedan", "ubicacion", "ubicación", "direccion", "dirección", "horario", "local", "sucursal"]
+    }
+  ],
+  "faqs": [
+    {
+      "id": "ubicacion_horario",
+      "question": "¿Dónde están ubicados?",
+      "answer": "El punto de referencia publicado para retiro en tienda es Av. Tecnología 123, Santiago, Región Metropolitana. Esa dirección es un ejemplo del sitio, no una sucursal verificada. El horario se confirma al coordinar el pedido. Escríbenos en {contacto}.",
+      "intent": "ubicacion_horario",
+      "show_on_about": true,
+      "aliases": ["donde estan", "dónde están", "ubicados", "dirección de la tienda", "horario de atencion", "horario de atención"]
+    },
+    {
+      "id": "despacho",
+      "question": "¿Realizan despachos o envíos a domicilio?",
+      "answer": "No. HardWareHouse no ofrece despacho, delivery ni envíos a domicilio. La entrega es solo mediante retiro en tienda una vez confirmado el pago. Los datos de región y comuna en el checkout son para el pedido, no implican envío. Más información en {sobre}.",
+      "intent": "despacho",
+      "show_on_about": true,
+      "aliases": ["despacho", "delivery", "deliveries", "envio", "envío", "envios", "envíos", "domicilio", "shipping", "courier", "mandan a casa", "envian", "envían"]
+    },
+    {
+      "id": "retiro",
+      "question": "¿Cómo funciona el retiro en tienda?",
+      "answer": "Solo entregamos con retiro en tienda tras confirmar el pago con PayPal. No hay despacho a domicilio. Coordinamos día y hora al confirmar tu compra.",
+      "intent": "retiro",
+      "show_on_about": true,
+      "aliases": ["retiro en tienda", "retirar", "pasar a buscar", "pickup", "recoger"]
+    },
+    {
+      "id": "compra",
+      "question": "¿Cómo compro en la web?",
+      "answer": "Explora {tienda}, agrega al carrito e inicia sesión. En el checkout completas tus datos y pagas con PayPal. Cuando el pago queda confirmado, coordinamos el retiro en tienda.",
+      "intent": "compra",
+      "show_on_about": true,
+      "aliases": ["como compro", "cómo compro", "como comprar", "cómo comprar", "finalizar compra", "proceso de compra"]
+    },
+    {
+      "id": "armado",
+      "question": "¿Qué es el armado de PC en HardWareHouse?",
+      "answer": "En {armado} eliges componentes paso a paso y revisas compatibilidad (socket, RAM, gabinete, fuente, etc.) antes de agregar al carrito o exportar un presupuesto.",
+      "intent": "armado",
+      "show_on_about": true,
+      "aliases": ["que es el armado", "qué es el armado", "armador de pc", "herramienta de armado"]
+    },
+    {
+      "id": "stock",
+      "question": "¿El stock de la web es en tiempo real?",
+      "answer": "Mostramos el stock del catálogo en cada ficha. Si un producto se agota durante la compra, te avisamos al confirmar el pedido. Ante dudas, escríbenos antes de pagar.",
+      "intent": "stock",
+      "show_on_about": true,
+      "aliases": ["stock en tiempo real", "stock de la web", "se agota"]
+    },
+    {
+      "id": "pago",
+      "question": "¿Qué métodos de pago aceptan?",
+      "answer": "Las compras en línea se procesan con PayPal. El pago debe quedar confirmado antes de preparar tu pedido para retiro en tienda.",
+      "intent": "pago",
+      "show_on_about": true,
+      "aliases": ["paypal", "metodo de pago", "método de pago", "metodos de pago", "cómo pago", "como pago"]
+    },
+    {
+      "id": "contacto",
+      "question": "¿Puedo recibir ayuda para elegir componentes?",
+      "answer": "Sí. Usa el armador de PC y el formulario de {contacto}. Te orientamos con criterio técnico, sin presión de venta.",
+      "intent": "contacto",
+      "show_on_about": true,
+      "aliases": ["ayuda para elegir", "asesoria", "asesoría", "orientacion", "orientación"]
+    },
+    {
+      "id": "empresa",
+      "question": "¿Quiénes son?",
+      "answer": "HardWareHouse es una pyme con cinco años en el mercado chileno, especializada en componentes de PC y armado de computadores a medida. Conoce más en {sobre}.",
+      "intent": "empresa",
+      "show_on_about": false,
+      "aliases": ["quienes son ustedes", "quiénes son ustedes"]
+    },
+    {
+      "id": "garantia",
+      "question": "Garantías y devoluciones",
+      "answer": "Para garantías o cambios, contáctanos con tu número de pedido y el detalle del producto. Revisa {sobre} o {contacto}.",
+      "intent": "garantia",
+      "show_on_about": false,
+      "aliases": ["garantia", "garantía", "devolucion", "devolución", "cambio de producto"]
+    }
+  ]
+}

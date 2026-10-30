@@ -1,7 +1,15 @@
 function iniciarArmado() {
     // --- 1. OBTENER DATOS Y ELEMENTOS DEL DOM ---
     const allComponentsData = JSON.parse(document.getElementById('componentes-data').textContent);
+    const imagenesCategoria = JSON.parse(document.getElementById('imagenes-categoria').textContent);
     const urls = document.getElementById('builder-urls').dataset;
+
+    function imagenComponente(component, clave) {
+        if (component && component.imagen) {
+            return component.imagen;
+        }
+        return imagenesCategoria[clave] || '';
+    }
     const builderContainer = document.getElementById('pc-builder');
     const summaryList = document.getElementById('summary-list');
     const totalPriceEl = document.getElementById('total-price');
@@ -90,7 +98,7 @@ function iniciarArmado() {
                     <div class="component-card">
                         <div class="info">
                             <h5 class="font-weight-bold ${visual.status}">${visual.icon}${label}</h5>
-                            <img src="${urls.placeholderImg}" alt="Almacenamiento">
+                            <img src="${hay ? (discos[0].imagen || imagenesCategoria.almacenamiento) : imagenesCategoria.almacenamiento}" alt="Almacenamiento">
                             ${lineas}
                             ${detalle}
                         </div>
@@ -135,7 +143,7 @@ function iniciarArmado() {
                     <div class="component-card">
                         <div class="info">
                             <h5 class="font-weight-bold ${visual.status}">${visual.icon}${label}</h5>
-                            <img src="${urls.placeholderImg}" alt="Memoria RAM">
+                            <img src="${hay ? (memorias[0].imagen || imagenesCategoria.memoria_ram) : imagenesCategoria.memoria_ram}" alt="Memoria RAM">
                             ${lineas}
                             ${conteo}
                             ${detalle}
@@ -184,7 +192,7 @@ function iniciarArmado() {
         }
         const price = component ? `$${parseInt(component.precio).toLocaleString('es-CL')}` : '-';
         const name = component ? component.nombre : `No seleccionado`;
-        const image = component && component.imagen ? component.imagen : urls.placeholderImg;
+        const image = imagenComponente(component, key);
 
         let compatibilityStatus = '';
         let compatibilityIcon = '';
@@ -338,7 +346,7 @@ function iniciarArmado() {
                     String(componente.id) === String(candidato.id) && componente.model_name === candidato.model_name
                 )) || candidato;
                 const price = parseInt(local.precio).toLocaleString('es-CL');
-                const image = local.imagen ? local.imagen : urls.placeholderImg;
+                const image = local.imagen || imagenesCategoria[categoriaModal] || '';
                 const detalle = detalleRecomendacion(candidato);
                 const etiquetaStock = candidato.seleccionable ? '' : '<span class="badge badge-secondary ml-2">Sin stock</span>';
                 const clase = candidato.seleccionable ? 'list-group-item list-group-item-action' : 'list-group-item disabled';
@@ -640,6 +648,9 @@ function iniciarArmado() {
                 pendiente: false,
             };
             initializeBuilder();
+            document.dispatchEvent(
+                new CustomEvent('hw-builder-state', { detail: { componentes: [] } })
+            );
             return;
         }
 
@@ -665,6 +676,9 @@ function iniciarArmado() {
             } else {
                 evaluacionActual = Object.assign({}, data, { fallo: false, pendiente: false });
             }
+            document.dispatchEvent(
+                new CustomEvent('hw-builder-state', { detail: { componentes: seleccionActual() } })
+            );
         } catch (error) {
             console.error('Error al evaluar el armado:', error);
             if (serial !== consultaSerial) {
@@ -875,10 +889,204 @@ function iniciarArmado() {
         URL.revokeObjectURL(url);
     }
 
+    function revalidarUrl() {
+        const root = document.getElementById('hw-chat-root');
+        return root ? root.getAttribute('data-revalidar-url') : '';
+    }
+
+    function getCookie(name) {
+        const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    async function revalidarPropuesta(propuesta) {
+        const url = revalidarUrl();
+        if (!url || !propuesta) {
+            return null;
+        }
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ proposal: propuesta }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.status !== 'success') {
+                return null;
+            }
+            return data;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function buscarProductoEnCatalogo(tipo, id) {
+        if (tipo === 'memoria_ram') {
+            return (allComponentsData.memoria_ram || []).find(c => String(c.id) === String(id));
+        }
+        if (tipo === 'almacenamiento_ssd' || tipo === 'almacenamiento_hdd') {
+            return (allComponentsData.almacenamiento || []).find(c => (
+                String(c.id) === String(id) && c.model_name === tipo
+            ));
+        }
+        const uiKey = tipo === 'refrigeracion' ? 'refrigeracion_cooler' : tipo;
+        const lista = allComponentsData[uiKey] || [];
+        return lista.find(c => String(c.id) === String(id));
+    }
+
+    function aplicarSeleccionDesdeApi(componentes) {
+        if (!Array.isArray(componentes) || componentes.length === 0) {
+            return false;
+        }
+        currentBuild = {};
+        discos = [];
+        memorias = [];
+        let aplicados = 0;
+        componentes.forEach(item => {
+            const tipo = item.tipo;
+            const cantidad = item.cantidad ? Number(item.cantidad) : 1;
+            const producto = buscarProductoEnCatalogo(tipo, item.id);
+            if (!producto) {
+                return;
+            }
+            aplicados += 1;
+            if (tipo === 'memoria_ram') {
+                memorias.push(Object.assign({}, producto, { cantidad }));
+            } else if (tipo === 'almacenamiento_ssd' || tipo === 'almacenamiento_hdd') {
+                discos.push(Object.assign({}, producto, { cantidad }));
+            } else {
+                const uiKey = tipo === 'refrigeracion' ? 'refrigeracion_cooler' : tipo;
+                currentBuild[uiKey] = producto;
+            }
+        });
+        if (aplicados === 0) {
+            return false;
+        }
+        consultarEvaluacion();
+        return true;
+    }
+
+    function builderTienePiezas() {
+        return seleccionActual().length > 0;
+    }
+
+    function limpiarPropuestaAplicada() {
+        if (window.HWChatSession) {
+            window.HWChatSession.setProposalPending(null, rootUserKey());
+        }
+        if (window.history && window.history.replaceState) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('aplicar');
+            window.history.replaceState({}, '', url.pathname + url.search);
+        }
+    }
+
+    function mostrarBannerPropuestaPendiente(propuesta, opciones) {
+        opciones = opciones || {};
+        if (!propuesta || !Array.isArray(propuesta.componentes)) {
+            return;
+        }
+        const contenedor = document.getElementById('armado-pending-banner');
+        if (!contenedor) {
+            return;
+        }
+        contenedor.innerHTML = `
+            <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <span>${opciones.reemplazar ? 'Ya tienes piezas en el armador. ¿Reemplazo el armado con la propuesta del chat?' : 'Tienes una propuesta de armado desde el asistente. ¿Quieres cargarla aquí?'}</span>
+                <div>
+                    <button type="button" class="btn btn-sm btn-primary" id="armado-apply-pending-btn">${opciones.reemplazar ? 'Reemplazar armado' : 'Cargar propuesta'}</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="armado-dismiss-pending-btn">Descartar</button>
+                </div>
+            </div>`;
+        contenedor.querySelector('#armado-apply-pending-btn').addEventListener('click', async function () {
+            const validada = await revalidarPropuesta(propuesta);
+            if (!validada || !validada.componentes) {
+                showToast('La propuesta expiró o ya no tiene stock y compatibilidad válidos.', 'error');
+                return;
+            }
+            if (aplicarSeleccionDesdeApi(validada.componentes)) {
+                limpiarPropuestaAplicada();
+                contenedor.innerHTML = '';
+                showToast('Propuesta cargada en el armador.');
+            } else {
+                showToast('No se pudieron mapear las piezas al catálogo actual.', 'error');
+            }
+        });
+        contenedor.querySelector('#armado-dismiss-pending-btn').addEventListener('click', function () {
+            if (window.HWChatSession) {
+                window.HWChatSession.setProposalPending(null, rootUserKey());
+            }
+            contenedor.innerHTML = '';
+        });
+    }
+
+    function rootUserKey() {
+        const root = document.getElementById('hw-chat-root');
+        return root ? root.getAttribute('data-user-key') || 'anon' : 'anon';
+    }
+
+    function leerPropuestaPendienteLocal() {
+        if (window.HWChatSession) {
+            return window.HWChatSession.getProposalPending(rootUserKey());
+        }
+        return null;
+    }
+
+    window.HW_BUILDER_SYNC = {
+        getComponentes: seleccionActual,
+        applyComponentes: aplicarSeleccionDesdeApi,
+        refresh: consultarEvaluacion,
+    };
+
+    document.addEventListener('hw-armado-apply', function (event) {
+        const detalle = event.detail || {};
+        if (detalle.componentes && aplicarSeleccionDesdeApi(detalle.componentes)) {
+            showToast('Armado actualizado desde el chat.');
+        }
+    });
+
+    document.addEventListener('hw-armado-pending', function (event) {
+        const propuesta = event.detail;
+        if (propuesta) {
+            if (window.HWChatSession) {
+                window.HWChatSession.setProposalPending(propuesta, rootUserKey());
+            }
+            mostrarBannerPropuestaPendiente(propuesta);
+        }
+    });
+
     // --- 6. INICIAR TODO ---
     addToCartBtn.addEventListener('click', addAllToCart);
     downloadExcelBtn.addEventListener('click', downloadAsExcel);
     initializeBuilder();
+    const pendiente = leerPropuestaPendienteLocal();
+    const aplicarAlEntrar = new URLSearchParams(window.location.search).get('aplicar') === '1';
+    if (pendiente) {
+        revalidarPropuesta(pendiente).then(function (validada) {
+            if (!validada || !validada.componentes) {
+                showToast('La propuesta expiró o ya no es válida con el catálogo actual.', 'error');
+                if (window.HWChatSession) {
+                    window.HWChatSession.setProposalPending(null, rootUserKey());
+                }
+                return;
+            }
+            const propuesta = validada.proposal_pending || { componentes: validada.componentes };
+            if (aplicarAlEntrar && !builderTienePiezas()) {
+                if (aplicarSeleccionDesdeApi(validada.componentes)) {
+                    limpiarPropuestaAplicada();
+                    showToast('Armado aplicado. Puedes agregarlo al carrito o exportar el Excel.');
+                }
+                return;
+            }
+            mostrarBannerPropuestaPendiente(propuesta, {
+                reemplazar: aplicarAlEntrar && builderTienePiezas(),
+            });
+        });
+    }
 }
 
 if (document.readyState === 'loading') {

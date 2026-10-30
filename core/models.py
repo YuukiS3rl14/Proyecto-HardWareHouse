@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -9,6 +11,10 @@ from django.utils import timezone
 class Region(models.Model):
     numero = models.IntegerField(unique=True)
     nombre = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = 'Región'
+        verbose_name_plural = 'Regiones'
     
     def __str__(self):
         return f"{self.numero} - {self.nombre}"
@@ -453,11 +459,29 @@ class ItemCarrito(models.Model):
 
     def get_total(self):
         return self.precio_unitario * self.cantidad
+
+    class Meta:
+        verbose_name = 'Ítem del carrito'
+        verbose_name_plural = 'Ítems del carrito'
         
     def __str__(self):
         producto = self.get_related_product()
         nombre_producto = producto.nombre if producto else "Producto Desconocido"
         return f"{self.cantidad} x {nombre_producto} en carrito de {self.carrito.usuario.username}"
+
+
+_MODELOS_DE_PRODUCTO = {
+    'procesador': Procesador,
+    'tarjeta_grafica': TarjetaGrafica,
+    'memoria_ram': MemoriaRam,
+    'placa_madre': PlacaMadre,
+    'almacenamiento_ssd': AlmacenamientoSSD,
+    'almacenamiento_hdd': AlmacenamientoHDD,
+    'gabinete': Gabinete,
+    'fuente_de_poder': FuenteDePoder,
+    'refrigeracion': RefrigeracionCooler,
+    'ventilador': Ventilador,
+}
 
 
 # --- 5. PEDIDOS Y BOLETAS (Post-Pago) ---
@@ -479,6 +503,26 @@ class Pedido(models.Model):
     
     estado = models.CharField(max_length=20, choices=ESTADOS, default='PENDIENTE')
     paypal_transaccion_id = models.CharField(max_length=100, blank=True, null=True, verbose_name="ID Transacción PayPal")
+    paypal_invoice = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False,
+        verbose_name='Invoice PayPal',
+    )
+    paypal_invoice_legado = models.CharField(
+        max_length=32,
+        unique=True,
+        null=True,
+        blank=True,
+        editable=False,
+        verbose_name='Invoice PayPal legado',
+        help_text='Invoice numérico ya enviado a PayPal antes del UUID. Los pedidos nuevos lo dejan vacío.',
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['estado', 'fecha_pedido'], name='pedido_estado_fecha_idx'),
+        ]
     
     def __str__(self):
         return f"Pedido #{self.id} de {self.usuario.username} - {self.estado}"
@@ -490,9 +534,22 @@ class ItemPedido(models.Model):
     producto_tipo = models.CharField(max_length=50, verbose_name="Tipo") 
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2) 
     cantidad = models.PositiveIntegerField()
+    producto_modelo = models.CharField(max_length=50, blank=True, default='', verbose_name="Modelo del producto")
+    producto_pk = models.PositiveIntegerField(null=True, blank=True, verbose_name="ID del producto")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['producto_modelo', 'producto_pk'], name='itempedido_producto_idx'),
+        ]
     
     def get_subtotal(self):
         return self.precio_unitario * self.cantidad
+
+    def get_related_product(self):
+        modelo = _MODELOS_DE_PRODUCTO.get(self.producto_modelo)
+        if modelo is None or not self.producto_pk:
+            return None
+        return modelo.objects.filter(pk=self.producto_pk).first()
         
     def __str__(self):
         return f"{self.cantidad} x {self.producto_nombre} en Pedido #{self.pedido.id}"
@@ -506,6 +563,13 @@ class PagoBoleta(models.Model):
     
     nombre_comprador = models.CharField(max_length=200)
     email_comprador = models.EmailField()
+
+    class Meta:
+        verbose_name = 'Boleta de pago'
+        verbose_name_plural = 'Boletas de pago'
+        indexes = [
+            models.Index(fields=['fecha_pago'], name='boleta_fecha_pago_idx'),
+        ]
     
     def __str__(self):
         return f"Boleta/Pago Transacción {self.transaccion_id}"

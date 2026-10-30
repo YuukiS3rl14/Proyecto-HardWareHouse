@@ -1,0 +1,77 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block tittle %} Sobre nosotros {% endblock %}
+
+{% block principal %}
+<div class="container-fluid pt-5 pb-5">
+    <div class="row px-xl-5">
+        <div class="col-12 text-center mb-5">
+            <h1 class="section-title text-success font-weight-bold">Sobre HardWareHouse</h1>
+            <p class="text-muted col-lg-8 mx-auto mb-0">
+                Conoce quiénes somos, hacia dónde vamos y cómo te acompañamos en la compra de tu próximo equipo.
+            </p>
+        </div>
+
+        <div class="col-lg-10 mx-auto mb-5">
+            <div class="border rounded p-4 bg-light">
+                <h2 class="h4 text-success font-weight-semi-bold mb-3">Quiénes somos</h2>
+                <p class="mb-0">{{ empresa.summary }}</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 text-success font-weight-semi-bold"><i class="fas fa-bullseye mr-2"></i>Misión</h3>
+                    <p class="text-muted mb-0">{{ empresa.mission }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 text-success font-weight-semi-bold"><i class="fas fa-eye mr-2"></i>Visión</h3>
+                    <p class="text-muted mb-0">{{ empresa.vision }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 text-success font-weight-semi-bold"><i class="fas fa-heart mr-2"></i>Valores</h3>
+                    <ul class="text-muted pl-3 mb-0">
+                        {% for valor in empresa.values %}
+                        <li>{{ valor }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-10 mx-auto mt-2">
+            <h2 class="h4 text-success font-weight-semi-bold text-center mb-4">Preguntas frecuentes</h2>
+            <div class="accordion" id="faqSobreNosotros">
+                {% for item in faq_items %}
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="faq-{{ item.clave }}">
+                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#faq-{{ item.clave }}-body" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="faq-{{ item.clave }}-body">
+                            {{ item.titulo }}
+                        </button>
+                    </h3>
+                    <div id="faq-{{ item.clave }}-body" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="faq-{{ item.clave }}" data-bs-parent="#faqSobreNosotros">
+                        <div class="accordion-body text-muted">
+                            {{ item.respuesta }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <p class="text-center mt-5 mb-0">
+                <a href="{% url 'core:contacto' %}" class="btn btn-success px-4">¿Más preguntas? Escríbenos</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

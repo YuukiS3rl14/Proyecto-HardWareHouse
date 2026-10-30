@@ -25,16 +25,29 @@ from .compatibilidad import (
 )
 from .forms import *
 import json
+import logging
 import uuid
 
-from django.conf import settings
 from django.db import transaction 
+from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Count
+from core.catalogo.registry import CATALOGO_MODELOS, model_name_for
+from core.tienda_filtros import (
+    BANDAS_PRECIO,
+    ORDENES,
+    ORDENES_VALIDAS,
+    filtro_precio,
+    ids_validos,
+    opciones_catalogo,
+    ordenar_catalogo,
+)
+
 from .models import *
-from paypal.standard.forms import PayPalPaymentsForm
-from django.urls import reverse
+from .imagenes import url_imagen_producto, urls_imagen_armado
+from .payments import SESION_VERIFICANDO, contexto_conversion, formulario_paypal, preparar_pedido_checkout
+
+paypal_logger = logging.getLogger('paypal.ipn')
 from django.utils import timezone
-from decimal import Decimal
 
 # Create your views here.
 
@@ -53,7 +66,7 @@ def mostrarArmado(request):
             data = {'id': item.id, 'model_name': model_name}
             for field in fields:
                 data[field] = getattr(item, field)
-            data['imagen'] = item.imagen.url if item.imagen else None
+            data['imagen'] = url_imagen_producto(item)
             components.append(data)
         return components
 
@@ -75,7 +88,10 @@ def mostrarArmado(request):
         for componente in componentes[categoria]:
             componente['precio'] = str(componente['precio'])
 
-    context = {'componentes': componentes}
+    context = {
+        'componentes': componentes,
+        'imagenes_categoria': urls_imagen_armado(),
+    }
     return render(request, 'core/armado.html', context)
 
 @login_required
@@ -109,78 +125,115 @@ def mostrarCheckout(request):
             return redirect('core:carrito')
 
 
-    total_clp = carrito.get_total_precio()
-    # Convertimos el total a USD para PayPal, redondeando a 2 decimales
-    total_usd = (total_clp / Decimal(settings.CLP_TO_USD_RATE)).quantize(Decimal('0.01'))
-
-    # Creamos un pedido PENDIENTE
-    # Usamos transaction.atomic para asegurar que la creación del pedido y sus items sea una operación única
-    with transaction.atomic():
-        # Siempre creamos un nuevo pedido para cada checkout.
-        # Esto evita reutilizar pedidos antiguos y asegura un invoice único.
-        pedido = Pedido.objects.create(
-            usuario=request.user,
-            estado='PENDIENTE',
-            total_monto=total_clp,
-            direccion_envio="Por definir" # O la dirección que tengas del usuario
-        )
-
-        for item_carrito in items_carrito:
-            producto = item_carrito.get_related_product()
-            ItemPedido.objects.create(
-                pedido=pedido,
-                producto_nombre=producto.nombre,
-                producto_tipo=producto.categoria,
-                precio_unitario=item_carrito.precio_unitario,
-                cantidad=item_carrito.cantidad
-            )
-
-
-
-
-    # Diccionario para el botón de PayPal
-    paypal_dict = {
-        "business": settings.PAYPAL_RECEIVER_EMAIL,
-        "amount": f"{total_usd:.2f}",
-        "item_name": f"Pedido #{pedido.id} - HardWareHouse",
-        "invoice": str(pedido.id), 
-        "currency_code": "USD",
-        "notify_url": settings.SITE_URL + reverse('paypal-ipn'), 
-        "return_url": settings.SITE_URL + reverse('core:payment_success'),
-        "cancel_return": settings.SITE_URL + reverse('core:payment_failed'),
-    }
-
-    form_paypal = PayPalPaymentsForm(initial=paypal_dict)
+    pedidos_antes = set(
+        Pedido.objects.filter(usuario=request.user, estado='PENDIENTE').values_list('id', flat=True)
+    )
+    pedido = preparar_pedido_checkout(request.user, items_carrito)
+    form_paypal, _total_usd = formulario_paypal(pedido)
 
     context = {
         'pedido': pedido,
+        'pedido_reutilizado': pedido.id in pedidos_antes,
         'items_pedido': pedido.items_pedido.all(),
-        'total_clp': total_clp,
-        'total_usd': total_usd,
-        'clp_to_usd_rate': settings.CLP_TO_USD_RATE,
         'form_paypal': form_paypal,
+        'estado_pago': 'esperando',
+        **contexto_conversion(pedido),
     }
     return render(request, 'core/checkout.html', context)
 
+def _pedido_del_retorno(request):
+    bruto = (request.GET.get('pedido') or '').strip()
+    if not bruto.isdigit():
+        return None
+    return Pedido.objects.filter(pk=int(bruto), usuario=request.user).first()
+
+
+def _olvidar_verificacion(request, pedido):
+    if pedido is not None and request.session.get(SESION_VERIFICANDO) == pedido.id:
+        request.session.pop(SESION_VERIFICANDO, None)
+
+
 @login_required
 def paymentSuccess(request):
-    # Aquí es donde PayPal redirige al usuario después de un pago exitoso.
-    # La lógica de actualización del pedido se maneja mejor con la señal de IPN de django-paypal.
-    # Por ahora, solo vaciamos el carrito y mostramos un mensaje.
-    carrito = Carrito.objects.filter(usuario=request.user).first()
-    if carrito:
-        carrito.items.all().delete()
-    
-    messages.success(request, "¡Tu pago ha sido procesado con éxito! Tu pedido está siendo preparado.")
-    return render(request, 'core/payment_success.html')
+    pedido = _pedido_del_retorno(request)
+    if pedido is not None and pedido.estado == 'PAGADO':
+        _olvidar_verificacion(request, pedido)
+        paypal_logger.info(
+            'Regreso del navegador a payment_success. Pedido #%s del usuario %s ya estaba pagado.',
+            pedido.id,
+            request.user.pk,
+        )
+        messages.info(request, "PayPal ya confirmó este pedido. El regreso del navegador no vuelve a marcarlo.")
+        return render(request, 'core/payment_success.html', {
+            'pedido': pedido,
+            'estado_pago': 'pagado',
+            **contexto_conversion(pedido),
+        })
+
+    if pedido is not None and pedido.estado == 'CANCELADO':
+        _olvidar_verificacion(request, pedido)
+        paypal_logger.info(
+            'Regreso del navegador a payment_success. Pedido #%s del usuario %s está cancelado.',
+            pedido.id,
+            request.user.pk,
+        )
+        return render(request, 'core/payment_success.html', {
+            'pedido': pedido,
+            'estado_pago': 'cancelado',
+        })
+
+    if pedido is not None and pedido.estado == 'PENDIENTE' and not (pedido.paypal_transaccion_id or '').strip():
+        request.session[SESION_VERIFICANDO] = pedido.id
+    paypal_logger.info(
+        'Regreso del navegador a payment_success. Pedido %s del usuario %s sigue sin confirmarse por IPN.',
+        pedido.id if pedido is not None else 'desconocido',
+        request.user.pk,
+    )
+    messages.info(request, "PayPal registró tu regreso. El pedido sigue pendiente hasta que se confirme el pago.")
+    context = {
+        'pedido': pedido,
+        'estado_pago': 'verificando',
+    }
+    if pedido is not None:
+        context.update(contexto_conversion(pedido))
+    return render(request, 'core/payment_success.html', context)
 
 @login_required
 def paymentFailed(request):
-    messages.error(request, "El pago falló o fue cancelado. Puedes intentarlo de nuevo desde 'Mis Pedidos'.")
-    return render(request, 'core/payment_failed.html')
+    pedido = _pedido_del_retorno(request)
+    _olvidar_verificacion(request, pedido)
+    paypal_logger.info(
+        'Regreso del navegador a payment_failed. Pedido %s del usuario %s no se marca como pagado.',
+        pedido.id if pedido is not None else 'desconocido',
+        request.user.pk,
+    )
+    messages.warning(request, "El pago fue cancelado en PayPal. El pedido sigue pendiente y puedes reintentarlo.")
+    reintento = pedido is not None and pedido.estado == 'PENDIENTE' and not (pedido.paypal_transaccion_id or '').strip()
+    context = {
+        'pedido': pedido,
+        'estado_pago': 'cancelado',
+        'reintento_disponible': reintento,
+    }
+    if reintento:
+        context.update(contexto_conversion(pedido))
+    return render(request, 'core/payment_failed.html', context)
 
 def mostrarContacto(request):
     return render(request, 'core/contacto.html')
+
+
+def mostrarSobreNosotros(request):
+    from core.faq_tienda import faq_items_acordeon
+    from core.knowledge.service import perfil_publico
+
+    return render(
+        request,
+        'core/about_us.html',
+        {
+            'faq_items': faq_items_acordeon(),
+            'empresa': perfil_publico(),
+        },
+    )
 
 PRODUCT_MODEL_MAP = {
     'procesador': Procesador,
@@ -230,63 +283,57 @@ def mostrarDetalle(request, model_name, pk):
     }
     return render(request, 'core/detalle.html', context)
 
+TIENDA_PAGE_SIZE = 50
+
+TIENDA_MODELOS = [modelo for modelo, _ in CATALOGO_MODELOS]
+
+
+def _model_name_tienda(modelo):
+    return model_name_for(modelo)
+
+
 def mostrarTienda(request):
     query = request.GET.get('q')
-    selected_categorias = request.GET.getlist('categoria')
-    selected_proveedores = request.GET.getlist('proveedor')
-    selected_precio = request.GET.get('precio')
+    selected_categorias = [categoria for categoria in request.GET.getlist('categoria') if categoria]
+    selected_proveedores = ids_validos(request.GET.getlist('proveedor'))
+    selected_precio = request.GET.get('precio') or ''
+    selected_orden = request.GET.get('orden') or 'relevancia'
+    if selected_orden not in ORDENES_VALIDAS:
+        selected_orden = 'relevancia'
+    if filtro_precio(selected_precio) is None:
+        selected_precio = ''
 
-    productos_con_modelo = [] # Cambiamos el nombre para mayor claridad
-    modelos = [
-        Procesador, TarjetaGrafica, MemoriaRam, PlacaMadre, 
-        AlmacenamientoSSD, AlmacenamientoHDD, Gabinete, FuenteDePoder, 
-        RefrigeracionCooler, Ventilador
-    ]
+    productos_con_modelo = []
 
-    # --- 2. Lógica de Filtrado ---
-    no_filters_applied = not query and not selected_categorias and not selected_proveedores and not selected_precio
-    if no_filters_applied:
-        for modelo in modelos:
-            model_name = modelo._meta.model_name.replace('tarjetagrafica', 'tarjeta_grafica').replace('memoriaram', 'memoria_ram').replace('placamadre', 'placa_madre').replace('almacenamientossd', 'almacenamiento_ssd').replace('almacenamientohdd', 'almacenamiento_hdd').replace('fuentedepoder', 'fuente_de_poder').replace('refrigeracioncooler', 'refrigeracion')
-            if modelo == RefrigeracionCooler: 
-                model_name = 'refrigeracion'
-            productos_recientes = modelo.objects.order_by('-id')[:5]
-            for producto in productos_recientes:
-                productos_con_modelo.append((producto, model_name))
-    else:
-        for modelo in modelos:
-            # a. Filtro por Categoría
-            categoria_modelo = modelo._meta.get_field('categoria').default
-            if selected_categorias and categoria_modelo not in selected_categorias:
-                continue
+    for modelo in TIENDA_MODELOS:
+        categoria_modelo = modelo._meta.get_field('categoria').default
+        if selected_categorias and categoria_modelo not in selected_categorias:
+            continue
 
-            # b. Construcción de la consulta
-            model_name = modelo._meta.model_name.replace('tarjetagrafica', 'tarjeta_grafica').replace('memoriaram', 'memoria_ram').replace('placamadre', 'placa_madre').replace('almacenamientossd', 'almacenamiento_ssd').replace('almacenamientohdd', 'almacenamiento_hdd').replace('fuentedepoder', 'fuente_de_poder').replace('refrigeracioncooler', 'refrigeracion')
-            if modelo == RefrigeracionCooler: 
-                model_name = 'refrigeracion'
-            qs = modelo.objects.all()
-            
-            if query:
-                search_query = (
-                    Q(nombre__icontains=query) | 
-                    Q(proveedor__nombre__icontains=query) |
-                    Q(categoria__icontains=query)
-                )
-                qs = qs.filter(search_query)
+        model_name = _model_name_tienda(modelo)
+        qs = modelo.objects.select_related('proveedor').all()
 
-            # Filtro por Proveedor
-            if selected_proveedores:
-                qs = qs.filter(proveedor__id__in=selected_proveedores)
+        if query:
+            qs = qs.filter(
+                Q(nombre__icontains=query)
+                | Q(proveedor__nombre__icontains=query)
+                | Q(categoria__icontains=query)
+            )
 
-            # Filtro por Precio
-            if selected_precio:
-                if selected_precio == 'p1': qs = qs.filter(precio__lte=100000)
-                elif selected_precio == 'p2': qs = qs.filter(precio__gt=100000, precio__lte=300000)
-                elif selected_precio == 'p3': qs = qs.filter(precio__gt=300000, precio__lte=600000)
-                elif selected_precio == 'p4': qs = qs.filter(precio__gt=600000)
+        if selected_proveedores:
+            qs = qs.filter(proveedor__id__in=selected_proveedores)
 
-            for producto in qs:
-                productos_con_modelo.append((producto, model_name))
+        banda = filtro_precio(selected_precio)
+        if banda is not None:
+            qs = qs.filter(banda)
+
+        for producto in qs:
+            productos_con_modelo.append((producto, model_name))
+
+    ordenar_catalogo(productos_con_modelo, selected_orden, query)
+
+    paginator = Paginator(productos_con_modelo, TIENDA_PAGE_SIZE)
+    productos_page = paginator.get_page(request.GET.get('page'))
 
     # --- 3. Obtener IDs de productos favoritos del usuario ---
     favoritos_ids = {}
@@ -298,22 +345,43 @@ def mostrarTienda(request):
                 model_name_template = prod._meta.model_name.replace('_', '')
                 favoritos_ids[f"{model_name_template}-{prod.id}"] = True
 
-    # --- 3. Preparar contexto para la plantilla ---
-    # Obtenemos todas las categorías y proveedores para mostrarlos en los filtros
-    categorias_disponibles = sorted(list(set(m._meta.get_field('categoria').default for m in modelos)))
-    proveedores_disponibles = Proveedor.objects.all().order_by('nombre')
-        
+    categorias_disponibles, proveedores_disponibles = opciones_catalogo(TIENDA_MODELOS)
+
+    pagination_params = request.GET.copy()
+    pagination_params.pop('page', None)
+    if selected_orden == 'relevancia':
+        pagination_params.pop('orden', None)
+    if not selected_precio:
+        pagination_params.pop('precio', None)
+    pagination_query = pagination_params.urlencode()
+
     context = {
-        'productos': productos_con_modelo,
+        'productos': productos_page.object_list,
+        'productos_page': productos_page,
+        'pagination_query': pagination_query,
+        'total_productos': paginator.count,
         'favoritos_ids': favoritos_ids,
         'query': query,
         'categorias': categorias_disponibles,
         'proveedores': proveedores_disponibles,
+        'bandas_precio': BANDAS_PRECIO,
+        'ordenes': ORDENES,
         'selected_categorias': selected_categorias,
-        'selected_proveedores': [int(p) for p in selected_proveedores], # Convertir a int para la plantilla
+        'selected_proveedores': selected_proveedores,
         'selected_precio': selected_precio,
+        'selected_orden': selected_orden,
     }
     return render(request, 'core/tienda.html', context)
+
+
+def descargar_productos_csv(request):
+    """Catálogo de componentes en CSV (p. ej. base de conocimiento de un asistente)."""
+    from .productos_csv import generar_csv_bytes
+
+    response = HttpResponse(generar_csv_bytes(), content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="productos_componentes.csv"'
+    return response
+
 
 def mostrarRegistro(request):
     data = {
@@ -447,19 +515,12 @@ def _error_armado(message, estado='error', motivos=None, status=400):
         'motivos': motivos if motivos is not None else [message],
     }, status=status)
 
-_RECOMENDACIONES = {
-    'procesador': ((Procesador, 'procesador', 'procesador'),),
-    'placa_madre': ((PlacaMadre, 'placa_madre', 'placa_madre'),),
-    'memoria_ram': ((MemoriaRam, 'memoria_ram', 'memoria_ram'),),
-    'gabinete': ((Gabinete, 'gabinete', 'gabinete'),),
-    'refrigeracion_cooler': ((RefrigeracionCooler, 'refrigeracion', 'refrigeracion'),),
-    'tarjeta_grafica': ((TarjetaGrafica, 'tarjeta_grafica', 'tarjeta_grafica'),),
-    'fuente_de_poder': ((FuenteDePoder, 'fuente_de_poder', 'fuente_de_poder'),),
-    'almacenamiento': (
-        (AlmacenamientoSSD, 'almacenamiento_ssd', 'almacenamiento_ssd'),
-        (AlmacenamientoHDD, 'almacenamiento_hdd', 'almacenamiento_hdd'),
-    ),
-}
+
+from core.armado_recomendacion import (
+    RECOMENDACIONES_POR_CATEGORIA as _RECOMENDACIONES,
+    candidatos_para_categoria,
+    serializar_candidatos_api,
+)
 
 _CLAVE_QUE_REEMPLAZA = {
     'procesador': 'procesador',
@@ -787,11 +848,10 @@ def recomendar_armado(request):
         return error
     seleccion, _sin_regla, memorias = cargado
 
-    candidatos = []
-    for modelo, categoria_regla, model_name in fuentes:
-        for producto in modelo.objects.all():
-            lineas = None
-            if conserva_ram:
+    if conserva_ram:
+        candidatos = []
+        for modelo, categoria_regla, model_name in fuentes:
+            for producto in modelo.objects.all():
                 lineas = _lineas_para_candidato(
                     memorias,
                     producto,
@@ -803,37 +863,33 @@ def recomendar_armado(request):
                         'status': 'error',
                         'message': 'La línea de RAM que quieres reemplazar no está en la selección.',
                     }, status=400)
-            evaluacion = evaluar_candidato(
-                categoria_regla,
-                producto,
-                memorias_ram=lineas if conserva_ram else (memorias or None),
-                **seleccion,
-            )
-            if categoria == 'almacenamiento' and evaluacion.estado == ESTADO_NO_EVALUADA:
-                evaluacion = EvaluacionCandidato(
-                    ESTADO_NO_EVALUADA,
-                    motivos=(MENSAJE_ALMACENAMIENTO,),
+                evaluacion = evaluar_candidato(
+                    categoria_regla,
+                    producto,
+                    memorias_ram=lineas,
+                    **seleccion,
                 )
-            candidatos.append({
-                'id': producto.id,
-                'model_name': model_name,
-                'nombre': producto.nombre,
-                'precio': producto.precio,
-                'stock': producto.stock,
-                'estado': evaluacion.estado,
-                'etiqueta': evaluacion.etiqueta,
-                'coincidencias': list(evaluacion.coincidencias),
-                'motivos': list(evaluacion.motivos),
-                'pendientes': list(evaluacion.pendientes),
-                'advertencias': list(evaluacion.advertencias),
-                'seleccionable': producto.stock > 0,
-            })
+                candidatos.append({
+                    'id': producto.id,
+                    'model_name': model_name,
+                    'nombre': producto.nombre,
+                    'precio': producto.precio,
+                    'stock': producto.stock,
+                    'estado': evaluacion.estado,
+                    'etiqueta': evaluacion.etiqueta,
+                    'coincidencias': list(evaluacion.coincidencias),
+                    'motivos': list(evaluacion.motivos),
+                    'pendientes': list(evaluacion.pendientes),
+                    'advertencias': list(evaluacion.advertencias),
+                    'seleccionable': producto.stock > 0,
+                })
+        candidatos.sort(key=_orden_recomendado)
+        for candidato in candidatos:
+            candidato['precio'] = str(candidato['precio'])
+        return JsonResponse({'status': 'success', 'candidatos': candidatos})
 
-    candidatos.sort(key=_orden_recomendado)
-    for candidato in candidatos:
-        candidato['precio'] = str(candidato['precio'])
-
-    return JsonResponse({'status': 'success', 'candidatos': candidatos})
+    candidatos = candidatos_para_categoria(categoria, seleccion, memorias or None)
+    return JsonResponse({'status': 'success', 'candidatos': serializar_candidatos_api(candidatos)})
 
 
 def _sumar_linea_ram(lineas, producto, cantidad):
@@ -1102,36 +1158,53 @@ def agregar_comentario(request, model_name, pk):
 
 # --- VISTAS DE PEDIDOS ---
 
+def _estado_visible(pedido, verificando_id):
+    if pedido.estado == 'PAGADO':
+        return 'pagado'
+    if pedido.estado == 'CANCELADO':
+        return 'cancelado'
+    if pedido.estado == 'PENDIENTE' and verificando_id == pedido.id and not (pedido.paypal_transaccion_id or '').strip():
+        return 'verificando'
+    if pedido.estado == 'PENDIENTE':
+        return 'esperando'
+    return 'otro'
+
+
+def _puede_reintentar(pedido):
+    return (
+        pedido.estado == 'PENDIENTE'
+        and not (pedido.paypal_transaccion_id or '').strip()
+        and not PagoBoleta.objects.filter(pedido_id=pedido.id).exists()
+    )
+
+
 @login_required
 def mis_pedidos(request):
     pedidos = Pedido.objects.filter(usuario=request.user).order_by('-fecha_pedido')
+    verificando_id = request.session.get(SESION_VERIFICANDO)
     context = {
-        'pedidos': pedidos
+        'pedidos': pedidos,
+        'verificando_id': verificando_id,
     }
     return render(request, 'core/mis_pedidos.html', context)
 
 @login_required
 def detalle_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
-    
+    if request.session.get(SESION_VERIFICANDO) == pedido.id and pedido.estado != 'PENDIENTE':
+        request.session.pop(SESION_VERIFICANDO, None)
+
+    reintento = _puede_reintentar(pedido)
     form_paypal = None
-    if pedido.estado == 'PENDIENTE':
-        total_usd = (pedido.total_monto / Decimal(settings.CLP_TO_USD_RATE)).quantize(Decimal('0.01'))
-        paypal_dict = {
-            "business": settings.PAYPAL_RECEIVER_EMAIL,
-            "amount": f"{total_usd:.2f}",
-            "item_name": f"Pedido #{pedido.id} - HardWareHouse",
-            "invoice": str(pedido.id),
-            "currency_code": "USD",
-            "notify_url": settings.SITE_URL + reverse('paypal-ipn'), 
-            "return_url": settings.SITE_URL + reverse('core:payment_success'),
-            "cancel_return": settings.SITE_URL + reverse('core:payment_failed'),
-        }
-        form_paypal = PayPalPaymentsForm(initial=paypal_dict)
+    if reintento:
+        form_paypal, _total_usd = formulario_paypal(pedido)
 
     context = {
         'pedido': pedido,
         'form_paypal': form_paypal,
+        'estado_pago': _estado_visible(pedido, request.session.get(SESION_VERIFICANDO)),
+        'reintento_disponible': reintento,
+        **contexto_conversion(pedido),
     }
     return render(request, 'core/detalle_pedido.html', context)
 
@@ -1154,9 +1227,12 @@ def cancelar_pedido(request, pedido_id):
 def ver_boleta(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user, estado='PAGADO')
     
+    boleta = PagoBoleta.objects.filter(pedido_id=pedido.id).first()
     context = {
         'pedido': pedido,
         'items_pedido': pedido.items_pedido.all(),
+        'fecha_pago': None if boleta is None else boleta.fecha_pago,
+        **contexto_conversion(pedido),
     }
     
     return render(request, 'core/boleta.html', context)

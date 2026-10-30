@@ -9,8 +9,8 @@
     <meta content="Hardware, PC, Componentes, Armado de PC, Tienda" name="keywords">
     <meta content="Tienda online de piezas de computador y armado personalizado de PC." name="description">
 
-    <!-- Favicon -->
-    <link href="{% static 'core/img/logo.ico' %}" rel="icon">
+    <link rel="icon" type="image/png" href="{% static 'core/img/HWH_logo.png' %}" sizes="any">
+    <link rel="apple-touch-icon" href="{% static 'core/img/HWH_logo.png' %}">
     <!-- Google Web Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -27,6 +27,7 @@
     <link href="{% static 'core/css/custom.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/theme.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/chat-widget.css' %}" rel="stylesheet">
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -84,6 +85,7 @@
                         <a href="{% url 'core:index' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">Inicio</a>
                         <a href="{% url 'core:tienda' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'tienda' %}active{% endif %}">Tienda</a>
                         <a href="{% url 'core:armado' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'armado' %}active{% endif %}">Armado de PC</a>
+                        <a href="{% url 'core:sobrenosotros' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'sobrenosotros' %}active{% endif %}">Sobre nosotros</a>
                         <a href="{% url 'core:contacto' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'contacto' %}active{% endif %}">Contacto</a>
                     </div>
                 </nav>
@@ -96,7 +98,7 @@
                         <i class="fas fa-user-circle text-success mr-1"></i> {{ user.username }}
                     </a>
                     <span class="text-muted">|</span>
-                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    <form method="post" action="{% url 'logout' %}" class="hw-chat-logout-form" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="nav-item nav-link py-0 px-2 text-dark border-0 bg-transparent"
                             style="cursor: pointer;">
@@ -124,6 +126,7 @@
                     <a href="{% url 'core:index' %}" class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}"><i class="fas fa-home fa-fw mr-2"></i>Inicio</a>
                     <a href="{% url 'core:tienda' %}" class="nav-link {% if request.resolver_match.url_name == 'tienda' %}active{% endif %}"><i class="fas fa-store fa-fw mr-2"></i>Tienda</a>
                     <a href="{% url 'core:armado' %}" class="nav-link {% if request.resolver_match.url_name == 'armado' %}active{% endif %}"><i class="fas fa-desktop fa-fw mr-2"></i>Armado de PC</a>
+                    <a href="{% url 'core:sobrenosotros' %}" class="nav-link {% if request.resolver_match.url_name == 'sobrenosotros' %}active{% endif %}"><i class="fas fa-info-circle fa-fw mr-2"></i>Sobre nosotros</a>
                     <a href="{% url 'core:contacto' %}" class="nav-link {% if request.resolver_match.url_name == 'contacto' %}active{% endif %}"><i class="fas fa-envelope fa-fw mr-2"></i>Contacto</a>
                 </nav>
 
@@ -145,7 +148,7 @@
                 </nav>
 
                 {% if user.is_authenticated %}
-                <form method="post" action="{% url 'logout' %}" class="mt-auto pt-4">
+                <form method="post" action="{% url 'logout' %}" class="mt-auto pt-4 hw-chat-logout-form">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-outline-danger w-100">
                         <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
@@ -230,6 +233,7 @@
                             class="fa fa-angle-right mr-2"></i>Tienda</a>
                     <a class="text-light mb-2" href="{% url 'core:armado' %}"><i class="fa fa-angle-right mr-2"></i>Armado de
                         PC</a>
+                    <a class="text-light mb-2" href="{% url 'core:sobrenosotros' %}"><i class="fa fa-angle-right mr-2"></i>Sobre nosotros</a>
                     <a class="text-light" href="{% url 'core:contacto' %}"><i class="fa fa-angle-right mr-2"></i>Contacto</a>
                 </div>
             </div>
@@ -252,6 +256,8 @@
     <a href="#" class="btn btn-success back-to-top" id="back"><i class="fa fa-angle-double-up"></i></a>
     {% endblock %}
 
+    {% include 'core/includes/chat_widget.html' %}
+
     <!-- JS LIBRARIES -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <!-- Bootstrap 5 JS Bundle -->
@@ -260,6 +266,8 @@
     <script src="{% static 'core/lib/owlcarousel/owl.carousel.min.js' %}"></script>
     <script src="{% static 'core/js/main.js' %}"></script>
     <script src="{% static 'core/js/ui.js' %}"></script>
+    <script src="{% static 'core/js/chat-session.js' %}" defer></script>
+    <script src="{% static 'core/js/chat-widget.js' %}?v=aplicar1" defer></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 

@@ -1,70 +1,76 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load humanize %} 
+{% load humanize %}
+{% load producto_extras %} 
 
 {% block tittle %} Tienda {% endblock %}
+
+{% block extra_head %}
+<link href="{% static 'core/css/tienda-filtros.css' %}?v=filtros1" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
+{% endblock %}
 
 {% block principal %}
 <!-- Shop Start -->
 <div class="container-fluid pt-5">
     <div class="row px-xl-5">
-        <div class="col-lg-3 mb-lg-5">
-          <div class="offcanvas offcanvas-start filters-offcanvas" tabindex="-1" id="filtrosOffcanvas" aria-labelledby="filtrosLabel">
-            <div class="offcanvas-header border-bottom">
-                <h5 class="offcanvas-title font-weight-semi-bold" id="filtrosLabel">Filtros</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-            </div>
-            <div class="offcanvas-body">
-            <h5 class="font-weight-semi-bold mb-4 d-none d-lg-block">Filtros</h5>
-            <form action="{% url 'core:tienda' %}" method="GET">
-                <div class="filter-group">
-                    <h5 class="font-weight-semi-bold mb-3">Categoría</h5>
-                    {% for cat in categorias %}
-                        <div class="custom-control custom-checkbox mb-2">
-                            <input type="checkbox" class="custom-control-input" name="categoria" value="{{ cat }}" id="cat-{{ forloop.counter }}" {% if cat in selected_categorias %}checked{% endif %}>
-                            <label class="custom-control-label" for="cat-{{ forloop.counter }}">{{ cat }}</label>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <div class="filter-group">
-                    <h5 class="font-weight-semi-bold mb-3">Marca</h5>
-                    {% for prov in proveedores %}
-                        <div class="custom-control custom-checkbox mb-2">
-                            <input type="checkbox" class="custom-control-input" name="proveedor" value="{{ prov.id }}" id="prov-{{ prov.id }}" {% if prov.id in selected_proveedores %}checked{% endif %}>
-                            <label class="custom-control-label" for="prov-{{ prov.id }}">{{ prov.nombre }}</label>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <div class="filter-group">
-                    <h5 class="font-weight-semi-bold mb-3">Precio</h5>
-                    <div class="custom-control custom-radio mb-2">
-                        <input type="radio" class="custom-control-input" name="precio" value="p1" id="p1" {% if selected_precio == 'p1' %}checked{% endif %}>
-                        <label class="custom-control-label" for="p1">$0 - $100.000</label>
+        <div class="col-12">
+            <form action="{% url 'core:tienda' %}" method="GET" class="catalog-toolbar" id="filtros-catalogo" aria-label="Filtros del catálogo">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                <div class="catalog-filters">
+                    <div class="catalog-filter">
+                        <label class="catalog-filter-label" for="filtro-categoria">
+                            Categoría
+                            <span class="hw-filter-count" id="conteo-categoria" aria-live="polite">{{ selected_categorias|length }}</span>
+                        </label>
+                        <select id="filtro-categoria" class="js-filtro-multiple" name="categoria" multiple
+                            data-placeholder="Todas las categorías" data-count="conteo-categoria"
+                            aria-describedby="conteo-categoria">
+                            {% for cat in categorias %}
+                            <option value="{{ cat }}" {% if cat in selected_categorias %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="custom-control custom-radio mb-2">
-                        <input type="radio" class="custom-control-input" name="precio" value="p2" id="p2" {% if selected_precio == 'p2' %}checked{% endif %}>
-                        <label class="custom-control-label" for="p2">$100.000 - $300.000</label>
+                    <div class="catalog-filter">
+                        <label class="catalog-filter-label" for="filtro-marca">
+                            Marca / Proveedor
+                            <span class="hw-filter-count" id="conteo-marca" aria-live="polite">{{ selected_proveedores|length }}</span>
+                        </label>
+                        <select id="filtro-marca" class="js-filtro-multiple" name="proveedor" multiple
+                            data-placeholder="Todas las marcas" data-count="conteo-marca"
+                            aria-describedby="conteo-marca">
+                            {% for prov in proveedores %}
+                            <option value="{{ prov.id }}" {% if prov.id in selected_proveedores %}selected{% endif %}>{{ prov.nombre }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="custom-control custom-radio mb-2">
-                        <input type="radio" class="custom-control-input" name="precio" value_name="precio" value="p3" id="p3" {% if selected_precio == 'p3' %}checked{% endif %}>
-                        <label class="custom-control-label" for="p3">$300.000 - $600.000</label>
+                    <div class="catalog-filter">
+                        <label class="catalog-filter-label" for="filtro-precio">Precio (CLP)</label>
+                        <select id="filtro-precio" class="form-select" name="precio">
+                            <option value="">Cualquier precio</option>
+                            {% for banda in bandas_precio %}
+                            <option value="{{ banda.codigo }}" {% if selected_precio == banda.codigo %}selected{% endif %}>{{ banda.etiqueta }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="custom-control custom-radio mb-2">
-                        <input type="radio" class="custom-control-input" name="precio" value="p4" id="p4" {% if selected_precio == 'p4' %}checked{% endif %}>
-                        <label class="custom-control-label" for="p4">$600.000+</label>
+                    <div class="catalog-filter-actions">
+                        <button type="submit" class="btn btn-success">Aplicar</button>
+                        <a href="{% url 'core:tienda' %}" class="btn btn-outline-dark">Limpiar</a>
                     </div>
                 </div>
-
-                <button type="submit" class="btn btn-success btn-block mt-4">Aplicar Filtros</button>
-                <a href="{% url 'core:tienda' %}" class="btn btn-outline-dark btn-block mt-2">Limpiar Filtros</a>
+                <div class="catalog-sort">
+                    <label class="catalog-filter-label" for="orden-catalogo">Ordenar</label>
+                    <select id="orden-catalogo" class="form-select" name="orden">
+                        {% for codigo, etiqueta in ordenes %}
+                        <option value="{{ codigo }}" {% if selected_orden == codigo %}selected{% endif %}>{{ etiqueta }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </form>
-            </div>
-          </div>
         </div>
 
-        <div class="col-lg-9 col-md-12">
+        <div class="col-12">
             <div class="row pb-3">
                 <div class="col-12 pb-1">
                     <div class="d-flex align-items-center justify-content-between gap-2 mb-4">
@@ -72,34 +78,33 @@
                             {% if query %}
                                 <h5 class="m-0">Resultados para: "{{ query }}"</h5>
                             {% elif selected_categorias or selected_proveedores or selected_precio %}
-                                <h5 class="m-0">Resultados Filtrados</h5>
+                                <h5 class="m-0">Resultados filtrados</h5>
                             {% else %}
-                                <h5 class="m-0">Productos Recientes</h5>
+                                <h5 class="m-0">Catálogo</h5>
+                            {% endif %}
+                            {% if total_productos %}
+                                <p class="text-muted small mb-0 mt-1">
+                                    {{ total_productos }} producto{{ total_productos|pluralize:"s" }}
+                                    {% if productos_page.paginator.num_pages > 1 %}
+                                        · página {{ productos_page.number }} de {{ productos_page.paginator.num_pages }}
+                                    {% endif %}
+                                </p>
                             {% endif %}
                         </div>
-                        <button class="btn btn-outline-success btn-sm d-lg-none flex-shrink-0" type="button"
-                            data-bs-toggle="offcanvas" data-bs-target="#filtrosOffcanvas" aria-controls="filtrosOffcanvas">
-                            <i class="fas fa-filter mr-1"></i>Filtros
-                            {% if selected_categorias or selected_proveedores or selected_precio %}<span class="badge bg-success ml-1">!</span>{% endif %}
-                        </button>
                     </div>
                 </div>
                 
                 {% if productos %}
                     {% for producto, model_name in productos %}
-                    <div class="col-6 col-md-4 pb-1 mb-4">
+                    <div class="col-6 col-md-4 col-xl-3 pb-1 mb-4">
                         <div class="card product-item h-100 d-flex flex-column">
                             <div class="card-header product-img position-relative overflow-hidden bg-white border p-0">
                                 <a href="{% url 'core:detalle' model_name producto.id %}"> 
-                                    {% if producto.imagen %}
-                                        <img class="img-fluid w-100 h-100" src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="object-fit: contain;">
-                                    {% else %}
-                                        <img class="img-fluid w-100 h-100" src="{% static 'core/img/placeholder.webp' %}" alt="Producto Sin Imagen" style="object-fit: contain;">
-                                    {% endif %}
+                                    <img class="img-fluid w-100 h-100" src="{{ producto|imagen_producto }}" alt="{{ producto.nombre }}" style="object-fit: contain;">
                                 </a>
                             </div>
                             <div class="card-body text-center px-2 pt-3 pt-sm-4 pb-3 flex-grow-1 d-flex flex-column justify-content-between">
-                                <h6 class="text-truncate mb-3">{{ producto.proveedor.nombre }} {{ producto.nombre }}</h6>
+                                <h6 class="text-truncate mb-3">{{ producto|nombre_visible }}</h6>
                                 <div class="d-flex justify-content-center">
                                     <h6>${{ producto.precio|floatformat:"0"|intcomma }}</h6>
                                 </div>
@@ -136,6 +141,43 @@
                     </div>
                     {% endfor %}
 
+                    {% if productos_page.has_other_pages %}
+                    <div class="col-12 mt-2">
+                        <p class="text-center text-muted small mb-2">
+                            Mostrando {{ productos_page.start_index }}–{{ productos_page.end_index }} de {{ total_productos }} productos
+                        </p>
+                        <nav aria-label="Paginación del catálogo">
+                            <ul class="pagination justify-content-center flex-wrap mb-0">
+                                <li class="page-item {% if not productos_page.has_previous %}disabled{% endif %}">
+                                    {% if productos_page.has_previous %}
+                                    <a class="page-link" href="?page={{ productos_page.previous_page_number }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}">Anterior</a>
+                                    {% else %}
+                                    <span class="page-link">Anterior</span>
+                                    {% endif %}
+                                </li>
+                                {% for num in productos_page.paginator.page_range %}
+                                    {% if num == productos_page.number %}
+                                    <li class="page-item active" aria-current="page">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% elif num > productos_page.number|add:"-3" and num < productos_page.number|add:"3" %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                <li class="page-item {% if not productos_page.has_next %}disabled{% endif %}">
+                                    {% if productos_page.has_next %}
+                                    <a class="page-link" href="?page={{ productos_page.next_page_number }}{% if pagination_query %}&amp;{{ pagination_query }}{% endif %}">Siguiente</a>
+                                    {% else %}
+                                    <span class="page-link">Siguiente</span>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+
                 {% else %}
                     <div class="col-12 pt-5 text-center">
                         <h4 class="text-muted">No se encontraron productos</h4>
@@ -156,4 +198,9 @@
 <script src="{% static 'core/js/ajax-cart.js' %}"></script>
 <script src="{% static 'core/js/ajax-favorites.js' %}"></script>
 
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{% static 'core/js/tienda-filtros.js' %}?v=filtros2"></script>
 {% endblock %}

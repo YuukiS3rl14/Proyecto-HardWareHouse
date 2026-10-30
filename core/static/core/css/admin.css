@@ -1,0 +1,486 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+/* Panel de HardWareHouse sobre Jazzmin/AdminLTE. Mismos tonos y tipografía que la tienda. */
+
+:root {
+    --hw-green: #16a34a;
+    --hw-green-dark: #15803d;
+    --hw-green-light: #22c55e;
+    --hw-green-soft: #ecfdf3;
+    --hw-green-ring: rgba(22, 163, 74, 0.22);
+    --hw-ink: #111827;
+    --hw-text: #4b5563;
+    --hw-muted: #6b7280;
+    --hw-border: #e5e7eb;
+    --hw-surface: #ffffff;
+    --hw-surface-alt: #f9fafb;
+    --hw-danger: #dc2626;
+    --hw-radius: 0.75rem;
+    --hw-shadow: 0 4px 14px rgba(17, 24, 39, 0.08);
+    --hw-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body,
+.main-sidebar,
+.main-header,
+.content-wrapper,
+.card,
+.btn,
+.form-control,
+.custom-select,
+.select2-container--admin-autocomplete .select2-selection {
+    font-family: Poppins, "Segoe UI", sans-serif;
+}
+
+body {
+    color: var(--hw-text);
+    background: var(--hw-surface-alt);
+}
+
+.content-wrapper {
+    background:
+        radial-gradient(circle at 12% 8%, rgba(22, 163, 74, 0.06), transparent 28%),
+        var(--hw-surface-alt);
+}
+
+h1, h2, h3, h4, h5, .content-header h1 {
+    color: var(--hw-ink);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+a {
+    color: var(--hw-green-dark);
+}
+
+a:hover {
+    color: var(--hw-green);
+}
+
+/* --- Marca y navegación --- */
+
+.hw-admin-logo,
+.brand-link .hw-admin-logo {
+    width: auto;
+    height: 2rem;
+    max-height: 2rem;
+    max-width: 2.5rem;
+    object-fit: contain;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    opacity: 1 !important;
+}
+
+.jazzmin-login-page .login-logo img {
+    display: block;
+    height: 7rem;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+    object-fit: contain;
+    background: transparent;
+}
+
+.brand-link {
+    border-bottom: 1px solid var(--hw-border) !important;
+    color: var(--hw-ink) !important;
+    font-weight: 700;
+}
+
+.main-header {
+    border-bottom: 1px solid var(--hw-border);
+    box-shadow: none;
+}
+
+.main-sidebar,
+.sidebar-light-success {
+    background: var(--hw-surface) !important;
+    box-shadow: 1px 0 0 var(--hw-border);
+}
+
+.sidebar-light-success .nav-sidebar > .nav-item > .nav-link,
+.sidebar-light-success .nav-sidebar .nav-treeview > .nav-item > .nav-link {
+    color: var(--hw-text);
+    border-radius: 0.55rem;
+    margin: 0.1rem 0.55rem;
+    transition: background-color 0.18s var(--hw-ease), color 0.18s var(--hw-ease);
+}
+
+.sidebar-light-success .nav-sidebar > .nav-item > .nav-link:hover,
+.sidebar-light-success .nav-sidebar .nav-treeview > .nav-item > .nav-link:hover {
+    background: var(--hw-green-soft);
+    color: var(--hw-green-dark);
+}
+
+.sidebar-light-success .nav-sidebar > .nav-item > .nav-link.active,
+.sidebar-light-success .nav-sidebar .nav-treeview > .nav-item > .nav-link.active {
+    background: var(--hw-green) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(22, 163, 74, 0.25);
+}
+
+.nav-sidebar .nav-icon {
+    color: var(--hw-green);
+}
+
+.nav-sidebar .nav-link.active .nav-icon {
+    color: #fff !important;
+}
+
+.main-footer {
+    border-top: 1px solid var(--hw-border);
+    background: var(--hw-surface);
+    color: var(--hw-muted);
+}
+
+/* --- Login --- */
+
+body.jazzmin-login-page {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(22, 163, 74, 0.16), transparent 32%),
+        radial-gradient(circle at 85% 80%, rgba(17, 24, 39, 0.05), transparent 28%),
+        #f3f4f6;
+}
+
+.login-box {
+    width: min(26rem, calc(100% - 2rem));
+}
+
+.login-logo img {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 1rem;
+    box-shadow: var(--hw-shadow);
+}
+
+.login-logo h1::after {
+    content: "HardWareHouse";
+    display: block;
+    margin-top: 0.85rem;
+    color: var(--hw-ink);
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+.login-box .card {
+    border: 1px solid var(--hw-border);
+    border-radius: var(--hw-radius);
+    box-shadow: var(--hw-shadow);
+    overflow: hidden;
+}
+
+.login-box .card-body {
+    padding: 1.5rem 1.4rem 1.3rem;
+}
+
+.login-box-msg {
+    color: var(--hw-muted);
+    font-weight: 500;
+}
+
+.login-box .form-control {
+    border-radius: 0.6rem 0 0 0.6rem;
+    min-height: 2.75rem;
+}
+
+.login-box .input-group-text {
+    background: var(--hw-surface-alt);
+    border-color: var(--hw-border);
+    color: var(--hw-green);
+    border-radius: 0 0.6rem 0.6rem 0;
+}
+
+.login-box .btn {
+    min-height: 2.75rem;
+    border-radius: 0.65rem;
+    font-weight: 600;
+}
+
+.password-reset-link a {
+    color: var(--hw-green-dark);
+    font-size: 0.9rem;
+}
+
+/* --- Tablero, tarjetas y tablas --- */
+
+.card {
+    border: 1px solid var(--hw-border);
+    border-radius: var(--hw-radius);
+    box-shadow: var(--hw-shadow);
+}
+
+.card-header {
+    background: var(--hw-surface);
+    border-bottom: 1px solid var(--hw-border);
+    border-radius: var(--hw-radius) var(--hw-radius) 0 0 !important;
+}
+
+.card-header h5,
+.card-title {
+    color: var(--hw-ink);
+    font-weight: 600;
+}
+
+.dashboard .card-body .table td {
+    vertical-align: middle;
+    border-top-color: var(--hw-border);
+}
+
+.dashboard .btn-group .btn {
+    border-radius: 0.45rem;
+    margin-left: 0.25rem;
+}
+
+#recent-actions-module h4,
+#content-related h3 {
+    color: var(--hw-ink);
+}
+
+.breadcrumb {
+    background: transparent;
+    padding-left: 0;
+}
+
+.table {
+    color: var(--hw-text);
+}
+
+.table thead th {
+    border-bottom: 1px solid var(--hw-border);
+    color: var(--hw-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+#result_list tbody tr:hover {
+    background: var(--hw-green-soft);
+}
+
+.hw-admin-thumb {
+    width: 3rem;
+    height: 3rem;
+    object-fit: contain;
+    border: 1px solid var(--hw-border);
+    border-radius: 0.45rem;
+    background: #fff;
+}
+
+.change-list .filtered .results,
+#changelist .results {
+    overflow-x: auto;
+}
+
+#changelist-filter {
+    background: var(--hw-surface);
+    border: 1px solid var(--hw-border);
+    border-radius: var(--hw-radius);
+}
+
+#changelist-filter h3,
+#changelist-filter h2 {
+    color: var(--hw-ink);
+    font-size: 0.95rem;
+}
+
+.paginator,
+.pagination .page-link {
+    border-radius: 0.45rem;
+}
+
+.page-item.active .page-link,
+.paginator a:hover {
+    background: var(--hw-green);
+    border-color: var(--hw-green);
+    color: #fff;
+}
+
+/* --- Formularios --- */
+
+.form-control,
+.custom-select,
+.select2-container--admin-autocomplete .select2-selection--single {
+    border: 1px solid #d1d5db;
+    border-radius: 0.6rem;
+    min-height: 2.5rem;
+    color: var(--hw-ink);
+}
+
+.form-control:focus,
+.custom-select:focus {
+    border-color: var(--hw-green);
+    box-shadow: 0 0 0 0.2rem var(--hw-green-ring);
+}
+
+.form-group label,
+label {
+    color: var(--hw-ink);
+    font-weight: 500;
+}
+
+@media (min-width: 576px) {
+    form .form-group > label.col-sm-3,
+    form .row > label.col-sm-3 {
+        flex: 0 0 38%;
+        max-width: 38%;
+        white-space: nowrap;
+    }
+
+    form .form-group > .col-sm-7,
+    form .row > .col-sm-7 {
+        flex: 0 0 62%;
+        max-width: 62%;
+    }
+}
+
+.help-block,
+.help,
+p.help {
+    color: var(--hw-muted);
+}
+
+fieldset .card,
+.inline-group {
+    border-radius: var(--hw-radius);
+}
+
+.inline-related h3,
+.inline-group .tabular td,
+.inline-group .tabular th {
+    font-size: 0.92rem;
+}
+
+.errornote,
+.alert-danger,
+.errorlist li {
+    border-radius: 0.55rem;
+}
+
+#jazzy-actions .btn,
+.object-tools a,
+.submit-row input {
+    border-radius: 0.6rem;
+    font-weight: 600;
+}
+
+.btn-success,
+.bg-success {
+    background-color: var(--hw-green) !important;
+    border-color: var(--hw-green) !important;
+}
+
+.btn-success:hover,
+.btn-success:focus {
+    background-color: var(--hw-green-dark) !important;
+    border-color: var(--hw-green-dark) !important;
+}
+
+.btn-outline-success {
+    color: var(--hw-green-dark);
+    border-color: var(--hw-green);
+}
+
+.btn-outline-success:hover {
+    background: var(--hw-green);
+    border-color: var(--hw-green);
+    color: #fff;
+}
+
+.btn-outline-danger:hover {
+    background: var(--hw-danger);
+    border-color: var(--hw-danger);
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+:focus-visible {
+    outline: 3px solid var(--hw-green-ring);
+    outline-offset: 2px;
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 991.98px) {
+    .content-wrapper > .content {
+        padding: 0.75rem;
+    }
+
+    .change-form #content-main > form > .row {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .change-form #jazzy-actions {
+        order: -1;
+        position: sticky;
+        top: 3.6rem;
+        z-index: 20;
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--hw-border);
+        border-radius: var(--hw-radius);
+        box-shadow: var(--hw-shadow);
+    }
+
+    .change-form #jazzy-actions .form-group {
+        display: inline-block;
+        width: calc(50% - 0.35rem);
+        margin: 0.2rem;
+        vertical-align: top;
+    }
+
+    #result_list {
+        font-size: 0.86rem;
+    }
+
+    .dashboard .btn-group {
+        display: flex;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 575.98px) {
+    #jazzy-navbar form.form-inline + form.form-inline {
+        display: none;
+    }
+
+    #jazzy-navbar form.form-inline {
+        margin-left: 0.35rem !important;
+    }
+
+    #jazzy-navbar form.form-inline .form-control {
+        width: 8.5rem;
+        min-width: 0;
+    }
+
+    .login-box {
+        margin-top: 1.5rem;
+    }
+
+    .content-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .object-tools {
+        float: none;
+        margin-bottom: 0.75rem;
+    }
+
+    .change-form #jazzy-actions .form-group {
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-sidebar .nav-link,
+    .btn {
+        transition: none;
+    }
+}

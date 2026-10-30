@@ -6,13 +6,20 @@
 {% block principal %}
 <div class="container-fluid bg-light mb-5">
     <div class="page-header d-flex flex-column align-items-center justify-content-center">
-        <h1 class="font-weight-semi-bold text-uppercase mb-3 text-danger"><i class="fas fa-times-circle"></i> Pago Fallido</h1>
-        <p class="text-muted">Tu pago no pudo ser procesado o fue cancelado.</p>
+        <h1 class="font-weight-semi-bold text-uppercase mb-3 text-danger"><i class="fas fa-times-circle"></i> Pago cancelado</h1>
+        <p class="text-muted">PayPal no completó el cobro.</p>
     </div>
 </div>
 
 <div class="container text-center py-5">
-    <p>No se ha realizado ningún cargo. Tu pedido ha quedado en estado 'Pendiente'.</p>
-    <a href="{% url 'core:mis_pedidos' %}" class="btn btn-warning">Ir a mis pedidos para reintentar</a>
+    <p>No se ha realizado ningún cargo. Tu pedido sigue pendiente y no se descontó stock.</p>
+    {% if reintento_disponible %}
+    <p>Puedes reintentar el pago del pedido #{{ pedido.id }}.</p>
+    <div class="mx-auto" style="max-width: 36rem;">
+        {% include 'core/includes/conversion_paypal.html' %}
+    </div>
+    <a href="{% url 'core:detalle_pedido' pedido.id %}" class="btn btn-warning">Reintentar pago</a>
+    {% endif %}
+    <a href="{% url 'core:mis_pedidos' %}" class="btn btn-outline-secondary">Ir a mis pedidos</a>
 </div>
 {% endblock %}

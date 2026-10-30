@@ -9,7 +9,7 @@ function getSelectedInfo(selectEl) {
     return {
         name: opt.value || null,
         price: parseInt(opt.dataset.price || 0, 10),
-        img: opt.dataset.img || 'img/placeholder.png'
+        img: opt.dataset.img || '/static/core/img/categorias/11_Componentes_PC_generico.webp'
     };
 }
 

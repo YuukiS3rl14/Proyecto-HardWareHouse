@@ -1,18 +1,36 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block tittle %} Pago Exitoso {% endblock %}
 
 {% block principal %}
 <div class="container-fluid bg-light mb-5">
     <div class="page-header d-flex flex-column align-items-center justify-content-center">
-        <h1 class="font-weight-semi-bold text-uppercase mb-3 text-success"><i class="fas fa-check-circle"></i> ¡Pago Exitoso!</h1>
+        <h1 class="font-weight-semi-bold text-uppercase mb-3 {% if estado_pago == 'cancelado' %}text-danger{% else %}text-success{% endif %}"><i class="fas {% if estado_pago == 'cancelado' %}fa-times-circle{% else %}fa-check-circle{% endif %}"></i> {% if estado_pago == 'pagado' %}Pagado{% elif estado_pago == 'cancelado' %}Cancelado{% else %}Verificando pago{% endif %}</h1>
         <p class="text-muted">Gracias por tu compra en HardWareHouse.</p>
     </div>
 </div>
 
 <div class="container text-center py-5">
-    <p>Tu pedido ha sido confirmado y está siendo procesado. Recibirás una notificación por correo electrónico pronto.</p>
+    {% if estado_pago == 'pagado' %}
+    <p>PayPal ya confirmó el pedido #{{ pedido.id }}. El regreso del navegador no vuelve a marcarlo como pagado.</p>
+    <div class="mx-auto" style="max-width: 36rem;">
+        {% include 'core/includes/conversion_paypal.html' %}
+    </div>
+    <a href="{% url 'core:ver_boleta' pedido.id %}" class="btn btn-success">Ver boleta</a>
+    {% elif estado_pago == 'cancelado' %}
+    <p>El pedido #{{ pedido.id }} está cancelado. Este regreso no lo reactiva ni lo marca como pagado.</p>
+    {% else %}
+    <p>PayPal todavía debe confirmar la transacción. El pedido sigue pendiente y el stock no cambia hasta esa confirmación.</p>
+    {% if pedido %}
+    <div class="mx-auto" style="max-width: 36rem;">
+        {% include 'core/includes/conversion_paypal.html' %}
+    </div>
+    <p>Pedido #{{ pedido.id }}: verificando pago.</p>
+    <a href="{% url 'core:detalle_pedido' pedido.id %}" class="btn btn-outline-success">Ver el pedido</a>
+    {% endif %}
+    {% endif %}
     <a href="{% url 'core:mis_pedidos' %}" class="btn btn-success">Ver mis pedidos</a>
 </div>
 {% endblock %}

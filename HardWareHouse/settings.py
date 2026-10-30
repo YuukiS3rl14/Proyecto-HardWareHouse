@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
@@ -39,10 +40,28 @@ DEBUG = env_bool('DEBUG', default=False)
 
 # Reemplaza 'url-ejemplo' por el dominio o la IP pública que te entregue AWS, sin 'https://'.
 # Ejemplo: 'ec2-3-90-12-34.compute-1.amazonaws.com' o 'www.hardwarehouse.cl'
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '8w96bzrx-8000.brs.devtunnels.ms', 'url-ejemplo']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '8w96bzrx-8000.brs.devtunnels.ms',
+    'url-ejemplo',
+    'proyecto-hardwarehouse-production.up.railway.app',
+]
 
 # Mismo dominio que en ALLOWED_HOSTS, pero aquí con el esquema 'https://'.
-CSRF_TRUSTED_ORIGINS = ['https://8w96bzrx-8000.brs.devtunnels.ms', 'https://url-ejemplo']
+CSRF_TRUSTED_ORIGINS = [
+    'https://8w96bzrx-8000.brs.devtunnels.ms',
+    'https://url-ejemplo',
+    'https://proyecto-hardwarehouse-production.up.railway.app',
+]
+
+railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+if railway_domain:
+    ALLOWED_HOSTS = list(set(ALLOWED_HOSTS + [railway_domain]))
+    CSRF_TRUSTED_ORIGINS = list(
+        set(CSRF_TRUSTED_ORIGINS + [f"https://{railway_domain}"])
+    )
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Requiere que el sitio se sirva por HTTPS (Nginx debe enviar la cabecera X-Forwarded-Proto).
 # Si en AWS todavía accedes por http://, define USE_HTTPS=False en el .env o no podrás iniciar sesión.
@@ -68,7 +87,20 @@ INSTALLED_APPS = [
     'bootstrap5',
     'django.contrib.humanize',
     'paypal.standard.ipn',
+    'storages',
 ]
+
+def middleware_estaticos(middleware, usar_r2):
+    """WhiteNoise sirve el disco local. Con R2 los estáticos salen del bucket."""
+    cadena = [
+        item for item in middleware
+        if item != 'whitenoise.middleware.WhiteNoiseMiddleware'
+    ]
+    if not usar_r2:
+        seguridad = cadena.index('django.middleware.security.SecurityMiddleware')
+        cadena.insert(seguridad + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    return cadena
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -85,7 +117,7 @@ ROOT_URLCONF = 'HardWareHouse.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -122,6 +154,13 @@ DATABASES = {
     }
 }
 
+# En Railway se usa DATABASE_URL (referencia al servicio Postgres).
+if os.getenv("DATABASE_URL"):
+    DATABASES["default"] = dj_database_url.parse(
+        os.environ["DATABASE_URL"],
+        conn_max_age=600,
+    )
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -157,21 +196,77 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
-# Carpeta donde 'python manage.py collectstatic' reúne los estáticos para que Nginx los sirva.
+# Destino local de collectstatic. WhiteNoise lo sirve solo cuando USE_R2 es falso.
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 # Ruta absoluta al directorio donde Django almacenará los archivos subidos por el usuario (imágenes de productos).
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # URL pública que se utilizará para acceder a los archivos multimedia.
 MEDIA_URL = '/media/'
+
+USE_R2 = env_bool('USE_R2', default=False)
+MIDDLEWARE = middleware_estaticos(MIDDLEWARE, USE_R2)
+
+if USE_R2:
+    bucket = os.environ['R2_BUCKET_NAME']
+    endpoint = os.environ['R2_ENDPOINT_URL']
+    access_key = os.environ['R2_ACCESS_KEY_ID']
+    secret_key = os.environ['R2_SECRET_ACCESS_KEY']
+    public_domain = os.environ['R2_PUBLIC_DOMAIN'].strip().rstrip('/')
+    if public_domain.startswith('https://'):
+        public_domain = public_domain[len('https://') :]
+    if public_domain.startswith('http://'):
+        public_domain = public_domain[len('http://') :]
+
+    common = {
+        'bucket_name': bucket,
+        'endpoint_url': endpoint,
+        'access_key': access_key,
+        'secret_key': secret_key,
+        'region_name': 'auto',
+        'custom_domain': public_domain,
+        'querystring_auth': False,
+        'default_acl': None,
+        'signature_version': 's3v4',
+    }
+
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                **common,
+                'location': 'media',
+                'file_overwrite': False,
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                **common,
+                'location': 'static',
+            },
+        },
+    }
+
+    STATIC_URL = f'https://{public_domain}/static/'
+    MEDIA_URL = f'https://{public_domain}/media/'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/'  
 LOGOUT_REDIRECT_URL = '/'  
@@ -183,20 +278,170 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # CONFIGURACIÓN DEL PANEL DE ADMINISTRACIÓN
 # ----------------------------------------------------
 
-ADMIN_SITE_TITLE = 'Panel de Administración HardWareHouse' 
+JAZZMIN_SETTINGS = {
+    'site_title': 'Admin HardWareHouse',
+    'site_header': 'HardWareHouse',
+    'site_brand': 'HardWareHouse',
+    'site_logo': 'core/img/HWH_logo.png',
+    'login_logo': 'core/img/HWH_logo_ampliado.png',
+    'site_logo_classes': 'hw-admin-logo',
+    'site_icon': 'core/img/HWH_logo.png',
+    'welcome_sign': 'Ingresa al panel de la tienda',
+    'copyright': 'HardWareHouse',
+    'search_model': ['core.Pedido', 'auth.User'],
+    'topmenu_links': [
+        {'name': 'Tienda', 'url': '/', 'icon': 'fas fa-store'},
+        {'model': 'core.Pedido'},
+        {'model': 'auth.User'},
+    ],
+    'usermenu_links': [
+        {'name': 'Ver la tienda', 'url': '/', 'icon': 'fas fa-external-link-alt'},
+    ],
+    'show_sidebar': True,
+    'navigation_expanded': True,
+    'order_with_respect_to': [
+        'core',
+        'core.pedido',
+        'core.pagoboleta',
+        'core.carrito',
+        'core.itemcarrito',
+        'core.favorito',
+        'core.comentario',
+        'core.procesador',
+        'core.tarjetagrafica',
+        'core.memoriaram',
+        'core.placamadre',
+        'core.almacenamientossd',
+        'core.almacenamientohdd',
+        'core.gabinete',
+        'core.fuentedepoder',
+        'core.refrigeracioncooler',
+        'core.ventilador',
+        'core.proveedor',
+        'core.region',
+        'core.comuna',
+        'auth',
+        'auth.user',
+        'auth.group',
+        'ipn',
+        'ipn.paypalipn',
+    ],
+    'icons': {
+        'core': 'fas fa-store',
+        'core.pedido': 'fas fa-receipt',
+        'core.pagoboleta': 'fas fa-file-invoice-dollar',
+        'core.carrito': 'fas fa-shopping-cart',
+        'core.itemcarrito': 'fas fa-box-open',
+        'core.favorito': 'fas fa-heart',
+        'core.comentario': 'fas fa-star',
+        'core.procesador': 'fas fa-microchip',
+        'core.tarjetagrafica': 'fas fa-desktop',
+        'core.memoriaram': 'fas fa-memory',
+        'core.placamadre': 'fas fa-th',
+        'core.almacenamientossd': 'fas fa-hdd',
+        'core.almacenamientohdd': 'fas fa-database',
+        'core.gabinete': 'fas fa-server',
+        'core.fuentedepoder': 'fas fa-plug',
+        'core.refrigeracioncooler': 'fas fa-fan',
+        'core.ventilador': 'fas fa-wind',
+        'core.proveedor': 'fas fa-tags',
+        'core.region': 'fas fa-map',
+        'core.comuna': 'fas fa-map-marker-alt',
+        'auth': 'fas fa-users-cog',
+        'auth.user': 'fas fa-user',
+        'auth.group': 'fas fa-users',
+        'ipn': 'fas fa-credit-card',
+        'ipn.paypalipn': 'fas fa-credit-card',
+    },
+    'related_modal_active': True,
+    'custom_css': 'core/css/admin.css',
+    'use_google_fonts_cdn': False,
+    'show_ui_builder': False,
+    'changeform_format': 'collapsible',
+}
 
-ADMIN_HEADER_TITLE = 'Administración de la Tienda' 
+JAZZMIN_UI_TWEAKS = {
+    'navbar': 'navbar-white navbar-light',
+    'no_navbar_border': True,
+    'navbar_fixed': True,
+    'sidebar_fixed': True,
+    'sidebar': 'sidebar-light-success',
+    'sidebar_nav_child_indent': True,
+    'sidebar_nav_flat_style': True,
+    'accent': 'accent-success',
+    'theme': 'litera',
+    'actions_sticky_top': True,
+    'button_classes': {
+        'primary': 'btn-success',
+        'secondary': 'btn-outline-secondary',
+        'info': 'btn-outline-success',
+        'warning': 'btn-warning',
+        'danger': 'btn-outline-danger',
+        'success': 'btn-success',
+    },
+}
 
-ADMIN_SITE_HEADER = 'HardWareHouse'
-
-PAYPAL_RECEIVER_EMAIL = 'sb-j1cpn47385379@business.example.com'
-PAYPAL_TEST = True
+# Sandbox: PAYPAL_TEST=True envía el botón a sandbox.paypal.com y solo acepta IPN de prueba.
+# La cuenta Business es la que recibe el pago. La cuenta Personal solo se usa para iniciar
+# sesión en el checkout de PayPal; no se guarda en la aplicación.
+PAYPAL_RECEIVER_EMAIL = os.environ.get(
+    'PAYPAL_RECEIVER_EMAIL',
+    'sb-j1cpn47385379@business.example.com',
+).strip()
+PAYPAL_TEST = env_bool('PAYPAL_TEST', default=True)
 
 # Tasa de cambio de ejemplo (CLP a USD). En un proyecto real, esto debería obtenerse de una API.
 CLP_TO_USD_RATE = 950 
 
 # URL base pública del sitio, sin '/' final. PayPal la usa para el IPN y las redirecciones.
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
+
+# ----------------------------------------------------
+# ASISTENTE VIRTUAL (chatbot HardWareHouse)
+# ----------------------------------------------------
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'hardwarehouse-default',
+    },
+}
+
+# Opcional: sobrescribe textos o patrones (claves de core.chatbot.assistant_config.AsistenteConfig).
+# HARDWAREHOUSE_ASISTENTE = {
+#     'mensaje_bienvenida': '¡Hola! Soy el asistente oficial de HardWareHouse…',
+# }
+
+# Motor local (intenciones + FAQ + ORM). Límites por IP vía cache.
+HARDWAREHOUSE_CHAT_RATE_LIMIT = {
+    'chat': {'requests': 30, 'window_seconds': 60},
+    'catalogo': {'requests': 60, 'window_seconds': 60},
+    'metadata': {'requests': 120, 'window_seconds': 60},
+}
+
+# FAQ: claves en core/chatbot/faq_rules.py (despacho, pago, armado, …)
+# HARDWAREHOUSE_CHAT_FAQ = {'despacho': 'Texto personalizado…'}
+
+# Reglas extra de intención: lista de dicts {intent, patrones, prioridad?, max_longitud?}
+# HARDWAREHOUSE_CHAT_INTENT_RULES = []
+
+# Ollama local (intención + clasificación JSON). Ver .env: OLLAMA_BASE_URL, OLLAMA_MODEL.
+OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', '').strip()
+OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen3:4b-instruct').strip()
+OLLAMA_TIMEOUT = int(os.environ.get('OLLAMA_TIMEOUT', '25'))
+HARDWAREHOUSE_CHAT_LLM_BACKEND = 'ollama' if OLLAMA_BASE_URL else ''
+HARDWAREHOUSE_CHAT_INTENT_LLM = env_bool(
+    'HARDWAREHOUSE_CHAT_INTENT_LLM',
+    default=bool(OLLAMA_BASE_URL),
+)
+HARDWAREHOUSE_CHAT_RESPONSE_LLM = env_bool(
+    'HARDWAREHOUSE_CHAT_RESPONSE_LLM',
+    default=bool(OLLAMA_BASE_URL),
+)
+HARDWAREHOUSE_CHAT_OLLAMA = {
+    'base_url': OLLAMA_BASE_URL or 'http://127.0.0.1:11434',
+    'model': OLLAMA_MODEL,
+    'timeout': OLLAMA_TIMEOUT,
+}
 
 # ----------------------------------------------------
 # CONFIGURACIÓN DE LOGGING
@@ -234,6 +479,12 @@ LOGGING = {
             'handlers': ['console', 'paypal_file'],
             'level': 'INFO',
             'propagate': False, 
+        },
+        # Temporal: ruta Ollama vs reglas. No registra el texto del usuario.
+        'hardwarehouse.chat': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }

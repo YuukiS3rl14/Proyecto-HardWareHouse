@@ -1,9 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django import forms
-from django.contrib.auth.models import User
-from django.utils.html import format_html 
+from django.utils.html import format_html
 
+from .imagenes import url_imagen_producto
 from .models import *
 
 # ----------------------------------------------------------------------
@@ -12,6 +11,7 @@ from .models import *
 
 class ProveedorAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'logo')
+    list_display_links = ('nombre',)
     search_fields = ('nombre',)
     list_per_page = 20
 
@@ -19,10 +19,24 @@ class ProveedorAdmin(admin.ModelAdmin):
 # 2. CLASES DE ADMINISTRACIÓN DE PRODUCTOS INDEPENDIENTES
 # ----------------------------------------------------------------------
 
-PRODUCTO_LIST_DISPLAY = ('id', 'nombre', 'categoria', 'proveedor', 'precio', 'stock', 'imagen')
+PRODUCTO_LIST_DISPLAY = ('id', 'miniatura', 'nombre', 'categoria', 'proveedor', 'precio', 'stock')
 PRODUCTO_EDITABLE = ('nombre', 'precio', 'stock')
 
-class ProcesadorAdmin(admin.ModelAdmin):
+class ProductoAdminBase(admin.ModelAdmin):
+    search_fields = ('nombre', 'proveedor__nombre')
+    list_display_links = ('id',)
+    list_per_page = 20
+    list_select_related = ('proveedor',)
+    save_on_top = True
+
+    @admin.display(description='Imagen')
+    def miniatura(self, obj):
+        return format_html(
+            '<img src="{}" alt="" class="hw-admin-thumb">',
+            url_imagen_producto(obj),
+        )
+
+class ProcesadorAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
@@ -31,7 +45,7 @@ class ProcesadorAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts')}),
     )
 
-class TarjetaGraficaAdmin(admin.ModelAdmin):
+class TarjetaGraficaAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'largo_mm')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
@@ -40,7 +54,7 @@ class TarjetaGraficaAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': ('vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'largo_mm')}),
     )
 
-class MemoriaRamAdmin(admin.ModelAdmin):
+class MemoriaRamAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('capacidad_gb', 'modulos_por_producto', 'capacidad_modulo_gb', 'formato_ram', 'tipo_ddr', 'velocidad_mhz')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
@@ -49,7 +63,7 @@ class MemoriaRamAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': ('capacidad_gb', 'modulos_por_producto', 'capacidad_modulo_gb', 'formato_ram', 'tipo_ddr', 'velocidad_mhz')}),
     )
 
-class PlacaMadreAdmin(admin.ModelAdmin):
+class PlacaMadreAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('socket_cpu', 'chipset', 'formato', 'tipo_ram_soportado', 'ranuras_ram', 'formato_ram_soportado', 'capacidad_maxima_ram_gb')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
@@ -89,7 +103,7 @@ class AlmacenamientoAdminForm(forms.ModelForm):
         
         return super().save(commit=commit)
 
-class AlmacenamientoSSDAdmin(admin.ModelAdmin):
+class AlmacenamientoSSDAdmin(ProductoAdminBase):
     form = AlmacenamientoAdminForm
     list_display = PRODUCTO_LIST_DISPLAY + ('capacidad_gb', 'interfaz', 'formato')
     list_filter = ('proveedor',)
@@ -99,7 +113,7 @@ class AlmacenamientoSSDAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': (('capacidad_valor', 'capacidad_unidad'), 'interfaz', 'formato')}),
     )
 
-class AlmacenamientoHDDAdmin(admin.ModelAdmin):
+class AlmacenamientoHDDAdmin(ProductoAdminBase):
     form = AlmacenamientoAdminForm
     list_display = PRODUCTO_LIST_DISPLAY + ('capacidad_gb', 'velocidad_rpm', 'cache_mb')
     list_filter = ('proveedor',)
@@ -109,7 +123,7 @@ class AlmacenamientoHDDAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': (('capacidad_valor', 'capacidad_unidad'), 'velocidad_rpm', 'cache_mb')}),
     )
     
-class GabineteAdmin(admin.ModelAdmin):
+class GabineteAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('formato_soporte', 'ventiladores_incluidos', 'material', 'largo_max_gpu_mm')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
@@ -118,7 +132,7 @@ class GabineteAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': ('formato_soporte', 'ventiladores_incluidos', 'material', 'largo_max_gpu_mm')}),
     )
 
-class FuenteDePoderAdmin(admin.ModelAdmin):
+class FuenteDePoderAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('potencia_watts', 'certificacion', 'modular')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
@@ -127,7 +141,7 @@ class FuenteDePoderAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': ('potencia_watts', 'certificacion', 'modular')}),
     )
     
-class RefrigeracionCoolerAdmin(admin.ModelAdmin):
+class RefrigeracionCoolerAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('tipo', 'socket_compatibles', 'tamanho_radiador_mm')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
@@ -136,7 +150,7 @@ class RefrigeracionCoolerAdmin(admin.ModelAdmin):
         ('Especificaciones Técnicas', {'fields': ('tipo', 'socket_compatibles', 'tamanho_radiador_mm')}),
     )
 
-class VentiladorAdmin(admin.ModelAdmin):
+class VentiladorAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('tamanho_mm', 'velocidad_rpm', 'rgb')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
@@ -152,24 +166,55 @@ class VentiladorAdmin(admin.ModelAdmin):
 
 class ItemPedidoInline(admin.TabularInline):
     model = ItemPedido
-    readonly_fields = ('producto_nombre', 'producto_tipo', 'precio_unitario', 'cantidad', 'get_subtotal')
+    readonly_fields = ('producto_nombre', 'producto_tipo', 'precio_unitario', 'cantidad', 'producto_modelo', 'producto_pk', 'get_subtotal')
     can_delete = False
     extra = 0
 
 class PedidoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'usuario', 'fecha_pedido', 'total_monto', 'estado', 'paypal_transaccion_id')
+    list_display = ('id', 'usuario', 'fecha_pedido', 'total_monto', 'estado', 'paypal_transaccion_id', 'paypal_invoice')
+    list_display_links = ('id',)
     list_filter = ('estado', 'fecha_pedido')
+    date_hierarchy = 'fecha_pedido'
     list_per_page = 20
-    search_fields = ('usuario__username', 'id')
+    search_fields = ('usuario__username', 'id', 'paypal_transaccion_id', 'paypal_invoice', 'paypal_invoice_legado')
+    list_select_related = ('usuario',)
+    ordering = ('-fecha_pedido',)
     inlines = [ItemPedidoInline]
-    readonly_fields = ('usuario', 'total_monto', 'fecha_pedido', 'paypal_transaccion_id')
+    readonly_fields = (
+        'usuario', 'total_monto', 'fecha_pedido', 'paypal_transaccion_id',
+        'paypal_invoice', 'paypal_invoice_legado',
+    )
+    save_on_top = True
 
 # ----------------------------------------------------------------------
 # 4. REGISTRO DE MODELOS (Usando clases específicas)
 # ----------------------------------------------------------------------
 
-admin.site.register(Region)
-admin.site.register(Comuna)
+class RegionAdmin(admin.ModelAdmin):
+    list_display = ('numero', 'nombre')
+    list_display_links = ('nombre',)
+    search_fields = ('nombre',)
+    ordering = ('numero',)
+
+class ComunaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'region')
+    list_display_links = ('nombre',)
+    search_fields = ('nombre', 'region__nombre')
+    list_filter = ('region',)
+    list_select_related = ('region',)
+    autocomplete_fields = ('region',)
+
+class ComentarioAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'usuario', 'calificacion', 'fecha_creacion')
+    list_display_links = ('titulo',)
+    search_fields = ('titulo', 'texto', 'usuario__username')
+    list_filter = ('calificacion', 'fecha_creacion')
+    list_select_related = ('usuario',)
+    date_hierarchy = 'fecha_creacion'
+    ordering = ('-fecha_creacion',)
+
+admin.site.register(Region, RegionAdmin)
+admin.site.register(Comuna, ComunaAdmin)
 admin.site.register(Proveedor, ProveedorAdmin)
 
 admin.site.register(Procesador, ProcesadorAdmin)
@@ -183,22 +228,50 @@ admin.site.register(FuenteDePoder, FuenteDePoderAdmin)
 admin.site.register(RefrigeracionCooler, RefrigeracionCoolerAdmin)
 admin.site.register(Ventilador, VentiladorAdmin)
 
-admin.site.register(Comentario)
+admin.site.register(Comentario, ComentarioAdmin)
 
 class CarritoAdmin(admin.ModelAdmin):
     list_display = ('usuario', 'fecha_creacion', 'get_total_precio')
+    list_display_links = ('usuario',)
+    search_fields = ('usuario__username',)
+    list_select_related = ('usuario',)
     list_per_page = 20
     readonly_fields = ('get_total_precio',)
 
+class ItemCarritoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'carrito', 'cantidad', 'precio_unitario', 'producto')
+    list_display_links = ('id',)
+    search_fields = ('carrito__usuario__username',)
+    list_select_related = ('carrito__usuario',)
+    list_per_page = 20
+
+    @admin.display(description='Producto')
+    def producto(self, obj):
+        return obj.get_related_product() or '—'
+
 admin.site.register(Carrito, CarritoAdmin)
-admin.site.register(ItemCarrito) 
+admin.site.register(ItemCarrito, ItemCarritoAdmin)
 admin.site.register(Pedido, PedidoAdmin)
 
 class FavoritoAdmin(admin.ModelAdmin):
     list_display = ('usuario', 'get_related_product', 'fecha_agregado')
+    list_display_links = ('usuario',)
     list_filter = ('usuario',)
+    search_fields = ('usuario__username',)
+    list_select_related = ('usuario',)
+    ordering = ('-fecha_agregado',)
+
+class PagoBoletaAdmin(admin.ModelAdmin):
+    list_display = ('transaccion_id', 'pedido', 'monto_pagado', 'metodo_pago', 'email_comprador', 'fecha_pago')
+    list_display_links = ('transaccion_id',)
+    search_fields = ('transaccion_id', 'email_comprador', 'nombre_comprador')
+    list_filter = ('metodo_pago', 'fecha_pago')
+    list_select_related = ('pedido',)
+    date_hierarchy = 'fecha_pago'
+    ordering = ('-fecha_pago',)
+
 admin.site.register(Favorito, FavoritoAdmin)
-admin.site.register(PagoBoleta)
+admin.site.register(PagoBoleta, PagoBoletaAdmin)
 
 # ----------------------------------------------------------------------
 # 5. Sobrescribir títulos del Admin Site

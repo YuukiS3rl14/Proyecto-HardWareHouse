@@ -1,6 +1,7 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load humanize %}
+{% load producto_extras %}
 
 {% block tittle %} Carrito {% endblock %}
 
@@ -27,11 +28,7 @@
                     {% with producto=item.get_related_product %}
                     <tr>
                         <td class="align-middle text-left cell-product">
-                            {% if producto.imagen %}
-                            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="width: 50px;">
-                            {% else %}
-                            <img src="{% static 'core/img/placeholder.webp' %}" alt="Sin imagen" style="width: 50px;">
-                            {% endif %}
+                            <img src="{{ producto|imagen_producto }}" alt="{{ producto.nombre }}" style="width: 50px;">
                             {{ producto.nombre }}
                         </td>
                         <td class="align-middle" data-label="Precio">${{ item.precio_unitario|floatformat:"0"|intcomma }}</td>
