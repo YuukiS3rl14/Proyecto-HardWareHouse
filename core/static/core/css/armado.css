@@ -51,3 +51,157 @@
     background-color: #f8d7da;
     cursor: not-allowed;
 }
+.armado-filtros .form-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.15rem;
+    color: #6c757d;
+}
+.armado-estado-breve {
+    margin-top: 0.35rem;
+}
+#componentModal .modal-dialog {
+    height: auto;
+    max-height: calc(100% - 1rem);
+}
+#componentModal .modal-content {
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+}
+#componentModal .modal-header {
+    flex: 0 0 auto;
+}
+#componentModal .modal-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    min-height: 0;
+}
+.armado-modal-controles {
+    flex: 0 0 auto;
+    padding: 1rem 1rem 0.25rem;
+}
+.armado-lista-resultados {
+    overflow-y: auto;
+    max-height: min(50vh, 28rem);
+    padding: 0 1rem 1rem;
+}
+@media (max-width: 575.98px) {
+    #componentModal .modal-dialog,
+    #componentModal .modal-content {
+        max-height: 100%;
+        height: 100%;
+    }
+    .armado-lista-resultados {
+        max-height: none;
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+}
+.armado-resumen-item + .armado-resumen-item {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e9ecef;
+}
+.armado-resumen-estado,
+.armado-estado-compacto {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+}
+.armado-estado-compacto {
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+.armado-resumen-info {
+    line-height: 1;
+    min-width: 1.75rem;
+    min-height: 1.75rem;
+    padding: 0.25rem;
+    color: inherit;
+    text-decoration: none;
+}
+.armado-resumen-info:hover,
+.armado-resumen-info:focus {
+    color: inherit;
+}
+.armado-resumen-info:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+.armado-resumen-critico {
+    margin: 0.35rem 0 0;
+    font-size: 0.8125rem;
+}
+.armado-popover {
+    max-width: 18rem;
+}
+.armado-popover .popover-body {
+    white-space: pre-line;
+    font-size: 0.8125rem;
+}
+#recomendarPcModal .modal-dialog,
+#recomendarPcDetalleModal .modal-dialog {
+    height: auto;
+    max-height: calc(100% - 1rem);
+}
+#recomendarPcModal .modal-content,
+#recomendarPcDetalleModal .modal-content {
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+}
+#recomendarPcModal .modal-header,
+#recomendarPcDetalleModal .modal-header,
+#recomendarPcDetalleModal .modal-footer {
+    flex: 0 0 auto;
+}
+#recomendarPcModal .modal-body,
+#recomendarPcDetalleModal .modal-body {
+    overflow-y: auto;
+    min-height: 0;
+}
+.recomendacion-tarjeta {
+    min-width: 0;
+    border: 1px solid #dee2e6;
+}
+.recomendacion-precio {
+    font-size: 1.35rem;
+    line-height: 1.2;
+}
+.recomendacion-resumen {
+    overflow-wrap: anywhere;
+}
+.recomendacion-resumen dt {
+    flex: 0 0 3.2rem;
+    color: #6c757d;
+    font-weight: 600;
+}
+.recomendacion-resumen dd {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.recomendacion-estado {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.35rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+.recomendacion-detalle-lista li + li {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e9ecef;
+}
+@media (max-width: 575.98px) {
+    #recomendarPcModal .modal-dialog,
+    #recomendarPcModal .modal-content,
+    #recomendarPcDetalleModal .modal-dialog,
+    #recomendarPcDetalleModal .modal-content {
+        max-height: 100%;
+        height: 100%;
+    }
+}

@@ -23,15 +23,22 @@ from .compatibilidad import (
     texto_del_armado,
     validar_armado,
 )
+from .recomendador_pc import (
+    EntradaInvalida,
+    generar_recomendaciones,
+    interpretar_pedido,
+)
 from .forms import *
 import json
 import logging
 import uuid
 
+from django.conf import settings
 from django.db import transaction 
 from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Count
 from core.catalogo.registry import CATALOGO_MODELOS, model_name_for
+from core.piezas_demo import es_demo, sin_demo
 from core.tienda_filtros import (
     BANDAS_PRECIO,
     ORDENES,
@@ -62,8 +69,15 @@ def mostrarIndex(request):
 def mostrarArmado(request):    
     def get_component_data(model, fields, model_name):
         components = []
-        for item in model.objects.all():
-            data = {'id': item.id, 'model_name': model_name}
+        consulta = model.objects.select_related('proveedor')
+        if not settings.DEBUG:
+            consulta = sin_demo(consulta)
+        for item in consulta:
+            data = {
+                'id': item.id,
+                'model_name': model_name,
+                'marca': item.proveedor.nombre,
+            }
             for field in fields:
                 data[field] = getattr(item, field)
             data['imagen'] = url_imagen_producto(item)
@@ -76,11 +90,11 @@ def mostrarArmado(request):
         'memoria_ram': get_component_data(MemoriaRam, ['nombre', 'precio', 'tipo_ddr', 'capacidad_gb', 'modulos_por_producto', 'capacidad_modulo_gb', 'formato_ram', 'velocidad_mhz', 'stock'], 'memoria_ram'),
         'tarjeta_grafica': get_component_data(TarjetaGrafica, ['nombre', 'precio', 'vram_gb', 'tipo_memoria', 'interfaz', 'consumo_referencia_watts', 'potencia_minima_fuente_watts', 'largo_mm', 'stock'], 'tarjeta_grafica'),
         'almacenamiento': (
-            get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'formato', 'stock'], 'almacenamiento_ssd')
+            get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'interfaz', 'formato', 'stock'], 'almacenamiento_ssd')
             + get_component_data(AlmacenamientoHDD, ['nombre', 'precio', 'capacidad_gb', 'stock'], 'almacenamiento_hdd')
         ),
         'gabinete': get_component_data(Gabinete, ['nombre', 'precio', 'formato_soporte', 'largo_max_gpu_mm', 'stock'], 'gabinete'),
-        'fuente_de_poder': get_component_data(FuenteDePoder, ['nombre', 'precio', 'potencia_watts', 'stock'], 'fuente_de_poder'),
+        'fuente_de_poder': get_component_data(FuenteDePoder, ['nombre', 'precio', 'potencia_watts', 'certificacion', 'modular', 'stock'], 'fuente_de_poder'),
         'refrigeracion_cooler': get_component_data(RefrigeracionCooler, ['nombre', 'precio', 'socket_compatibles', 'tipo', 'tamanho_radiador_mm', 'stock'], 'refrigeracion'),
     }
 
@@ -254,8 +268,10 @@ def mostrarDetalle(request, model_name, pk):
     
     if not ModelClass:
         raise Http404("Tipo de producto no encontrado.")
-        
-    producto = get_object_or_404(ModelClass, pk=pk)
+
+    producto = get_object_or_404(ModelClass.objects.select_related('proveedor'), pk=pk)
+    if es_demo(producto):
+        raise Http404('Producto no encontrado.')
     
     is_favorito = False
     if request.user.is_authenticated:
@@ -311,7 +327,7 @@ def mostrarTienda(request):
             continue
 
         model_name = _model_name_tienda(modelo)
-        qs = modelo.objects.select_related('proveedor').all()
+        qs = sin_demo(modelo.objects.select_related('proveedor'))
 
         if query:
             qs = qs.filter(
@@ -851,7 +867,10 @@ def recomendar_armado(request):
     if conserva_ram:
         candidatos = []
         for modelo, categoria_regla, model_name in fuentes:
-            for producto in modelo.objects.all():
+            consulta = modelo.objects.all()
+            if not settings.DEBUG:
+                consulta = sin_demo(consulta)
+            for producto in consulta:
                 lineas = _lineas_para_candidato(
                     memorias,
                     producto,
@@ -890,6 +909,39 @@ def recomendar_armado(request):
 
     candidatos = candidatos_para_categoria(categoria, seleccion, memorias or None)
     return JsonResponse({'status': 'success', 'candidatos': serializar_candidatos_api(candidatos)})
+
+
+@require_POST
+def recomendar_pc(request):
+    """Arma configuraciones con el motor propio. No toca el carrito."""
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'message': 'La solicitud no es válida.'}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({'status': 'error', 'message': 'La solicitud no es válida.'}, status=400)
+    try:
+        pedido = interpretar_pedido(payload)
+    except EntradaInvalida as exc:
+        return JsonResponse({'status': 'error', 'message': exc.mensaje}, status=400)
+
+    seleccion = {}
+    almacenamientos = []
+    memorias = []
+    if pedido['modo'] == 'completar':
+        cargado, error = _cargar_seleccion(payload.get('componentes') or [])
+        if error:
+            return error
+        seleccion, almacenamientos, memorias = cargado
+    resultado = generar_recomendaciones(
+        pedido['presupuesto_clp'],
+        pedido['uso'],
+        resolucion=pedido['resolucion'],
+        seleccion=seleccion,
+        memorias=memorias,
+        almacenamientos=almacenamientos,
+    )
+    return JsonResponse(resultado)
 
 
 def _sumar_linea_ram(lineas, producto, cantidad):

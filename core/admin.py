@@ -37,12 +37,12 @@ class ProductoAdminBase(admin.ModelAdmin):
         )
 
 class ProcesadorAdmin(ProductoAdminBase):
-    list_display = PRODUCTO_LIST_DISPLAY + ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts')
+    list_display = PRODUCTO_LIST_DISPLAY + ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts', 'incluye_cooler')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts')}),
+        ('Especificaciones Técnicas', {'fields': ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts', 'incluye_cooler', 'potencia_termica_referencia_watts')}),
     )
 
 class TarjetaGraficaAdmin(ProductoAdminBase):
@@ -124,12 +124,12 @@ class AlmacenamientoHDDAdmin(ProductoAdminBase):
     )
     
 class GabineteAdmin(ProductoAdminBase):
-    list_display = PRODUCTO_LIST_DISPLAY + ('formato_soporte', 'ventiladores_incluidos', 'material', 'largo_max_gpu_mm')
+    list_display = PRODUCTO_LIST_DISPLAY + ('formato_soporte', 'ventiladores_incluidos', 'material', 'largo_max_gpu_mm', 'altura_max_cooler_mm')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('formato_soporte', 'ventiladores_incluidos', 'material', 'largo_max_gpu_mm')}),
+        ('Especificaciones Técnicas', {'fields': ('formato_soporte', 'ventiladores_incluidos', 'material', 'largo_max_gpu_mm', 'altura_max_cooler_mm')}),
     )
 
 class FuenteDePoderAdmin(ProductoAdminBase):
@@ -142,12 +142,12 @@ class FuenteDePoderAdmin(ProductoAdminBase):
     )
     
 class RefrigeracionCoolerAdmin(ProductoAdminBase):
-    list_display = PRODUCTO_LIST_DISPLAY + ('tipo', 'socket_compatibles', 'tamanho_radiador_mm')
+    list_display = PRODUCTO_LIST_DISPLAY + ('tipo', 'socket_compatibles', 'tamanho_radiador_mm', 'disipacion_referencia_watts', 'altura_mm')
     list_filter = ('proveedor',)
     list_editable = PRODUCTO_EDITABLE
     fieldsets = (
         ('Información General', {'fields': ('proveedor', 'nombre', 'descripcion', 'precio', 'stock', 'imagen')}),
-        ('Especificaciones Técnicas', {'fields': ('tipo', 'socket_compatibles', 'tamanho_radiador_mm')}),
+        ('Especificaciones Técnicas', {'fields': ('tipo', 'socket_compatibles', 'tamanho_radiador_mm', 'disipacion_referencia_watts', 'altura_mm')}),
     )
 
 class VentiladorAdmin(ProductoAdminBase):

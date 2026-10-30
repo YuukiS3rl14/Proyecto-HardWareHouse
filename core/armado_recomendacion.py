@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
+from django.conf import settings
+
 from core.compatibilidad import (
     ESTADO_DATOS_INSUFICIENTES,
     ESTADO_INCOMPATIBLE,
@@ -19,6 +21,7 @@ from core.compatibilidad import (
     evaluar_candidato,
     validar_armado,
 )
+from core.piezas_demo import sin_demo
 from core.models import (
     AlmacenamientoHDD,
     AlmacenamientoSSD,
@@ -132,7 +135,10 @@ def candidatos_para_categoria(
 
     candidatos: list[dict] = []
     for modelo, categoria_regla, model_name in fuentes:
-        for producto in modelo.objects.select_related('proveedor').all():
+        consulta = modelo.objects.select_related('proveedor')
+        if not settings.DEBUG:
+            consulta = sin_demo(consulta)
+        for producto in consulta:
             evaluacion = evaluar_candidato(
                 categoria_regla,
                 producto,
