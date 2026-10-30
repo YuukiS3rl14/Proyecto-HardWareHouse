@@ -13,6 +13,7 @@ INTENTS_PUBLICOS = frozenset(
         'clarification',
         'off_topic',
         'greeting',
+        'compatibility',
     }
 )
 
@@ -86,6 +87,8 @@ def clasificar_intent_publico(intent: str | None, texto: str = '', resultado: di
         if nombre == 'pc_build_replace':
             return 'build_upgrade' if 'barat' not in bajo else 'build_downgrade'
         return 'pc_build'
+    if nombre == 'compatibilidad' or resultado.get('response_type') == 'compatibility':
+        return 'compatibility'
     if resultado.get('necesita_clarificacion'):
         return 'clarification'
     return 'clarification'

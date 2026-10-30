@@ -102,6 +102,7 @@ def inferir_tipo_respuesta(resultado: dict, extraido: IntentoLLM | None = None) 
         'build_pending_change',
         'build_applied',
         'build_rejected',
+        'compatibility',
     ):
         return pre
 
