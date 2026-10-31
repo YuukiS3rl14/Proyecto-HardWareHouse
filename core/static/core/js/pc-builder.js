@@ -231,8 +231,13 @@ function iniciarArmado() {
     let filtrosActivos = {};
     let recomendacionesActuales = [];
     let categoriaModal = null;
-    const MENSAJE_FALTAN = 'Faltan componentes por seleccionar';
+    const MENSAJE_FALTAN = 'Faltan componentes';
     const MENSAJE_SIN_FILTROS = 'No se encontraron productos con estos filtros';
+    const MENSAJE_SIN_COMPATIBLES = 'No hay productos compatibles con la selección actual.';
+    const MENSAJE_SIN_VERIFICAR = 'No hay productos con compatibilidad verificada. Los demás no tienen datos suficientes.';
+    const MENSAJE_DISPONIBLES = 'Todavía no hay componentes suficientes para comprobar compatibilidad. Se muestran los productos disponibles.';
+    const MENSAJE_SESION = 'Debes iniciar sesión para agregar el armado al carrito.';
+    let enviandoCarrito = false;
 
     function escaparHtml(texto) {
         return String(texto ?? '').replace(/[&<>"']/g, caracter => ({
@@ -480,15 +485,11 @@ function iniciarArmado() {
         `;
     }
 
-    function hayFiltrosActivos() {
-        return soloCompatibles || Object.values(filtrosActivos).some(Boolean);
-    }
-
     function renderRecomendaciones() {
         const modalBody = document.getElementById('componentModalBody');
         const productos = recomendacionesActuales.map(productoDeCandidato);
         const visibles = recomendacionesActuales.filter((candidato, indice) => {
-            if (soloCompatibles && candidato.estado !== 'compatible') {
+            if (soloCompatibles && !pasaSoloCompatibles(candidato)) {
                 return false;
             }
             return productoPasaFiltros(productos[indice]);
@@ -508,6 +509,9 @@ function iniciarArmado() {
         if (visibles.length === 0) {
             html += htmlListaVacia();
         } else {
+            if (soloCompatibles && visibles.every(esDisponibleSinComparar)) {
+                html += `<p class="small text-muted mb-2">${MENSAJE_DISPONIBLES}</p>`;
+            }
             html += '<div class="list-group">';
             visibles.forEach(candidato => {
                 const local = productoDeCandidato(candidato);
@@ -564,14 +568,42 @@ function iniciarArmado() {
         }
     }
 
+    function esDisponibleSinComparar(candidato) {
+        if (candidato.estado === 'incompleto') {
+            return true;
+        }
+        return candidato.estado === 'no_evaluada'
+            && categoriaModal === 'almacenamiento'
+            && !currentBuild.placa_madre;
+    }
+
+    function pasaSoloCompatibles(candidato) {
+        return candidato.estado === 'compatible' || esDisponibleSinComparar(candidato);
+    }
+
     function htmlListaVacia() {
         if (recomendacionesActuales.length === 0) {
             return '<p class="text-muted mb-0">No hay piezas en esta categoría.</p>';
         }
-        if (hayFiltrosActivos()) {
+        const productos = recomendacionesActuales.map(productoDeCandidato);
+        const trasSpec = recomendacionesActuales.filter((candidato, indice) => productoPasaFiltros(productos[indice]));
+        if (trasSpec.length === 0) {
             return `<p class="text-muted mb-0">${MENSAJE_SIN_FILTROS}</p>`;
         }
-        return '<p class="text-muted mb-0">No hay piezas en esta categoría.</p>';
+        if (soloCompatibles) {
+            const hayIncompatible = trasSpec.some(candidato => candidato.estado === 'incompatible');
+            const haySinDatos = trasSpec.some(candidato => (
+                candidato.estado === 'datos_insuficientes'
+                || (candidato.estado === 'no_evaluada' && !esDisponibleSinComparar(candidato))
+            ));
+            if (hayIncompatible) {
+                return `<p class="text-muted mb-0">${MENSAJE_SIN_COMPATIBLES}</p>`;
+            }
+            if (haySinDatos) {
+                return `<p class="text-muted mb-0">${MENSAJE_SIN_VERIFICAR}</p>`;
+            }
+        }
+        return `<p class="text-muted mb-0">${MENSAJE_SIN_FILTROS}</p>`;
     }
 
     function activarSeleccion(evento) {
@@ -633,9 +665,11 @@ function iniciarArmado() {
         } else if (categoriaModal === 'gabinete') {
             agregar(producto.formato_soporte);
             agregar(producto.largo_max_gpu_mm, valor => `GPU máx. ${textoNumero(valor)} mm`);
+            agregar(producto.altura_max_cooler_mm, valor => `Cooler máx. ${textoNumero(valor)} mm`);
         } else if (categoriaModal === 'refrigeracion_cooler') {
             agregar(producto.tipo);
             agregar(producto.socket_compatibles);
+            agregar(producto.altura_mm, valor => `${textoNumero(valor)} mm`);
         } else if (categoriaModal === 'almacenamiento') {
             agregar(textoTipoDisco(producto.model_name));
             agregar(producto.capacidad_gb, valor => `${textoNumero(valor)} GB`);
@@ -666,29 +700,36 @@ function iniciarArmado() {
         (candidato.motivos || []).forEach(agregar);
         (candidato.pendientes || []).forEach(agregar);
         (candidato.advertencias || []).forEach(agregar);
-        if ((candidato.pendientes || []).length) {
-            agregar(MENSAJE_FALTAN);
-        }
         return textos;
     }
 
+    function presentarEstado(estado, opciones) {
+        const general = Boolean(opciones && opciones.general);
+        const clave = opciones && opciones.clave;
+        const sinPlaca = clave === 'almacenamiento' && !currentBuild.placa_madre;
+        if (estado === 'compatible') {
+            return { texto: 'Compatible', clase: 'armado-estado-ok', icono: 'fa-check-circle', motivo: false };
+        }
+        if (estado === 'incompatible') {
+            return { texto: 'Incompatible', clase: 'armado-estado-no', icono: 'fa-times-circle', motivo: true };
+        }
+        if (estado === 'datos_insuficientes') {
+            return { texto: 'No verificada', clase: 'armado-estado-revisar', icono: 'fa-info-circle', motivo: true };
+        }
+        if (estado === 'incompleto') {
+            if (general) {
+                return { texto: MENSAJE_FALTAN, clase: 'armado-estado-disponible', icono: 'fa-info-circle', motivo: false };
+            }
+            return { texto: 'Disponible', clase: 'armado-estado-disponible', icono: 'fa-circle', motivo: false };
+        }
+        if (estado === 'no_evaluada' && !general && (sinPlaca || (categoriaModal === 'almacenamiento' && !currentBuild.placa_madre && !clave))) {
+            return { texto: 'Disponible', clase: 'armado-estado-disponible', icono: 'fa-circle', motivo: false };
+        }
+        return { texto: 'No verificada', clase: 'armado-estado-revisar', icono: 'fa-info-circle', motivo: true };
+    }
+
     function estadoVisual(candidato) {
-        if (candidato.estado === 'compatible') {
-            return { texto: 'Compatible', clase: 'armado-estado-ok', motivo: false };
-        }
-        if (candidato.estado === 'incompatible') {
-            return { texto: 'Incompatible', clase: 'armado-estado-no', motivo: true };
-        }
-        if (candidato.estado === 'datos_insuficientes') {
-            return { texto: 'No verificada', clase: 'armado-estado-revisar', motivo: true };
-        }
-        if (candidato.estado === 'incompleto') {
-            return { texto: 'Disponible', clase: 'armado-estado-disponible', motivo: false };
-        }
-        if (candidato.estado === 'no_evaluada' && categoriaModal === 'almacenamiento' && !currentBuild.placa_madre) {
-            return { texto: 'Disponible', clase: 'armado-estado-disponible', motivo: false };
-        }
-        return { texto: 'No verificada', clase: 'armado-estado-revisar', motivo: true };
+        return presentarEstado(candidato.estado);
     }
 
     function detalleRecomendacion(candidato, producto) {
@@ -760,8 +801,10 @@ function iniciarArmado() {
         if (component.potencia_minima_fuente_watts) specs.push(`Fuente mín. recomendada: ${component.potencia_minima_fuente_watts}W`);
         if (component.largo_mm) specs.push(`Largo: ${component.largo_mm}mm`);
         if (component.largo_max_gpu_mm) specs.push(`GPU máx.: ${component.largo_max_gpu_mm}mm`);
+        if (component.altura_max_cooler_mm) specs.push(`Cooler máx.: ${component.altura_max_cooler_mm} mm`);
         // Refrigeración
         if (component.tipo) specs.push(`Tipo: ${component.tipo}`);
+        if (component.altura_mm) specs.push(`Altura: ${component.altura_mm} mm`);
         if (component.tamanho_radiador_mm) specs.push(`Radiador: ${component.tamanho_radiador_mm}mm`);
 
         return specs;
@@ -889,28 +932,11 @@ function iniciarArmado() {
         return (evaluacionActual.piezas || {})[key] || null;
     }
 
-    function clasificarPieza(pieza) {
+    function clasificarPieza(pieza, clave) {
         if (!pieza) {
             return null;
         }
-        const pendientes = pieza.pendientes || [];
-        const avisos = pieza.advertencias || [];
-        if (pieza.estado === 'incompatible') {
-            return { texto: 'Incompatible', clase: 'text-danger', icono: 'fa-times-circle' };
-        }
-        if (pieza.estado === 'datos_insuficientes' || avisos.length) {
-            return { texto: 'Revisar compatibilidad', clase: 'text-warning', icono: 'fa-exclamation-triangle' };
-        }
-        if (pieza.estado === 'no_evaluada') {
-            return { texto: 'Compatibilidad no verificada', clase: 'text-info', icono: 'fa-info-circle' };
-        }
-        if (pieza.estado === 'incompleto' || pendientes.length) {
-            return { texto: 'Faltan componentes', clase: 'text-info', icono: 'fa-info-circle' };
-        }
-        if (pieza.estado === 'compatible') {
-            return { texto: 'Compatible', clase: 'text-success', icono: 'fa-check-circle' };
-        }
-        return { texto: 'Compatibilidad no verificada', clase: 'text-info', icono: 'fa-info-circle' };
+        return presentarEstado(pieza.estado, { clave: clave });
     }
 
     function textosDetalle(pieza) {
@@ -936,27 +962,30 @@ function iniciarArmado() {
         return /potencia insuficiente|no se puede estimar la potencia|para estimar la potencia de la fuente/i.test(texto);
     }
 
-    function contenidoEstado(pieza, label) {
-        const clase = clasificarPieza(pieza);
+    function contenidoEstado(pieza, label, clave) {
+        const clase = clasificarPieza(pieza, clave);
         if (!evaluacionActual || evaluacionActual.pendiente) {
-            return { clase: 'text-muted', html: '<span>Consultando compatibilidad...</span>' };
+            return { html: '<span>Consultando compatibilidad...</span>' };
         }
         if (evaluacionActual.fallo || !clase) {
-            return { clase: 'text-danger', html: '<span>No se pudo consultar la compatibilidad.</span>' };
+            return { html: '<span>No se pudo consultar la compatibilidad.</span>' };
         }
         const detalle = textosDetalle(pieza);
         const info = detalle.length
-            ? `<button type="button" class="btn btn-link btn-sm armado-resumen-info ${clase.clase}" data-detalle="${escaparHtml(detalle.join('\n\n'))}" aria-label="Ver detalle de compatibilidad de ${escaparHtml(label)}"><i class="fas fa-info-circle" aria-hidden="true"></i></button>`
+            ? `<button type="button" class="btn btn-link btn-sm armado-resumen-info" data-detalle="${escaparHtml(detalle.join('\n\n'))}" aria-label="Ver detalle de compatibilidad de ${escaparHtml(label)}"><i class="fas fa-info-circle" aria-hidden="true"></i></button>`
             : '';
+        const avisos = (pieza.advertencias || [])
+            .filter(texto => texto && !esAvisoCritico(texto))
+            .map(texto => `<span class="armado-advertencia">${escaparHtml(texto)}</span>`)
+            .join('');
         return {
-            clase: clase.clase,
-            html: `<span><i class="fas ${clase.icono}" aria-hidden="true"></i> ${escaparHtml(clase.texto)}</span>${info}`,
+            html: `<span class="armado-estado-badge ${clase.clase}"><i class="fas ${clase.icono}" aria-hidden="true"></i> ${escaparHtml(clase.texto)}</span>${avisos}${info}`,
         };
     }
 
     function htmlEstadoTarjeta(key, label) {
-        const estado = contenidoEstado(piezaEvaluada(key), label);
-        return `<div class="armado-estado-compacto ${estado.clase}">${estado.html}</div>`;
+        const estado = contenidoEstado(piezaEvaluada(key), label, key);
+        return `<div class="armado-estado-compacto">${estado.html}</div>`;
     }
 
     function desecharPopovers(raiz) {
@@ -1089,7 +1118,7 @@ function iniciarArmado() {
             total += subtotal;
             componentCount += 1;
             const pieza = piezaEvaluada(key);
-            const estado = contenidoEstado(pieza, label);
+            const estado = contenidoEstado(pieza, label, key);
             const clase = estado;
             const criticos = (pieza && evaluacionActual && !evaluacionActual.pendiente && !evaluacionActual.fallo)
                 ? [...(pieza.motivos || []), ...(pieza.advertencias || [])].filter(esAvisoCritico)
@@ -1109,7 +1138,7 @@ function iniciarArmado() {
                     <span class="text-nowrap">$${subtotal.toLocaleString('es-CL')}</span>
                 </div>
                 ${nombres}
-                <div class="armado-resumen-estado ${clase.clase}">${clase.html}</div>
+                <div class="armado-resumen-estado">${clase.html}</div>
                 ${avisosCriticos}
             `;
             summaryList.appendChild(summaryItem);
@@ -1150,6 +1179,12 @@ function iniciarArmado() {
         });
 
         if (componentCount > 0 && evaluacionActual && !evaluacionActual.pendiente && !evaluacionActual.fallo) {
+            const general = presentarEstado(evaluacionActual.estado, { general: true });
+            const nota = document.createElement('p');
+            nota.id = 'armado-estado-general';
+            nota.className = `armado-estado-general armado-estado-badge ${general.clase}`;
+            nota.textContent = general.texto;
+            summaryList.prepend(nota);
             (evaluacionActual.advertencias || []).filter(esAvisoCritico).forEach(texto => {
                 if (criticosVisibles.has(texto)) {
                     return;
@@ -1166,8 +1201,95 @@ function iniciarArmado() {
 
         totalPriceEl.textContent = `$${total.toLocaleString('es-CL')}`;
 
-        addToCartBtn.disabled = componentCount === 0;
         downloadExcelBtn.disabled = componentCount === 0;
+        actualizarBotonCarrito(componentCount);
+    }
+
+    function servidorBloqueaCarrito() {
+        if (!evaluacionActual || evaluacionActual.fallo) {
+            return false;
+        }
+        if (evaluacionActual.pendiente) {
+            return true;
+        }
+        return evaluacionActual.estado === 'incompatible' || evaluacionActual.estado === 'datos_insuficientes';
+    }
+
+    function mostrarAvisoCarrito(texto, conEnlace) {
+        const aviso = document.getElementById('armado-carrito-aviso');
+        if (!aviso) {
+            return;
+        }
+        aviso.replaceChildren();
+        aviso.classList.remove('armado-carrito-aviso-sesion');
+        aviso.setAttribute('role', 'status');
+        if (!texto) {
+            aviso.hidden = true;
+            return;
+        }
+        aviso.hidden = false;
+        if (!conEnlace) {
+            aviso.textContent = texto;
+            return;
+        }
+        aviso.classList.add('armado-carrito-aviso-sesion');
+        aviso.setAttribute('role', 'alert');
+        const icono = document.createElement('i');
+        icono.className = 'fas fa-sign-in-alt armado-carrito-aviso-icono';
+        icono.setAttribute('aria-hidden', 'true');
+        const cuerpo = document.createElement('div');
+        cuerpo.className = 'armado-carrito-aviso-cuerpo';
+        const parrafo = document.createElement('p');
+        parrafo.className = 'armado-carrito-aviso-texto';
+        parrafo.textContent = texto;
+        cuerpo.append(parrafo);
+        if (urls.loginUrl) {
+            const enlace = document.createElement('a');
+            const separador = urls.loginUrl.includes('?') ? '&' : '?';
+            enlace.href = `${urls.loginUrl}${separador}next=${encodeURIComponent(window.location.pathname)}`;
+            enlace.className = 'btn btn-warning btn-block armado-carrito-aviso-enlace';
+            enlace.textContent = 'Iniciar sesión';
+            cuerpo.append(enlace);
+        }
+        aviso.append(icono, cuerpo);
+    }
+
+    function actualizarBotonCarrito(componentCount) {
+        if (enviandoCarrito) {
+            addToCartBtn.disabled = true;
+            return;
+        }
+        if (!componentCount) {
+            addToCartBtn.disabled = true;
+            mostrarAvisoCarrito('');
+            return;
+        }
+        if (evaluacionActual && evaluacionActual.pendiente) {
+            addToCartBtn.disabled = true;
+            mostrarAvisoCarrito('Comprobando compatibilidad…');
+            return;
+        }
+        if (servidorBloqueaCarrito()) {
+            addToCartBtn.disabled = true;
+            const motivos = ((evaluacionActual && evaluacionActual.motivos) || []).filter(Boolean);
+            mostrarAvisoCarrito(motivos.join(' ') || 'No se puede agregar este armado al carrito.');
+            return;
+        }
+        addToCartBtn.disabled = false;
+        if (evaluacionActual && evaluacionActual.fallo) {
+            mostrarAvisoCarrito('No se pudo consultar la compatibilidad. Al agregar, el servidor la volverá a comprobar.');
+            return;
+        }
+        mostrarAvisoCarrito('');
+    }
+
+    function respuestaPideSesion(response) {
+        const destino = response.url || '';
+        return Boolean(
+            (response.redirected && destino.includes('/login'))
+            || response.status === 401
+            || response.status === 403
+        );
     }
 
     // --- 5. ACCIONES FINALES ---
@@ -1192,10 +1314,20 @@ function iniciarArmado() {
     }
 
     async function addAllToCart() {
+        if (enviandoCarrito || addToCartBtn.disabled) {
+            return;
+        }
         const componentes = seleccionActual();
-        if (componentes.length === 0) return;
+        if (componentes.length === 0) {
+            return;
+        }
 
+        enviandoCarrito = true;
+        addToCartBtn.disabled = true;
         const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        let agregado = false;
+        let avisoFinal = '';
+        let avisoEnlace = false;
 
         try {
             const response = await fetch(urls.addArmadoUrl, {
@@ -1207,16 +1339,37 @@ function iniciarArmado() {
                     'X-CSRFToken': csrfInput ? csrfInput.value : '',
                 },
             });
+            if (respuestaPideSesion(response)) {
+                avisoFinal = MENSAJE_SESION;
+                avisoEnlace = true;
+                return;
+            }
+            const tipo = response.headers.get('Content-Type') || '';
+            if (!tipo.includes('application/json')) {
+                alert('Hubo un error de comunicación con el servidor al agregar el armado.');
+                return;
+            }
             const data = await response.json();
             if (!response.ok || data.status !== 'success') {
                 const motivos = (data.motivos || []).filter(Boolean);
-                alert(motivos.length ? motivos.join('\n') : (data.message || 'No se agregó el armado al carrito.'));
+                const mensaje = motivos.length ? motivos.join('\n') : (data.message || 'No se agregó el armado al carrito.');
+                avisoFinal = mensaje;
+                alert(mensaje);
                 return;
             }
+            agregado = true;
         } catch (error) {
             console.error('Error al agregar el armado:', error);
             alert('Hubo un error de comunicación con el servidor al agregar el armado.');
             return;
+        } finally {
+            if (!agregado) {
+                enviandoCarrito = false;
+                updateSummaryAndTotal();
+                if (avisoFinal) {
+                    mostrarAvisoCarrito(avisoFinal, avisoEnlace);
+                }
+            }
         }
 
         showToast('¡Componentes agregados! Redirigiendo al carrito...');

@@ -92,9 +92,9 @@ def mostrarArmado(request):
             get_component_data(AlmacenamientoSSD, ['nombre', 'precio', 'capacidad_gb', 'interfaz', 'formato', 'stock'], 'almacenamiento_ssd')
             + get_component_data(AlmacenamientoHDD, ['nombre', 'precio', 'capacidad_gb', 'interfaz', 'formato', 'stock'], 'almacenamiento_hdd')
         ),
-        'gabinete': get_component_data(Gabinete, ['nombre', 'precio', 'formato_soporte', 'largo_max_gpu_mm', 'stock'], 'gabinete'),
+        'gabinete': get_component_data(Gabinete, ['nombre', 'precio', 'formato_soporte', 'largo_max_gpu_mm', 'altura_max_cooler_mm', 'stock'], 'gabinete'),
         'fuente_de_poder': get_component_data(FuenteDePoder, ['nombre', 'precio', 'potencia_watts', 'certificacion', 'modular', 'stock'], 'fuente_de_poder'),
-        'refrigeracion_cooler': get_component_data(RefrigeracionCooler, ['nombre', 'precio', 'socket_compatibles', 'tipo', 'tamanho_radiador_mm', 'stock'], 'refrigeracion'),
+        'refrigeracion_cooler': get_component_data(RefrigeracionCooler, ['nombre', 'precio', 'socket_compatibles', 'tipo', 'tamanho_radiador_mm', 'altura_mm', 'stock'], 'refrigeracion'),
     }
 
     for categoria in componentes:
@@ -1042,31 +1042,6 @@ def agregar_armado_al_carrito(request):
         if clave and model_name != 'memoria_ram':
             seleccion[clave] = producto
 
-    carrito_previo = Carrito.objects.filter(usuario=request.user).first()
-    motivos_stock = []
-    for model_name, product_id in orden:
-        grupo = grupos[(model_name, product_id)]
-        producto = grupo['producto']
-        ya_en_carrito = 0
-        if carrito_previo is not None:
-            existente = ItemCarrito.objects.filter(
-                carrito=carrito_previo,
-                **{f'{model_name}__id': producto.id},
-            ).first()
-            ya_en_carrito = existente.cantidad if existente else 0
-        if ya_en_carrito + grupo['cantidad'] > producto.stock:
-            motivos_stock.append(
-                f"'{producto.nombre}' no tiene stock suficiente: "
-                f"se piden {grupo['cantidad']} y hay {producto.stock} "
-                f"({ya_en_carrito} ya en el carrito)."
-            )
-    if motivos_stock:
-        return _error_armado(
-            'No se agregó el armado al carrito.',
-            estado='error',
-            motivos=motivos_stock,
-        )
-
     memorias = [
         LineaRam(grupos[clave]['producto'], grupos[clave]['cantidad'])
         for clave in orden
@@ -1094,19 +1069,65 @@ def agregar_armado_al_carrito(request):
         )
 
     with transaction.atomic():
-        carrito, _created = Carrito.objects.get_or_create(usuario=request.user)
+        # El carrito puede no existir todavía. La fila del usuario sí existe
+        # y serializa las altas simultáneas de esa cuenta en PostgreSQL.
+        # Después se bloquean los productos por (tipo, id), el carrito y las
+        # líneas por id. SQLite no emite FOR UPDATE; la transacción igual
+        # guarda el armado completo o no guarda nada.
+        request.user.__class__.objects.select_for_update().get(pk=request.user.pk)
+        bloqueados = {}
+        for model_name, product_id in sorted(orden, key=lambda clave: (clave[0], clave[1])):
+            producto = (
+                PRODUCT_MODEL_MAP[model_name].objects.select_for_update()
+                .filter(pk=product_id)
+                .first()
+            )
+            if producto is None:
+                transaction.set_rollback(True)
+                return _error_armado('Uno de los componentes ya no está disponible.')
+            bloqueados[(model_name, product_id)] = producto
+
+        carrito, _creado = Carrito.objects.get_or_create(usuario=request.user)
+        Carrito.objects.select_for_update().get(pk=carrito.pk)
+        lineas = []
+        motivos_stock = []
         for model_name, product_id in orden:
-            grupo = grupos[(model_name, product_id)]
-            producto = grupo['producto']
-            lookup_kwargs = {f'{model_name}__id': producto.id}
-            item, created = ItemCarrito.objects.get_or_create(carrito=carrito, **lookup_kwargs)
-            if created:
-                setattr(item, model_name, producto)
-                item.cantidad = grupo['cantidad']
-                item.precio_unitario = producto.precio
+            producto = bloqueados[(model_name, product_id)]
+            pedidas = grupos[(model_name, product_id)]['cantidad']
+            existentes = list(
+                ItemCarrito.objects.select_for_update()
+                .filter(carrito=carrito, **{f'{model_name}__id': producto.id})
+                .order_by('id')
+            )
+            ya_en_carrito = sum(item.cantidad for item in existentes)
+            if ya_en_carrito + pedidas > producto.stock:
+                motivos_stock.append(
+                    f"'{producto.nombre}' no tiene stock suficiente: "
+                    f"se piden {pedidas} y hay {producto.stock} "
+                    f"({ya_en_carrito} ya en el carrito)."
+                )
+            lineas.append((model_name, producto, pedidas, existentes))
+        if motivos_stock:
+            transaction.set_rollback(True)
+            return _error_armado(
+                'No se agregó el armado al carrito.',
+                estado='error',
+                motivos=motivos_stock,
+            )
+
+        for model_name, producto, pedidas, existentes in lineas:
+            if existentes:
+                item = existentes[0]
+                item.cantidad += pedidas
+                item.save(update_fields=['cantidad'])
             else:
-                item.cantidad += grupo['cantidad']
-            item.save()
+                item = ItemCarrito(
+                    carrito=carrito,
+                    cantidad=pedidas,
+                    precio_unitario=producto.precio,
+                )
+                setattr(item, model_name, producto)
+                item.save()
 
     return JsonResponse({
         'status': 'success',

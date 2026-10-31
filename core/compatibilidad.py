@@ -31,6 +31,13 @@ Si hay GPU y gabinete, la tarjeta cabe en largo cuando largo_mm es menor o
 igual que largo_max_gpu_mm. La igualdad cumple. Un milímetro de más no.
 Esta regla no valida grosor, altura ni el espacio que ocupan los radiadores.
 
+Altura del cooler de aire
+-------------------------
+Si hay un cooler de aire y un gabinete, la altura cabe cuando altura_mm es
+menor o igual que altura_max_cooler_mm. La igualdad cumple. Un milímetro de
+más no. Si falta una de las dos medidas, o es 0, no se asume que quepa.
+Un cooler líquido no usa esta medida: el campo no describe el radiador.
+
 Memoria RAM
 -----------
 ``capacidad_gb`` es la capacidad del producto tal como se vende: un módulo
@@ -106,8 +113,8 @@ REGLAS_POR_CATEGORIA = {
     'procesador': ('socket',),
     'placa_madre': ('socket', 'ddr', 'formato', 'formato_ram', 'ranuras_ram', 'capacidad_ram'),
     'memoria_ram': ('ddr', 'formato_ram', 'ranuras_ram', 'capacidad_ram'),
-    'gabinete': ('formato', 'largo'),
-    'refrigeracion': ('cooler',),
+    'gabinete': ('formato', 'largo', 'altura'),
+    'refrigeracion': ('cooler', 'altura'),
     'fuente_de_poder': ('potencia',),
     'tarjeta_grafica': ('largo',),
 }
@@ -293,6 +300,8 @@ def evaluar_candidato(
     pendientes = []
     estados = []
     for regla in REGLAS_POR_CATEGORIA[categoria]:
+        if regla == 'altura' and not _altura_aplica(piezas):
+            continue
         hallazgo = hallazgos_por_regla.get(regla)
         if hallazgo is not None:
             estados.append(hallazgo.estado)
@@ -365,6 +374,8 @@ def _regla_puede_comprobarse(regla, piezas, politica):
         return _potencia_cumplida(piezas, politica)
     if regla == 'largo':
         return _largo_cumplido(piezas)
+    if regla == 'altura':
+        return _altura_cumplida(piezas)
     return False
 
 
@@ -385,6 +396,8 @@ def _texto_coincidencia(regla, piezas, politica):
         return _texto_potencia_cumplida(piezas, politica)
     if regla == 'largo':
         return _texto_largo_cumplido(piezas)
+    if regla == 'altura':
+        return _texto_altura_cumplida(piezas)
     sockets = []
     if piezas['procesador'] is not None:
         sockets.append(normalizar_spec(piezas['procesador'].socket))
@@ -517,6 +530,9 @@ def validar_armado(
     )
     hallazgos = [hallazgo for hallazgo in candidatos if hallazgo is not None]
     hallazgos.extend(_evaluar_cooler(refrigeracion, procesador, placa_madre))
+    hallazgo_altura = _evaluar_altura(refrigeracion, gabinete)
+    if hallazgo_altura is not None:
+        hallazgos.append(hallazgo_altura)
     hallazgos.extend(_evaluar_memorias(lineas, placa_madre))
     discos = _evaluacion_discos(_normalizar_discos(almacenamientos), placa_madre)
     if discos is not None and discos.estado == ESTADO_INCOMPATIBLE:
@@ -1202,6 +1218,61 @@ def _texto_largo_cumplido(piezas):
         f'Cumple el límite de largo ({largo_gpu} mm de {largo_maximo} mm). '
         'Solo se comprueba el largo; no el grosor, la altura ni el espacio de radiadores.'
     )
+
+
+def _es_cooler_de_aire(refrigeracion):
+    return normalizar_spec(getattr(refrigeracion, 'tipo', None)) == 'AIRE'
+
+
+def _altura_aplica(piezas):
+    cooler = piezas.get('refrigeracion')
+    gabinete = piezas.get('gabinete')
+    return cooler is not None and gabinete is not None and _es_cooler_de_aire(cooler)
+
+
+def _evaluar_altura(refrigeracion, gabinete):
+    """Compara la altura de un cooler de aire con el máximo del gabinete.
+
+    Solo corre cuando las dos piezas están elegidas. La igualdad cabe.
+    Un valor vacío o 0 no se toma como medida y no se asume que quepa.
+    El cooler líquido no entra: altura_mm no describe su radiador.
+    """
+    if refrigeracion is None or gabinete is None or not _es_cooler_de_aire(refrigeracion):
+        return None
+    altura = _entero_positivo(getattr(refrigeracion, 'altura_mm', None))
+    maximo = _entero_positivo(getattr(gabinete, 'altura_max_cooler_mm', None))
+    faltan = []
+    if altura is None:
+        faltan.append('la altura del cooler')
+    if maximo is None:
+        faltan.append('la altura máxima del gabinete')
+    if faltan:
+        return Hallazgo(
+            'altura',
+            ESTADO_DATOS_INSUFICIENTES,
+            'No se puede comprobar la altura del cooler porque falta '
+            + ' y '.join(faltan)
+            + '. No se asume que quepa.',
+        )
+    if altura > maximo:
+        return Hallazgo(
+            'altura',
+            ESTADO_INCOMPATIBLE,
+            f'El cooler mide {altura} mm y el gabinete admite un máximo de {maximo} mm.',
+        )
+    return None
+
+
+def _altura_cumplida(piezas):
+    if not _altura_aplica(piezas):
+        return False
+    return _evaluar_altura(piezas['refrigeracion'], piezas['gabinete']) is None
+
+
+def _texto_altura_cumplida(piezas):
+    altura = _entero_positivo(piezas['refrigeracion'].altura_mm)
+    maximo = _entero_positivo(piezas['gabinete'].altura_max_cooler_mm)
+    return f'Cumple la altura del cooler ({altura} mm de {maximo} mm).'
 
 
 def _sockets_conocidos_del_cooler(texto):

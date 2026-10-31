@@ -86,9 +86,9 @@ class RecomendadorPcTests(TestCase):
             'cpu': self.cpu('CPU AM5', 'AM5', nucleos=8, frecuencia='4.20'),
             'placa': self.placa('Placa AM5', 'AM5', 'DDR5'),
             'ram': self.ram('RAM DDR5', 'DDR5'),
-            'cooler': self.cooler('AM5'),
+            'cooler': self.cooler('AM5', altura=150),
             'gpu': self.gpu('GPU 280', 280),
-            'gabinete': self.gabinete('Gabinete 350', 350),
+            'gabinete': self.gabinete('Gabinete 350', 350, altura_max=160),
             'fuente': self.fuente('Fuente 650', 650),
             'ssd': self.ssd(),
         }
@@ -492,11 +492,11 @@ class RecomendadorPcTests(TestCase):
         self.placa('Placa AM4', 'AM4', 'DDR4', precio='50000')
         self.ram('RAM 32', 'DDR4', precio='45000', capacidad=32)
         self.gpu('GPU 8GB', 280, consumo=100, vram=8, precio='200000')
-        self.gabinete('Gabinete 320', 320, precio='60000')
+        self.gabinete('Gabinete 320', 320, precio='60000', altura_max=160)
         self.fuente('Fuente 650', 650, precio='65000')
         grande = self.ssd('SSD 1TB', precio='55000')
         chico = self.ssd('SSD 500', precio='30000', capacidad=500)
-        cooler = self.cooler('AM4', precio='20000')
+        cooler = self.cooler('AM4', precio='20000', altura=150)
 
         opcion = generar_recomendaciones(600_000, 'gaming', resolucion='1080p')['recomendaciones'][0]
 
@@ -542,10 +542,10 @@ class RecomendadorPcTests(TestCase):
         self.placa('Placa AM5', 'AM5', 'DDR5')
         self.ram('RAM DDR5', 'DDR5')
         self.gpu('GPU 280', 280)
-        self.gabinete('Gabinete 350', 350)
+        self.gabinete('Gabinete 350', 350, altura_max=160)
         self.fuente('Fuente 650', 650)
         self.ssd()
-        cooler = self.cooler('AM5')
+        cooler = self.cooler('AM5', altura=150)
         opcion = generar_recomendaciones(2_000_000, 'general')['recomendaciones'][0]
 
         self.assertEqual(self._id(opcion, 'refrigeracion'), cooler.id)
@@ -598,7 +598,7 @@ class RecomendadorPcTests(TestCase):
 
     def test_conserva_el_cooler_que_el_usuario_ya_eligio(self):
         piezas = self.catalogo_valido()
-        fijado = self.cooler('AM5', precio='40000', nombre='Cooler elegido')
+        fijado = self.cooler('AM5', precio='40000', altura=150, nombre='Cooler elegido')
         opcion = generar_recomendaciones(
             2_000_000,
             'gaming',

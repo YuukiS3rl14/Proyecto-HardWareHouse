@@ -150,6 +150,17 @@ class OrdenYDiscosTests(TestCase):
         self.assertIsNone(hdd.almacenamiento_ssd_id)
         self.assertNotEqual(ssd.almacenamiento_ssd.nombre, hdd.almacenamiento_hdd.nombre)
 
+    def test_sin_sesion_el_servidor_sigue_pidiendo_login(self):
+        self.client.logout()
+        response = self.client.post(
+            reverse('core:agregar_armado_al_carrito'),
+            data=json.dumps({'componentes': [{'tipo': 'procesador', 'id': self.cpu.id}]}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response.url)
+        self.assertEqual(ItemCarrito.objects.count(), 0)
+
     def test_cantidades_invalidas_o_sin_stock_no_agregan_nada(self):
         from core.models import Carrito, ItemCarrito
 

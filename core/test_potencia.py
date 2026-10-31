@@ -11,7 +11,16 @@ from core.compatibilidad import (
     evaluar_candidato,
     validar_armado,
 )
-from core.models import FuenteDePoder, ItemCarrito, Procesador, Proveedor, TarjetaGrafica
+from core.models import (
+    FuenteDePoder,
+    Gabinete,
+    ItemCarrito,
+    MemoriaRam,
+    PlacaMadre,
+    Procesador,
+    Proveedor,
+    TarjetaGrafica,
+)
 
 
 def pieza(**atributos):
@@ -51,6 +60,43 @@ class PoliticaPotenciaTests(SimpleTestCase):
         # (100 + 200 + 10) * 1.25 = 387.5 -> 388
         self.assertEqual(estimacion, 388)
         self.assertEqual(minimo, 388)
+
+    def test_la_gama_basica_de_450w_alcanza_el_minimo_estimado(self):
+        # 65 + 110 + 150 = 325; techo(325 × 1.20) = 390; la GPU pide 450 W.
+        estimacion, minimo = POLITICA_POTENCIA_DEFECTO.estimar(65, 110, 450)
+
+        self.assertEqual(estimacion, 390)
+        self.assertEqual(minimo, 450)
+        for watts in (450, 650, 850):
+            resultado = validar_armado(**cpu_gpu_fuente(watts, cpu_w=65, gpu_w=110, minimo_gpu=450))
+            self.assertEqual(resultado.estado, 'compatible', watts)
+
+    def test_una_configuracion_sobre_450w_rechaza_esa_fuente(self):
+        # 95 + 170 + 150 = 415; techo(415 × 1.20) = 498; la GPU pide 550 W.
+        estimacion, minimo = POLITICA_POTENCIA_DEFECTO.estimar(95, 170, 550)
+        cpu = pieza(socket='AM5', potencia_referencia_watts=95)
+        gpu = pieza(consumo_referencia_watts=170, potencia_minima_fuente_watts=550, largo_mm=270)
+        corta = pieza(potencia_watts=450)
+        suficiente = pieza(potencia_watts=650)
+
+        self.assertEqual(estimacion, 498)
+        self.assertEqual(minimo, 550)
+        for fuente, esperado in ((corta, 'incompatible'), (suficiente, 'compatible')):
+            armado = validar_armado(**cpu_gpu_fuente(
+                fuente.potencia_watts, cpu_w=95, gpu_w=170, minimo_gpu=550,
+            ))
+            candidato = evaluar_candidato(
+                'fuente_de_poder', fuente, procesador=cpu, tarjeta_grafica=gpu,
+            )
+            self.assertEqual(armado.estado, esperado, fuente.potencia_watts)
+            self.assertEqual(candidato.estado, armado.estado, fuente.potencia_watts)
+
+        motivos = ' '.join(evaluar_candidato(
+            'fuente_de_poder', corta, procesador=cpu, tarjeta_grafica=gpu,
+        ).motivos)
+        self.assertIn('450 W', motivos)
+        self.assertIn('550 W', motivos)
+        self.assertIn('498 W', motivos)
 
     def test_la_recomendacion_de_la_gpu_eleva_el_minimo(self):
         estimacion, minimo = POLITICA_EXACTA.estimar(100, 100, 400)
@@ -202,6 +248,70 @@ class RecomendacionPotenciaTests(TestCase):
                 {'tipo': 'tarjeta_grafica', 'id': self.gpu.id},
             ]).json()['candidatos']].index('Fuente corta'),
         )
+
+    def test_el_modal_y_el_armado_coinciden_cuando_hacen_falta_mas_de_450w(self):
+        cpu = Procesador.objects.create(
+            proveedor=self.proveedor, nombre='CPU media 95', precio=Decimal('120000'), stock=4,
+            socket='AM4', nucleos=6, frecuencia_base=Decimal('3.80'), potencia_referencia_watts=95,
+        )
+        gpu = TarjetaGrafica.objects.create(
+            proveedor=self.proveedor, nombre='GPU media 170', precio=Decimal('300000'), stock=4,
+            vram_gb=8, tipo_memoria='GDDR6', interfaz='PCIe 4.0',
+            consumo_referencia_watts=170, potencia_minima_fuente_watts=550, largo_mm=270,
+        )
+        fuente_450 = FuenteDePoder.objects.create(
+            proveedor=self.proveedor, nombre='Fuente 450 de prueba', precio=Decimal('35000'), stock=4,
+            potencia_watts=450, certificacion='80+ Bronze', modular=False,
+        )
+        fuente_650 = FuenteDePoder.objects.create(
+            proveedor=self.proveedor, nombre='Fuente 650 de prueba', precio=Decimal('65000'), stock=4,
+            potencia_watts=650, certificacion='80+ Gold', modular=False,
+        )
+        placa = PlacaMadre.objects.create(
+            proveedor=self.proveedor, nombre='Placa AM4 de prueba', precio=Decimal('80000'), stock=4,
+            socket_cpu='AM4', chipset='B550', formato='ATX', ranuras_ram=4,
+            tipo_ram_soportado='DDR4', formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        )
+        ram = MemoriaRam.objects.create(
+            proveedor=self.proveedor, nombre='RAM DDR4 de prueba', precio=Decimal('30000'), stock=4,
+            capacidad_gb=16, tipo_ddr='DDR4', velocidad_mhz=3200, modulos_por_producto=1,
+            capacidad_modulo_gb=16, formato_ram='DIMM',
+        )
+        gabinete = Gabinete.objects.create(
+            proveedor=self.proveedor, nombre='Gabinete ATX de prueba', precio=Decimal('40000'), stock=4,
+            formato_soporte='ATX', material='Acero', largo_max_gpu_mm=320,
+        )
+        base = [
+            {'tipo': 'procesador', 'id': cpu.id},
+            {'tipo': 'tarjeta_grafica', 'id': gpu.id},
+        ]
+        por_nombre = self.fuentes(base)
+        componentes = base + [
+            {'tipo': 'placa_madre', 'id': placa.id},
+            {'tipo': 'memoria_ram', 'id': ram.id},
+            {'tipo': 'gabinete', 'id': gabinete.id},
+        ]
+
+        self.assertEqual(por_nombre['Fuente 450 de prueba']['estado'], 'incompatible')
+        self.assertIn('550 W', ' '.join(por_nombre['Fuente 450 de prueba']['motivos']))
+        self.assertEqual(por_nombre['Fuente 650 de prueba']['estado'], 'compatible')
+
+        for fuente, esperado in ((fuente_450, 'incompatible'), (fuente_650, 'compatible')):
+            respuesta = self.client.post(
+                reverse('core:evaluar_armado'),
+                data=json.dumps({'componentes': componentes + [
+                    {'tipo': 'fuente_de_poder', 'id': fuente.id},
+                ]}),
+                content_type='application/json',
+            )
+            self.assertEqual(respuesta.status_code, 200)
+            cuerpo = respuesta.json()
+            self.assertEqual(cuerpo['estado'], esperado)
+            self.assertEqual(cuerpo['piezas']['fuente_de_poder']['estado'], esperado)
+            self.assertEqual(
+                cuerpo['piezas']['fuente_de_poder']['estado'],
+                por_nombre[fuente.nombre]['estado'],
+            )
 
     def test_sin_gpu_la_fuente_queda_incompleta(self):
         por_nombre = self.fuentes([{'tipo': 'procesador', 'id': self.cpu.id}])

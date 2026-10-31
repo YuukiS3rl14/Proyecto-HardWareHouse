@@ -213,13 +213,14 @@ class ArmadoCarritoTests(TestCase):
         return Gabinete.objects.create(
             proveedor=cls.proveedor, nombre=nombre, precio=Decimal('50000'), stock=4,
             formato_soporte=formato, material='Acero', largo_max_gpu_mm=320,
+            altura_max_cooler_mm=160,
         )
 
     @classmethod
     def _cooler(cls, sockets):
         return RefrigeracionCooler.objects.create(
             proveedor=cls.proveedor, nombre='Cooler', precio=Decimal('30000'), stock=4,
-            tipo='Aire', socket_compatibles=sockets,
+            tipo='Aire', socket_compatibles=sockets, altura_mm=150,
         )
 
     @classmethod

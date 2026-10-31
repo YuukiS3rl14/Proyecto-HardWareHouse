@@ -276,6 +276,69 @@ class ArmadoRamTests(TestCase):
         self.assertIn('Capacidad por módulo (GB)', textos)
         self.assertIn('Módulos por producto', textos)
 
+    def test_diez_unidades_son_incompatibles_aunque_el_stock_alcance(self):
+        placa = PlacaMadre.objects.create(
+            proveedor=self.proveedor, nombre='Placa 4 ranuras 128', precio=Decimal('50000'), stock=4,
+            socket_cpu='AM4', chipset='B550', formato='ATX', ranuras_ram=4,
+            tipo_ram_soportado='DDR4', formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        )
+        modulo = self._ram('DDR4 16 con stock', 16, 1, 16, 'DIMM', 'DDR4', 20, Decimal('15000'))
+        componentes = [
+            {'tipo': 'placa_madre', 'id': placa.id},
+            {'tipo': 'memoria_ram', 'id': modulo.id, 'cantidad': 10},
+        ]
+
+        evaluacion = self.post(reverse('core:evaluar_armado'), componentes).json()
+        motivos = ' '.join(evaluacion['piezas']['memoria_ram']['motivos'])
+        self.assertEqual(evaluacion['piezas']['memoria_ram']['estado'], 'incompatible')
+        self.assertIn('10 ranuras', motivos)
+        self.assertIn('160 GB', motivos)
+        self.assertNotIn('stock', motivos.lower())
+
+        carrito = self.post(reverse('core:agregar_armado_al_carrito'), componentes)
+        self.assertEqual(carrito.status_code, 400)
+        self.assertEqual(carrito.json()['estado'], 'incompatible')
+        self.assertNotIn('stock', ' '.join(carrito.json()['motivos']).lower())
+        self.assertEqual(ItemCarrito.objects.count(), 0)
+
+    def test_el_stock_cambiado_no_se_confunde_con_incompatibilidad(self):
+        modulo = self._ram('DDR4 16 escaso', 16, 1, 16, 'DIMM', 'DDR4', 5, Decimal('15000'))
+        componentes = [
+            {'tipo': 'memoria_ram', 'id': modulo.id, 'cantidad': 2},
+        ]
+        modulo.stock = 1
+        modulo.save(update_fields=['stock'])
+
+        respuesta = self.post(reverse('core:agregar_armado_al_carrito'), componentes)
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.json()['estado'], 'error')
+        self.assertNotEqual(respuesta.json()['estado'], 'incompatible')
+        self.assertIn('stock', ' '.join(respuesta.json()['motivos']).lower())
+        self.assertEqual(ItemCarrito.objects.count(), 0)
+
+    def test_un_kit_cuenta_modulos_por_unidad_y_capacidad_del_producto(self):
+        placa = PlacaMadre.objects.create(
+            proveedor=self.proveedor, nombre='Placa para kit', precio=Decimal('50000'), stock=4,
+            socket_cpu='AM4', chipset='B550', formato='ATX', ranuras_ram=4,
+            tipo_ram_soportado='DDR4', formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        )
+        kit = self._ram('Kit DDR4 32', 32, 2, 16, 'DIMM', 'DDR4', 2, Decimal('40000'))
+        componentes = [
+            {'tipo': 'placa_madre', 'id': placa.id},
+            {'tipo': 'memoria_ram', 'id': kit.id, 'cantidad': 2},
+        ]
+
+        evaluacion = self.post(reverse('core:evaluar_armado'), componentes).json()
+        self.assertEqual(evaluacion['piezas']['memoria_ram']['estado'], 'compatible')
+        self.assertIn('4 de 4 ranuras', evaluacion['piezas']['memoria_ram']['etiqueta'])
+        self.assertIn('64 GB de 128 GB', evaluacion['piezas']['memoria_ram']['etiqueta'])
+
+        carrito = self.post(reverse('core:agregar_armado_al_carrito'), componentes)
+        self.assertEqual(carrito.status_code, 200)
+        item = ItemCarrito.objects.get(memoria_ram__isnull=False)
+        self.assertEqual(item.cantidad, 2)
+        self.assertEqual(item.memoria_ram_id, kit.id)
+
     def test_el_stock_insuficiente_no_agrega_nada(self):
         carrito = Carrito.objects.create(usuario=self.user)
         ItemCarrito.objects.create(

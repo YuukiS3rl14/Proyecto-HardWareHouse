@@ -125,11 +125,15 @@ CATALOGO_DEMO = (
         'modelo': RefrigeracionCooler,
         'nombre': 'DEMO Cooler AM4',
         'campos': {
-            'descripcion': 'Pieza ficticia de demostración. Cooler de aire compatible solo con socket AM4.',
+            'descripcion': (
+                'Pieza ficticia de demostración. Cooler de aire compatible solo con socket AM4. '
+                'Altura 150 mm.'
+            ),
             'precio': Decimal('19990.00'),
             'stock': STOCK_DEMO,
             'tipo': 'Aire',
             'socket_compatibles': 'AM4',
+            'altura_mm': 150,
         },
     },
     {
@@ -461,13 +465,17 @@ GAMAS_DEMO = (
         'modelo': Gabinete,
         'nombre': 'DEMO Gabinete Micro-ATX prueba',
         'campos': {
-            'descripcion': _NOTA + 'Micro-ATX. Admite GPU de hasta 230 mm. No entra la GPU de 270 mm ni la de 330 mm.',
+            'descripcion': (
+                _NOTA + 'Micro-ATX. Admite GPU de hasta 230 mm y un cooler de aire de hasta 155 mm. '
+                'No entra la GPU de 270 mm ni la de 330 mm.'
+            ),
             'precio': Decimal('32990.00'),
             'stock': STOCK_DEMO,
             'formato_soporte': 'Micro-ATX',
             'ventiladores_incluidos': False,
             'material': 'Acero',
             'largo_max_gpu_mm': 230,
+            'altura_max_cooler_mm': 155,
         },
     },
     {
@@ -558,6 +566,15 @@ GAMAS_DEMO = (
 )
 
 CATALOGO_DEMO = CATALOGO_DEMO + GAMAS_DEMO
+
+# Alturas ficticias del armado básico. La carga normal las escribe solo en estos
+# nombres, también si el producto DEMO ya existía. No crea piezas nuevas.
+ALTURA_COOLER_DEMO = {
+    'DEMO Cooler AM4': 150,
+}
+ALTURA_GABINETE_DEMO = {
+    'DEMO Gabinete Micro-ATX prueba': 155,
+}
 
 # Watts ficticios. Solo los escribe la opción --potencia, y solo en estos nombres.
 POTENCIA_CPU_DEMO = {
@@ -725,8 +742,9 @@ GPUS_LARGO_DEMO = (
 
 class Command(BaseCommand):
     help = (
-        'Carga piezas DEMO para probar el armador. No modifica productos que ya existen '
-        'y no se ejecuta si DEBUG está apagado, como en Railway.'
+        'Carga piezas DEMO para probar el armador. No reescribe productos ajenos. '
+        'Si ya existen DEMO Cooler AM4 o DEMO Gabinete Micro-ATX prueba, completa '
+        'solo su altura. No se ejecuta si DEBUG está apagado, como en Railway.'
     )
 
     def add_arguments(self, parser):
@@ -760,6 +778,7 @@ class Command(BaseCommand):
             raise CommandError('cargar_demo_armado solo puede ejecutarse con DEBUG=True.')
 
         self._crear_faltantes_del_catalogo()
+        self._completar_altura_demo()
         if options['potencia']:
             self._aplicar_potencia_demo()
         if options['dimensiones']:
@@ -774,7 +793,7 @@ class Command(BaseCommand):
         ]
         if not faltantes:
             self.stdout.write(self.style.SUCCESS(
-                'Catálogo DEMO: todos los productos ya existen. No se creó ni se modificó ninguno de ellos.'
+                'Catálogo DEMO: todos los productos ya existen. No se creó ninguno.'
             ))
             return
 
@@ -799,6 +818,33 @@ class Command(BaseCommand):
             self.stdout.write(f'Creado: {nombre}')
         self.stdout.write(self.style.SUCCESS(
             f'Listo. Creados: {len(creados)}. Omitidos porque ya existían: {len(CATALOGO_DEMO) - len(creados)}.'
+        ))
+
+    def _completar_altura_demo(self):
+        """Escribe la altura solo en los dos nombres DEMO del armado básico."""
+        with transaction.atomic():
+            for nombre, altura in ALTURA_COOLER_DEMO.items():
+                actualizados = RefrigeracionCooler.objects.filter(nombre=nombre).update(
+                    altura_mm=altura,
+                )
+                if actualizados:
+                    self.stdout.write(f'Altura del cooler en {nombre}: {altura} mm')
+                else:
+                    self.stdout.write(self.style.WARNING(
+                        f'No existe {nombre}; no se creó un cooler fuera del catálogo.'
+                    ))
+            for nombre, altura in ALTURA_GABINETE_DEMO.items():
+                actualizados = Gabinete.objects.filter(nombre=nombre).update(
+                    altura_max_cooler_mm=altura,
+                )
+                if actualizados:
+                    self.stdout.write(f'Altura máxima de cooler en {nombre}: {altura} mm')
+                else:
+                    self.stdout.write(self.style.WARNING(
+                        f'No existe {nombre}; no se creó un gabinete fuera del catálogo.'
+                    ))
+        self.stdout.write(self.style.SUCCESS(
+            'Altura DEMO aplicada solo a DEMO Cooler AM4 y DEMO Gabinete Micro-ATX prueba.'
         ))
 
     def _aplicar_potencia_demo(self):

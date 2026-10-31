@@ -67,6 +67,7 @@ _CAMPOS = {
         ('tipo', 'Tipo de refrigeración'),
         ('socket_compatibles', 'Sockets compatibles'),
         ('tamanho_radiador_mm', 'Radiador (mm)'),
+        ('altura_mm', 'Altura del cooler (mm)'),
     ),
     'tarjeta_grafica': (
         ('vram_gb', 'VRAM (GB)'),
@@ -93,6 +94,7 @@ _CAMPOS = {
         ('material', 'Material'),
         ('ventiladores_incluidos', 'Ventiladores incluidos'),
         ('largo_max_gpu_mm', 'Largo máximo de GPU (mm)'),
+        ('altura_max_cooler_mm', 'Altura máxima de cooler (mm)'),
     ),
     'fuente_de_poder': (
         ('potencia_watts', 'Potencia (W)'),

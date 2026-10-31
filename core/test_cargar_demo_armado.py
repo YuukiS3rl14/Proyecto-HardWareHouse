@@ -188,10 +188,10 @@ class DemoArmadoCarritoTests(TestCase):
 
     def test_seleccion_compatible_agrega_ssd_y_hdd_con_su_tipo(self):
         response = self.post_armado([
-            ('procesador', self.cpu_am5),
-            ('placa_madre', self.placa_am5),
-            ('gabinete', self.gabinete_atx),
-            ('refrigeracion', self.cooler_am5),
+            ('procesador', Procesador.objects.get(nombre='DEMO CPU AM4 básica')),
+            ('placa_madre', PlacaMadre.objects.get(nombre='DEMO Placa AM4 DDR4 básica')),
+            ('gabinete', Gabinete.objects.get(nombre='DEMO Gabinete Micro-ATX prueba')),
+            ('refrigeracion', RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM4')),
             ('almacenamiento_ssd', self.ssd),
             ('almacenamiento_hdd', self.hdd),
         ])
@@ -457,3 +457,133 @@ class CatalogoDemoEscenariosTests(TestCase):
         self.assertIn('16GB', gpus[2])
         self.assertNotEqual(armados[3]['procesador'], armados[0]['procesador'])
         self.assertNotEqual(armados[4]['tarjeta_grafica'], armados[2]['tarjeta_grafica'])
+
+
+@override_settings(DEBUG=True)
+class DemoArmadoBasicoCompletoTests(TestCase):
+    PIEZAS = (
+        (Procesador, 'DEMO CPU AM4 básica', 'procesador'),
+        (PlacaMadre, 'DEMO Placa AM4 DDR4 básica', 'placa_madre'),
+        (MemoriaRam, 'DEMO RAM DDR4 16GB prueba', 'memoria_ram'),
+        (RefrigeracionCooler, 'DEMO Cooler AM4', 'refrigeracion'),
+        (TarjetaGrafica, 'DEMO GPU básica 4GB', 'tarjeta_grafica'),
+        (AlmacenamientoSSD, 'DEMO SSD SATA 500GB prueba', 'almacenamiento_ssd'),
+        (Gabinete, 'DEMO Gabinete Micro-ATX prueba', 'gabinete'),
+        (FuenteDePoder, 'DEMO Fuente 450W prueba', 'fuente_de_poder'),
+    )
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command('cargar_demo_armado')
+        cls.user = User.objects.create_user('basico8', 'basico8@example.com', 'clave-basico8')
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def componentes(self, reemplazos=None):
+        reemplazos = reemplazos or {}
+        piezas = []
+        for modelo, nombre, tipo in self.PIEZAS:
+            producto = reemplazos.get(tipo) or modelo.objects.get(nombre=nombre)
+            piezas.append({'tipo': tipo, 'id': producto.id})
+        return piezas
+
+    def post_carrito(self, componentes):
+        return self.client.post(
+            reverse('core:agregar_armado_al_carrito'),
+            data=json.dumps({'componentes': componentes}),
+            content_type='application/json',
+        )
+
+    def test_la_carga_completa_solo_la_altura_de_las_dos_piezas_demo(self):
+        marca = Proveedor.objects.create(nombre='Marca real de altura')
+        real_cooler = RefrigeracionCooler.objects.create(
+            proveedor=marca, nombre='Cooler de tienda', precio=Decimal('10.00'), stock=1,
+            tipo='Aire', socket_compatibles='AM4',
+        )
+        real_case = Gabinete.objects.create(
+            proveedor=marca, nombre='Gabinete de tienda', precio=Decimal('20.00'), stock=1,
+            formato_soporte='ATX', material='Acero',
+        )
+        previo = RefrigeracionCooler.objects.create(
+            proveedor=marca, nombre='DEMO Cooler AM4 copia', precio=Decimal('7.00'), stock=1,
+            descripcion='No tocar', tipo='Aire', socket_compatibles='AM4',
+        )
+        call_command('cargar_demo_armado')
+
+        cooler = RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM4')
+        case = Gabinete.objects.get(nombre='DEMO Gabinete Micro-ATX prueba')
+        cooler.refresh_from_db()
+        case.refresh_from_db()
+        real_cooler.refresh_from_db()
+        real_case.refresh_from_db()
+        previo.refresh_from_db()
+        self.assertEqual(cooler.altura_mm, 150)
+        self.assertEqual(cooler.precio, Decimal('19990.00'))
+        self.assertEqual(case.altura_max_cooler_mm, 155)
+        self.assertEqual(case.largo_max_gpu_mm, 230)
+        self.assertEqual(case.precio, Decimal('32990.00'))
+        self.assertIsNone(real_cooler.altura_mm)
+        self.assertIsNone(real_case.altura_max_cooler_mm)
+        self.assertIsNone(previo.altura_mm)
+        self.assertEqual(previo.precio, Decimal('7.00'))
+        self.assertEqual(previo.descripcion, 'No tocar')
+        self.assertIsNone(RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM5').altura_mm)
+        self.assertIsNone(Gabinete.objects.get(nombre='DEMO Gabinete ATX medio prueba').altura_max_cooler_mm)
+
+    def test_las_ocho_piezas_entran_al_carrito_por_362920(self):
+        evaluacion = self.client.post(
+            reverse('core:evaluar_armado'),
+            data=json.dumps({'componentes': self.componentes()}),
+            content_type='application/json',
+        )
+        self.assertEqual(evaluacion.status_code, 200)
+        self.assertEqual(evaluacion.json()['estado'], 'compatible')
+        self.assertIn(
+            '150 mm de 155 mm',
+            evaluacion.json()['piezas']['refrigeracion_cooler']['etiqueta'],
+        )
+
+        respuesta = self.post_carrito(self.componentes())
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(ItemCarrito.objects.count(), 8)
+        total = sum(item.get_total() for item in ItemCarrito.objects.all())
+        self.assertEqual(total, Decimal('362920.00'))
+        for modelo, nombre, _tipo in self.PIEZAS:
+            self.assertEqual(modelo.objects.get(nombre=nombre).stock, 10)
+
+    def test_un_cooler_mas_alto_sigue_siendo_incompatible(self):
+        marca = Proveedor.objects.get(nombre='DEMO')
+        alto = RefrigeracionCooler.objects.create(
+            proveedor=marca, nombre='DEMO Cooler AM4 165', precio=Decimal('19990.00'), stock=10,
+            tipo='Aire', socket_compatibles='AM4', altura_mm=165,
+        )
+        respuesta = self.post_carrito(self.componentes({'refrigeracion': alto}))
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.json()['estado'], 'incompatible')
+        self.assertIn(
+            'El cooler mide 165 mm y el gabinete admite un máximo de 155 mm.',
+            respuesta.json()['motivos'],
+        )
+        self.assertEqual(ItemCarrito.objects.count(), 0)
+
+    def test_una_altura_desconocida_sigue_sin_verificarse(self):
+        componentes = [
+            {'tipo': 'procesador', 'id': Procesador.objects.get(nombre='DEMO CPU AM5 media').id},
+            {'tipo': 'refrigeracion', 'id': RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM5').id},
+            {'tipo': 'gabinete', 'id': Gabinete.objects.get(nombre='DEMO Gabinete Micro-ATX prueba').id},
+        ]
+        evaluacion = self.client.post(
+            reverse('core:evaluar_armado'),
+            data=json.dumps({'componentes': componentes}),
+            content_type='application/json',
+        )
+        carrito = self.post_carrito(componentes)
+
+        self.assertEqual(evaluacion.status_code, 200)
+        self.assertEqual(evaluacion.json()['estado'], 'datos_insuficientes')
+        self.assertIn('No se asume que quepa.', ' '.join(evaluacion.json()['motivos']))
+        self.assertEqual(carrito.status_code, 400)
+        self.assertEqual(carrito.json()['estado'], 'datos_insuficientes')
+        self.assertEqual(ItemCarrito.objects.count(), 0)

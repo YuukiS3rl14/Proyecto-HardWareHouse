@@ -233,7 +233,7 @@ class EvaluacionVisualTests(TestCase):
         )
         cls.cooler = RefrigeracionCooler.objects.create(
             proveedor=proveedor, nombre='Cooler visual', precio=Decimal('30000'), stock=3,
-            tipo='Aire', socket_compatibles='AM5',
+            tipo='Aire', socket_compatibles='AM5', altura_mm=150,
         )
         cls.gpu = TarjetaGrafica.objects.create(
             proveedor=proveedor, nombre='GPU 320', precio=Decimal('200000'), stock=3,
@@ -251,6 +251,7 @@ class EvaluacionVisualTests(TestCase):
         cls.case = Gabinete.objects.create(
             proveedor=proveedor, nombre='Gabinete 320', precio=Decimal('50000'), stock=3,
             formato_soporte='ATX', material='Acero', largo_max_gpu_mm=320,
+            altura_max_cooler_mm=160,
         )
         cls.fuente = FuenteDePoder.objects.create(
             proveedor=proveedor, nombre='Fuente visual', precio=Decimal('60000'), stock=3,
@@ -356,5 +357,5 @@ class EvaluacionVisualTests(TestCase):
         self.assertLess(js.index('El Excel no se generó'), hasta_archivo)
         self.assertContains(pagina, 'data-evaluar-url')
         self.assertContains(pagina, 'data-exportar-url')
-        self.assertContains(pagina, 'pc-builder.js?v=selector2')
+        self.assertContains(pagina, 'pc-builder.js?v=selector6')
         self.assertNotContains(pagina, 'xlsx.full.min.js')
