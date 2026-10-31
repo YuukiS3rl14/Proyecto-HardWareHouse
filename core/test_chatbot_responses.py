@@ -74,7 +74,7 @@ class ResponseTypeTests(TestCase):
 )
 class ResponseOllamaClarificationTests(TestCase):
     @patch('core.chatbot.engine.extraer_intencion_ollama')
-    @patch('core.chatbot.llm.response_composer.componer_con_ollama')
+    @patch('core.chatbot.response_finalize.componer_con_ollama')
     def test_clarificacion_con_interpretacion(self, mock_compose, mock_intent):
         from core.chatbot.llm.intent_schema import IntentoLLM
 
@@ -99,7 +99,7 @@ class ResponseOllamaClarificationTests(TestCase):
             faq_topic='despacho',
             confidence=0.9,
         )
-        with patch('core.chatbot.llm.response_composer.componer_con_ollama', return_value=None):
+        with patch('core.chatbot.response_finalize.componer_con_ollama', return_value=None):
             data = generar_respuesta('envían a mi casa?')
         self.assertEqual(data.get('response_type'), FAQ)
         self.assertNotIn('RTX', data['reply'])

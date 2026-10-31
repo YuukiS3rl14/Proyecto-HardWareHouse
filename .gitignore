@@ -8,3 +8,7 @@ __pycache__/
 *.pyc
 db.sqlite3
 staticfiles/
+
+# JSON de catálogo para Railway. No versionar: va fuera del repositorio.
+data/catalogo_privado/
+catalogo_hardwarehouse.json

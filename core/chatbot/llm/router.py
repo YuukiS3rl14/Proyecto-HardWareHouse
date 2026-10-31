@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from core.chatbot.assistant_config import AsistenteConfig, get_asistente_config
-from core.chatbot.catalog_nl import ConsultaCatalogoNL
+from core.chatbot.catalog_nl import ConsultaCatalogoNL, extraer_consulta_catalogo, limpiar_q_catalogo
+from core.chatbot.compatibilidad_chat import responder_si_compatibilidad
 from core.chatbot.handlers import manejar_buscar_producto, manejar_faq, manejar_presupuesto
 from core.chatbot.intents import Intent, _busqueda_producto_explicita
 from core.chatbot.llm.intent_schema import IntentoLLM
@@ -50,28 +51,41 @@ def _busqueda_catalogo_ejecutable(consulta: ConsultaCatalogoNL, texto: str) -> b
 
 def _consulta_desde_llm(extraido: IntentoLLM, texto_usuario: str) -> ConsultaCatalogoNL:
     filtros = extraido.filters or {}
-    orden = extraido.price_sort or 'relevancia'
-    solo_stock = bool(filtros.get('solo_stock'))
-    if extraido.intent == 'product_search' and orden == 'precio_asc':
+    pista = extraer_consulta_catalogo(texto_usuario)
+    # Un tope de precio es un filtro. El orden de un solo producto solo sale del texto
+    # («la más barata», «la más cara»), no de price_sort del modelo.
+    orden = pista.orden
+    solo_stock = bool(filtros.get('solo_stock')) or pista.solo_con_stock
+    if orden == 'precio_asc':
         solo_stock = True
-
-    precio_max = filtros.get('precio_max')
-    precio_min = filtros.get('precio_min')
+    categoria = pista.categoria or extraido.category
+    precio_max = pista.precio_max
+    precio_min = pista.precio_min
+    if precio_max is None:
+        precio_max = filtros.get('precio_max')
+    if precio_min is None:
+        precio_min = filtros.get('precio_min')
     if extraido.budget_clp and precio_max is None and extraido.intent == 'product_search':
         precio_max = extraido.budget_clp
 
     q = extraido.query_text or filtros.get('query') or ''
-    if not q and extraido.brand and not extraido.category:
+    if not isinstance(q, str):
+        q = ''
+    if not q and extraido.brand and not categoria:
         q = extraido.brand.lower()
+    if not solo_stock:
+        solo_stock = pista.solo_con_stock
+    q = limpiar_q_catalogo(q, categoria) if q else (pista.q or '')
 
+    marca = extraido.brand if extraido.brand and extraido.brand.lower() not in ('intel', 'amd', 'nvidia') else None
     return ConsultaCatalogoNL(
-        categoria=extraido.category,
-        marca=extraido.brand if extraido.brand and extraido.brand.lower() not in ('intel', 'amd', 'nvidia') else None,
+        categoria=categoria,
+        marca=marca or pista.marca,
         orden=orden,
         precio_min=precio_min,
         precio_max=precio_max,
         solo_con_stock=solo_stock,
-        q=q if isinstance(q, str) else '',
+        q=q,
     )
 
 
@@ -84,6 +98,12 @@ def ejecutar_ruta_llm(
     builder_componentes: list | None = None,
 ) -> dict:
     config = config or get_asistente_config()
+
+    compatibilidad = responder_si_compatibilidad(texto)
+    if compatibilidad:
+        compatibilidad['motor'] = 'ollama'
+        compatibilidad['confidence'] = extraido.confidence
+        return compatibilidad
 
     confirmado = intentar_confirmar_accion(texto, build_context)
     if confirmado:
@@ -110,6 +130,15 @@ def ejecutar_ruta_llm(
         }
 
     if extraido.intent == 'clarification':
+        consulta = extraer_consulta_catalogo(texto)
+        if consulta.requiere_orm_estructurado() and not consulta.q:
+            out = manejar_buscar_producto(texto, config, consulta_nl=consulta)
+            out['intent'] = 'product_search'
+            out['busqueda_catalogo'] = True
+            out['motor'] = 'ollama'
+            out['confidence'] = extraido.confidence
+            out['fallback_reason'] = 'catalogo_reglas'
+            return out
         return _respuesta_clarificacion(extraido)
 
     if extraido.intent in ('order_status', 'orders'):

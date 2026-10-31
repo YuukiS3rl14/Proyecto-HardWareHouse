@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from functools import wraps
 from typing import Callable
 
@@ -12,7 +13,34 @@ from django.http import HttpRequest, JsonResponse
 MAX_MENSAJE = 2000
 MAX_HISTORIAL_ITEMS = 20
 MAX_HISTORIAL_ITEM_CHARS = 4000
-MAX_HISTORIAL_LLM = 6
+MAX_HISTORIAL_LLM = 4
+MAX_TEXTO_LLM = 400
+
+_EMAIL = re.compile(r'[\w.+-]+@[\w.-]+\.\w+', re.IGNORECASE)
+_RUT = re.compile(r'\b\d{1,2}\.?\d{3}\.?\d{3}-[\dkK]\b')
+_TELEFONO = re.compile(r'(?:\+?56\s*)?(?:\(?\d\)?[\s.-]*){8,}\d')
+_LINEA_PERSONAL = re.compile(
+    r'\b(?:e-?mail|correo|direcci[oó]n|tel[eé]fono|rut|contrase[nñ]a|password|clave)\b',
+    re.IGNORECASE,
+)
+
+
+def texto_para_llm(texto: str, limite: int = MAX_TEXTO_LLM) -> str:
+    """Quita datos personales antes de salir del servidor. El texto local no cambia."""
+    if not texto:
+        return ''
+    lineas = []
+    for linea in texto.splitlines():
+        if _LINEA_PERSONAL.search(linea):
+            continue
+        if 'pedido #' in linea.lower():
+            continue
+        lineas.append(linea)
+    limpio = '\n'.join(lineas)
+    limpio = _EMAIL.sub('[correo]', limpio)
+    limpio = _RUT.sub('[rut]', limpio)
+    limpio = _TELEFONO.sub('[telefono]', limpio)
+    return limpio.strip()[:limite]
 
 
 def historial_para_llm(historial: list | None) -> list[dict]:
@@ -27,7 +55,10 @@ def historial_para_llm(historial: list | None) -> list[dict]:
         content = item.get('content')
         if role not in ('user', 'assistant') or not isinstance(content, str):
             continue
-        saneado.append({'role': role, 'content': content[:MAX_HISTORIAL_ITEM_CHARS]})
+        limpio = texto_para_llm(content)
+        if not limpio:
+            continue
+        saneado.append({'role': role, 'content': limpio})
     return saneado
 
 
@@ -179,6 +210,11 @@ def validar_build_context(payload: dict) -> dict | None:
             accion['componentes'] = sanitizar_lista_componentes(pending['componentes'])
         if accion.get('componentes'):
             limpio['pending_action'] = accion
+    from core.chatbot.catalogo_contexto import sanear_busqueda_catalogo
+
+    busqueda = sanear_busqueda_catalogo(raw.get('catalogo_busqueda'))
+    if busqueda:
+        limpio['catalogo_busqueda'] = busqueda
     intent_previo = raw.get('ultimo_intent')
     if isinstance(intent_previo, str):
         from core.chatbot.conversation_state import INTENTS_PUBLICOS

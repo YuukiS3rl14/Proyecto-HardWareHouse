@@ -13,7 +13,5 @@ BUDGET = 'budget'
 PRIVACY = 'privacy'
 GENERIC = 'generic'
 
-# Solo estos tipos pueden pasar por redacción Ollama (nunca catálogo).
-OLLAMA_POLISH_TIPOS = frozenset(
-    {FAQ, CLARIFICATION, OFF_TOPIC, GREETING, ORDER_STATUS, ORDER_LOGIN, GENERIC}
-)
+# Redacción opcional. Pedidos, precios, stock y datos de clientes no salen del servidor.
+OLLAMA_POLISH_TIPOS = frozenset({FAQ, CLARIFICATION, OFF_TOPIC, GREETING, GENERIC})

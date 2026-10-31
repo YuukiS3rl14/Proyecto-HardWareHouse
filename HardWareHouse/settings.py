@@ -430,10 +430,13 @@ HARDWAREHOUSE_CHAT_RATE_LIMIT = {
 # Reglas extra de intención: lista de dicts {intent, patrones, prioridad?, max_longitud?}
 # HARDWAREHOUSE_CHAT_INTENT_RULES = []
 
-# Ollama local (intención + clasificación JSON). Ver .env: OLLAMA_BASE_URL, OLLAMA_MODEL.
+# Ollama opcional. URL vacía = solo reglas. La clave solo se envía por HTTPS.
+# El modelo lo define OLLAMA_MODEL. En local, si queda vacío, el cliente usa qwen3:4b-instruct.
+# En un host remoto hay que indicar un modelo que ese host publique.
 OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', '').strip()
-OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen3:4b-instruct').strip()
-OLLAMA_TIMEOUT = int(os.environ.get('OLLAMA_TIMEOUT', '25'))
+OLLAMA_API_KEY = os.environ.get('OLLAMA_API_KEY', '').strip()
+OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', '').strip()
+OLLAMA_TIMEOUT = int(os.environ.get('OLLAMA_TIMEOUT', '10'))
 HARDWAREHOUSE_CHAT_LLM_BACKEND = 'ollama' if OLLAMA_BASE_URL else ''
 HARDWAREHOUSE_CHAT_INTENT_LLM = env_bool(
     'HARDWAREHOUSE_CHAT_INTENT_LLM',
@@ -441,7 +444,7 @@ HARDWAREHOUSE_CHAT_INTENT_LLM = env_bool(
 )
 HARDWAREHOUSE_CHAT_RESPONSE_LLM = env_bool(
     'HARDWAREHOUSE_CHAT_RESPONSE_LLM',
-    default=bool(OLLAMA_BASE_URL),
+    default=False,
 )
 HARDWAREHOUSE_CHAT_OLLAMA = {
     'base_url': OLLAMA_BASE_URL or 'http://127.0.0.1:11434',

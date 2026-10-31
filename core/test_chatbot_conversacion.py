@@ -156,13 +156,11 @@ class RedaccionOllamaTests(ArmadoFixtureMixin, TestCase):
 
     @patch('core.chatbot.engine.extraer_intencion_ollama', return_value=None)
     @patch('core.chatbot.response_finalize.componer_con_ollama')
-    def test_ollama_explica_con_hechos_de_django(self, mock_compose, _mock_intent):
-        mock_compose.return_value = 'Te dejo el armado con las piezas que ya revisé en el catálogo.'
+    def test_el_armado_no_se_reescribe(self, mock_compose, _mock_intent):
         data = generar_respuesta('armame un PC gamer por 700 lucas')
         self.assertEqual(data.get('response_type'), 'pc_build')
-        self.assertIn('catálogo', data['reply'])
-        hechos = mock_compose.call_args.kwargs['hechos_verificados']
-        self.assertIn('CLP', hechos)
+        mock_compose.assert_not_called()
+        self.assertIn('CLP', data['reply'])
         self.assertLessEqual(data['armado']['total_clp'], 700_000)
 
     @patch('core.chatbot.engine.extraer_intencion_ollama', return_value=None)

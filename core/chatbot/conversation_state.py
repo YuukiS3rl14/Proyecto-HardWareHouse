@@ -13,6 +13,7 @@ INTENTS_PUBLICOS = frozenset(
         'clarification',
         'off_topic',
         'greeting',
+        'compatibility',
     }
 )
 
@@ -86,6 +87,8 @@ def clasificar_intent_publico(intent: str | None, texto: str = '', resultado: di
         if nombre == 'pc_build_replace':
             return 'build_upgrade' if 'barat' not in bajo else 'build_downgrade'
         return 'pc_build'
+    if nombre == 'compatibilidad' or resultado.get('response_type') == 'compatibility':
+        return 'compatibility'
     if resultado.get('necesita_clarificacion'):
         return 'clarification'
     return 'clarification'
@@ -137,6 +140,19 @@ def recordar_turno(resultado: dict, build_context: dict | None, texto: str) -> d
         base['presupuesto_clp'] = armado.get('presupuesto_clp')
     if not base.get('presupuesto_original_clp') and base.get('presupuesto_clp'):
         base['presupuesto_original_clp'] = base['presupuesto_clp']
+
+    from core.chatbot.catalogo_contexto import snapshot_busqueda
+
+    if resultado.get('conservar_busqueda'):
+        pass
+    elif clasificado == 'product_search':
+        busqueda = snapshot_busqueda(resultado)
+        if busqueda:
+            base['catalogo_busqueda'] = busqueda
+        else:
+            base.pop('catalogo_busqueda', None)
+    elif clasificado != 'clarification':
+        base.pop('catalogo_busqueda', None)
 
     if resultado.get('necesita_clarificacion') or clasificado == 'clarification':
         resultado['sugerencia'] = sugerencia_contextual(

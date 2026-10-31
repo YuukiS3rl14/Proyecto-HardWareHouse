@@ -29,6 +29,8 @@ _ALIAS_CATEGORIA.update(
         'grafica': 'Tarjeta Gráfica',
         'graficas': 'Tarjeta Gráfica',
         'tarjeta grafica': 'Tarjeta Gráfica',
+        'tarjetas graficas': 'Tarjeta Gráfica',
+        'tarjetas': 'Tarjeta Gráfica',
         'tarjeta de video': 'Tarjeta Gráfica',
         'video': 'Tarjeta Gráfica',
         'ram': 'Memoria RAM',
@@ -88,6 +90,11 @@ _PRECIO_MAX = re.compile(
     r'\b(?:menos de|bajo|hasta|maximo|máximo|max)\s*\$?\s*([\d.\s]+)\s*(?:mil|k\b)?',
     re.I,
 )
+_FRASE_PRECIO = re.compile(
+    r'\b(?:por\s+)?(?:menos(?:\s+de)?|mas(?:\s+de)?|hasta|desde|bajo|sobre|maximo|minimo|max|min)\s+'
+    r'\d[\d\s]*(?:\s*(?:mil|k|pesos|clp))?',
+    re.I,
+)
 _PRECIO_MIN = re.compile(
     r'\b(?:mas de|más de|sobre|desde|minimo|mínimo|min)\s*\$?\s*([\d.\s]+)\s*(?:mil|k\b)?',
     re.I,
@@ -98,8 +105,10 @@ _STOCK_DISPONIBLE = re.compile(
 )
 
 _STOPWORDS = re.compile(
-    r'\b(busco|quiero|necesito|precio de|cuanto cuesta|cuánto cuesta|hay|tienen|'
-    r'me interesa|algun|algún|una|un|el|la|los|las|de|para|del|al|en|'
+    r'\b(busco|buscar|quiero|necesito|precio de|cuanto cuesta|cuánto cuesta|hay|tienen|tiene|'
+    r'me interesa|algun|algún|una|un|el|la|los|las|de|para|del|al|en|que|cual|cuales|'
+    r'muestrame|muestra|mostrar|ver|dime|ensename|'
+    r'este|esta|estos|estas|por|jugar|juego|juegos|gamer|gaming|'
     r'mas barata|más barata|mas barato|más barato|mas cara|más cara|'
     r'mas caro|más caro|mas economic[ao]|más economic[ao]|'
     r'menor precio|mayor precio|cheapest|disponible|disponibles|con stock|en stock|'
@@ -127,6 +136,7 @@ class ConsultaCatalogoNL:
     precio_max: int | None = None
     solo_con_stock: bool = False
     q: str = ''
+    pks_por_modelo: dict | None = None
 
     def requiere_orm_estructurado(self) -> bool:
         return bool(
@@ -153,7 +163,45 @@ class ConsultaCatalogoNL:
             solo_con_stock=self.solo_con_stock,
             limit=lim,
             orden=self.orden,
+            pks_por_modelo=self.pks_por_modelo,
         )
+
+
+def _una_edicion(izquierda: str, derecha: str) -> bool:
+    """Una sustitución, un agregado o un borrado. Sirve para un typo corto."""
+    if izquierda == derecha:
+        return False
+    largo_izq, largo_der = len(izquierda), len(derecha)
+    if abs(largo_izq - largo_der) > 1:
+        return False
+    if largo_izq == largo_der:
+        return sum(a != b for a, b in zip(izquierda, derecha)) == 1
+    if largo_izq > largo_der:
+        izquierda, derecha = derecha, izquierda
+        largo_izq, largo_der = largo_der, largo_izq
+    indice_corto = indice_largo = 0
+    diferencias = 0
+    while indice_corto < largo_izq and indice_largo < largo_der:
+        if izquierda[indice_corto] != derecha[indice_largo]:
+            diferencias += 1
+            if diferencias > 1:
+                return False
+            indice_largo += 1
+            continue
+        indice_corto += 1
+        indice_largo += 1
+    return True
+
+
+def _alias_de_categoria(token: str, categoria: str) -> bool:
+    for alias, cat in _ALIAS_CATEGORIA.items():
+        if cat != categoria or not alias or ' ' in alias:
+            continue
+        if token == alias:
+            return True
+        if len(token) >= 8 and len(alias) >= 8 and _una_edicion(token, alias):
+            return True
+    return False
 
 
 def _resolver_categoria(norm: str) -> str | None:
@@ -162,7 +210,37 @@ def _resolver_categoria(norm: str) -> str | None:
     for alias, cat in sorted(_ALIAS_CATEGORIA.items(), key=lambda x: -len(x[0])):
         if len(alias) >= 3 and re.search(rf'\b{re.escape(alias)}\b', norm):
             return cat
+    categorias = set()
+    for token in norm.split():
+        if len(token) < 8:
+            continue
+        for alias, cat in _ALIAS_CATEGORIA.items():
+            if ' ' in alias or len(alias) < 8:
+                continue
+            if _una_edicion(token, alias):
+                categorias.add(cat)
+    if len(categorias) == 1:
+        return categorias.pop()
     return None
+
+
+def limpiar_q_catalogo(q: str, categoria: str | None = None) -> str:
+    """Deja el nombre del producto. La categoría, el precio y el pedido no se buscan en el nombre."""
+    norm = normalizar_texto(q or '')
+    norm = re.sub(r'[^\w\s]+', ' ', norm)
+    norm = _FRASE_PRECIO.sub(' ', norm)
+    norm = _STOPWORDS.sub(' ', norm)
+    if categoria:
+        for alias, cat in _ALIAS_CATEGORIA.items():
+            if cat == categoria and alias:
+                norm = re.sub(rf'\b{re.escape(alias)}\b', ' ', norm)
+        for token in norm.split():
+            if _alias_de_categoria(token, categoria):
+                norm = re.sub(rf'\b{re.escape(token)}\b', ' ', norm)
+    norm = re.sub(r'\s+', ' ', norm).strip()
+    if not norm or norm in _ALIAS_CATEGORIA or len(norm) < 2:
+        return ''
+    return norm
 
 
 def extraer_consulta_catalogo(texto: str) -> ConsultaCatalogoNL:
@@ -207,5 +285,6 @@ def extraer_consulta_catalogo(texto: str) -> ConsultaCatalogoNL:
     resto = re.sub(r'\s+', ' ', resto).strip()
     if resto and len(resto) >= 2 and not consulta.q:
         consulta.q = resto
+    consulta.q = limpiar_q_catalogo(consulta.q, consulta.categoria)
 
     return consulta

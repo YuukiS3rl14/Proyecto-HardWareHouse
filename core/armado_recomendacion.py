@@ -234,6 +234,63 @@ class ResultadoArmadoAutomatico:
         }
 
 
+def _motivo_sin_pieza(
+    categoria: str,
+    candidatos: list[dict],
+    restante_global: Decimal,
+    seleccion: dict,
+) -> str:
+    viables = [
+        candidato
+        for candidato in candidatos
+        if candidato['stock'] > 0
+        and candidato['estado'] not in (ESTADO_INCOMPATIBLE, ESTADO_DATOS_INSUFICIENTES)
+    ]
+    procesador = seleccion.get('procesador')
+    if categoria == 'placa_madre' and procesador is not None and not viables:
+        return f'No hay placa madre compatible con el socket {procesador.socket}.'
+    return (
+        f'No encontré pieza compatible en {categoria} dentro del presupuesto restante '
+        f'(${int(restante_global):,} CLP).'.replace(',', '.')
+    )
+
+
+def _cpus_en_presupuesto(candidatos: list[dict], presupuesto: Decimal) -> list[dict]:
+    validos = [
+        candidato
+        for candidato in candidatos
+        if candidato['stock'] > 0
+        and candidato['estado'] not in (ESTADO_INCOMPATIBLE, ESTADO_DATOS_INSUFICIENTES)
+        and candidato['precio'] <= presupuesto
+    ]
+    validos.sort(key=_orden_candidato)
+    return validos
+
+
+def _resumir_intentos(intentos: list[ResultadoArmadoAutomatico]) -> ResultadoArmadoAutomatico:
+    if len(intentos) == 1:
+        return intentos[0]
+    motivos = [intento.motivo_fallo or '' for intento in intentos]
+    if motivos and all(motivo.startswith('No hay placa madre compatible con el socket') for motivo in motivos):
+        return ResultadoArmadoAutomatico(
+            ok=False,
+            presupuesto_clp=intentos[0].presupuesto_clp,
+            proposito=intentos[0].proposito,
+            motivo_fallo=(
+                'No hay un armado compatible completo: ningún procesador con stock '
+                'tiene una placa madre compatible dentro del presupuesto.'
+            ),
+        )
+    if len(set(motivos)) == 1:
+        return intentos[0]
+    return ResultadoArmadoAutomatico(
+        ok=False,
+        presupuesto_clp=intentos[0].presupuesto_clp,
+        proposito=intentos[0].proposito,
+        motivo_fallo='No hay un armado compatible completo dentro del presupuesto.',
+    )
+
+
 def construir_armado_automatico(
     presupuesto_clp: int,
     *,
@@ -251,10 +308,55 @@ def construir_armado_automatico(
         )
 
     proposito = proposito if proposito in _REPARTO_PRESUPUESTO else 'general'
-    reparto = _REPARTO_PRESUPUESTO[proposito]
     if incluir_gpu is None:
         incluir_gpu = proposito in ('gaming', 'editing', 'general')
 
+    candidatos_cpu = _filtrar_cpu_preferencia(
+        candidatos_para_categoria('procesador', {}),
+        preferencia_cpu,
+    )
+    cpus = _cpus_en_presupuesto(candidatos_cpu, Decimal(presupuesto_clp))
+    if not cpus:
+        return _construir_pasada(
+            presupuesto_clp,
+            proposito=proposito,
+            preferencia_cpu=preferencia_cpu,
+            indice_economico=indice_economico,
+            incluir_gpu=incluir_gpu,
+        )
+
+    exitos: list[ResultadoArmadoAutomatico] = []
+    fallos: list[ResultadoArmadoAutomatico] = []
+    for cpu in cpus:
+        resultado = _construir_pasada(
+            presupuesto_clp,
+            proposito=proposito,
+            preferencia_cpu=preferencia_cpu,
+            indice_economico=indice_economico,
+            incluir_gpu=incluir_gpu,
+            procesador_fijo=cpu,
+        )
+        if resultado.ok:
+            exitos.append(resultado)
+            if len(exitos) > indice_economico:
+                return exitos[indice_economico]
+        else:
+            fallos.append(resultado)
+    if exitos:
+        return exitos[-1]
+    return _resumir_intentos(fallos)
+
+
+def _construir_pasada(
+    presupuesto_clp: int,
+    *,
+    proposito: str,
+    preferencia_cpu: str | None,
+    indice_economico: int,
+    incluir_gpu: bool,
+    procesador_fijo: dict | None = None,
+) -> ResultadoArmadoAutomatico:
+    reparto = _REPARTO_PRESUPUESTO[proposito]
     seleccion: dict = {}
     memorias: list[LineaRam] = []
     almacenamientos: list[dict] = []
@@ -281,15 +383,18 @@ def construir_armado_automatico(
                 tradeoffs=tradeoffs,
             )
 
-        candidatos = candidatos_para_categoria(
-            categoria, seleccion, memorias or None, almacenamientos or None,
-        )
-        if categoria == 'procesador':
-            candidatos = _filtrar_cpu_preferencia(candidatos, preferencia_cpu)
-
-        elegido = _elegir(candidatos, max_pieza, indice_economico=indice_economico)
-        if elegido is None and techo_guia < restante_global:
-            elegido = _elegir(candidatos, techo_guia, indice_economico=indice_economico)
+        if categoria == 'procesador' and procesador_fijo is not None:
+            elegido = procesador_fijo if procesador_fijo['precio'] <= max_pieza else None
+            candidatos = []
+        else:
+            candidatos = candidatos_para_categoria(
+                categoria, seleccion, memorias or None, almacenamientos or None,
+            )
+            if categoria == 'procesador':
+                candidatos = _filtrar_cpu_preferencia(candidatos, preferencia_cpu)
+            elegido = _elegir(candidatos, max_pieza, indice_economico=indice_economico)
+            if elegido is None and techo_guia < restante_global:
+                elegido = _elegir(candidatos, techo_guia, indice_economico=indice_economico)
         if elegido is None and categoria == 'tarjeta_grafica':
             tradeoffs.append('No cupo una GPU compatible en el presupuesto; el resto del armado sigue siendo válido.')
             continue
@@ -300,10 +405,7 @@ def construir_armado_automatico(
                 proposito=proposito,
                 total_clp=int(total),
                 componentes=componentes_api,
-                motivo_fallo=(
-                    f'No encontré pieza compatible en {categoria} dentro del presupuesto restante '
-                    f'(${int(restante_global):,} CLP).'.replace(',', '.')
-                ),
+                motivo_fallo=_motivo_sin_pieza(categoria, candidatos, restante_global, seleccion),
                 tradeoffs=tradeoffs,
             )
 
