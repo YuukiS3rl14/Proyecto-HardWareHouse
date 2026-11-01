@@ -21,6 +21,11 @@ from .compatibilidad import (
     evaluaciones_de_seleccion,
     texto_para_armado,
     validar_armado,
+    video_integrado_confirmado,
+)
+from .interpretador_solicitud_pc import (
+    SolicitudInvalida,
+    interpretar_solicitud,
 )
 from .recomendador_pc import (
     EntradaInvalida,
@@ -522,13 +527,57 @@ _CLAVES_DE_VALIDACION = {
     'fuente_de_poder': 'fuente_de_poder',
 }
 
-def _error_armado(message, estado='error', motivos=None, status=400):
-    return JsonResponse({
+def _error_armado(message, estado='error', motivos=None, status=400, faltantes=None):
+    cuerpo = {
         'status': 'error',
         'estado': estado,
         'message': message,
         'motivos': motivos if motivos is not None else [message],
-    }, status=status)
+    }
+    if faltantes is not None:
+        cuerpo['faltantes'] = faltantes
+    return JsonResponse(cuerpo, status=status)
+
+
+_ETIQUETAS_ARMADO_COMPLETO = (
+    ('placa_madre', 'Placa Madre'),
+    ('procesador', 'Procesador (CPU)'),
+    ('memoria_ram', 'Memoria RAM'),
+    ('tarjeta_grafica', 'Tarjeta Gráfica (GPU)'),
+    ('almacenamiento', 'Almacenamiento'),
+    ('gabinete', 'Gabinete'),
+    ('fuente_de_poder', 'Fuente de Poder'),
+)
+
+
+def componentes_faltantes(seleccion, memorias, almacenamientos):
+    """Piezas sin las cuales el armado no es un PC completo.
+
+    La refrigeración aparte no es obligatoria: el diseño admite un equipo
+    sin cooler dedicado. La GPU dedicada tampoco lo es cuando el procesador
+    y la placa confirman video integrado. El almacenamiento no verificado
+    sigue presente; solo falta si no hay ningún disco.
+    """
+    seleccion = seleccion or {}
+    cpu = seleccion.get('procesador')
+    placa = seleccion.get('placa_madre')
+    presentes = {
+        'placa_madre': placa is not None,
+        'procesador': cpu is not None,
+        'memoria_ram': bool(memorias),
+        'tarjeta_grafica': (
+            seleccion.get('tarjeta_grafica') is not None
+            or video_integrado_confirmado(cpu, placa)
+        ),
+        'almacenamiento': bool(almacenamientos),
+        'gabinete': seleccion.get('gabinete') is not None,
+        'fuente_de_poder': seleccion.get('fuente_de_poder') is not None,
+    }
+    return [
+        etiqueta
+        for clave, etiqueta in _ETIQUETAS_ARMADO_COMPLETO
+        if not presentes[clave]
+    ]
 
 
 from core.armado_recomendacion import (
@@ -679,6 +728,7 @@ def evaluar_armado(request):
         'texto': texto_para_armado(resultado, bool(seleccion) or bool(memorias)),
         'motivos': resultado.motivos_de_rechazo,
         'advertencias': resultado.advertencias,
+        'faltantes': componentes_faltantes(seleccion, memorias, almacenamientos),
         'piezas': {
             clave: _serializar_evaluacion(evaluacion)
             for clave, evaluacion in por_categoria.items()
@@ -736,7 +786,11 @@ def _filas_de_exportacion(seleccion, almacenamientos, memorias, por_categoria):
                     'cantidad': disco['cantidad'],
                     'precio': pesos_enteros(producto.precio),
                     'estado': evaluacion.estado,
-                    'texto_estado': texto_de_estado(evaluacion),
+                    'texto_estado': (
+                        'No verificada'
+                        if evaluacion.estado == 'no_evaluada'
+                        else texto_de_estado(evaluacion)
+                    ),
                     'especificaciones': especificaciones_de(producto),
                 })
             continue
@@ -939,8 +993,28 @@ def recomendar_pc(request):
         seleccion=seleccion,
         memorias=memorias,
         almacenamientos=almacenamientos,
+        preferencias=pedido['preferencias'],
     )
     return JsonResponse(resultado)
+
+
+@require_POST
+def interpretar_solicitud_pc(request):
+    """Lee una descripción con reglas locales. No recomienda ni guarda el texto."""
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'message': 'La solicitud no es válida.'}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({'status': 'error', 'message': 'La solicitud no es válida.'}, status=400)
+    texto = payload.get('texto')
+    if not isinstance(texto, str):
+        return JsonResponse({'status': 'error', 'message': 'La descripción no es válida.'}, status=400)
+    try:
+        borrador = interpretar_solicitud(texto)
+    except SolicitudInvalida as exc:
+        return JsonResponse({'status': 'error', 'message': exc.mensaje}, status=400)
+    return JsonResponse({'status': 'success', 'borrador': borrador})
 
 
 def _sumar_linea_ram(lineas, producto, cantidad):
@@ -1113,6 +1187,15 @@ def agregar_armado_al_carrito(request):
                 'No se agregó el armado al carrito.',
                 estado='error',
                 motivos=motivos_stock,
+            )
+        faltantes = componentes_faltantes(seleccion, memorias, almacenamientos)
+        if faltantes:
+            transaction.set_rollback(True)
+            return _error_armado(
+                'Faltan componentes por seleccionar.',
+                estado='incompleto',
+                motivos=[f'Falta {nombre}.' for nombre in faltantes],
+                faltantes=faltantes,
             )
 
         for model_name, producto, pedidas, existentes in lineas:

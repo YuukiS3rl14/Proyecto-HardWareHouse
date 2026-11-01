@@ -57,6 +57,7 @@ def _cpu(proveedor, nombre, precio='89990.00', stock=5, **campos):
         'potencia_referencia_watts': 65,
         'incluye_cooler': None,
         'potencia_termica_referencia_watts': None,
+        'graficos_integrados': None,
     }
     especificaciones.update(campos)
     return {

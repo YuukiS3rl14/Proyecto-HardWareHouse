@@ -190,15 +190,18 @@ class DemoArmadoCarritoTests(TestCase):
         response = self.post_armado([
             ('procesador', Procesador.objects.get(nombre='DEMO CPU AM4 básica')),
             ('placa_madre', PlacaMadre.objects.get(nombre='DEMO Placa AM4 DDR4 básica')),
+            ('memoria_ram', MemoriaRam.objects.get(nombre='DEMO RAM DDR4 16GB prueba')),
+            ('tarjeta_grafica', TarjetaGrafica.objects.get(nombre='DEMO GPU básica 4GB')),
             ('gabinete', Gabinete.objects.get(nombre='DEMO Gabinete Micro-ATX prueba')),
+            ('fuente_de_poder', FuenteDePoder.objects.get(nombre='DEMO Fuente 450W prueba')),
             ('refrigeracion', RefrigeracionCooler.objects.get(nombre='DEMO Cooler AM4')),
             ('almacenamiento_ssd', self.ssd),
             ('almacenamiento_hdd', self.hdd),
         ])
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['estado'], 'incompleto')
-        self.assertEqual(ItemCarrito.objects.count(), 6)
+        self.assertNotIn(response.json()['estado'], ('incompatible', 'datos_insuficientes', 'incompleto'))
+        self.assertEqual(ItemCarrito.objects.count(), 9)
         item_ssd = ItemCarrito.objects.get(almacenamiento_ssd__isnull=False)
         item_hdd = ItemCarrito.objects.get(almacenamiento_hdd__isnull=False)
         self.assertEqual(item_ssd.almacenamiento_ssd_id, self.ssd.id)
@@ -446,7 +449,8 @@ class CatalogoDemoEscenariosTests(TestCase):
             self.assertIn('almacenamiento_ssd', tipos, f'{presupuesto} {uso} {nombres} total={opcion["total"]}')
             self.assertNotIn('almacenamiento_hdd', tipos)
             self.assertNotIn('SO-DIMM', nombres)
-            self.assertTrue(any('SATA' in texto for texto in opcion['limitaciones']))
+            self.assertTrue(any('ranuras M.2' in texto for texto in opcion['limitaciones']))
+            self.assertFalse(any('puertos SATA' in texto for texto in opcion['limitaciones']))
             self.assertIn('No se estiman FPS', opcion['explicacion'])
             armados.append({item['tipo']: item['nombre'] for item in opcion['componentes']})
 

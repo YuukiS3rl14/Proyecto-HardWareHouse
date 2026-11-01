@@ -8,7 +8,18 @@ from django.db import connection
 from django.test import Client, TestCase, TransactionTestCase
 from django.urls import reverse
 
-from core.models import Carrito, ItemCarrito, MemoriaRam, PlacaMadre, Procesador, Proveedor
+from core.models import (
+    AlmacenamientoSSD,
+    Carrito,
+    FuenteDePoder,
+    Gabinete,
+    ItemCarrito,
+    MemoriaRam,
+    PlacaMadre,
+    Procesador,
+    Proveedor,
+    TarjetaGrafica,
+)
 
 
 def _motivo_concurrencia_pendiente():
@@ -59,6 +70,45 @@ class StockArmadoTests(TestCase):
             tipo_ram_soportado='DDR5',
         )
 
+    def companeros(self, cpu, incluir_ram=True):
+        placa = PlacaMadre.objects.create(
+            proveedor=self.proveedor, nombre=f'Placa de {cpu.nombre}', precio=Decimal('80000'), stock=4,
+            socket_cpu=cpu.socket, chipset='B650', formato='ATX', ranuras_ram=4,
+            tipo_ram_soportado='DDR5', formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        )
+        gpu = TarjetaGrafica.objects.create(
+            proveedor=self.proveedor, nombre=f'GPU de {cpu.nombre}', precio=Decimal('100000'), stock=4,
+            vram_gb=8, tipo_memoria='GDDR6', interfaz='PCIe 4.0',
+            consumo_referencia_watts=100, largo_mm=200,
+        )
+        gabinete = Gabinete.objects.create(
+            proveedor=self.proveedor, nombre=f'Gabinete de {cpu.nombre}', precio=Decimal('40000'), stock=4,
+            formato_soporte='ATX', material='Acero', largo_max_gpu_mm=320,
+        )
+        fuente = FuenteDePoder.objects.create(
+            proveedor=self.proveedor, nombre=f'Fuente de {cpu.nombre}', precio=Decimal('50000'), stock=4,
+            potencia_watts=650, certificacion='80+ Bronze',
+        )
+        disco = AlmacenamientoSSD.objects.create(
+            proveedor=self.proveedor, nombre=f'SSD de {cpu.nombre}', precio=Decimal('20000'), stock=4,
+            capacidad_gb=1000, interfaz='NVMe PCIe 4.0', formato='M.2 2280',
+        )
+        pares = [
+            ('placa_madre', placa, None),
+            ('tarjeta_grafica', gpu, None),
+            ('gabinete', gabinete, None),
+            ('fuente_de_poder', fuente, None),
+            ('almacenamiento_ssd', disco, None),
+        ]
+        if incluir_ram:
+            ram = MemoriaRam.objects.create(
+                proveedor=self.proveedor, nombre=f'RAM de {cpu.nombre}', precio=Decimal('20000'), stock=4,
+                capacidad_gb=16, tipo_ddr='DDR5', velocidad_mhz=5600,
+                modulos_por_producto=1, capacidad_modulo_gb=16, formato_ram='DIMM',
+            )
+            pares.insert(1, ('memoria_ram', ram, 1))
+        return tuple(pares)
+
     def post(self, client, *pares):
         componentes = [
             {'tipo': tipo, 'id': producto.id, **({'cantidad': cantidad} if cantidad else {})}
@@ -71,11 +121,23 @@ class StockArmadoTests(TestCase):
         )
 
     def test_la_cantidad_igual_al_stock_se_agrega_y_el_stock_no_cambia(self):
-        ram = self.ram(2)
-        respuesta = self.post(self.client, ('memoria_ram', ram, 2))
+        ram = MemoriaRam.objects.create(
+            proveedor=self.proveedor, nombre='RAM completa', precio=Decimal('20000'), stock=2,
+            capacidad_gb=16, tipo_ddr='DDR5', velocidad_mhz=5600,
+            modulos_por_producto=1, capacidad_modulo_gb=16, formato_ram='DIMM',
+        )
+        cpu = self.cpu('CPU con la RAM', 4)
+        cpu.potencia_referencia_watts = 65
+        cpu.save(update_fields=['potencia_referencia_watts'])
+        respuesta = self.post(
+            self.client,
+            ('procesador', cpu, None),
+            ('memoria_ram', ram, 2),
+            *self.companeros(cpu, incluir_ram=False),
+        )
 
         self.assertEqual(respuesta.status_code, 200)
-        item = ItemCarrito.objects.get()
+        item = ItemCarrito.objects.get(memoria_ram__isnull=False)
         self.assertEqual(item.cantidad, 2)
         self.assertEqual(item.precio_unitario, ram.precio)
         ram.refresh_from_db()
@@ -107,10 +169,11 @@ class StockArmadoTests(TestCase):
         self.assertEqual(ItemCarrito.objects.get().precio_unitario, Decimal('1.00'))
 
         cpu.stock = 2
-        cpu.save(update_fields=['stock'])
-        aceptada = self.post(self.client, ('procesador', cpu, None))
+        cpu.potencia_referencia_watts = 65
+        cpu.save(update_fields=['stock', 'potencia_referencia_watts'])
+        aceptada = self.post(self.client, ('procesador', cpu, None), *self.companeros(cpu))
         self.assertEqual(aceptada.status_code, 200)
-        item = ItemCarrito.objects.get()
+        item = ItemCarrito.objects.get(procesador__isnull=False)
         self.assertEqual(item.cantidad, 2)
         self.assertEqual(item.precio_unitario, Decimal('1.00'))
         cpu.refresh_from_db()
@@ -159,25 +222,31 @@ class StockArmadoTests(TestCase):
 
     def test_dos_usuarios_pueden_guardar_la_ultima_unidad(self):
         cpu = self.cpu('Ultima CPU', 1)
-        primero = self.post(self.client, ('procesador', cpu, None))
+        cpu.potencia_referencia_watts = 65
+        cpu.save(update_fields=['potencia_referencia_watts'])
+        pares = (('procesador', cpu, None), *self.companeros(cpu))
+        primero = self.post(self.client, *pares)
         otro = Client()
         otro.force_login(self.otro)
-        segundo = self.post(otro, ('procesador', cpu, None))
+        segundo = self.post(otro, *pares)
 
         self.assertEqual(primero.status_code, 200)
         self.assertEqual(segundo.status_code, 200)
-        self.assertEqual(ItemCarrito.objects.count(), 2)
+        self.assertEqual(ItemCarrito.objects.filter(procesador__isnull=False).count(), 2)
         self.assertEqual(Carrito.objects.count(), 2)
         cpu.refresh_from_db()
         self.assertEqual(cpu.stock, 1)
 
     def test_una_segunda_alta_actualiza_la_linea_existente(self):
         cpu = self.cpu('CPU repetida', 4)
-        self.assertEqual(self.post(self.client, ('procesador', cpu, None)).status_code, 200)
-        self.assertEqual(self.post(self.client, ('procesador', cpu, None)).status_code, 200)
+        cpu.potencia_referencia_watts = 65
+        cpu.save(update_fields=['potencia_referencia_watts'])
+        pares = (('procesador', cpu, None), *self.companeros(cpu))
+        self.assertEqual(self.post(self.client, *pares).status_code, 200)
+        self.assertEqual(self.post(self.client, *pares).status_code, 200)
 
-        self.assertEqual(ItemCarrito.objects.count(), 1)
-        self.assertEqual(ItemCarrito.objects.get().cantidad, 2)
+        item = ItemCarrito.objects.get(procesador__isnull=False)
+        self.assertEqual(item.cantidad, 2)
         cpu.refresh_from_db()
         self.assertEqual(cpu.stock, 4)
 

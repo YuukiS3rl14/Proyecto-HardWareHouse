@@ -86,6 +86,17 @@ class Procesador(models.Model):
             "No es el TDP ni la potencia que usa la fuente. Déjalo vacío si no se conoce; no uses 0."
         ),
     )
+    graficos_integrados = models.BooleanField(
+        null=True,
+        blank=True,
+        verbose_name="Gráficos integrados",
+        help_text=(
+            "Sí: se confirmó que el procesador incluye gráficos. "
+            "No: se confirmó que no incluye. "
+            "Desconocido: no se sabe. "
+            "No lo deduzcas del nombre, la marca ni la descripción."
+        ),
+    )
 
     class Meta:
         verbose_name_plural = "Procesadores (CPU)"
@@ -283,6 +294,18 @@ class PlacaMadre(models.Model):
         help_text=(
             "Puertos SATA para SSD de 2,5 pulgadas y discos duros. "
             "No cuenta las ranuras M.2. 0 significa que no hay ninguno. Vacío si no se sabe."
+        ),
+    )
+    tiene_salidas_video = models.BooleanField(
+        null=True,
+        blank=True,
+        verbose_name="Salidas de video",
+        help_text=(
+            "Sí: se confirmó que la placa tiene al menos una salida de video "
+            "para el gráfico integrado, como HDMI, DisplayPort o VGA. "
+            "No: se confirmó que no tiene. "
+            "Desconocido: no se sabe. "
+            "No lo deduzcas del nombre, la marca, la descripción ni el chipset."
         ),
     )
 

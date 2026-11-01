@@ -196,10 +196,53 @@
     font-size: 0.75rem;
     font-weight: 500;
     line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+.armado-aviso-global,
+.armado-aviso-incompleto {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.35rem;
+    margin: 0 0 0.75rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid #f59e0b;
+    border-radius: 0.45rem;
+    background: #fffbeb;
+    color: #78350f;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+.armado-aviso-global > span,
+.armado-aviso-incompleto > span {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.recomendacion-incompleta {
+    border-color: #f59e0b;
 }
 .armado-carrito-aviso:empty,
 .armado-carrito-aviso[hidden] {
     display: none;
+}
+.armado-carrito-aviso-faltantes {
+    margin-bottom: 0.75rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #fde68a;
+    border-radius: 0.5rem;
+    background: #fffbeb;
+    color: #78350f;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+.armado-carrito-aviso-faltantes .armado-carrito-aviso-texto {
+    margin: 0 0 0.25rem;
+}
+.armado-carrito-aviso-faltantes summary {
+    cursor: pointer;
+}
+.armado-carrito-aviso-faltantes ul {
+    margin-top: 0.35rem;
+    padding-left: 1.1rem;
 }
 .armado-carrito-aviso-sesion {
     display: flex;
@@ -303,6 +346,24 @@
     overflow-y: auto;
     min-height: 0;
 }
+.recomendador-preferencias {
+    border-top: 1px solid #e9ecef;
+    padding-top: 0.75rem;
+}
+.recomendador-preferencias summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+.recomendador-preferencias summary:focus-visible {
+    outline: 2px solid #1f2937;
+    outline-offset: 2px;
+}
+.recomendador-modo {
+    min-width: 0;
+}
+.recomendador-modo:disabled {
+    opacity: 0.55;
+}
 .recomendacion-tarjeta {
     min-width: 0;
     border: 1px solid #dee2e6;
@@ -342,5 +403,108 @@
     #recomendarPcDetalleModal .modal-content {
         max-height: 100%;
         height: 100%;
+    }
+}
+.recomendador-solicitud {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+}
+.recomendador-borrador {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+}
+.recomendador-borrador-contraido {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+.recomendador-aviso {
+    margin: 0.75rem 0 0;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    background: #f8f9fa;
+    color: #495057;
+    font-size: 0.8125rem;
+    line-height: 1.35;
+}
+.recomendador-aviso-requisitos {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #92400e;
+}
+#recomendar-pc-resultado .recomendador-aviso {
+    margin-top: 0;
+}
+.recomendador-aclaraciones {
+    margin-bottom: 0.5rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    background: #f8f9fa;
+    color: #495057;
+}
+.recomendador-aclaraciones p {
+    font-size: 0.8125rem;
+}
+.recomendador-aclaraciones ul {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+.recomendador-aclaraciones li {
+    margin: 0.15rem 0;
+    font-size: 0.8125rem;
+    line-height: 1.35;
+}
+.recomendador-campo .form-check {
+    margin-bottom: 0;
+    min-height: 1.25rem;
+}
+.recomendador-campo + .recomendador-campo {
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+    border-top: 1px solid #e9ecef;
+}
+.recomendador-fragmento {
+    margin: 0.1rem 0 0;
+    color: #6c757d;
+    font-size: 0.75rem;
+    line-height: 1.3;
+}
+.recomendador-modos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    margin-top: 0.2rem;
+}
+.recomendador-estado {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.05rem 0.45rem;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: #f8f9fa;
+    color: #495057;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+    vertical-align: baseline;
+}
+.recomendador-estado-pendiente {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #92400e;
+}
+@media (max-width: 575.98px) {
+    .recomendador-solicitud,
+    .recomendador-borrador {
+        padding: 0.75rem;
+    }
+    .recomendador-solicitud .btn {
+        width: 100%;
     }
 }

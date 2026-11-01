@@ -9,7 +9,18 @@ from openpyxl import load_workbook
 
 from core.admin import MemoriaRamAdmin, PlacaMadreAdmin
 from core.compatibilidad import ACLARACION_RAM, MENSAJE_MEZCLA_RAM, LineaRam, validar_armado
-from core.models import Carrito, ItemCarrito, MemoriaRam, PlacaMadre, Procesador, Proveedor
+from core.models import (
+    AlmacenamientoSSD,
+    Carrito,
+    FuenteDePoder,
+    Gabinete,
+    ItemCarrito,
+    MemoriaRam,
+    PlacaMadre,
+    Procesador,
+    Proveedor,
+    TarjetaGrafica,
+)
 from core.tests import pieza
 
 
@@ -205,6 +216,36 @@ class ArmadoRamTests(TestCase):
     def setUp(self):
         self.client.force_login(self.user)
 
+    def resto_del_pc(self, socket='AM5'):
+        cpu = Procesador.objects.create(
+            proveedor=self.proveedor, nombre=f'CPU {socket} del kit', precio=Decimal('90000'), stock=4,
+            socket=socket, nucleos=6, frecuencia_base=Decimal('3.50'), potencia_referencia_watts=65,
+        )
+        gpu = TarjetaGrafica.objects.create(
+            proveedor=self.proveedor, nombre='GPU del kit', precio=Decimal('100000'), stock=4,
+            vram_gb=8, tipo_memoria='GDDR6', interfaz='PCIe 4.0',
+            consumo_referencia_watts=100, largo_mm=200,
+        )
+        gabinete = Gabinete.objects.create(
+            proveedor=self.proveedor, nombre='Gabinete del kit', precio=Decimal('40000'), stock=4,
+            formato_soporte='ATX', material='Acero', largo_max_gpu_mm=320,
+        )
+        fuente = FuenteDePoder.objects.create(
+            proveedor=self.proveedor, nombre='Fuente del kit', precio=Decimal('50000'), stock=4,
+            potencia_watts=650, certificacion='80+ Bronze',
+        )
+        disco = AlmacenamientoSSD.objects.create(
+            proveedor=self.proveedor, nombre='SSD del kit', precio=Decimal('20000'), stock=4,
+            capacidad_gb=1000, interfaz='NVMe PCIe 4.0', formato='M.2 2280',
+        )
+        return [
+            {'tipo': 'procesador', 'id': cpu.id},
+            {'tipo': 'tarjeta_grafica', 'id': gpu.id},
+            {'tipo': 'gabinete', 'id': gabinete.id},
+            {'tipo': 'fuente_de_poder', 'id': fuente.id},
+            {'tipo': 'almacenamiento_ssd', 'id': disco.id},
+        ]
+
     def post(self, url, componentes, extra=None):
         payload = {'componentes': componentes}
         if extra:
@@ -326,6 +367,7 @@ class ArmadoRamTests(TestCase):
         componentes = [
             {'tipo': 'placa_madre', 'id': placa.id},
             {'tipo': 'memoria_ram', 'id': kit.id, 'cantidad': 2},
+            *self.resto_del_pc(socket='AM4'),
         ]
 
         evaluacion = self.post(reverse('core:evaluar_armado'), componentes).json()
@@ -389,10 +431,11 @@ class ArmadoRamTests(TestCase):
             {'tipo': 'placa_madre', 'id': self.placa.id},
             {'tipo': 'memoria_ram', 'id': self.modulo.id, 'cantidad': 1},
             {'tipo': 'memoria_ram', 'id': self.modulo.id, 'cantidad': 1},
+            *self.resto_del_pc(),
         ])
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertEqual(respuesta.json()['estado'], 'incompleto')
+        self.assertEqual(respuesta.json()['estado'], 'compatible')
         item = ItemCarrito.objects.get(memoria_ram__isnull=False)
         self.assertEqual(item.cantidad, 2)
         self.assertEqual(item.memoria_ram_id, self.modulo.id)

@@ -15,8 +15,6 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.page import PageMargins
 
-from .compatibilidad import MENSAJE_ALMACENAMIENTO
-
 ZONA_CHILE = ZoneInfo('America/Santiago')
 
 
@@ -462,4 +460,11 @@ def _alto(pares):
 def aclaracion_de_pieza(componente, evaluacion):
     if evaluacion.estado != 'no_evaluada':
         return None
-    return f'{componente}: {MENSAJE_ALMACENAMIENTO}'
+    textos = []
+    for texto in (evaluacion.etiqueta, *evaluacion.motivos):
+        limpio = str(texto or '').strip()
+        if limpio and limpio not in textos:
+            textos.append(limpio)
+    if not textos:
+        return None
+    return f'{componente}: ' + ' '.join(textos)

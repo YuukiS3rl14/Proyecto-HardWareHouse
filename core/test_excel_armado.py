@@ -12,7 +12,16 @@ from openpyxl import load_workbook
 
 from core.compatibilidad import MENSAJE_ALMACENAMIENTO
 from core.excel_armado import ANCHOS, construir_libro
-from core.models import AlmacenamientoSSD, Carrito, Gabinete, ItemCarrito, Proveedor, TarjetaGrafica
+from core.models import (
+    AlmacenamientoHDD,
+    AlmacenamientoSSD,
+    Carrito,
+    Gabinete,
+    ItemCarrito,
+    PlacaMadre,
+    Proveedor,
+    TarjetaGrafica,
+)
 
 
 NOMBRE_GPU = (
@@ -249,14 +258,13 @@ class ExportarArmadoTests(TestCase):
         self.assertEqual(presupuesto['E8'].value, 325970)
         self.assertIn('321 mm', presupuesto.cell(fila_gpu, 6).value)
         self.assertIn('320 mm', presupuesto.cell(fila_case, 6).value)
-        self.assertIn('Compatibilidad no evaluada', presupuesto.cell(fila_ssd, 6).value)
+        self.assertEqual(presupuesto.cell(fila_ssd, 6).value, 'No verificada')
         textos = ' '.join(
             str(valor) for fila in presupuesto.iter_rows(values_only=True) for valor in fila if valor
         )
         self.assertIn('radiadores', textos)
-        self.assertIn('puertos SATA', textos)
-        self.assertIn('ranuras M.2', textos)
-        self.assertIn('bahías', textos)
+        self.assertNotIn('bahías', textos)
+        self.assertEqual(textos.count('Selecciona una placa madre para comprobar el almacenamiento.'), 1)
         self.gpu.refresh_from_db()
         self.case.refresh_from_db()
         self.assertEqual(self.gpu.precio, precio_gpu)
@@ -282,3 +290,142 @@ class ExportarArmadoTests(TestCase):
         self.assertIn('exportarUrl', cuerpo)
         self.assertNotIn('evaluacionActual', cuerpo)
         self.assertNotIn('XLSX', js)
+
+
+class RedaccionAlmacenamientoTests(TestCase):
+    def setUp(self):
+        proveedor = Proveedor.objects.create(nombre='Marca redaccion')
+        self.placa = PlacaMadre.objects.create(
+            proveedor=proveedor, nombre='Placa sin conteos', precio=Decimal('80000'), stock=2,
+            socket_cpu='AM5', chipset='B650', formato='ATX', ranuras_ram=4,
+            tipo_ram_soportado='DDR5', formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        )
+        self.placa_nvme = PlacaMadre.objects.create(
+            proveedor=proveedor, nombre='Placa con NVMe', precio=Decimal('90000'), stock=2,
+            socket_cpu='AM5', chipset='B650', formato='ATX', ranuras_ram=4,
+            tipo_ram_soportado='DDR5', formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+            ranuras_m2_solo_nvme=1, ranuras_m2_solo_sata=0, ranuras_m2_nvme_o_sata=0, puertos_sata=4,
+        )
+        self.placa_sin_nvme = PlacaMadre.objects.create(
+            proveedor=proveedor, nombre='Placa sin NVMe', precio=Decimal('90000'), stock=2,
+            socket_cpu='AM5', chipset='B650', formato='ATX', ranuras_ram=4,
+            tipo_ram_soportado='DDR5', formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+            ranuras_m2_solo_nvme=0, ranuras_m2_solo_sata=0, ranuras_m2_nvme_o_sata=0, puertos_sata=4,
+        )
+        self.nvme = AlmacenamientoSSD.objects.create(
+            proveedor=proveedor, nombre='SSD NVMe', precio=Decimal('54990'), stock=2,
+            capacidad_gb=1000, interfaz='NVMe PCIe 4.0', formato='M.2 2280',
+        )
+        self.sata = AlmacenamientoSSD.objects.create(
+            proveedor=proveedor, nombre='SSD SATA', precio=Decimal('29990'), stock=2,
+            capacidad_gb=500, interfaz='SATA III', formato='2.5"',
+        )
+        self.hdd = AlmacenamientoHDD.objects.create(
+            proveedor=proveedor, nombre='HDD sin interfaz', precio=Decimal('22990'), stock=2,
+            capacidad_gb=1000, velocidad_rpm=7200, cache_mb=64,
+        )
+        User.objects.create_user('redaccion', 'redaccion@example.com', 'clave-redaccion')
+        self.client.login(username='redaccion', password='clave-redaccion')
+
+    def _par(self, componentes):
+        cuerpo = json.dumps({'componentes': componentes})
+        evaluacion = self.client.post(
+            reverse('core:evaluar_armado'), data=cuerpo, content_type='application/json',
+        )
+        excel = self.client.post(
+            reverse('core:exportar_armado'), data=cuerpo, content_type='application/json',
+        )
+        self.assertEqual(evaluacion.status_code, 200)
+        self.assertEqual(excel.status_code, 200)
+        self.assertIn('spreadsheetml', excel['Content-Type'])
+        libro = load_workbook(BytesIO(excel.content))
+        textos = ' '.join(
+            str(valor)
+            for hoja in libro.worksheets
+            for fila in hoja.iter_rows(values_only=True)
+            for valor in fila if valor
+        )
+        return evaluacion.json(), textos, libro['Presupuesto']
+
+    def test_nvme_sin_ranuras_explica_solo_esa_causa(self):
+        aviso = (
+            'No fue posible verificar la compatibilidad del SSD con la placa madre '
+            'porque el catálogo no contiene información suficiente sobre sus ranuras M.2.'
+        )
+        evaluacion, textos, hoja = self._par([
+            {'tipo': 'placa_madre', 'id': self.placa.id},
+            {'tipo': 'almacenamiento_ssd', 'id': self.nvme.id},
+        ])
+        pieza = evaluacion['piezas']['almacenamiento']
+        self.assertEqual(pieza['estado'], 'no_evaluada')
+        self.assertEqual(pieza['motivos'], [aviso])
+        self.assertNotIn('puertos SATA', pieza['etiqueta'])
+        self.assertNotIn('bahías', textos)
+        self.assertEqual(textos.count(aviso), 1)
+        self.assertEqual(hoja['E7'].value, 80000 + 54990)
+
+    def test_sata_sin_puertos_no_menciona_ranuras_m2(self):
+        aviso = (
+            'No fue posible verificar la compatibilidad del SSD con la placa madre '
+            'porque el catálogo no contiene información suficiente sobre sus puertos SATA.'
+        )
+        evaluacion, textos, hoja = self._par([
+            {'tipo': 'placa_madre', 'id': self.placa.id},
+            {'tipo': 'almacenamiento_ssd', 'id': self.sata.id},
+        ])
+        pieza = evaluacion['piezas']['almacenamiento']
+        self.assertEqual(pieza['estado'], 'no_evaluada')
+        self.assertEqual(pieza['motivos'], [aviso])
+        self.assertNotIn('ranuras M.2', textos)
+        self.assertEqual(textos.count(aviso), 1)
+        self.assertEqual(hoja['E7'].value, 80000 + 29990)
+
+    def test_interfaz_desconocida_no_se_atribuye_a_la_placa(self):
+        evaluacion, textos, _hoja = self._par([
+            {'tipo': 'placa_madre', 'id': self.placa_nvme.id},
+            {'tipo': 'almacenamiento_hdd', 'id': self.hdd.id},
+        ])
+        pieza = evaluacion['piezas']['almacenamiento']
+        self.assertEqual(pieza['estado'], 'no_evaluada')
+        self.assertIn('Falta la interfaz', pieza['etiqueta'])
+        self.assertNotIn('ranuras M.2', pieza['etiqueta'])
+        self.assertNotIn('puertos SATA', pieza['etiqueta'])
+        self.assertIn('Falta la interfaz', textos)
+        self.assertNotIn('bahías', textos)
+
+    def test_disco_compatible_no_agrega_el_aviso_de_datos_faltantes(self):
+        evaluacion, textos, hoja = self._par([
+            {'tipo': 'placa_madre', 'id': self.placa_nvme.id},
+            {'tipo': 'almacenamiento_ssd', 'id': self.nvme.id},
+        ])
+        pieza = evaluacion['piezas']['almacenamiento']
+        self.assertEqual(pieza['estado'], 'compatible')
+        self.assertIn('Cabe', pieza['etiqueta'])
+        self.assertNotIn('No fue posible verificar', textos)
+        self.assertEqual(hoja['E7'].value, 90000 + 54990)
+
+    def test_disco_incompatible_conserva_el_rechazo(self):
+        evaluacion, textos, _hoja = self._par([
+            {'tipo': 'placa_madre', 'id': self.placa_sin_nvme.id},
+            {'tipo': 'almacenamiento_ssd', 'id': self.nvme.id},
+        ])
+        pieza = evaluacion['piezas']['almacenamiento']
+        self.assertEqual(pieza['estado'], 'incompatible')
+        self.assertEqual(evaluacion['estado'], 'incompatible')
+        self.assertIn('SSD NVMe', ' '.join(pieza['motivos']))
+        self.assertNotIn('No fue posible verificar', textos)
+
+    def test_dos_causas_se_muestran_una_sola_vez_cada_una(self):
+        evaluacion, textos, _hoja = self._par([
+            {'tipo': 'placa_madre', 'id': self.placa.id},
+            {'tipo': 'almacenamiento_ssd', 'id': self.nvme.id},
+            {'tipo': 'almacenamiento_ssd', 'id': self.sata.id},
+        ])
+        motivos = evaluacion['piezas']['almacenamiento']['motivos']
+        self.assertEqual(len(motivos), len(set(motivos)))
+        self.assertEqual(len(motivos), 2)
+        self.assertTrue(any('ranuras M.2' in texto for texto in motivos))
+        self.assertTrue(any('puertos SATA' in texto for texto in motivos))
+        self.assertNotIn('bahías', textos)
+        for motivo in motivos:
+            self.assertEqual(textos.count(motivo), 1)

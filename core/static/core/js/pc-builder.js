@@ -24,6 +24,10 @@ function iniciarArmado() {
     let modoModal = '';
     let reemplazaId = null;
     let consultaSerial = 0;
+    let avisosTarjetaVistos = new Set();
+    let faltaAlmacenamientoAplicado = false;
+    let motivoAlmacenamientoAplicado = '';
+    const AVISO_GRAFICOS_BREVE = 'Gráficos integrados: salida de video confirmada. Estimación de potencia con limitaciones.';
 
     // Orden y etiquetas de los componentes
     const componentOrder = [
@@ -39,6 +43,7 @@ function iniciarArmado() {
 
     // --- 2. INICIALIZAR LA INTERFAZ ---
     function initializeBuilder() {
+        avisosTarjetaVistos = new Set();
         desecharPopovers(builderContainer);
         builderContainer.innerHTML = '<div class="row"></div>'; // Crear una fila para la rejilla
         const gridRow = builderContainer.querySelector('.row');
@@ -699,7 +704,11 @@ function iniciarArmado() {
         coincidencias.forEach(agregar);
         (candidato.motivos || []).forEach(agregar);
         (candidato.pendientes || []).forEach(agregar);
-        (candidato.advertencias || []).forEach(agregar);
+        (candidato.advertencias || []).forEach(texto => {
+            if (!esAvisoGlobalGraficos(texto)) {
+                agregar(texto);
+            }
+        });
         return textos;
     }
 
@@ -954,7 +963,11 @@ function iniciarArmado() {
         (pieza.coincidencias || []).forEach(agregar);
         (pieza.motivos || []).forEach(agregar);
         (pieza.pendientes || []).forEach(agregar);
-        (pieza.advertencias || []).forEach(agregar);
+        (pieza.advertencias || []).forEach(texto => {
+            if (!esAvisoGlobalGraficos(texto)) {
+                agregar(texto);
+            }
+        });
         return textos;
     }
 
@@ -962,7 +975,32 @@ function iniciarArmado() {
         return /potencia insuficiente|no se puede estimar la potencia|para estimar la potencia de la fuente/i.test(texto);
     }
 
-    function contenidoEstado(pieza, label, clave) {
+    function esAvisoGlobalGraficos(texto) {
+        return /salida de video por gráficos integrados confirmados/i.test(String(texto || ''));
+    }
+
+    function textoAvisoGraficos() {
+        const lista = (evaluacionActual && evaluacionActual.advertencias) || [];
+        return lista.find(esAvisoGlobalGraficos) || '';
+    }
+
+    function avisosVisiblesDePieza(pieza, vistos) {
+        return (pieza && pieza.advertencias || []).filter(texto => {
+            const limpio = String(texto || '').trim();
+            if (!limpio || esAvisoCritico(limpio) || esAvisoGlobalGraficos(limpio)) {
+                return false;
+            }
+            if (vistos && vistos.has(limpio)) {
+                return false;
+            }
+            if (vistos) {
+                vistos.add(limpio);
+            }
+            return true;
+        });
+    }
+
+    function contenidoEstado(pieza, label, clave, vistos) {
         const clase = clasificarPieza(pieza, clave);
         if (!evaluacionActual || evaluacionActual.pendiente) {
             return { html: '<span>Consultando compatibilidad...</span>' };
@@ -974,8 +1012,7 @@ function iniciarArmado() {
         const info = detalle.length
             ? `<button type="button" class="btn btn-link btn-sm armado-resumen-info" data-detalle="${escaparHtml(detalle.join('\n\n'))}" aria-label="Ver detalle de compatibilidad de ${escaparHtml(label)}"><i class="fas fa-info-circle" aria-hidden="true"></i></button>`
             : '';
-        const avisos = (pieza.advertencias || [])
-            .filter(texto => texto && !esAvisoCritico(texto))
+        const avisos = avisosVisiblesDePieza(pieza, vistos)
             .map(texto => `<span class="armado-advertencia">${escaparHtml(texto)}</span>`)
             .join('');
         return {
@@ -984,7 +1021,7 @@ function iniciarArmado() {
     }
 
     function htmlEstadoTarjeta(key, label) {
-        const estado = contenidoEstado(piezaEvaluada(key), label, key);
+        const estado = contenidoEstado(piezaEvaluada(key), label, key, avisosTarjetaVistos);
         return `<div class="armado-estado-compacto">${estado.html}</div>`;
     }
 
@@ -1113,12 +1150,13 @@ function iniciarArmado() {
         let total = 0;
         let componentCount = 0;
         const criticosVisibles = new Set();
+        const avisosResumenVistos = new Set();
 
         const agregarLinea = (key, label, subtotal, nombres) => {
             total += subtotal;
             componentCount += 1;
             const pieza = piezaEvaluada(key);
-            const estado = contenidoEstado(pieza, label, key);
+            const estado = contenidoEstado(pieza, label, key, avisosResumenVistos);
             const clase = estado;
             const criticos = (pieza && evaluacionActual && !evaluacionActual.pendiente && !evaluacionActual.fallo)
                 ? [...(pieza.motivos || []), ...(pieza.advertencias || [])].filter(esAvisoCritico)
@@ -1185,16 +1223,46 @@ function iniciarArmado() {
             nota.className = `armado-estado-general armado-estado-badge ${general.clase}`;
             nota.textContent = general.texto;
             summaryList.prepend(nota);
+            const avisoGraficos = textoAvisoGraficos();
+            if (avisoGraficos) {
+                const aviso = document.createElement('p');
+                aviso.className = 'armado-aviso-global';
+                aviso.setAttribute('role', 'status');
+                aviso.innerHTML = `
+                    <span>${escaparHtml(AVISO_GRAFICOS_BREVE)}</span>
+                    <button type="button" class="btn btn-link btn-sm armado-resumen-info" data-detalle="${escaparHtml(avisoGraficos)}" aria-label="Ver el detalle de la estimación de potencia con gráficos integrados"><i class="fas fa-info-circle" aria-hidden="true"></i></button>
+                `;
+                if (nota.nextSibling) {
+                    summaryList.insertBefore(aviso, nota.nextSibling);
+                } else {
+                    summaryList.appendChild(aviso);
+                }
+            }
             (evaluacionActual.advertencias || []).filter(esAvisoCritico).forEach(texto => {
                 if (criticosVisibles.has(texto)) {
                     return;
                 }
                 criticosVisibles.add(texto);
-                const nota = document.createElement('p');
-                nota.className = 'armado-resumen-critico text-warning mb-0';
-                nota.textContent = texto;
-                summaryList.appendChild(nota);
+                const critico = document.createElement('p');
+                critico.className = 'armado-resumen-critico text-warning mb-0';
+                critico.textContent = texto;
+                summaryList.appendChild(critico);
             });
+        }
+
+        if (discos.length > 0) {
+            faltaAlmacenamientoAplicado = false;
+            motivoAlmacenamientoAplicado = '';
+        }
+        if (componentCount === 0) {
+            faltaAlmacenamientoAplicado = false;
+            motivoAlmacenamientoAplicado = '';
+        } else if (faltaAlmacenamientoAplicado && discos.length === 0) {
+            const incompleto = document.createElement('p');
+            incompleto.className = 'armado-aviso-incompleto';
+            incompleto.setAttribute('role', 'status');
+            incompleto.innerHTML = '<span><strong>Configuración incompleta.</strong> Falta almacenamiento. Esta configuración no está lista para comprar.</span>';
+            summaryList.appendChild(incompleto);
         }
 
         montarPopovers(summaryList);
@@ -1221,7 +1289,7 @@ function iniciarArmado() {
             return;
         }
         aviso.replaceChildren();
-        aviso.classList.remove('armado-carrito-aviso-sesion');
+        aviso.classList.remove('armado-carrito-aviso-sesion', 'armado-carrito-aviso-faltantes');
         aviso.setAttribute('role', 'status');
         if (!texto) {
             aviso.hidden = true;
@@ -1254,6 +1322,32 @@ function iniciarArmado() {
         aviso.append(icono, cuerpo);
     }
 
+    function mostrarFaltantes(faltantes) {
+        const aviso = document.getElementById('armado-carrito-aviso');
+        if (!aviso) {
+            return;
+        }
+        aviso.replaceChildren();
+        aviso.classList.remove('armado-carrito-aviso-sesion');
+        aviso.classList.add('armado-carrito-aviso-faltantes');
+        aviso.hidden = false;
+        const texto = document.createElement('p');
+        texto.className = 'armado-carrito-aviso-texto';
+        texto.textContent = 'Faltan componentes por seleccionar.';
+        const detalles = document.createElement('details');
+        const resumen = document.createElement('summary');
+        resumen.textContent = 'Ver componentes faltantes';
+        const lista = document.createElement('ul');
+        lista.className = 'mb-0';
+        faltantes.forEach((nombre) => {
+            const item = document.createElement('li');
+            item.textContent = nombre;
+            lista.append(item);
+        });
+        detalles.append(resumen, lista);
+        aviso.append(texto, detalles);
+    }
+
     function actualizarBotonCarrito(componentCount) {
         if (enviandoCarrito) {
             addToCartBtn.disabled = true;
@@ -1273,6 +1367,12 @@ function iniciarArmado() {
             addToCartBtn.disabled = true;
             const motivos = ((evaluacionActual && evaluacionActual.motivos) || []).filter(Boolean);
             mostrarAvisoCarrito(motivos.join(' ') || 'No se puede agregar este armado al carrito.');
+            return;
+        }
+        const faltantes = (evaluacionActual && evaluacionActual.faltantes) || [];
+        if (componentCount > 0 && faltantes.length) {
+            addToCartBtn.disabled = true;
+            mostrarFaltantes(faltantes);
             return;
         }
         addToCartBtn.disabled = false;
@@ -1602,7 +1702,452 @@ function iniciarArmado() {
         }
         const modal = new bootstrap.Modal(modalEl);
         const modalDetalle = new bootstrap.Modal(detalleEl);
+        const modosPreferencia = [
+            ['recomendador-ram', 'recomendador-ram-modo'],
+            ['recomendador-disco-tipo', 'recomendador-disco-tipo-modo'],
+            ['recomendador-disco-gb', 'recomendador-disco-gb-modo'],
+            ['recomendador-socket', 'recomendador-socket-modo'],
+            ['recomendador-gpu', 'recomendador-gpu-modo'],
+        ];
+        function sincronizarModoPreferencia(selectId, grupoId) {
+            const select = document.getElementById(selectId);
+            const grupo = document.getElementById(grupoId);
+            if (!select || !grupo) {
+                return;
+            }
+            const activo = selectId === 'recomendador-gpu'
+                ? select.value === 'sin_dedicada'
+                : Boolean(select.value);
+            grupo.disabled = !activo;
+            if (activo) {
+                grupo.removeAttribute('aria-disabled');
+            } else {
+                grupo.setAttribute('aria-disabled', 'true');
+            }
+        }
+        modosPreferencia.forEach(([selectId, grupoId]) => {
+            const select = document.getElementById(selectId);
+            if (!select) {
+                return;
+            }
+            sincronizarModoPreferencia(selectId, grupoId);
+            select.addEventListener('change', () => sincronizarModoPreferencia(selectId, grupoId));
+        });
+        const textoSolicitud = document.getElementById('recomendador-texto');
+        const botonInterpretar = document.getElementById('recomendador-interpretar');
+        const borradorCaja = document.getElementById('recomendador-borrador');
+        const estadoSolicitud = document.getElementById('recomendador-solicitud-estado');
+        let borradorActual = null;
+        let interpretando = false;
+        let borradorAplicado = false;
+        let cambiosAplicados = null;
+        const camposModo = {
+            ram_gb: 'ram_modo',
+            disco_tipo: 'disco_tipo_modo',
+            disco_gb: 'disco_gb_modo',
+            socket: 'socket_modo',
+            gpu: 'gpu_modo',
+        };
+        const destinoCampo = {
+            presupuesto: 'recomendador-presupuesto',
+            uso: 'recomendador-uso',
+            resolucion: 'recomendador-resolucion',
+            ram_gb: 'recomendador-ram',
+            disco_tipo: 'recomendador-disco-tipo',
+            disco_gb: 'recomendador-disco-gb',
+            socket: 'recomendador-socket',
+            gpu: 'recomendador-gpu',
+        };
+
+        async function interpretarSolicitud() {
+            if (!textoSolicitud || !botonInterpretar || interpretando) {
+                return;
+            }
+            const texto = textoSolicitud.value.trim();
+            if (!texto) {
+                if (estadoSolicitud) {
+                    estadoSolicitud.textContent = 'Escribe qué computador necesitas antes de interpretarlo.';
+                }
+                return;
+            }
+            interpretando = true;
+            botonInterpretar.disabled = true;
+            botonInterpretar.setAttribute('aria-busy', 'true');
+            if (estadoSolicitud) {
+                estadoSolicitud.textContent = 'Interpretando la descripción...';
+            }
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            try {
+                const response = await fetch(urls.interpretarSolicitudUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({ texto }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfInput ? csrfInput.value : '',
+                    },
+                });
+                const data = await response.json().catch(() => ({}));
+                if (response.status === 403) {
+                    if (estadoSolicitud) {
+                        estadoSolicitud.textContent = 'La verificación de seguridad falló. Recarga la página e inténtalo otra vez.';
+                    }
+                    return;
+                }
+                if (!response.ok) {
+                    if (estadoSolicitud) {
+                        estadoSolicitud.textContent = data.message || 'No se pudo interpretar la descripción.';
+                    }
+                    return;
+                }
+                borradorActual = data.borrador || null;
+                mostrarBorrador(borradorActual);
+            } catch (error) {
+                if (estadoSolicitud) {
+                    estadoSolicitud.textContent = 'No se pudo interpretar la descripción.';
+                }
+            } finally {
+                interpretando = false;
+                botonInterpretar.disabled = false;
+                botonInterpretar.removeAttribute('aria-busy');
+            }
+        }
+
+        function cancelarInterpretacion() {
+            if (borradorAplicado && borradorActual) {
+                contraerBorradorAplicado();
+                return;
+            }
+            borradorActual = null;
+            borradorAplicado = false;
+            cambiosAplicados = null;
+            if (borradorCaja) {
+                borradorCaja.hidden = true;
+                borradorCaja.innerHTML = '';
+                borradorCaja.classList.remove('recomendador-borrador-contraido');
+            }
+            if (estadoSolicitud) {
+                estadoSolicitud.textContent = 'Se canceló la interpretación. El formulario no cambió.';
+            }
+            actualizarAvisoInterpretacion();
+        }
+
+        function contraerBorradorAplicado() {
+            borradorAplicado = true;
+            if (borradorCaja) {
+                borradorCaja.hidden = false;
+                borradorCaja.classList.add('recomendador-borrador-contraido');
+                borradorCaja.innerHTML = '<button type="button" class="btn btn-link btn-sm p-0" id="recomendador-revisar">Revisar interpretación</button>';
+            }
+            if (estadoSolicitud) {
+                estadoSolicitud.textContent = 'Requisitos aplicados al formulario. Puedes revisarlos antes de generar tu PC.';
+            }
+            actualizarAvisoInterpretacion();
+        }
+
+        function aplicarInterpretacion() {
+            const cambios = camposParaAplicar();
+            if (!cambios) {
+                return;
+            }
+            const abrePreferencias = cambios.some(cambio => (
+                cambio.campo === 'ram_gb'
+                || cambio.campo === 'disco_tipo'
+                || cambio.campo === 'disco_gb'
+                || cambio.campo === 'socket'
+                || (cambio.campo === 'gpu' && cambio.valor === 'sin_dedicada')
+            ));
+            if (abrePreferencias) {
+                const seccion = formulario.querySelector('.recomendador-preferencias');
+                if (seccion) {
+                    seccion.open = true;
+                }
+            }
+            cambiosAplicados = cambios;
+            cambios.forEach(escribirCampo);
+            contraerBorradorAplicado();
+            invalidarRecomendacionesSiCambiaron();
+        }
+
+        function escribirCampo(cambio) {
+            const destino = document.getElementById(destinoCampo[cambio.campo]);
+            if (!destino) {
+                return;
+            }
+            destino.value = String(cambio.valor);
+            destino.dispatchEvent(new Event('change', { bubbles: true }));
+            const nombreModo = camposModo[cambio.campo];
+            if (!nombreModo || cambio.tipo === 'detectado' || cambio.valor === 'automatica') {
+                return;
+            }
+            const radio = formulario.querySelector(`input[name="${nombreModo}"][value="${cambio.tipo}"]`);
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        function htmlBorrador(borrador) {
+            const partes = [];
+            (borrador.advertencias || []).forEach(texto => {
+                partes.push(`<p class="alert alert-warning py-2 mb-2">${escaparHtml(texto)}</p>`);
+            });
+            const notas = borrador.no_representable || [];
+            if (notas.length) {
+                const items = notas.map(item => (
+                    `<li><strong>${escaparHtml(item.dato)}.</strong> ${escaparHtml(item.motivo)}`
+                    + (item.fragmento ? ` <span class="recomendador-fragmento">En el texto: «${escaparHtml(item.fragmento)}»</span>` : '')
+                    + '</li>'
+                )).join('');
+                partes.push(
+                    '<section class="recomendador-aclaraciones" aria-label="Mencionado, sin un campo verificable">'
+                    + '<p class="mb-1"><strong>Mencionado, sin un campo verificable</strong></p>'
+                    + `<ul>${items}</ul></section>`
+                );
+            }
+            (borrador.contradicciones || []).forEach((contradiccion, indice) => {
+                const alternativas = (contradiccion.alternativas || []).map(alternativa => `
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="borrador-alternativa-${indice}" id="borrador-alternativa-${indice}-${escaparHtml(alternativa.id)}" value="${escaparHtml(alternativa.id)}">
+                        <label class="form-check-label" for="borrador-alternativa-${indice}-${escaparHtml(alternativa.id)}">${escaparHtml(alternativa.etiqueta)}</label>
+                    </div>
+                `).join('');
+                partes.push(
+                    `<div class="alert alert-warning"><p class="mb-2">${escaparHtml(contradiccion.mensaje)}</p>`
+                    + `<div class="d-flex flex-column gap-1" role="radiogroup" aria-label="Alternativa">${alternativas}</div>`
+                    + htmlModosDe(contradiccion)
+                    + '</div>'
+                );
+            });
+            (borrador.campos || []).forEach(campo => {
+                if (campo.bloqueado) {
+                    partes.push(
+                        `<div class="recomendador-campo"><p class="mb-1"><strong>${escaparHtml(campo.etiqueta)}:</strong> ${escaparHtml(campo.valor_etiqueta || 'varios valores')}</p>`
+                        + '<p class="small text-muted mb-0">Queda en pausa hasta que elijas una alternativa.</p></div>'
+                    );
+                    return;
+                }
+                const resumen = campo.candidatos && campo.candidatos.length
+                    ? 'elige un valor'
+                    : escaparHtml(campo.valor_etiqueta || '');
+                const opciones = campo.candidatos && campo.candidatos.length ? htmlCandidatos(campo) : '';
+                const modo = camposModo[campo.campo] ? htmlModo(campo) : '';
+                const incluir = cambiosAplicados
+                    ? cambiosAplicados.some(item => item.campo === campo.campo)
+                    : !(campo.aproximado && !(campo.candidatos && campo.candidatos.length));
+                partes.push(
+                    `<div class="recomendador-campo"><div class="form-check">`
+                    + `<input class="form-check-input" type="checkbox" id="borrador-aplicar-${escaparHtml(campo.campo)}" data-aplicar="${escaparHtml(campo.campo)}" ${incluir ? 'checked' : ''}>`
+                    + `<label class="form-check-label" for="borrador-aplicar-${escaparHtml(campo.campo)}"><strong>${escaparHtml(campo.etiqueta)}:</strong> ${resumen}`
+                    + `${marcaEstado(campo)}</label></div>`
+                    + (campo.fragmento ? `<p class="recomendador-fragmento">En el texto: «${escaparHtml(campo.fragmento)}»</p>` : '')
+                    + opciones
+                    + modo
+                    + '</div>'
+                );
+            });
+            const aplicables = (borrador.campos || []).some(campo => !campo.bloqueado) || (borrador.contradicciones || []).length;
+            if (!aplicables) {
+                partes.push('<p class="mb-2">No hay datos aplicables al formulario. Puedes completar los campos a mano.</p>');
+            }
+            partes.push(
+                '<div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">'
+                + '<button type="button" class="btn btn-outline-secondary" id="recomendador-cancelar">Cancelar</button>'
+                + (aplicables ? '<button type="button" class="btn btn-success" id="recomendador-aplicar" disabled>Aplicar al formulario</button>' : '')
+                + '</div>'
+            );
+            return partes.join('');
+        }
+
+        function htmlCandidatos(campo) {
+            return `<div class="d-flex flex-column gap-1 mt-1" role="radiogroup" aria-label="${escaparHtml(campo.etiqueta)}">`
+                + campo.candidatos.map(candidato => `
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="borrador-valor-${escaparHtml(campo.campo)}" id="borrador-valor-${escaparHtml(campo.campo)}-${escaparHtml(candidato.valor)}" value="${escaparHtml(candidato.valor)}">
+                        <label class="form-check-label" for="borrador-valor-${escaparHtml(campo.campo)}-${escaparHtml(candidato.valor)}">${escaparHtml(candidato.etiqueta)}</label>
+                    </div>
+                `).join('')
+                + '</div>';
+        }
+
+        function tipoEfectivo(campo) {
+            const aplicado = (cambiosAplicados || []).find(item => item.campo === campo.campo);
+            return aplicado ? aplicado.tipo : campo.tipo;
+        }
+
+        function marcaEstado(campo) {
+            const tipo = tipoEfectivo(campo);
+            if (camposModo[campo.campo] && (tipo === 'preferencia' || tipo === 'obligatorio')) {
+                return '';
+            }
+            const texto = {
+                detectado: 'Detectado',
+                pendiente: 'Por confirmar',
+                preferencia: 'Preferencia',
+                obligatorio: 'Obligatorio',
+            }[tipo] || '';
+            if (!texto) {
+                return '';
+            }
+            const pendiente = tipo === 'pendiente' ? ' recomendador-estado-pendiente' : '';
+            return ` <span class="recomendador-estado${pendiente}">${texto}</span>`;
+        }
+
+        function htmlModo(campo) {
+            const tipos = (campo.candidatos || []).map(candidato => candidato.tipo);
+            const compartido = tipos.length && tipos.every(tipo => tipo === tipos[0]) ? tipos[0] : '';
+            const tipo = tipoEfectivo(campo);
+            const propuesto = tipo === 'obligatorio' || tipo === 'preferencia' ? tipo : compartido;
+            const actual = propuesto === 'obligatorio' || propuesto === 'preferencia' ? propuesto : '';
+            return `<div class="recomendador-modos" role="radiogroup" aria-label="Cómo aplicar ${escaparHtml(campo.etiqueta)}">`
+                + ['preferencia', 'obligatorio'].map(valor => `
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="borrador-modo-${escaparHtml(campo.campo)}" id="borrador-modo-${escaparHtml(campo.campo)}-${valor}" value="${valor}" ${actual === valor ? 'checked' : ''}>
+                        <label class="form-check-label" for="borrador-modo-${escaparHtml(campo.campo)}-${valor}">${valor === 'preferencia' ? 'Preferencia' : 'Obligatorio'}</label>
+                    </div>
+                `).join('')
+                + '</div>';
+        }
+
+        function htmlModosDe(contradiccion) {
+            const vistos = new Set();
+            let html = '';
+            (contradiccion.alternativas || []).forEach(alternativa => {
+                (alternativa.campos || []).forEach(cambio => {
+                    if (!camposModo[cambio.campo] || cambio.tipo !== 'pendiente' || vistos.has(cambio.campo)) {
+                        return;
+                    }
+                    vistos.add(cambio.campo);
+                    html += `<p class="small mb-0 mt-2">Si la alternativa sigue pendiente, confirma cómo aplicarla.</p>${htmlModo(cambio)}`;
+                });
+            });
+            return html;
+        }
+
+        function pintarBorrador(borrador) {
+            if (!borradorCaja || !borrador) {
+                return;
+            }
+            borradorCaja.classList.remove('recomendador-borrador-contraido');
+            borradorCaja.innerHTML = htmlBorrador(borrador);
+            borradorCaja.hidden = false;
+            actualizarBotonAplicar();
+        }
+
+        function mostrarBorrador(borrador) {
+            borradorAplicado = false;
+            cambiosAplicados = null;
+            pintarBorrador(borrador);
+            if (estadoSolicitud) {
+                estadoSolicitud.textContent = 'Revisa el borrador. Confirmarlo solo completa el formulario; no genera una recomendación.';
+            }
+            actualizarAvisoInterpretacion();
+        }
+
+        function revisarInterpretacion() {
+            if (!borradorActual) {
+                return;
+            }
+            pintarBorrador(borradorActual);
+            if (estadoSolicitud) {
+                estadoSolicitud.textContent = 'Puedes revisar la interpretación. El formulario no cambia hasta que vuelvas a aplicar.';
+            }
+        }
+
+        function camposParaAplicar() {
+            if (!borradorActual || !borradorCaja) {
+                return null;
+            }
+            const cambios = [];
+            const contradicciones = borradorActual.contradicciones || [];
+            for (let indice = 0; indice < contradicciones.length; indice += 1) {
+                const contradiccion = contradicciones[indice];
+                const elegida = borradorCaja.querySelector(`input[name="borrador-alternativa-${indice}"]:checked`);
+                if (!elegida) {
+                    return null;
+                }
+                const alternativa = (contradiccion.alternativas || []).find(item => item.id === elegida.value);
+                if (!alternativa) {
+                    return null;
+                }
+                for (const cambio of alternativa.campos || []) {
+                    let tipo = cambio.tipo;
+                    if (camposModo[cambio.campo] && tipo === 'pendiente') {
+                        const modo = borradorCaja.querySelector(`input[name="borrador-modo-${cambio.campo}"]:checked`);
+                        if (!modo) {
+                            return null;
+                        }
+                        tipo = modo.value;
+                    }
+                    cambios.push({ campo: cambio.campo, valor: cambio.valor, tipo });
+                }
+            }
+            for (const campo of borradorActual.campos || []) {
+                if (campo.bloqueado) {
+                    continue;
+                }
+                const casilla = borradorCaja.querySelector(`[data-aplicar="${campo.campo}"]`);
+                if (casilla && !casilla.checked) {
+                    continue;
+                }
+                let valor = campo.valor;
+                let tipo = campo.tipo;
+                if (campo.candidatos && campo.candidatos.length) {
+                    const elegido = borradorCaja.querySelector(`input[name="borrador-valor-${campo.campo}"]:checked`);
+                    if (!elegido) {
+                        return null;
+                    }
+                    const candidato = campo.candidatos.find(item => String(item.valor) === elegido.value);
+                    if (!candidato) {
+                        return null;
+                    }
+                    valor = candidato.valor;
+                    tipo = candidato.tipo || tipo;
+                }
+                if (camposModo[campo.campo]) {
+                    const modo = borradorCaja.querySelector(`input[name="borrador-modo-${campo.campo}"]:checked`);
+                    if (modo) {
+                        tipo = modo.value;
+                    } else if (tipo === 'pendiente') {
+                        return null;
+                    }
+                }
+                if (valor === null || valor === undefined || valor === '') {
+                    return null;
+                }
+                cambios.push({ campo: campo.campo, valor, tipo });
+            }
+            return cambios.length ? cambios : null;
+        }
+
+        function actualizarBotonAplicar() {
+            const boton = document.getElementById('recomendador-aplicar');
+            if (!boton) {
+                return;
+            }
+            boton.disabled = !camposParaAplicar();
+        }
+
+        if (botonInterpretar && textoSolicitud && borradorCaja && urls.interpretarSolicitudUrl) {
+            botonInterpretar.addEventListener('click', interpretarSolicitud);
+            borradorCaja.addEventListener('click', (evento) => {
+                if (evento.target.closest('#recomendador-revisar')) {
+                    revisarInterpretacion();
+                    return;
+                }
+                if (evento.target.closest('#recomendador-cancelar')) {
+                    cancelarInterpretacion();
+                    return;
+                }
+                if (evento.target.closest('#recomendador-aplicar')) {
+                    aplicarInterpretacion();
+                }
+            });
+            borradorCaja.addEventListener('change', actualizarBotonAplicar);
+        }
         let propuestas = [];
+        let firmaRecomendacion = null;
+        let recomendacionesVigentes = false;
         let buscando = false;
         let indiceDetalle = null;
         let volverAlCerrarDetalle = false;
@@ -1646,11 +2191,107 @@ function iniciarArmado() {
             }
         });
 
+        function leerFirmaRequisitos() {
+            const modo = formulario.querySelector('input[name="modo"]:checked');
+            const partes = [
+                document.getElementById('recomendador-presupuesto').value,
+                document.getElementById('recomendador-uso').value,
+                document.getElementById('recomendador-resolucion').value,
+                modo ? modo.value : '',
+            ];
+            [
+                ['recomendador-ram', 'ram_modo'],
+                ['recomendador-disco-tipo', 'disco_tipo_modo'],
+                ['recomendador-disco-gb', 'disco_gb_modo'],
+                ['recomendador-socket', 'socket_modo'],
+            ].forEach(([selectId, claveModo]) => {
+                const valor = document.getElementById(selectId).value;
+                if (!valor) {
+                    partes.push('', '');
+                    return;
+                }
+                partes.push(valor);
+                const elegido = formulario.querySelector(`input[name="${claveModo}"]:checked`);
+                partes.push(elegido ? elegido.value : 'preferencia');
+            });
+            const gpu = document.getElementById('recomendador-gpu').value || 'automatica';
+            partes.push(gpu);
+            if (gpu === 'sin_dedicada') {
+                const elegido = formulario.querySelector('input[name="gpu_modo"]:checked');
+                partes.push(elegido ? elegido.value : 'preferencia');
+            } else {
+                partes.push('');
+            }
+            return partes.join('\u001f');
+        }
+
+        function htmlAvisoRequisitos() {
+            return '<p class="recomendador-aviso recomendador-aviso-requisitos" role="status">Los requisitos se actualizaron. Genera una nueva recomendación para ver configuraciones acordes a ellos.</p>';
+        }
+
+        function actualizarAvisoInterpretacion() {
+            const aviso = document.getElementById('recomendador-aviso-interpretacion');
+            if (!aviso) {
+                return;
+            }
+            aviso.hidden = !(borradorActual && !borradorAplicado && recomendacionesVigentes);
+        }
+
+        function fijarAplicacionDetalle(activa) {
+            const boton = document.getElementById('recomendador-aplicar-detalle');
+            if (boton) {
+                boton.disabled = !activa;
+            }
+        }
+
+        function marcarRecomendacionesObsoletas() {
+            recomendacionesVigentes = false;
+            firmaRecomendacion = null;
+            propuestas = [];
+            indiceDetalle = null;
+            fijarAplicacionDetalle(false);
+            actualizarAvisoInterpretacion();
+        }
+
+        function invalidarRecomendacionesSiCambiaron() {
+            if (!recomendacionesVigentes || !firmaRecomendacion) {
+                return;
+            }
+            if (leerFirmaRequisitos() === firmaRecomendacion) {
+                return;
+            }
+            marcarRecomendacionesObsoletas();
+            salida.innerHTML = htmlAvisoRequisitos();
+        }
+
+        [
+            'recomendador-presupuesto',
+            'recomendador-uso',
+            'recomendador-resolucion',
+            'recomendador-ram',
+            'recomendador-disco-tipo',
+            'recomendador-disco-gb',
+            'recomendador-socket',
+            'recomendador-gpu',
+        ].forEach((id) => {
+            const campo = document.getElementById(id);
+            if (campo) {
+                campo.addEventListener('change', invalidarRecomendacionesSiCambiaron);
+            }
+        });
+        ['modo', 'ram_modo', 'disco_tipo_modo', 'disco_gb_modo', 'socket_modo', 'gpu_modo'].forEach((nombre) => {
+            formulario.querySelectorAll(`input[name="${nombre}"]`).forEach((radio) => {
+                radio.addEventListener('change', invalidarRecomendacionesSiCambiaron);
+            });
+        });
+        fijarAplicacionDetalle(false);
+
         formulario.addEventListener('submit', async (evento) => {
             evento.preventDefault();
             if (buscando) {
                 return;
             }
+            const firmaPedido = leerFirmaRequisitos();
             const boton = document.getElementById('recomendador-generar');
             const modo = formulario.querySelector('input[name="modo"]:checked');
             const cuerpo = {
@@ -1659,12 +2300,33 @@ function iniciarArmado() {
                 resolucion: document.getElementById('recomendador-resolucion').value,
                 modo: modo ? modo.value : '',
             };
+            [
+                ['recomendador-ram', 'ram_gb', 'ram_modo'],
+                ['recomendador-disco-tipo', 'disco_tipo', 'disco_tipo_modo'],
+                ['recomendador-disco-gb', 'disco_gb', 'disco_gb_modo'],
+                ['recomendador-socket', 'socket', 'socket_modo'],
+            ].forEach(([selectId, clave, claveModo]) => {
+                const valor = document.getElementById(selectId).value;
+                if (!valor) {
+                    return;
+                }
+                cuerpo[clave] = valor;
+                const elegido = formulario.querySelector(`input[name="${claveModo}"]:checked`);
+                cuerpo[claveModo] = elegido ? elegido.value : 'preferencia';
+            });
+            const gpu = document.getElementById('recomendador-gpu').value;
+            cuerpo.gpu = gpu || 'automatica';
+            if (cuerpo.gpu === 'sin_dedicada') {
+                const elegido = formulario.querySelector('input[name="gpu_modo"]:checked');
+                cuerpo.gpu_modo = elegido ? elegido.value : 'preferencia';
+            }
             if (cuerpo.modo === 'completar') {
                 cuerpo.componentes = seleccionActual();
             }
             buscando = true;
             boton.disabled = true;
             boton.setAttribute('aria-busy', 'true');
+            marcarRecomendacionesObsoletas();
             salida.innerHTML = `
                 <div class="d-flex align-items-center gap-2 text-muted" role="status">
                     <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
@@ -1687,8 +2349,18 @@ function iniciarArmado() {
                     salida.innerHTML = `<p class="text-danger mb-0">${escaparHtml(data.message || 'No se pudo generar la recomendación.')}</p>`;
                     return;
                 }
+                if (leerFirmaRequisitos() !== firmaPedido) {
+                    propuestas = [];
+                    salida.innerHTML = htmlAvisoRequisitos();
+                    return;
+                }
                 propuestas = data.recomendaciones || [];
                 salida.innerHTML = htmlRecomendaciones(data);
+                firmaRecomendacion = firmaPedido;
+                recomendacionesVigentes = true;
+                fijarAplicacionDetalle(true);
+                actualizarAvisoInterpretacion();
+                contraerPreferenciasSiHayResultado(data);
             } catch (error) {
                 console.error('Error al recomendar el armado:', error);
                 propuestas = [];
@@ -1699,6 +2371,28 @@ function iniciarArmado() {
                 boton.removeAttribute('aria-busy');
             }
         });
+
+        function contraerPreferenciasSiHayResultado(datos) {
+            const lista = datos && datos.recomendaciones;
+            if (!Array.isArray(lista) || lista.length === 0) {
+                return;
+            }
+            const seccion = formulario.querySelector('.recomendador-preferencias');
+            if (!seccion || !seccion.open) {
+                return;
+            }
+            seccion.open = false;
+            const caja = salida.closest('.modal-body');
+            if (!caja) {
+                return;
+            }
+            const visibleHasta = caja.getBoundingClientRect().bottom;
+            const inicio = salida.getBoundingClientRect().top;
+            if (inicio > visibleHasta - 80) {
+                const destino = seccion.getBoundingClientRect().top - caja.getBoundingClientRect().top;
+                caja.scrollTop += Math.max(0, destino);
+            }
+        }
 
         function cerrarModalActivo() {
             volverAlCerrarDetalle = false;
@@ -1723,8 +2417,21 @@ function iniciarArmado() {
         }
 
         function aplicarPropuesta(indice) {
+            if (!recomendacionesVigentes || leerFirmaRequisitos() !== firmaRecomendacion) {
+                return;
+            }
             const propuesta = propuestas[Number(indice)];
-            if (!propuesta || !aplicarSeleccionDesdeApi(propuesta.componentes)) {
+            if (!propuesta) {
+                showToast('No se pudieron cargar las piezas en el armador.', 'error');
+                return;
+            }
+            faltaAlmacenamientoAplicado = Boolean(propuesta.configuracion_incompleta);
+            motivoAlmacenamientoAplicado = faltaAlmacenamientoAplicado
+                ? String(propuesta.motivo_incompleto || '')
+                : '';
+            if (!aplicarSeleccionDesdeApi(propuesta.componentes)) {
+                faltaAlmacenamientoAplicado = false;
+                motivoAlmacenamientoAplicado = '';
                 showToast('No se pudieron cargar las piezas en el armador.', 'error');
                 return;
             }
@@ -1798,7 +2505,7 @@ function iniciarArmado() {
     }
 
     function esAvisoNoVerificado(texto) {
-        return /no se comprueban puertos SATA|Compatibilidad no evaluada/i.test(texto || '');
+        return /no se comprueban puertos SATA|Compatibilidad no evaluada|No fue posible verificar la compatibilidad del (?:SSD|almacenamiento) con la placa madre|Falta la interfaz|Faltan la interfaz|Falta el formato|Faltan el formato|No se reconoce la interfaz|Selecciona una placa madre para comprobar el almacenamiento|no es SATA, así que no se compara/i.test(texto || '');
     }
 
     function esAvisoVisible(texto) {
@@ -1833,7 +2540,19 @@ function iniciarArmado() {
                 repetidos.push(texto);
             }
         });
-        return textosUnicos([...(propuesta.limitaciones || []), ...(propuesta.advertencias || []), ...repetidos]);
+        return textosUnicos([...(propuesta.limitaciones || []), ...(propuesta.advertencias || []), ...repetidos]).filter(texto => {
+            if (propuesta.usa_graficos_integrados && esAvisoGlobalGraficos(texto)) {
+                return false;
+            }
+            if (
+                propuesta.configuracion_incompleta
+                && propuesta.motivo_incompleto
+                && texto === propuesta.motivo_incompleto
+            ) {
+                return false;
+            }
+            return true;
+        });
     }
 
     function motivoSinAvisos(motivo, avisos) {
@@ -1846,7 +2565,20 @@ function iniciarArmado() {
         return texto.replace(/\s+/g, ' ').trim();
     }
 
+    function htmlPreferencias(propuesta) {
+        const cumple = (propuesta.requisitos_cumplidos || []).map(texto => (
+            `<p class="small text-success mb-1">${escaparHtml(texto)}</p>`
+        )).join('');
+        const falta = (propuesta.preferencias_no_cumplidas || []).map(texto => (
+            `<p class="small text-warning mb-1">${escaparHtml(texto)}</p>`
+        )).join('');
+        return `${cumple}${falta}`;
+    }
+
     function estadoRecomendacion(propuesta) {
+        if (propuesta.configuracion_incompleta) {
+            return { clase: 'text-warning', icono: 'fa-exclamation-circle', texto: 'Configuración incompleta' };
+        }
         if (propuesta.estado_reglas === 'incompatible') {
             return {
                 clase: 'text-danger',
@@ -1871,6 +2603,25 @@ function iniciarArmado() {
         };
     }
 
+    function textoGpu(propuesta) {
+        const dedicada = resumenDe(propuesta.componentes, ['tarjeta_grafica']);
+        if (dedicada !== 'No incluida') {
+            return dedicada;
+        }
+        if (propuesta.usa_graficos_integrados) {
+            return 'Gráficos integrados';
+        }
+        return dedicada;
+    }
+
+    function textoDisco(propuesta) {
+        const texto = resumenDe(propuesta.componentes, ['almacenamiento_ssd', 'almacenamiento_hdd']);
+        if (texto === 'No incluida' && propuesta.configuracion_incompleta) {
+            return 'No incluido';
+        }
+        return texto;
+    }
+
     function resumenDe(componentes, tipos) {
         const piezas = (componentes || []).filter(pieza => tipos.includes(pieza.tipo));
         if (!piezas.length) {
@@ -1880,6 +2631,27 @@ function iniciarArmado() {
             const cantidad = Number(pieza.cantidad) > 1 ? ` × ${pieza.cantidad}` : '';
             return `${pieza.nombre}${cantidad}`;
         }).join(' + ');
+    }
+
+    function avisoConfiguracionIncompleta(data) {
+        if (!data.sin_configuracion_completa) {
+            return '';
+        }
+        const propuestas = data.recomendaciones || [];
+        const primera = propuestas[0];
+        if (!primera || propuestas.length !== 1) {
+            return '<div class="alert alert-warning" role="status"><p class="mb-0">No se encontró un computador completo dentro del presupuesto y los requisitos seleccionados. Las configuraciones siguientes están incompletas y no están listas para comprar.</p></div>';
+        }
+        const total = Number(primera.total);
+        const presupuesto = Number(primera.presupuesto);
+        const resta = presupuesto - total;
+        const cifras = Number.isFinite(total) && Number.isFinite(resta)
+            ? ` La configuración propuesta cuesta ${pesosClp(total)} y quedan ${pesosClp(resta)} disponibles.`
+            : '';
+        const causa = Number.isFinite(primera.presupuesto_adicional)
+            ? ' No se encontró un componente compatible dentro del presupuesto disponible.'
+            : ' No fue posible incorporar almacenamiento dentro del presupuesto restante con compatibilidad verificada.';
+        return `<div class="alert alert-warning" role="status"><p class="mb-0">No se encontró un computador completo dentro del presupuesto y los requisitos seleccionados.${cifras}${causa}</p></div>`;
     }
 
     function htmlRecomendaciones(data) {
@@ -1908,7 +2680,9 @@ function iniciarArmado() {
             if (Number.isFinite(presupuesto) && Number.isFinite(total)) {
                 const resta = presupuesto - total;
                 if (resta > 0) {
-                    diferencia = `Quedan ${pesosClp(resta)} dentro del presupuesto`;
+                    diferencia = propuesta.configuracion_incompleta
+                        ? `Presupuesto restante: ${pesosClp(resta)}`
+                        : `Quedan ${pesosClp(resta)} dentro del presupuesto`;
                 } else if (resta < 0) {
                     diferencia = `Supera el presupuesto en ${pesosClp(Math.abs(resta))}`;
                 }
@@ -1920,9 +2694,15 @@ function iniciarArmado() {
             const almacenamiento = discoSinVerificar
                 ? '<p class="small text-info mb-1"><i class="fas fa-info-circle" aria-hidden="true"></i> Almacenamiento: compatibilidad no verificada</p>'
                 : '';
+            const graficoIntegrado = propuesta.usa_graficos_integrados
+                ? `<p class="small mb-1">${escaparHtml(AVISO_GRAFICOS_BREVE)}</p>`
+                : '';
+            const incompleta = propuesta.configuracion_incompleta
+                ? '<p class="small text-warning mb-1"><strong>Falta almacenamiento.</strong></p><p class="small mb-2">Esta configuración no está lista para comprar.</p>'
+                : '';
             return `
                 <div class="col">
-                    <article class="card h-100 recomendacion-tarjeta">
+                    <article class="card h-100 recomendacion-tarjeta${propuesta.configuracion_incompleta ? ' recomendacion-incompleta' : ''}">
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                                 <h6 class="mb-0">${escaparHtml(propuesta.titulo || `Opción ${indice + 1}`)}</h6>
@@ -1932,11 +2712,14 @@ function iniciarArmado() {
                             ${diferencia ? `<p class="small text-muted mb-2">${diferencia}</p>` : ''}
                             <dl class="recomendacion-resumen small mb-2">
                                 <div class="d-flex gap-2"><dt class="mb-0">CPU</dt><dd class="mb-0 text-break">${escaparHtml(resumenDe(componentes, ['procesador']))}</dd></div>
-                                <div class="d-flex gap-2"><dt class="mb-0">GPU</dt><dd class="mb-0 text-break">${escaparHtml(resumenDe(componentes, ['tarjeta_grafica']))}</dd></div>
+                                <div class="d-flex gap-2"><dt class="mb-0">GPU</dt><dd class="mb-0 text-break">${escaparHtml(textoGpu(propuesta))}</dd></div>
                                 <div class="d-flex gap-2"><dt class="mb-0">RAM</dt><dd class="mb-0 text-break">${escaparHtml(resumenDe(componentes, ['memoria_ram']))}</dd></div>
-                                <div class="d-flex gap-2"><dt class="mb-0">Disco</dt><dd class="mb-0 text-break">${escaparHtml(resumenDe(componentes, ['almacenamiento_ssd', 'almacenamiento_hdd']))}</dd></div>
+                                <div class="d-flex gap-2"><dt class="mb-0">Disco</dt><dd class="mb-0 text-break">${escaparHtml(textoDisco(propuesta))}</dd></div>
                             </dl>
                             <p class="recomendacion-estado ${estado.clase} mb-1"><i class="fas ${estado.icono}" aria-hidden="true"></i> ${escaparHtml(estado.texto)}</p>
+                            ${htmlPreferencias(propuesta)}
+                            ${incompleta}
+                            ${graficoIntegrado}
                             ${almacenamiento}
                             ${visibleCritico}
                             <p class="small text-muted mb-3">${componentes.length} ${componentes.length === 1 ? 'componente' : 'componentes'}</p>
@@ -1948,7 +2731,7 @@ function iniciarArmado() {
                     </article>
                 </div>`;
         }).join('');
-        return `<div class="row row-cols-1 row-cols-md-2 g-3">${tarjetas}</div>`;
+        return `${avisoConfiguracionIncompleta(data)}<div class="row row-cols-1 row-cols-md-2 g-3">${tarjetas}</div>`;
     }
 
     function htmlDetalleRecomendacion(propuesta) {
@@ -1988,8 +2771,11 @@ function iniciarArmado() {
         return `
             <p class="recomendacion-precio fw-bold text-success mb-1">${pesosClp(propuesta.total)}</p>
             <p class="recomendacion-estado ${estado.clase} mb-2"><i class="fas ${estado.icono}" aria-hidden="true"></i> ${escaparHtml(estado.texto)}</p>
+            ${htmlPreferencias(propuesta)}
             <p class="small mb-2">${escaparHtml(propuesta.explicacion || '')}</p>
             <p class="small text-muted mb-3">Puntaje interno del algoritmo: ${escaparHtml(propuesta.puntaje)}. No es un benchmark de rendimiento.</p>
+            ${propuesta.configuracion_incompleta ? `<p class="small text-warning mb-3"><strong>Configuración incompleta.</strong> ${escaparHtml(propuesta.motivo_incompleto || 'Falta almacenamiento. Esta configuración no está lista para comprar.')}</p>` : ''}
+            ${propuesta.usa_graficos_integrados ? `<p class="small mb-3"><strong>${escaparHtml(AVISO_GRAFICOS_BREVE)}</strong> <span class="d-block mt-1">${escaparHtml(propuesta.nota_video || '')}</span></p>` : ''}
             <ul class="list-unstyled recomendacion-detalle-lista mb-3">${filas}</ul>
             ${listaAvisos ? `<h6 class="small fw-bold">Comprobaciones y advertencias</h6><ul class="small mb-3">${listaAvisos}</ul>` : ''}
             ${criterios ? `<h6 class="small fw-bold">Criterios del puntaje</h6><ul class="small text-muted mb-0">${criterios}</ul>` : ''}`;

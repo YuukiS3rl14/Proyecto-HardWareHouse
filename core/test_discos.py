@@ -15,6 +15,8 @@ from core.models import (
     FuenteDePoder,
     Gabinete,
     ItemCarrito,
+    MemoriaRam,
+    PlacaMadre,
     Procesador,
     Proveedor,
     TarjetaGrafica,
@@ -130,8 +132,24 @@ class OrdenYDiscosTests(TestCase):
         from core.models import ItemCarrito
 
         self.assertEqual(self.ssd.id, self.hdd.id)
+        placa = PlacaMadre.objects.create(
+            proveedor=self.proveedor, nombre='Placa de los discos', precio=Decimal('80000'), stock=4,
+            socket_cpu='AM5', chipset='B650', formato='ATX', ranuras_ram=4,
+            tipo_ram_soportado='DDR5', formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        )
+        ram = MemoriaRam.objects.create(
+            proveedor=self.proveedor, nombre='RAM de los discos', precio=Decimal('20000'), stock=4,
+            capacidad_gb=16, tipo_ddr='DDR5', velocidad_mhz=5600,
+            modulos_por_producto=1, capacidad_modulo_gb=16, formato_ram='DIMM',
+        )
         response = self.post(reverse('core:agregar_armado_al_carrito'), {
             'componentes': [
+                {'tipo': 'procesador', 'id': self.cpu.id},
+                {'tipo': 'placa_madre', 'id': placa.id},
+                {'tipo': 'memoria_ram', 'id': ram.id},
+                {'tipo': 'tarjeta_grafica', 'id': self.gpu.id},
+                {'tipo': 'gabinete', 'id': self.atx.id},
+                {'tipo': 'fuente_de_poder', 'id': self.fuente.id},
                 {'tipo': 'almacenamiento_ssd', 'id': self.ssd.id, 'cantidad': 2},
                 {'tipo': 'almacenamiento_ssd', 'id': self.ssd.id, 'cantidad': 1},
                 {'tipo': 'almacenamiento_hdd', 'id': self.hdd.id, 'cantidad': 3},
@@ -141,7 +159,7 @@ class OrdenYDiscosTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['estado'], 'compatible')
         items = list(ItemCarrito.objects.order_by('id'))
-        self.assertEqual(len(items), 2)
+        self.assertGreaterEqual(len(items), 2)
         ssd = ItemCarrito.objects.get(almacenamiento_ssd_id=42)
         hdd = ItemCarrito.objects.get(almacenamiento_hdd_id=42)
         self.assertEqual(ssd.cantidad, 3)
@@ -231,7 +249,8 @@ class OrdenYDiscosTests(TestCase):
             sin_discos['piezas']['fuente_de_poder']['etiqueta'],
             con['piezas']['fuente_de_poder']['etiqueta'],
         )
-        self.assertIn('SATA', con['piezas']['almacenamiento']['etiqueta'])
+        self.assertIn('placa madre', con['piezas']['almacenamiento']['etiqueta'])
+        self.assertNotIn('ranuras M.2', con['piezas']['almacenamiento']['etiqueta'])
         self.assertNotEqual(con['piezas']['almacenamiento']['estado'], 'compatible')
 
     def test_la_exportacion_suma_los_subtotales_de_cada_disco(self):

@@ -341,16 +341,17 @@ class ArmadoCarritoTests(TestCase):
         self.assertEqual(response_formato.json()['estado'], 'datos_insuficientes')
         self.assertEqual(ItemCarrito.objects.count(), 0)
 
-    def test_seleccion_incompleta_si_se_agrega(self):
+    def test_seleccion_incompleta_no_se_agrega(self):
         response = self.post_armado([
             ('procesador', self.cpu_am5),
             ('placa_madre', self.board_am5),
             ('memoria_ram', self.ram_ddr5),
         ])
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()['estado'], 'incompleto')
-        self.assertEqual(ItemCarrito.objects.count(), 3)
+        self.assertEqual(response.json()['message'], 'Faltan componentes por seleccionar.')
+        self.assertEqual(ItemCarrito.objects.count(), 0)
 
     def test_compra_individual_no_valida_el_armado(self):
         respuesta_cpu = self.client.post(reverse('core:agregar_al_carrito'), {

@@ -25,6 +25,17 @@ ventiladores. No aumenta al agregar SSD o HDD y no mide el consumo de cada
 unidad. Unos pocos discos caben en ese margen junto con el resto del equipo;
 muchas unidades exigirían revisar la reserva, porque la fórmula no lo hace.
 
+Sin GPU dedicada, la estimación solo corre si el procesador tiene
+``graficos_integrados`` en sí y la placa tiene ``tiene_salidas_video`` en sí.
+En ese caso no se inventa una tarjeta: los watts de GPU dedicada valen 0 y no
+se aplica la fuente mínima de una GPU. El consumo del gráfico integrado no
+está en el catálogo y no se suma. La reserva de 150 W tampoco lo mide. Cumplir
+ese mínimo no declara la fuente completamente compatible.
+
+Si alguno de esos dos campos es no o está vacío, falta la GPU dedicada y la
+regla de potencia sigue incompleta. El nombre, la marca, la descripción y el
+chipset no cuentan como evidencia.
+
 Largo de la GPU
 ---------------
 Si hay GPU y gabinete, la tarjeta cabe en largo cuando largo_mm es menor o
@@ -91,6 +102,22 @@ MENSAJE_ALMACENAMIENTO = (
     'ni bahías. La reserva de potencia es un margen fijo para placa, memoria, '
     'discos y ventiladores; no suma el consumo de cada unidad.'
 )
+MENSAJE_SSD_SIN_RANURAS_M2 = (
+    'No fue posible verificar la compatibilidad del SSD con la placa madre '
+    'porque el catálogo no contiene información suficiente sobre sus ranuras M.2.'
+)
+MENSAJE_SSD_SIN_PUERTOS_SATA = (
+    'No fue posible verificar la compatibilidad del SSD con la placa madre '
+    'porque el catálogo no contiene información suficiente sobre sus puertos SATA.'
+)
+MENSAJE_DISCO_SIN_PUERTOS_SATA = (
+    'No fue posible verificar la compatibilidad del almacenamiento con la placa madre '
+    'porque el catálogo no contiene información suficiente sobre sus puertos SATA.'
+)
+MENSAJE_ALMACENAMIENTO_SIN_RANURAS_M2 = (
+    'No fue posible verificar la compatibilidad del almacenamiento con la placa madre '
+    'porque el catálogo no contiene información suficiente sobre sus ranuras M.2.'
+)
 ACLARACION_ALMACENAMIENTO = (
     'Cada SSD NVMe usa una ranura M.2 NVMe y cada SSD M.2 SATA usa una ranura M.2 SATA. '
     'Un SSD de 2,5" y un HDD SATA usan un puerto SATA cada uno. '
@@ -99,6 +126,12 @@ ACLARACION_ALMACENAMIENTO = (
 )
 MENSAJE_ELEGIR_GABINETE = 'Selecciona un gabinete para comprobar el largo.'
 MENSAJE_ELEGIR_GPU = 'Selecciona una GPU para comprobar el largo.'
+MENSAJE_POTENCIA_INTEGRADA = (
+    'Salida de video por gráficos integrados confirmados en el procesador y en la placa. '
+    'No hay GPU dedicada. La estimación de la fuente usa la potencia de referencia del procesador '
+    'y la reserva fija, sin sumar watts de una tarjeta. '
+    'El consumo del gráfico integrado no está en el catálogo. No es una garantía eléctrica.'
+)
 MENSAJE_MEZCLA_RAM = (
     'Hay productos o kits de RAM distintos. No se garantiza la estabilidad ni '
     'el funcionamiento del perfil XMP/EXPO, aunque compartan DDR y velocidad.'
@@ -302,6 +335,8 @@ def evaluar_candidato(
     for regla in REGLAS_POR_CATEGORIA[categoria]:
         if regla == 'altura' and not _altura_aplica(piezas):
             continue
+        if regla == 'largo' and not _largo_aplica(piezas):
+            continue
         hallazgo = hallazgos_por_regla.get(regla)
         if hallazgo is not None:
             estados.append(hallazgo.estado)
@@ -462,7 +497,7 @@ def evaluaciones_de_seleccion(piezas, memorias_ram=None, almacenamientos=None):
             almacenamientos=almacenamientos,
             **presentes,
         )
-    publicar_almacenamiento(por_categoria, resultado)
+    publicar_almacenamiento(por_categoria, resultado, almacenamientos)
     return resultado, por_categoria
 
 
@@ -485,18 +520,70 @@ def texto_para_armado(resultado, hay_otras_piezas):
     return texto_del_armado(resultado, sin_regla, con_regla)
 
 
-def publicar_almacenamiento(por_categoria, resultado):
-    """Copia la evaluación de discos. Si no hubo datos, conserva el aviso anterior."""
+def _tipos_de_discos(almacenamientos):
+    tipos = []
+    for item in almacenamientos or ():
+        if isinstance(item, LineaDisco):
+            tipos.append(item.tipo)
+        elif isinstance(item, dict):
+            tipos.append(item.get('tipo') or '')
+    return tipos
+
+
+def textos_almacenamiento_no_verificado(evaluacion, almacenamientos=None):
+    """Redacción del aviso. No cambia el estado ni decide si el disco cabe.
+
+    Usa el motivo que ya calculó la validación. Cada causa queda una sola vez.
+    """
+    motivos = []
+    for texto in getattr(evaluacion, 'motivos', ()) or ():
+        limpio = str(texto or '').strip()
+        if limpio and limpio not in motivos:
+            motivos.append(limpio)
+    texto = ' '.join(motivos)
+    falta_m2 = 'ranuras M.2' in texto
+    falta_sata = 'puertos SATA de la placa' in texto
+    tipos = _tipos_de_discos(almacenamientos)
+    solo_ssd = bool(tipos) and all(tipo == 'almacenamiento_ssd' for tipo in tipos)
+    if falta_m2 and not falta_sata:
+        return (MENSAJE_SSD_SIN_RANURAS_M2 if solo_ssd else MENSAJE_ALMACENAMIENTO_SIN_RANURAS_M2,)
+    if falta_sata and not falta_m2:
+        return (MENSAJE_SSD_SIN_PUERTOS_SATA if solo_ssd else MENSAJE_DISCO_SIN_PUERTOS_SATA,)
+    if falta_m2 and falta_sata:
+        return (
+            MENSAJE_SSD_SIN_RANURAS_M2 if solo_ssd else MENSAJE_ALMACENAMIENTO_SIN_RANURAS_M2,
+            MENSAJE_SSD_SIN_PUERTOS_SATA if solo_ssd else MENSAJE_DISCO_SIN_PUERTOS_SATA,
+        )
+    if motivos:
+        return tuple(motivos)
+    return (MENSAJE_ALMACENAMIENTO,)
+
+
+def publicar_almacenamiento(por_categoria, resultado, almacenamientos=None):
+    """Copia la evaluación de discos. El estado no cambia; solo la redacción."""
     evaluacion = resultado.almacenamiento
     if evaluacion is None:
         return
     if evaluacion.estado == ESTADO_NO_EVALUADA:
         por_categoria['almacenamiento'] = EvaluacionCandidato(
             ESTADO_NO_EVALUADA,
-            motivos=(MENSAJE_ALMACENAMIENTO,),
+            motivos=textos_almacenamiento_no_verificado(evaluacion, almacenamientos),
         )
         return
     por_categoria['almacenamiento'] = evaluacion
+
+
+def video_integrado_confirmado(procesador, placa_madre):
+    """True solo con las dos evidencias explícitas.
+
+    Vacío y no no confirman. No se lee el nombre, la marca, la descripción ni el chipset.
+    """
+    if procesador is None or placa_madre is None:
+        return False
+    return (
+        getattr(procesador, 'graficos_integrados', None) is True
+        and getattr(placa_madre, 'tiene_salidas_video', None) is True
+    )
 
 
 def validar_armado(
@@ -522,11 +609,16 @@ def validar_armado(
     Una pieza sin su par es selección incompleta y no se trata como conflicto.
     """
     lineas = _lineas_ram(memoria_ram, memorias_ram)
+    integrado = tarjeta_grafica is None and video_integrado_confirmado(procesador, placa_madre)
+    politica_activa = politica or politica_potencia()
+    hallazgo_potencia = _evaluar_potencia(
+        procesador, tarjeta_grafica, fuente_de_poder, politica_activa, placa_madre,
+    )
     candidatos = (
         _evaluar_socket(procesador, placa_madre),
         _evaluar_formato(placa_madre, gabinete),
-        _evaluar_largo(tarjeta_grafica, gabinete),
-        _evaluar_potencia(procesador, tarjeta_grafica, fuente_de_poder, politica or politica_potencia()),
+        None if integrado else _evaluar_largo(tarjeta_grafica, gabinete),
+        hallazgo_potencia,
     )
     hallazgos = [hallazgo for hallazgo in candidatos if hallazgo is not None]
     hallazgos.extend(_evaluar_cooler(refrigeracion, procesador, placa_madre))
@@ -537,7 +629,10 @@ def validar_armado(
     discos = _evaluacion_discos(_normalizar_discos(almacenamientos), placa_madre)
     if discos is not None and discos.estado == ESTADO_INCOMPATIBLE:
         hallazgos.append(Hallazgo('almacenamiento', ESTADO_INCOMPATIBLE, ' '.join(discos.motivos)))
-    return ResultadoCompatibilidad(hallazgos, _advertencias_ram(lineas), discos)
+    advertencias = list(_advertencias_ram(lineas))
+    if integrado and fuente_de_poder is not None and hallazgo_potencia is None:
+        advertencias.append(MENSAJE_POTENCIA_INTEGRADA)
+    return ResultadoCompatibilidad(hallazgos, advertencias, discos)
 
 
 def _normalizar_discos(almacenamientos):
@@ -1201,6 +1296,13 @@ def _evaluar_largo(tarjeta_grafica, gabinete):
     return None
 
 
+def _largo_aplica(piezas):
+    """Sin GPU dedicada, el largo no aplica solo si el video integrado está confirmado."""
+    if piezas.get('tarjeta_grafica') is not None:
+        return True
+    return not video_integrado_confirmado(piezas.get('procesador'), piezas.get('placa_madre'))
+
+
 def _largo_cumplido(piezas):
     gpu = piezas.get('tarjeta_grafica')
     gabinete = piezas.get('gabinete')
@@ -1382,16 +1484,28 @@ _watts_conocido = _entero_positivo
 
 
 def _potencia_cumplida(piezas, politica):
+    if piezas.get('fuente_de_poder') is None or piezas.get('procesador') is None:
+        return False
+    if piezas.get('tarjeta_grafica') is None and not video_integrado_confirmado(
+        piezas.get('procesador'), piezas.get('placa_madre'),
+    ):
+        return False
     return _evaluar_potencia(
         piezas.get('procesador'),
         piezas.get('tarjeta_grafica'),
         piezas.get('fuente_de_poder'),
         politica,
-    ) is None and piezas.get('fuente_de_poder') is not None and piezas.get('procesador') is not None and piezas.get('tarjeta_grafica') is not None
+        piezas.get('placa_madre'),
+    ) is None
 
 
 def _texto_potencia_cumplida(piezas, politica):
     _estimacion, minimo = _cifras_potencia(piezas, politica)
+    if piezas.get('tarjeta_grafica') is None:
+        return (
+            f'Cumple la estimación sin GPU dedicada ({minimo} W). '
+            'No suma el consumo del gráfico integrado: ese dato no está en el catálogo.'
+        )
     return (
         f'Cumple la estimación de potencia ({minimo} W). '
         'No se validan conectores ni dimensiones; no es una garantía eléctrica.'
@@ -1400,16 +1514,20 @@ def _texto_potencia_cumplida(piezas, politica):
 
 def _cifras_potencia(piezas, politica):
     cpu = _watts_conocido(getattr(piezas['procesador'], 'potencia_referencia_watts', None))
-    gpu = _watts_conocido(getattr(piezas['tarjeta_grafica'], 'consumo_referencia_watts', None))
-    minimo_gpu = _watts_conocido(getattr(piezas['tarjeta_grafica'], 'potencia_minima_fuente_watts', None))
+    gpu_producto = piezas.get('tarjeta_grafica')
+    if gpu_producto is None:
+        return politica.estimar(cpu, 0, None)
+    gpu = _watts_conocido(getattr(gpu_producto, 'consumo_referencia_watts', None))
+    minimo_gpu = _watts_conocido(getattr(gpu_producto, 'potencia_minima_fuente_watts', None))
     return politica.estimar(cpu, gpu, minimo_gpu)
 
 
-def _evaluar_potencia(procesador, tarjeta_grafica, fuente_de_poder, politica):
+def _evaluar_potencia(procesador, tarjeta_grafica, fuente_de_poder, politica, placa_madre=None):
     """Solo corre si hay una fuente. Sin ella, la regla no aplica al resto del armado."""
     if fuente_de_poder is None:
         return None
-    if procesador is None or tarjeta_grafica is None:
+    integrado = tarjeta_grafica is None and video_integrado_confirmado(procesador, placa_madre)
+    if procesador is None or (tarjeta_grafica is None and not integrado):
         return Hallazgo(
             'potencia',
             ESTADO_INCOMPLETO,
@@ -1417,13 +1535,18 @@ def _evaluar_potencia(procesador, tarjeta_grafica, fuente_de_poder, politica):
         )
 
     cpu_w = _watts_conocido(getattr(procesador, 'potencia_referencia_watts', None))
-    gpu_w = _watts_conocido(getattr(tarjeta_grafica, 'consumo_referencia_watts', None))
     fuente_w = _watts_conocido(getattr(fuente_de_poder, 'potencia_watts', None))
     faltan = []
     if cpu_w is None:
         faltan.append('la potencia de referencia del procesador')
-    if gpu_w is None:
-        faltan.append('el consumo de referencia de la GPU')
+    if integrado:
+        gpu_w = 0
+        minimo_gpu = None
+    else:
+        gpu_w = _watts_conocido(getattr(tarjeta_grafica, 'consumo_referencia_watts', None))
+        minimo_gpu = _watts_conocido(getattr(tarjeta_grafica, 'potencia_minima_fuente_watts', None))
+        if gpu_w is None:
+            faltan.append('el consumo de referencia de la GPU')
     if fuente_w is None:
         faltan.append('la potencia nominal de la fuente')
     if faltan:
@@ -1435,11 +1558,7 @@ def _evaluar_potencia(procesador, tarjeta_grafica, fuente_de_poder, politica):
             + '. Un valor vacío o 0 no se toma como consumo conocido.',
         )
 
-    estimacion, minimo = politica.estimar(
-        cpu_w,
-        gpu_w,
-        _watts_conocido(getattr(tarjeta_grafica, 'potencia_minima_fuente_watts', None)),
-    )
+    estimacion, minimo = politica.estimar(cpu_w, gpu_w, minimo_gpu)
     if fuente_w < minimo:
         return Hallazgo(
             'potencia',

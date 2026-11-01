@@ -11,9 +11,14 @@ from core.tests import pieza
 from core.models import (
     AlmacenamientoHDD,
     AlmacenamientoSSD,
+    FuenteDePoder,
+    Gabinete,
     ItemCarrito,
+    MemoriaRam,
     PlacaMadre,
+    Procesador,
     Proveedor,
+    TarjetaGrafica,
 )
 
 
@@ -180,7 +185,7 @@ class CarritoAlmacenamientoTests(TestCase):
         cls.placa_sin_datos = PlacaMadre.objects.create(
             proveedor=marca, nombre='Placa sin puertos', precio=Decimal('20000'), stock=5,
             socket_cpu='AM5', chipset='B650', formato='ATX', ranuras_ram=4,
-            tipo_ram_soportado='DDR5',
+            tipo_ram_soportado='DDR5', formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
         )
         cls.placa_sin_nvme = PlacaMadre.objects.create(
             proveedor=marca, nombre='Placa sin NVMe', precio=Decimal('20000'), stock=5,
@@ -208,14 +213,43 @@ class CarritoAlmacenamientoTests(TestCase):
         )
 
     def test_un_armado_viejo_con_disco_sigue_pudiendo_entrar_al_carrito(self):
+        marca = self.placa_sin_datos.proveedor
+        cpu = Procesador.objects.create(
+            proveedor=marca, nombre='CPU del disco viejo', precio=Decimal('90000'), stock=4,
+            socket='AM5', nucleos=6, frecuencia_base=Decimal('3.50'), potencia_referencia_watts=65,
+        )
+        ram = MemoriaRam.objects.create(
+            proveedor=marca, nombre='RAM del disco viejo', precio=Decimal('20000'), stock=4,
+            capacidad_gb=16, tipo_ddr='DDR5', velocidad_mhz=5600,
+            modulos_por_producto=1, capacidad_modulo_gb=16, formato_ram='DIMM',
+        )
+        gpu = TarjetaGrafica.objects.create(
+            proveedor=marca, nombre='GPU del disco viejo', precio=Decimal('100000'), stock=4,
+            vram_gb=8, tipo_memoria='GDDR6', interfaz='PCIe 4.0',
+            consumo_referencia_watts=100, largo_mm=200,
+        )
+        gabinete = Gabinete.objects.create(
+            proveedor=marca, nombre='Gabinete del disco viejo', precio=Decimal('40000'), stock=4,
+            formato_soporte='ATX', material='Acero', largo_max_gpu_mm=320,
+        )
+        fuente = FuenteDePoder.objects.create(
+            proveedor=marca, nombre='Fuente del disco viejo', precio=Decimal('50000'), stock=4,
+            potencia_watts=650, certificacion='80+ Bronze',
+        )
         response = self.post(reverse('core:agregar_armado_al_carrito'), [
+            {'tipo': 'procesador', 'id': cpu.id},
             {'tipo': 'placa_madre', 'id': self.placa_sin_datos.id},
+            {'tipo': 'memoria_ram', 'id': ram.id},
+            {'tipo': 'tarjeta_grafica', 'id': gpu.id},
+            {'tipo': 'gabinete', 'id': gabinete.id},
+            {'tipo': 'fuente_de_poder', 'id': fuente.id},
             {'tipo': 'almacenamiento_hdd', 'id': self.hdd_viejo.id, 'cantidad': 1},
             {'tipo': 'almacenamiento_ssd', 'id': self.nvme.id, 'cantidad': 1},
         ])
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.json()['estado'] in ('incompatible', 'datos_insuficientes'))
-        self.assertEqual(ItemCarrito.objects.count(), 3)
+        self.assertTrue(ItemCarrito.objects.filter(almacenamiento_hdd__isnull=False).exists())
+        self.assertTrue(ItemCarrito.objects.filter(almacenamiento_ssd__isnull=False).exists())
 
     def test_nvme_en_placa_sin_ranura_no_entra_al_carrito(self):
         response = self.post(reverse('core:agregar_armado_al_carrito'), [
