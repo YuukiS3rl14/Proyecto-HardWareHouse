@@ -75,10 +75,12 @@
 <div class="container-fluid pt-5">
     <div class="row px-xl-5 pb-3">
         <div class="col-6 col-lg-3 pb-1">
-            <div class="d-flex align-items-center border mb-4 feature-box">
-                <h1 class="fa fa-check text-success m-0 mr-3"></h1>
-                <h5 class="font-weight-semi-bold m-0">Componentes de calidad</h5>
-            </div>
+            <a href="{% url 'core:tienda' %}?novedades=1" class="text-decoration-none text-dark d-block">
+                <div class="d-flex align-items-center border mb-4 feature-box">
+                    <h1 class="fa fa-check text-success m-0 mr-3"></h1>
+                    <h5 class="font-weight-semi-bold m-0">Novedades del catálogo</h5>
+                </div>
+            </a>
         </div>
         <div class="col-6 col-lg-3 pb-1">
             <a href="{% url 'core:armado' %}" class="text-decoration-none text-dark d-block">
@@ -89,16 +91,20 @@
             </a>
         </div>
         <div class="col-6 col-lg-3 pb-1">
-            <div class="d-flex align-items-center border mb-4 feature-box">
-                <h1 class="fas fa-exchange-alt text-success m-0 mr-3"></h1>
-                <h5 class="font-weight-semi-bold m-0">Garantía y devolución</h5>
-            </div>
+            <a href="{% url 'core:contacto' %}" class="text-decoration-none text-dark d-block">
+                <div class="d-flex align-items-center border mb-4 feature-box">
+                    <h1 class="fas fa-exchange-alt text-success m-0 mr-3"></h1>
+                    <h5 class="font-weight-semi-bold m-0">Consulta técnica</h5>
+                </div>
+            </a>
         </div>
         <div class="col-6 col-lg-3 pb-1">
-            <div id="soporte-tecnico-box" class="d-flex align-items-center border mb-4 feature-box">
-                <h1 class="fa fa-headset text-success m-0 mr-3"></h1>
-                <h5 class="font-weight-semi-bold m-0">Soporte técnico 24/7</h5>
-            </div>
+            <a href="{% url 'core:sobrenosotros' %}" class="text-decoration-none text-dark d-block">
+                <div class="d-flex align-items-center border mb-4 feature-box">
+                    <h1 class="fa fa-headset text-success m-0 mr-3"></h1>
+                    <h5 class="font-weight-semi-bold m-0">Conoce HardWareHouse</h5>
+                </div>
+            </a>
         </div>
     </div>
 </div>

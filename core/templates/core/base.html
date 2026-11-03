@@ -160,10 +160,11 @@
 
         {% block navbarBaja %}
         <div class="row border-top px-xl-5 py-3 align-items-center sub-navbar-container">
+            {% if request.resolver_match.url_name == 'index' or request.resolver_match.url_name == 'tienda' %}
             <div class="col col-lg-7">
                 <form action="{% url 'core:tienda' %}" method="GET">
                     <div class="input-group">
-                        <input type="text" class="form-control" name="q" placeholder="Buscar productos">
+                        <input type="text" class="form-control" name="q" maxlength="120" placeholder="Buscar productos">
 
                         <div class="input-group-append">
                             <button type="submit" class="input-group-text bg-success text-white border-0">
@@ -173,6 +174,7 @@
                     </div>
                 </form>
             </div>
+            {% endif %}
 
             <div class="col-auto col-lg-5 d-flex justify-content-end gap-2 ps-0 ps-lg-3">
                 {% if user.is_authenticated %}

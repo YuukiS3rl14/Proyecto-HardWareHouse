@@ -6,7 +6,7 @@
 {% block tittle %} Tienda {% endblock %}
 
 {% block extra_head %}
-<link href="{% static 'core/css/tienda-filtros.css' %}?v=filtros1" rel="stylesheet">
+<link href="{% static 'core/css/tienda-filtros.css' %}?v=filtros3" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
 {% endblock %}
@@ -16,9 +16,17 @@
 <div class="container-fluid pt-5">
     <div class="row px-xl-5">
         <div class="col-12">
+            <button type="button" class="btn btn-outline-dark catalog-filters-toggle d-lg-none mb-3" id="abrir-filtros" aria-controls="panel-filtros" aria-expanded="false">
+                <i class="fa fa-ellipsis-v" aria-hidden="true"></i> Filtros
+            </button>
             <form action="{% url 'core:tienda' %}" method="GET" class="catalog-toolbar" id="filtros-catalogo" aria-label="Filtros del catálogo">
                 {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
-                <div class="catalog-filters">
+                {% if novedades %}<input type="hidden" name="novedades" value="1">{% endif %}
+                <div class="catalog-filters" id="panel-filtros">
+                    <div class="catalog-filters-head d-lg-none">
+                        <strong>Filtros</strong>
+                        <button type="button" class="btn-close" id="cerrar-filtros" aria-label="Cerrar filtros"></button>
+                    </div>
                     <div class="catalog-filter">
                         <label class="catalog-filter-label" for="filtro-categoria">
                             Categoría
@@ -68,6 +76,7 @@
                     </select>
                 </div>
             </form>
+            <div id="filtros-overlay" class="catalog-filters-overlay" hidden></div>
         </div>
 
         <div class="col-12">
@@ -75,7 +84,10 @@
                 <div class="col-12 pb-1">
                     <div class="d-flex align-items-center justify-content-between gap-2 mb-4">
                         <div class="text-break">
-                            {% if query %}
+                            {% if novedades_pendiente %}
+                                <h5 class="m-0">Novedades del catálogo</h5>
+                                <p class="text-muted mb-0">El catálogo todavía no guarda la fecha de alta o actualización de cada producto, así que esta vista no ordena por novedad.</p>
+                            {% elif query %}
                                 <h5 class="m-0">Resultados para: "{{ query }}"</h5>
                             {% elif selected_categorias or selected_proveedores or selected_precio %}
                                 <h5 class="m-0">Resultados filtrados</h5>

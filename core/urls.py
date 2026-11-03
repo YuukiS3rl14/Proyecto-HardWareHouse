@@ -13,6 +13,7 @@ from core.chatbot.api import (
     chat_asistente_config_api,
 )
 
+from .forms import LoginForm
 from .views import *
 
 urlpatterns = [
@@ -42,7 +43,11 @@ urlpatterns = [
     path('api/catalogo/metadata/', catalogo_metadata_api, name='catalogo_metadata_api'),
     path('registro/', mostrarRegistro, name='registro'),
     path('perfil/', verPerfil, name='perfil'),
-    path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path(
+        'login/',
+        LoginView.as_view(template_name='registration/login.html', authentication_form=LoginForm),
+        name='login',
+    ),
 
     # URLs del Carrito
     path('carrito/agregar/', agregar_al_carrito, name='agregar_al_carrito'),

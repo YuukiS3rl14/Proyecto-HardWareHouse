@@ -32,6 +32,7 @@ from .recomendador_pc import (
     generar_recomendaciones,
     interpretar_pedido,
 )
+from .cantidad_carrito import CantidadInvalida, parsear_cantidad, revalidar_lineas
 from .forms import *
 import json
 import logging
@@ -47,6 +48,8 @@ from core.tienda_filtros import (
     BANDAS_PRECIO,
     ORDENES,
     ORDENES_VALIDAS,
+    campo_novedad,
+    catalogo_tiene_fechas,
     filtro_precio,
     ids_validos,
     opciones_catalogo,
@@ -135,12 +138,12 @@ def mostrarCheckout(request):
         messages.warning(request, "Tu carrito está vacío. Agrega productos antes de proceder al pago.")
         return redirect('core:carrito')
 
-    # Verificación de stock antes de proceder
-    for item_carrito in items_carrito:
-        producto = item_carrito.get_related_product()
-        if producto.stock < item_carrito.cantidad:
-            messages.error(request, f"No hay suficiente stock para '{producto.nombre}'. Solo quedan {producto.stock} unidades. Por favor, ajusta tu carrito.")
-            return redirect('core:carrito')
+    # El descuento real sigue en el IPN, con select_for_update. Aquí solo se relee el stock.
+    errores_stock = revalidar_lineas(items_carrito)
+    if errores_stock:
+        for texto in errores_stock:
+            messages.error(request, texto)
+        return redirect('core:carrito')
 
 
     pedidos_antes = set(
@@ -237,7 +240,18 @@ def paymentFailed(request):
     return render(request, 'core/payment_failed.html', context)
 
 def mostrarContacto(request):
-    return render(request, 'core/contacto.html')
+    if request.method == 'POST':
+        form = ContactoForm(request.POST)
+        if form.is_valid():
+            messages.success(
+                request,
+                'Los datos son válidos. El correo publicado en esta página es de ejemplo '
+                'y el mensaje no se envió a un buzón.',
+            )
+            return redirect('core:contacto')
+    else:
+        form = ContactoForm()
+    return render(request, 'core/contacto.html', {'form': form})
 
 
 def mostrarSobreNosotros(request):
@@ -304,6 +318,8 @@ def mostrarDetalle(request, model_name, pk):
     return render(request, 'core/detalle.html', context)
 
 TIENDA_PAGE_SIZE = 50
+BUSQUEDA_MAX = 120
+NOVEDADES_LIMITE = 30
 
 TIENDA_MODELOS = [modelo for modelo, _ in CATALOGO_MODELOS]
 
@@ -313,7 +329,11 @@ def _model_name_tienda(modelo):
 
 
 def mostrarTienda(request):
-    query = request.GET.get('q')
+    query = (request.GET.get('q') or '').strip()
+    if len(query) > BUSQUEDA_MAX:
+        messages.error(request, 'La búsqueda admite como máximo 120 caracteres.')
+        query = ''
+    novedades = request.GET.get('novedades') == '1'
     selected_categorias = [categoria for categoria in request.GET.getlist('categoria') if categoria]
     selected_proveedores = ids_validos(request.GET.getlist('proveedor'))
     selected_precio = request.GET.get('precio') or ''
@@ -351,6 +371,14 @@ def mostrarTienda(request):
             productos_con_modelo.append((producto, model_name))
 
     ordenar_catalogo(productos_con_modelo, selected_orden, query)
+    novedades_pendiente = novedades and not catalogo_tiene_fechas(TIENDA_MODELOS)
+    if novedades and not novedades_pendiente:
+        def _marca_temporal(item):
+            producto = item[0]
+            return getattr(producto, campo_novedad(producto.__class__))
+
+        productos_con_modelo.sort(key=_marca_temporal, reverse=True)
+        productos_con_modelo = productos_con_modelo[:NOVEDADES_LIMITE]
 
     paginator = Paginator(productos_con_modelo, TIENDA_PAGE_SIZE)
     productos_page = paginator.get_page(request.GET.get('page'))
@@ -390,6 +418,8 @@ def mostrarTienda(request):
         'selected_proveedores': selected_proveedores,
         'selected_precio': selected_precio,
         'selected_orden': selected_orden,
+        'novedades': novedades,
+        'novedades_pendiente': novedades_pendiente,
     }
     return render(request, 'core/tienda.html', context)
 
@@ -480,39 +510,55 @@ def agregar_al_carrito(request):
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
         model_name = request.POST.get('model_name')
-        quantity = int(request.POST.get('quantity', 1))
-
         ModelClass = PRODUCT_MODEL_MAP.get(model_name)
         if not ModelClass or not product_id:
             messages.error(request, "Error al intentar agregar el producto.")
             return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
 
         producto = get_object_or_404(ModelClass, id=product_id)
+        es_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
-        # --- VALIDACIÓN DE STOCK ---
-        if producto.stock <= 0:
-            messages.error(request, f"Lo sentimos, '{producto.nombre}' está agotado y no se puede agregar al carrito.")
+        def rechazar(mensaje):
+            if es_ajax:
+                return JsonResponse({'status': 'error', 'message': mensaje}, status=400)
+            messages.error(request, mensaje)
             return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
 
-        carrito, created = Carrito.objects.get_or_create(usuario=request.user)
+        if producto.stock <= 0:
+            return rechazar(f"Lo sentimos, '{producto.nombre}' está agotado y no se puede agregar al carrito.")
 
-        lookup_kwargs = {f'{model_name}__id': product_id}
-        item, created = ItemCarrito.objects.get_or_create(carrito=carrito, **lookup_kwargs)
+        try:
+            solicitada = parsear_cantidad(request.POST.get('quantity', '1'), producto.stock)
+        except CantidadInvalida as exc:
+            return rechazar(exc.mensaje)
 
-        if created:
+        carrito, _creado = Carrito.objects.get_or_create(usuario=request.user)
+        item = ItemCarrito.objects.filter(
+            carrito=carrito, **{f'{model_name}__id': product_id}
+        ).first()
+
+        if item is None:
+            item = ItemCarrito(
+                carrito=carrito,
+                cantidad=solicitada,
+                precio_unitario=producto.precio,
+            )
             setattr(item, model_name, producto)
-            item.cantidad = max(1, quantity) 
-            item.precio_unitario = producto.precio 
+            item.save()
             message = f"'{producto.nombre}' se agregó a tu carrito."
         else:
-            item.cantidad += max(1, quantity)
+            try:
+                final = parsear_cantidad(item.cantidad + solicitada, producto.stock)
+            except CantidadInvalida as exc:
+                return rechazar(exc.mensaje)
+            item.cantidad = final
+            item.precio_unitario = producto.precio
+            item.save(update_fields=['cantidad', 'precio_unitario'])
             message = f"Se actualizó la cantidad de '{producto.nombre}' en tu carrito."
-        
-        item.save()
 
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        if es_ajax:
             return JsonResponse({'status': 'success', 'message': message, 'cart_count': carrito.items.count()})
-        
+
         messages.success(request, message)
 
     return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
@@ -1231,15 +1277,20 @@ def eliminar_del_carrito(request, item_id):
 def actualizar_carrito(request, item_id):
     if request.method == 'POST':
         item = get_object_or_404(ItemCarrito, id=item_id, carrito__usuario=request.user)
-        new_quantity = int(request.POST.get('quantity', 1))
+        producto = item.get_related_product()
+        if producto is None:
+            messages.error(request, 'Un producto del carrito ya no está disponible.')
+            return redirect('core:carrito')
+        try:
+            cantidad = parsear_cantidad(request.POST.get('quantity'), producto.stock)
+        except CantidadInvalida as exc:
+            messages.error(request, exc.mensaje)
+            return redirect('core:carrito')
+        item.cantidad = cantidad
+        item.precio_unitario = producto.precio
+        item.save(update_fields=['cantidad', 'precio_unitario'])
+        messages.success(request, 'Cantidad actualizada.')
 
-        if new_quantity > 0:
-            item.cantidad = new_quantity
-            item.save()
-            messages.success(request, "Cantidad actualizada.")
-        else:
-            return eliminar_del_carrito(request, item_id)
-            
     return redirect('core:carrito')
 
 # --- VISTAS DE FAVORITOS ---

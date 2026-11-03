@@ -37,17 +37,25 @@
                                 {% csrf_token %}
                                 <div class="input-group quantity mx-auto flex-nowrap" style="width: 100px;">
                                     <div class="input-group-btn">
-                                        <button type="button" class="btn btn-sm btn-success btn-minus">
+                                        <button type="button" class="btn btn-sm btn-success btn-minus" aria-label="Disminuir cantidad">
                                         <i class="fa fa-minus"></i>
                                         </button>
                                     </div>
-                                    <input type="text" name="quantity" class="form-control form-control-sm bg-light text-center" value="{{ item.cantidad }}">
+                                    <input type="text" inputmode="numeric" name="quantity"
+                                        class="form-control form-control-sm bg-light text-center"
+                                        value="{{ item.cantidad }}"
+                                        data-cantidad="{{ item.cantidad }}"
+                                        data-stock="{{ producto.stock }}"
+                                        data-precio="{{ item.precio_unitario }}"
+                                        min="1" max="{{ producto.stock }}"
+                                        aria-label="Cantidad">
                                     <div class="input-group-btn">
-                                        <button type="button" class="btn btn-sm btn-success btn-plus">
+                                        <button type="button" class="btn btn-sm btn-success btn-plus" aria-label="Aumentar cantidad">
                                             <i class="fa fa-plus"></i>
                                         </button>
                                     </div>
                                 </div>
+                                <p class="small text-danger mb-0" data-cantidad-error role="alert"></p>
                             </form>
                         </td>
                         <td class="align-middle" data-label="Total">${{ item.get_total|floatformat:"0"|intcomma }}</td>

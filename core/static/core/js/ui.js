@@ -47,9 +47,22 @@
         });
     }
 
+    function mensajeCantidad(input) {
+        const texto = (input.value || '').trim();
+        if (texto === '') return 'Ingresa una cantidad.';
+        if (!/^[0-9]+$/.test(texto)) return 'La cantidad debe ser un número entero positivo.';
+        const cantidad = parseInt(texto, 10);
+        if (cantidad < 1) return 'La cantidad mínima es 1.';
+        const stock = parseInt(input.dataset.stock, 10);
+        if (Number.isFinite(stock) && stock < 1) return 'Este producto no tiene stock disponible.';
+        if (Number.isFinite(stock) && cantidad > stock) return `Solo hay ${stock} unidades disponibles.`;
+        return '';
+    }
+
     window.HW = {
         showToast,
         replayAnimation,
+        mensajeCantidad,
         updateCartCount: (value) => updateCount('[data-cart-count]', value),
         updateFavoriteCount: (value) => updateCount('[data-favorite-count]', value),
     };
@@ -100,7 +113,17 @@
             group.querySelectorAll('.btn-minus, .btn-plus').forEach((btn) => {
                 btn.addEventListener('click', () => {
                     const current = parseInt(input.value, 10) || 1;
-                    input.value = btn.classList.contains('btn-plus') ? current + 1 : Math.max(1, current - 1);
+                    const stock = parseInt(input.dataset.stock, 10);
+                    let siguiente = btn.classList.contains('btn-plus') ? current + 1 : Math.max(1, current - 1);
+                    if (Number.isFinite(stock) && siguiente > stock) {
+                        showToast(`Solo hay ${stock} unidades disponibles.`, 'error');
+                        siguiente = stock;
+                    }
+                    if (siguiente < 1) {
+                        showToast('La cantidad mínima es 1.', 'error');
+                        siguiente = 1;
+                    }
+                    input.value = String(Math.max(1, siguiente));
                 });
             });
         });

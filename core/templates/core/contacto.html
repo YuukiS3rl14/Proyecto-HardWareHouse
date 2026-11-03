@@ -11,22 +11,40 @@
     </div>
     <div class="row">
         <div class="col-lg-7 mb-5">
-            <form id="contactForm">
-                <div class="form-group">
-                    <input type="text" id="name" class="form-control" placeholder="Tu nombre" required>
+            <form id="contactForm" method="post" action="{% url 'core:contacto' %}">
+                {% csrf_token %}
+                <div class="form-group mb-3">
+                    <label class="form-label" for="name">Nombre</label>
+                    <input type="text" id="name" name="nombre" class="form-control" placeholder="Tu nombre"
+                        maxlength="100" required value="{{ form.nombre.value|default:'' }}" autocomplete="name">
+                    {% for error in form.nombre.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
-                <div class="form-group">
-                    <input type="email" id="email" class="form-control" placeholder="Tu correo" required>
+                <div class="form-group mb-3">
+                    <label class="form-label" for="email">Correo</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="Tu correo"
+                        maxlength="254" required value="{{ form.email.value|default:'' }}" autocomplete="email">
+                    {% for error in form.email.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
-                <div class="form-group">
-                    <input type="text" id="phone" class="form-control" placeholder="Tu teléfono">
+                <div class="form-group mb-3">
+                    <label class="form-label" for="phone">Teléfono</label>
+                    <input type="text" id="phone" name="telefono" class="form-control" placeholder="Tu teléfono"
+                        maxlength="20" inputmode="tel" pattern="[0-9+\-().\s]{0,20}"
+                        value="{{ form.telefono.value|default:'' }}" autocomplete="tel">
+                    {% for error in form.telefono.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
-                <div class="form-group">
-                    <input type="text" id="subject" class="form-control" placeholder="Asunto" required>
+                <div class="form-group mb-3">
+                    <label class="form-label" for="subject">Asunto</label>
+                    <input type="text" id="subject" name="asunto" class="form-control" placeholder="Asunto"
+                        maxlength="120" required value="{{ form.asunto.value|default:'' }}">
+                    {% for error in form.asunto.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
-                <div class="form-group">
-                    <textarea id="message" class="form-control" rows="5" placeholder="Tu mensaje" required></textarea>
+                <div class="form-group mb-3">
+                    <label class="form-label" for="message">Mensaje</label>
+                    <textarea id="message" name="mensaje" class="form-control" rows="5" placeholder="Tu mensaje"
+                        maxlength="2000" required>{{ form.mensaje.value|default:'' }}</textarea>
+                    {% for error in form.mensaje.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
+                <p id="contacto-error" class="text-danger small" role="alert"></p>
                 <button type="submit" class="btn btn-success px-4 py-2">Contactar ahora</button>
             </form>
         </div>
@@ -41,13 +59,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- Popup -->
-<div id="popup-bg">
-    <div id="popup">
-        <i class="fas fa-check-circle"></i>
-        <h4 id="popup-msg"></h4>
-        <button onclick="closePopup()">Volver al formulario</button>
-    </div>
-</div>
+{% block extra_scripts %}
+<script src="{% static 'core/js/contacto.js' %}"></script>
 {% endblock %}

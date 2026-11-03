@@ -97,3 +97,16 @@ def _clave_relevancia(producto, consulta):
     else:
         rango = 4
     return (rango, nombre, producto.id)
+
+
+def campo_novedad(modelo):
+    """Fecha real de alta o actualización. No usa el id como sustituto."""
+    nombres = {campo.name for campo in modelo._meta.concrete_fields}
+    for nombre in ('actualizado_en', 'creado_en'):
+        if nombre in nombres:
+            return nombre
+    return None
+
+
+def catalogo_tiene_fechas(modelos) -> bool:
+    return all(campo_novedad(modelo) for modelo in modelos)

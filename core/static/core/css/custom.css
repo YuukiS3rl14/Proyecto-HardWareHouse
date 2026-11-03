@@ -72,21 +72,6 @@ body {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }
 
-/* Cinta "En Desarrollo" para el bloque de soporte técnico */
-#soporte-tecnico-box::after {
-    content: 'En Desarrollo';
-    position: absolute;
-    top: 10px;
-    right: -30px;
-    background-color: #ffc107; /* Amarillo warning */
-    color: #212529;
-    padding: 2px 30px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    transform: rotate(45deg);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
 /* Estilo para los logos de proveedores */
 .vendor-item {
     border-radius: 0.5rem !important;

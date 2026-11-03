@@ -29,6 +29,69 @@
         });
     }
 
+    var panel = document.getElementById('panel-filtros');
+    var abrir = document.getElementById('abrir-filtros');
+    var cerrarBtn = document.getElementById('cerrar-filtros');
+    var overlay = document.getElementById('filtros-overlay');
+
+    function esMovil() {
+        return window.matchMedia('(max-width: 991.98px)').matches;
+    }
+
+    function panelAbierto() {
+        return panel && panel.classList.contains('is-open');
+    }
+
+    function abrirPanel() {
+        if (!panel || !esMovil()) return;
+        panel.classList.add('is-open');
+        if (overlay) overlay.hidden = false;
+        if (abrir) abrir.setAttribute('aria-expanded', 'true');
+        panel.setAttribute('role', 'dialog');
+        panel.setAttribute('aria-modal', 'true');
+        panel.setAttribute('aria-label', 'Filtros');
+        if (cerrarBtn) cerrarBtn.focus();
+    }
+
+    function cerrarPanel(devolverFoco) {
+        if (!panel) return;
+        panel.classList.remove('is-open');
+        if (overlay) overlay.hidden = true;
+        if (abrir) abrir.setAttribute('aria-expanded', 'false');
+        panel.removeAttribute('role');
+        panel.removeAttribute('aria-modal');
+        if (devolverFoco && abrir) abrir.focus();
+    }
+
+    if (abrir) abrir.addEventListener('click', abrirPanel);
+    if (cerrarBtn) cerrarBtn.addEventListener('click', function () { cerrarPanel(true); });
+    if (overlay) overlay.addEventListener('click', function () { cerrarPanel(true); });
+
+    document.addEventListener('keydown', function (event) {
+        if (!panelAbierto() || !esMovil()) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            cerrarPanel(true);
+            return;
+        }
+        if (event.key !== 'Tab' || !panel) return;
+        var focos = panel.querySelectorAll('button, [href], select, input, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focos.length) return;
+        var primero = focos[0];
+        var ultimo = focos[focos.length - 1];
+        if (event.shiftKey && document.activeElement === primero) {
+            event.preventDefault();
+            ultimo.focus();
+        } else if (!event.shiftKey && document.activeElement === ultimo) {
+            event.preventDefault();
+            primero.focus();
+        }
+    });
+
+    window.addEventListener('resize', function () {
+        if (!esMovil() && panelAbierto()) cerrarPanel(false);
+    });
+
     if (!window.jQuery || !jQuery.fn.select2) {
         return;
     }

@@ -133,11 +133,13 @@
         
                         <div class="input-group quantity" style="width: 130px;">
                             <div class="input-group-btn">
-                                <button type="button" class="btn btn-success btn-minus"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-success btn-minus" aria-label="Disminuir cantidad"><i class="fa fa-minus"></i></button>
                             </div>
-                            <input type="text" name="quantity" class="form-control bg-light text-center" value="1">
+                            <input type="text" inputmode="numeric" name="quantity" class="form-control bg-light text-center"
+                                value="1" data-cantidad="1" data-stock="{{ producto.stock }}" min="1" max="{{ producto.stock }}"
+                                aria-label="Cantidad">
                             <div class="input-group-btn">
-                                <button type="button" class="btn btn-success btn-plus"><i class="fa fa-plus"></i></button>
+                                <button type="button" class="btn btn-success btn-plus" aria-label="Aumentar cantidad"><i class="fa fa-plus"></i></button>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-success px-3">
