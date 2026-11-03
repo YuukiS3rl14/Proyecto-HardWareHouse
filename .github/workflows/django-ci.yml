@@ -1,6 +1,21 @@
 
 name: Django CI
 
+## Project context
+
+Before starting development work, read:
+- docs/CONTEXTO_HWH.md
+
+Use it to understand the project's architecture,
+technical decisions, known issues, and pending work.
+
+Verify important details against the current codebase.
+If the documentation and code disagree, report the
+discrepancy before making changes.
+
+Keep the context document updated when significant
+architectural decisions or functionality changes occur.
+
 on:
   pull_request:
     branches: [main]
