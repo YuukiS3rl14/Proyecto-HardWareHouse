@@ -1,0 +1,80 @@
+
+name: Django CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  django-ci:
+    name: django-ci
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: hwh_ci
+          POSTGRES_USER: hwh_ci
+          POSTGRES_PASSWORD: ci_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hwh_ci -d hwh_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      SECRET_KEY: "temporary-ci-only-django-key-not-for-production"
+      DEBUG: "False"
+      USE_HTTPS: "False"
+      USE_R2: "False"
+      USE_SQLITE: "False"
+
+      DB_NAME: hwh_ci
+      DB_USER: hwh_ci
+      DB_PASSWORD: ci_test_password
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5432"
+
+      SITE_URL: "http://localhost:8000"
+      PAYPAL_TEST: "True"
+      OLLAMA_BASE_URL: ""
+      HARDWAREHOUSE_CHAT_INTENT_LLM: "False"
+      HARDWAREHOUSE_CHAT_RESPONSE_LLM: "False"
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v6
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Verificar configuracion Django
+        run: python manage.py check
+
+      - name: Comprobar migraciones pendientes
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Ejecutar pruebas de regresion
+        run: |
+          python manage.py test \
+            core.test_catalogo_migracion \
+            core.test_chatbot_contexto_catalogo \
+            core.test_chatbot_consultas_nl \
+            --noinput --verbosity 1
