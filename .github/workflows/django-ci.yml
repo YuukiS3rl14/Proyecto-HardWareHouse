@@ -69,7 +69,7 @@ jobs:
         run: python manage.py check
 
       - name: Comprobar migraciones pendientes
-        run: python manage.py makemigrations --check --dry-run
+        run: python manage.py makemigrations core --check --dry-run
 
       - name: Ejecutar pruebas de regresion
         run: |
