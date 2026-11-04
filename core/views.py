@@ -86,7 +86,10 @@ def mostrarArmado(request):
                 'marca': item.proveedor.nombre,
             }
             for field in fields:
-                data[field] = getattr(item, field)
+                if field == 'precio':
+                    data[field] = item.precio_vigente
+                else:
+                    data[field] = getattr(item, field)
             data['imagen'] = url_imagen_producto(item)
             components.append(data)
         return components
@@ -129,6 +132,19 @@ def mostrarCarrito(request):
     }
     return render(request, 'core/carrito.html', context)
 
+
+def _sincronizar_precios_carrito(items):
+    """Copia el precio vigente a las líneas del carrito antes de crear el pedido."""
+    for item in items:
+        producto = item.get_related_product()
+        if producto is None:
+            continue
+        vigente = producto.precio_vigente
+        if item.precio_unitario != vigente:
+            item.precio_unitario = vigente
+            item.save(update_fields=['precio_unitario'])
+
+
 @login_required
 def mostrarCheckout(request):
     carrito = get_object_or_404(Carrito, usuario=request.user)
@@ -138,6 +154,8 @@ def mostrarCheckout(request):
         messages.warning(request, "Tu carrito está vacío. Agrega productos antes de proceder al pago.")
         return redirect('core:carrito')
 
+    # El precio cobrado es el vigente al entrar al checkout. El IPN no vuelve a leer el catálogo.
+    _sincronizar_precios_carrito(items_carrito)
     # El descuento real sigue en el IPN, con select_for_update. Aquí solo se relee el stock.
     errores_stock = revalidar_lineas(items_carrito)
     if errores_stock:
@@ -363,6 +381,7 @@ def mostrarTienda(request):
         if selected_proveedores:
             qs = qs.filter(proveedor__id__in=selected_proveedores)
 
+        qs = qs.annotate(_precio_vigente=expresion_precio_vigente())
         banda = filtro_precio(selected_precio)
         if banda is not None:
             qs = qs.filter(banda)
@@ -373,11 +392,13 @@ def mostrarTienda(request):
     ordenar_catalogo(productos_con_modelo, selected_orden, query)
     novedades_pendiente = novedades and not catalogo_tiene_fechas(TIENDA_MODELOS)
     if novedades and not novedades_pendiente:
-        def _marca_temporal(item):
-            producto = item[0]
-            return getattr(producto, campo_novedad(producto.__class__))
-
-        productos_con_modelo.sort(key=_marca_temporal, reverse=True)
+        productos_con_modelo.sort(
+            key=lambda item: (
+                getattr(item[0], campo_novedad(item[0].__class__)),
+                item[0].pk,
+            ),
+            reverse=True,
+        )
         productos_con_modelo = productos_con_modelo[:NOVEDADES_LIMITE]
 
     paginator = Paginator(productos_con_modelo, TIENDA_PAGE_SIZE)
@@ -541,7 +562,7 @@ def agregar_al_carrito(request):
             item = ItemCarrito(
                 carrito=carrito,
                 cantidad=solicitada,
-                precio_unitario=producto.precio,
+                precio_unitario=producto.precio_vigente,
             )
             setattr(item, model_name, producto)
             item.save()
@@ -552,7 +573,7 @@ def agregar_al_carrito(request):
             except CantidadInvalida as exc:
                 return rechazar(exc.mensaje)
             item.cantidad = final
-            item.precio_unitario = producto.precio
+            item.precio_unitario = producto.precio_vigente
             item.save(update_fields=['cantidad', 'precio_unitario'])
             message = f"Se actualizó la cantidad de '{producto.nombre}' en tu carrito."
 
@@ -811,7 +832,7 @@ def _filas_de_exportacion(seleccion, almacenamientos, memorias, por_categoria):
                     'componente': componente,
                     'producto': producto.nombre,
                     'cantidad': linea.cantidad,
-                    'precio': pesos_enteros(producto.precio),
+                    'precio': pesos_enteros(producto.precio_vigente),
                     'estado': evaluacion.estado,
                     'texto_estado': texto_de_estado(evaluacion),
                     'especificaciones': especificaciones,
@@ -830,7 +851,7 @@ def _filas_de_exportacion(seleccion, almacenamientos, memorias, por_categoria):
                     'componente': componente,
                     'producto': producto.nombre,
                     'cantidad': disco['cantidad'],
-                    'precio': pesos_enteros(producto.precio),
+                    'precio': pesos_enteros(producto.precio_vigente),
                     'estado': evaluacion.estado,
                     'texto_estado': (
                         'No verificada'
@@ -848,7 +869,7 @@ def _filas_de_exportacion(seleccion, almacenamientos, memorias, por_categoria):
             'componente': componente,
             'producto': producto.nombre,
             'cantidad': 1,
-            'precio': pesos_enteros(producto.precio),
+            'precio': pesos_enteros(producto.precio_vigente),
             'estado': evaluacion.estado,
             'texto_estado': texto_de_estado(evaluacion),
             'especificaciones': especificaciones_de(producto),
@@ -989,7 +1010,7 @@ def recomendar_armado(request):
                     'id': producto.id,
                     'model_name': model_name,
                     'nombre': producto.nombre,
-                    'precio': producto.precio,
+                    'precio': producto.precio_vigente,
                     'stock': producto.stock,
                     'estado': evaluacion.estado,
                     'etiqueta': evaluacion.etiqueta,
@@ -1248,12 +1269,13 @@ def agregar_armado_al_carrito(request):
             if existentes:
                 item = existentes[0]
                 item.cantidad += pedidas
-                item.save(update_fields=['cantidad'])
+                item.precio_unitario = producto.precio_vigente
+                item.save(update_fields=['cantidad', 'precio_unitario'])
             else:
                 item = ItemCarrito(
                     carrito=carrito,
                     cantidad=pedidas,
-                    precio_unitario=producto.precio,
+                    precio_unitario=producto.precio_vigente,
                 )
                 setattr(item, model_name, producto)
                 item.save()
@@ -1287,7 +1309,7 @@ def actualizar_carrito(request, item_id):
             messages.error(request, exc.mensaje)
             return redirect('core:carrito')
         item.cantidad = cantidad
-        item.precio_unitario = producto.precio
+        item.precio_unitario = producto.precio_vigente
         item.save(update_fields=['cantidad', 'precio_unitario'])
         messages.success(request, 'Cantidad actualizada.')
 

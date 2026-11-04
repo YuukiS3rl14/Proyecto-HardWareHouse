@@ -1086,3 +1086,5 @@ INFO 2026-10-29 14:05:16,416 payments 15732 6284 IPN recibida. Transacción: TXN-
 WARNING 2026-10-29 14:05:16,417 payments 15732 6284 El pedido #42 ya no está pendiente (CANCELADO, transacción None). No se vuelve a descontar stock.
 WARNING 2026-10-29 14:05:16,464 signals 15732 6284 IPN rechazada por PayPal. id=38 txn=TXN-MALO invoice=fa80af21-91ff-4e55-84bd-1505bfd7f8ed codigo=sin codigo.
 WARNING 2026-10-30 17:28:32,216 0012_pedido_paypal_invoice 19952 11776 Pedido #1 pendiente conserva el invoice legado 1. Un IPN con ese número solo se acepta si sigue guardado en este pedido. Si ese cobro se hizo en otra base o después de un reinicio, requiere conciliación manual.
+INFO 2026-11-04 04:45:36,539 payments 4104 25656 Checkout crea el pedido pendiente #1 del usuario 4 (1 líneas).
+INFO 2026-11-04 04:45:36,602 payments 4104 25656 Checkout crea el pedido pendiente #2 del usuario 4 (1 líneas).

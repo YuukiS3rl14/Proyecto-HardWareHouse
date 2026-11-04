@@ -23,11 +23,6 @@
             }
         });
     }
-    if (orden && orden.form) {
-        orden.addEventListener('change', function () {
-            orden.form.submit();
-        });
-    }
 
     var panel = document.getElementById('panel-filtros');
     var abrir = document.getElementById('abrir-filtros');

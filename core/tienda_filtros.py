@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.db.models import Q
 
-from .models import Proveedor
+from .models import Proveedor, expresion_precio_vigente
 from .piezas_demo import sin_demo
 
 # El límite superior queda fuera de la banda, salvo «1.000.000 o más».
@@ -30,8 +30,8 @@ def filtro_precio(codigo):
         if banda['codigo'] != codigo:
             continue
         if banda['maximo'] is None:
-            return Q(precio__gte=banda['minimo'])
-        return Q(precio__gte=banda['minimo'], precio__lt=banda['maximo'])
+            return Q(_precio_vigente__gte=banda['minimo'])
+        return Q(_precio_vigente__gte=banda['minimo'], _precio_vigente__lt=banda['maximo'])
     return None
 
 
@@ -70,9 +70,9 @@ def ordenar_catalogo(productos, orden, consulta):
         orden = 'relevancia'
 
     if orden == 'precio_asc':
-        productos.sort(key=lambda item: (item[0].precio, item[0].nombre.casefold(), item[0].id))
+        productos.sort(key=lambda item: (item[0].precio_vigente, item[0].nombre.casefold(), item[0].id))
     elif orden == 'precio_desc':
-        productos.sort(key=lambda item: (-item[0].precio, item[0].nombre.casefold(), item[0].id))
+        productos.sort(key=lambda item: (-item[0].precio_vigente, item[0].nombre.casefold(), item[0].id))
     elif orden == 'nombre':
         productos.sort(key=lambda item: (item[0].nombre.casefold(), item[0].id))
     else:

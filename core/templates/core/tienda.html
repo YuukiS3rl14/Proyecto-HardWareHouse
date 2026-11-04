@@ -6,7 +6,7 @@
 {% block tittle %} Tienda {% endblock %}
 
 {% block extra_head %}
-<link href="{% static 'core/css/tienda-filtros.css' %}?v=filtros3" rel="stylesheet">
+<link href="{% static 'core/css/tienda-filtros.css' %}?v=filtros4" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
 {% endblock %}
@@ -62,18 +62,18 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="catalog-filter catalog-sort">
+                        <label class="catalog-filter-label" for="orden-catalogo">Ordenar</label>
+                        <select id="orden-catalogo" class="form-select" name="orden">
+                            {% for codigo, etiqueta in ordenes %}
+                            <option value="{{ codigo }}" {% if selected_orden == codigo %}selected{% endif %}>{{ etiqueta }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <div class="catalog-filter-actions">
                         <button type="submit" class="btn btn-success">Aplicar</button>
                         <a href="{% url 'core:tienda' %}" class="btn btn-outline-dark">Limpiar</a>
                     </div>
-                </div>
-                <div class="catalog-sort">
-                    <label class="catalog-filter-label" for="orden-catalogo">Ordenar</label>
-                    <select id="orden-catalogo" class="form-select" name="orden">
-                        {% for codigo, etiqueta in ordenes %}
-                        <option value="{{ codigo }}" {% if selected_orden == codigo %}selected{% endif %}>{{ etiqueta }}</option>
-                        {% endfor %}
-                    </select>
                 </div>
             </form>
             <div id="filtros-overlay" class="catalog-filters-overlay" hidden></div>
@@ -84,7 +84,10 @@
                 <div class="col-12 pb-1">
                     <div class="d-flex align-items-center justify-content-between gap-2 mb-4">
                         <div class="text-break">
-                            {% if novedades_pendiente %}
+                            {% if novedades and not novedades_pendiente %}
+                                <h5 class="m-0">Novedades del catálogo</h5>
+                                <p class="text-muted mb-0">Los 30 productos agregados o actualizados más recientemente. Los que ya estaban en el catálogo comparten la fecha de la migración que agregó este registro, no una fecha histórica reconstruida.</p>
+                            {% elif novedades_pendiente %}
                                 <h5 class="m-0">Novedades del catálogo</h5>
                                 <p class="text-muted mb-0">El catálogo todavía no guarda la fecha de alta o actualización de cada producto, así que esta vista no ordena por novedad.</p>
                             {% elif query %}
@@ -117,8 +120,14 @@
                             </div>
                             <div class="card-body text-center px-2 pt-3 pt-sm-4 pb-3 flex-grow-1 d-flex flex-column justify-content-between">
                                 <h6 class="text-truncate mb-3">{{ producto|nombre_visible }}</h6>
-                                <div class="d-flex justify-content-center">
-                                    <h6>${{ producto.precio|floatformat:"0"|intcomma }}</h6>
+                                <div class="d-flex flex-column align-items-center">
+                                    {% if producto.precio_vigente < producto.precio %}
+                                        {% if producto.porcentaje_descuento %}<span class="badge bg-danger mb-1">-{{ producto.porcentaje_descuento }}%</span>{% endif %}
+                                        <h6 class="text-muted mb-0"><s>${{ producto.precio|floatformat:"0"|intcomma }}</s></h6>
+                                        <h6 class="text-success mb-0">${{ producto.precio_vigente|floatformat:"0"|intcomma }}</h6>
+                                    {% else %}
+                                        <h6 class="mb-0">${{ producto.precio|floatformat:"0"|intcomma }}</h6>
+                                    {% endif %}
                                 </div>
                                 <small class="text-muted d-block mt-1">{{ producto.categoria }}</small>
                             </div>

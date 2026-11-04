@@ -172,11 +172,15 @@ class FormulariosYBusquedaTests(TestCase):
         self.assertContains(respuesta, '120 caracteres')
         self.assertContains(respuesta, 'CPU Visible')
 
-        self.assertContains(self.client.get(reverse('core:index')), 'name="q"')
+        inicio = self.client.get(reverse('core:index'))
+        self.assertContains(inicio, 'name="q"')
+        self.assertContains(inicio, 'ms-auto')
         self.assertContains(self.client.get(reverse('core:tienda')), 'maxlength="120"')
         for nombre in ('contacto', 'armado', 'sobrenosotros', 'login', 'registro'):
             pagina = self.client.get(reverse(f'core:{nombre}'))
             self.assertNotContains(pagina, 'name="q"', msg_prefix=nombre)
+            if nombre in ('contacto', 'armado', 'sobrenosotros'):
+                self.assertContains(pagina, 'col-lg-5 d-flex justify-content-end gap-2 ps-0 ps-lg-3 ms-auto', msg_prefix=nombre)
 
 
 class FiltrosYInicioTests(TestCase):
@@ -204,8 +208,12 @@ class FiltrosYInicioTests(TestCase):
         self.assertIn('categoria=CPU', respuesta.context['pagination_query'])
         self.assertContains(respuesta, 'Aplicar')
         self.assertContains(respuesta, 'Limpiar')
+        panel = html.split('id="panel-filtros"', 1)[1].split('id="filtros-overlay"', 1)[0]
+        self.assertLess(panel.index('id="orden-catalogo"'), panel.index('>Aplicar<'))
+        self.assertLess(panel.index('>Aplicar<'), panel.index('>Limpiar<'))
 
         js = Path('core/static/core/js/tienda-filtros.js').read_text(encoding='utf-8')
+        self.assertNotIn('orden.form.submit()', js)
         css = Path('core/static/core/css/tienda-filtros.css').read_text(encoding='utf-8')
         self.assertIn("event.key === 'Escape'", js)
         self.assertIn('cerrarBtn.focus()', js)
@@ -225,9 +233,13 @@ class FiltrosYInicioTests(TestCase):
 
         for modelo, _etiqueta in CATALOGO_MODELOS:
             nombres = {campo.name for campo in modelo._meta.concrete_fields}
-            self.assertFalse(nombres & {'creado_en', 'actualizado_en'}, modelo.__name__)
+            self.assertTrue(
+                {'creado_en', 'actualizado_en', 'en_oferta', 'precio_oferta'} <= nombres,
+                modelo.__name__,
+            )
         novedades = self.client.get(reverse('core:tienda'), {'novedades': '1'})
-        self.assertContains(novedades, 'no guarda la fecha de alta')
+        self.assertNotContains(novedades, 'no guarda la fecha de alta')
+        self.assertContains(novedades, 'más recientemente')
         self.assertContains(novedades, 'CPU Filtro')
 
         sobre = self.client.get(reverse('core:sobrenosotros'))

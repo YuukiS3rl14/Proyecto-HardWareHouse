@@ -39,7 +39,7 @@ def producto_a_dict(producto, model_name: str | None = None, score: float | None
         'nombre': producto.nombre,
         'nombre_completo': nombre_comercial(marca, producto.nombre),
         'descripcion': (producto.descripcion or '').strip(),
-        'precio_clp': precio_a_entero(producto.precio),
+        'precio_clp': precio_a_entero(producto.precio_vigente),
         'stock': producto.stock,
         'disponible': producto.stock > 0,
         'especificaciones': especificaciones_producto(producto),

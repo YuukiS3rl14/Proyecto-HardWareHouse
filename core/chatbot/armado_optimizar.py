@@ -232,7 +232,7 @@ def _opciones(items: list[dict], categoria: str, *, techo: int, total: int, modo
         return []
     pieza = _pieza_de_categoria(items, categoria) or {}
     cantidad = int(pieza.get('cantidad') or 1)
-    precio_actual = _precio_entero(actual.precio) * cantidad
+    precio_actual = _precio_entero(actual.precio_vigente) * cantidad
     puntaje_actual = _puntaje(actual, categoria)
     esenciales = _ESENCIALES.get(proposito, _ESENCIALES['general'])
     piso = 0.85 if categoria in esenciales else 0.70

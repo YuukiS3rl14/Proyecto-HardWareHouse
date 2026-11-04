@@ -1,8 +1,11 @@
 import uuid
+from decimal import Decimal, ROUND_HALF_UP
 
-from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.db.models import Case, DecimalField, F, Q, When
 from django.utils import timezone
 
 
@@ -39,7 +42,100 @@ class Proveedor(models.Model):
 
 # --- 2. MODELOS DE PRODUCTOS INDEPENDIENTES ---
 
-class Procesador(models.Model):
+class ProductoComercial(models.Model):
+    """Fechas y oferta compartidas. El precio original sigue en cada familia."""
+
+    creado_en = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Registrado en',
+        help_text=(
+            'Se completa solo. En productos que ya existían, esta fecha es la de la '
+            'migración que agregó el campo, no la fecha real de alta.'
+        ),
+    )
+    actualizado_en = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Actualizado en',
+        help_text=(
+            'Se actualiza solo al guardar. No reconstruye cambios anteriores a este campo.'
+        ),
+    )
+    en_oferta = models.BooleanField(default=False, verbose_name='En oferta')
+    precio_oferta = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Precio de oferta',
+    )
+
+    class Meta:
+        abstract = True
+
+    def clean(self):
+        super().clean()
+        oferta = self.precio_oferta
+        if oferta is not None and (oferta <= 0 or self.precio is None or oferta >= self.precio):
+            raise ValidationError({
+                'precio_oferta': 'El precio de oferta debe ser positivo y menor que el precio original.',
+            })
+        if self.en_oferta and oferta is None:
+            raise ValidationError({
+                'precio_oferta': 'Indica un precio de oferta positivo y menor que el precio original.',
+            })
+
+    @property
+    def precio_vigente(self):
+        oferta = self.precio_oferta
+        if self.en_oferta and oferta is not None and oferta > 0 and self.precio is not None and oferta < self.precio:
+            return oferta
+        return self.precio
+
+    @property
+    def porcentaje_descuento(self):
+        if not self.en_oferta or self.precio is None or self.precio <= 0:
+            return None
+        vigente = self.precio_vigente
+        if vigente is None or vigente >= self.precio:
+            return None
+        porcentaje = ((self.precio - vigente) * Decimal('100') / self.precio).quantize(
+            Decimal('1'),
+            rounding=ROUND_HALF_UP,
+        )
+        valor = int(porcentaje)
+        return valor or None
+
+
+def restriccion_oferta():
+    return [
+        models.CheckConstraint(
+            check=(
+                Q(precio_oferta__isnull=True)
+                | (Q(precio_oferta__gt=0) & Q(precio_oferta__lt=F('precio')))
+            ) & (
+                Q(en_oferta=False) | Q(precio_oferta__isnull=False)
+            ),
+            name='%(app_label)s_%(class)s_oferta_valida',
+        ),
+    ]
+
+
+def expresion_precio_vigente():
+    return Case(
+        When(
+            en_oferta=True,
+            precio_oferta__isnull=False,
+            precio_oferta__gt=0,
+            precio_oferta__lt=F('precio'),
+            then=F('precio_oferta'),
+        ),
+        default=F('precio'),
+        output_field=DecimalField(max_digits=10, decimal_places=2),
+    )
+
+
+class Procesador(ProductoComercial):
     categoria = models.CharField(max_length=50, default='CPU', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -100,10 +196,11 @@ class Procesador(models.Model):
 
     class Meta:
         verbose_name_plural = "Procesadores (CPU)"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[CPU | {self.proveedor.nombre}] {self.nombre}"
 
-class TarjetaGrafica(models.Model):
+class TarjetaGrafica(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Tarjeta Gráfica', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -155,10 +252,11 @@ class TarjetaGrafica(models.Model):
 
     class Meta:
         verbose_name_plural = "Tarjetas Gráficas (GPU)"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[GPU | {self.proveedor.nombre}] {self.nombre}"
 
-class MemoriaRam(models.Model):
+class MemoriaRam(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Memoria RAM', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -212,10 +310,11 @@ class MemoriaRam(models.Model):
     
     class Meta:
         verbose_name_plural = "Memorias RAM"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[RAM | {self.proveedor.nombre}] {self.nombre}"
 
-class PlacaMadre(models.Model):
+class PlacaMadre(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Placa Madre', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -311,10 +410,11 @@ class PlacaMadre(models.Model):
 
     class Meta:
         verbose_name_plural = "Placas Madre"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[MB | {self.proveedor.nombre}] {self.nombre}"
 
-class AlmacenamientoSSD(models.Model):
+class AlmacenamientoSSD(ProductoComercial):
     categoria = models.CharField(max_length=50, default='SSD', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -332,10 +432,11 @@ class AlmacenamientoSSD(models.Model):
     
     class Meta:
         verbose_name_plural = "Almacenamiento SSD"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[SSD | {self.proveedor.nombre}] {self.nombre}"
 
-class AlmacenamientoHDD(models.Model):
+class AlmacenamientoHDD(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Disco Duro HDD', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -367,10 +468,11 @@ class AlmacenamientoHDD(models.Model):
 
     class Meta:
         verbose_name_plural = "Almacenamiento HDD"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[HDD | {self.proveedor.nombre}] {self.nombre}"
 
-class Gabinete(models.Model):
+class Gabinete(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Gabinete', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -410,10 +512,11 @@ class Gabinete(models.Model):
 
     class Meta:
         verbose_name_plural = "Gabinetes"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[Case | {self.proveedor.nombre}] {self.nombre}"
 
-class FuenteDePoder(models.Model):
+class FuenteDePoder(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Fuente de Poder', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -432,10 +535,11 @@ class FuenteDePoder(models.Model):
     
     class Meta:
         verbose_name_plural = "Fuentes de Poder (PSU)"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[PSU | {self.proveedor.nombre}] {self.nombre}"
     
-class RefrigeracionCooler(models.Model):
+class RefrigeracionCooler(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Refrigeración', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -472,10 +576,11 @@ class RefrigeracionCooler(models.Model):
 
     class Meta:
         verbose_name_plural = "Refrigeración (Cooler)"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[Cooler | {self.proveedor.nombre}] {self.nombre}"
 
-class Ventilador(models.Model):
+class Ventilador(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Ventilador', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -489,10 +594,11 @@ class Ventilador(models.Model):
 
     class Meta:
         verbose_name_plural = "Ventiladores"
+        constraints = restriccion_oferta()
     def __str__(self):
         return f"[Fan | {self.proveedor.nombre}] {self.nombre}"
 
-    
+
 # --- 3. COMENTARIOS Y RESEÑAS (CLAVES FORÁNEAS MÚLTIPLES) ---
 
 class Comentario(models.Model):

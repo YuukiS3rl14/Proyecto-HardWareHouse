@@ -19,8 +19,11 @@ class ProveedorAdmin(admin.ModelAdmin):
 # 2. CLASES DE ADMINISTRACIÓN DE PRODUCTOS INDEPENDIENTES
 # ----------------------------------------------------------------------
 
-PRODUCTO_LIST_DISPLAY = ('id', 'miniatura', 'nombre', 'categoria', 'proveedor', 'precio', 'stock')
-PRODUCTO_EDITABLE = ('nombre', 'precio', 'stock')
+PRODUCTO_LIST_DISPLAY = (
+    'id', 'miniatura', 'nombre', 'categoria', 'proveedor',
+    'precio', 'en_oferta', 'precio_oferta', 'descuento', 'stock',
+)
+PRODUCTO_EDITABLE = ('nombre', 'precio', 'en_oferta', 'precio_oferta', 'stock')
 
 class ProductoAdminBase(admin.ModelAdmin):
     search_fields = ('nombre', 'proveedor__nombre')
@@ -28,6 +31,7 @@ class ProductoAdminBase(admin.ModelAdmin):
     list_per_page = 20
     list_select_related = ('proveedor',)
     save_on_top = True
+    readonly_fields = ('creado_en', 'actualizado_en', 'porcentaje_descuento')
 
     @admin.display(description='Imagen')
     def miniatura(self, obj):
@@ -35,6 +39,30 @@ class ProductoAdminBase(admin.ModelAdmin):
             '<img src="{}" alt="" class="hw-admin-thumb">',
             url_imagen_producto(obj),
         )
+
+    @admin.display(description='Descuento')
+    def descuento(self, obj):
+        valor = obj.porcentaje_descuento
+        if valor is None:
+            return '—'
+        return f'{valor}%'
+
+    def get_fieldsets(self, request, obj=None):
+        resultado = []
+        for nombre, opciones in super().get_fieldsets(request, obj):
+            opciones = dict(opciones)
+            campos = list(opciones.get('fields') or ())
+            if nombre == 'Información General' and 'precio' in campos and 'en_oferta' not in campos:
+                indice = campos.index('precio') + 1
+                campos[indice:indice] = ['en_oferta', 'precio_oferta', 'porcentaje_descuento']
+                opciones['fields'] = tuple(campos)
+            resultado.append((nombre, opciones))
+        if not any(nombre == 'Registro' for nombre, _opciones in resultado):
+            resultado.append((
+                'Registro',
+                {'fields': ('creado_en', 'actualizado_en')},
+            ))
+        return resultado
 
 class ProcesadorAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts', 'incluye_cooler', 'graficos_integrados')

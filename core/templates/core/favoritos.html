@@ -40,7 +40,15 @@
                             </a>
                         </td>
                         <td class="align-middle" data-label="Categoría">{{ item.producto.categoria }}</td>
-                        <td class="align-middle" data-label="Precio">${{ item.producto.precio|floatformat:"0"|intcomma }}</td>
+                        <td class="align-middle" data-label="Precio">
+                            {% if item.producto.precio_vigente < item.producto.precio %}
+                                {% if item.producto.porcentaje_descuento %}<span class="badge bg-danger">-{{ item.producto.porcentaje_descuento }}%</span>{% endif %}
+                                <s class="text-muted">${{ item.producto.precio|floatformat:"0"|intcomma }}</s>
+                                ${{ item.producto.precio_vigente|floatformat:"0"|intcomma }}
+                            {% else %}
+                                ${{ item.producto.precio|floatformat:"0"|intcomma }}
+                            {% endif %}
+                        </td>
                         <td class="align-middle" data-label="Acciones">
                             <a href="{% url 'core:detalle' item.model_name item.producto.id %}" class="btn btn-sm btn-info" title="Ver Detalle"><i class="fas fa-eye"></i></a>
                             <a href="{% url 'core:eliminar_favorito' item.fav_id %}" class="btn btn-sm btn-danger" title="Quitar de Favoritos"><i class="fa fa-times"></i></a>

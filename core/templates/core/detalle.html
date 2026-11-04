@@ -49,8 +49,13 @@
                 <small class="pt-1">({{ total_comentarios }} reseña{{ total_comentarios|pluralize:"s" }})</small> 
             </div>
             
-            <!-- Precio Formateado -->
-            <h3 class="text-success font-weight-bold mb-4">${{ producto.precio|floatformat:"0"|intcomma }} CLP</h3>
+            {% if producto.precio_vigente < producto.precio %}
+                {% if producto.porcentaje_descuento %}<span class="badge bg-danger mb-2">-{{ producto.porcentaje_descuento }}%</span>{% endif %}
+                <p class="text-muted mb-1"><s>${{ producto.precio|floatformat:"0"|intcomma }} CLP</s></p>
+                <h3 class="text-success font-weight-bold mb-4">${{ producto.precio_vigente|floatformat:"0"|intcomma }} CLP</h3>
+            {% else %}
+                <h3 class="text-success font-weight-bold mb-4">${{ producto.precio|floatformat:"0"|intcomma }} CLP</h3>
+            {% endif %}
             
             <p>{{ producto.descripcion|default:"Descripción no disponible." }}</p>
             
