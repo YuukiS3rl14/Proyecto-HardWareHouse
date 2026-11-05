@@ -86,26 +86,6 @@
 
 })(jQuery);
 
-const form = document.getElementById('contactForm');
-const popupBg = document.getElementById('popup-bg');
-const popupMsg = document.getElementById('popup-msg');
-
-if (form) {
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const name = document.getElementById('name').value.trim();
-        if (name) {
-            popupMsg.innerHTML = `Gracias, <strong>${name}</strong>. Tu mensaje fue enviado correctamente.`;
-            popupBg.style.display = 'flex';
-            form.reset();
-        }
-    });
-}
-
-function closePopup() {
-    popupBg.style.display = 'none';
-}
-
 // Mostrar y ocultar alerta
 const addCartButton = document.getElementById("addCart");
 if (addCartButton) {

@@ -1156,19 +1156,6 @@ a:hover > .brand-logo span {
     box-shadow: 0 0 0 4px var(--hw-green-soft);
 }
 
-#popup {
-    border-radius: var(--hw-radius-lg);
-}
-
-#popup button {
-    transition: transform var(--hw-fast) var(--hw-ease), background-color var(--hw-fast) ease;
-}
-
-#popup button:hover {
-    background-color: var(--hw-green-dark);
-    transform: translateY(-2px);
-}
-
 iframe {
     border-radius: var(--hw-radius-lg);
     box-shadow: var(--hw-shadow-sm);
