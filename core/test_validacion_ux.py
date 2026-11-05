@@ -1,5 +1,6 @@
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -133,13 +134,14 @@ class FormulariosYBusquedaTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, 'letras')
 
-        valido = self.client.post(reverse('core:contacto'), {
-            'nombre': "José Pérez-O'Brien",
-            'email': 'ana@example.com',
-            'telefono': '+56 9 1234 5678',
-            'asunto': 'Consulta técnica',
-            'mensaje': 'Quiero orientación para un armado.',
-        })
+        with patch('core.correo.enviar_contacto', return_value=True):
+            valido = self.client.post(reverse('core:contacto'), {
+                'nombre': "José Pérez-O'Brien",
+                'email': 'ana@example.com',
+                'telefono': '+56 9 1234 5678',
+                'asunto': 'Consulta técnica',
+                'mensaje': 'Quiero orientación para un armado.',
+            })
         self.assertRedirects(valido, reverse('core:contacto'))
 
     def test_registro_conserva_usuario_con_digitos_y_el_limite_de_correo(self):

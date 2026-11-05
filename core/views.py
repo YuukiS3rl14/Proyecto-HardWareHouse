@@ -261,12 +261,24 @@ def mostrarContacto(request):
     if request.method == 'POST':
         form = ContactoForm(request.POST)
         if form.is_valid():
-            messages.success(
-                request,
-                'Los datos son válidos. El correo publicado en esta página es de ejemplo '
-                'y el mensaje no se envió a un buzón.',
-            )
-            return redirect('core:contacto')
+            from .correo import contacto_bloqueado, enviar_contacto
+
+            if contacto_bloqueado(request):
+                form.add_error(
+                    None,
+                    'Demasiados mensajes desde esta conexión. Espera unos minutos e inténtalo de nuevo.',
+                )
+            elif enviar_contacto(form.cleaned_data):
+                messages.success(
+                    request,
+                    'Recibimos tu mensaje. Te responderemos al correo que indicaste.',
+                )
+                return redirect('core:contacto')
+            else:
+                form.add_error(
+                    None,
+                    'No pudimos enviar el mensaje. Inténtalo de nuevo en unos minutos.',
+                )
     else:
         form = ContactoForm()
     return render(request, 'core/contacto.html', {'form': form})

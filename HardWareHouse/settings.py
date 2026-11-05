@@ -396,6 +396,17 @@ PAYPAL_RECEIVER_EMAIL = os.environ.get(
 ).strip()
 PAYPAL_TEST = env_bool('PAYPAL_TEST', default=True)
 
+# EmailJS se llama solo desde el servidor. Las claves no se renderizan en el HTML.
+EMAILJS_SERVICE_ID = os.environ.get('EMAILJS_SERVICE_ID', '').strip()
+EMAILJS_TEMPLATE_CONTACTO = os.environ.get('EMAILJS_TEMPLATE_CONTACTO', '').strip()
+EMAILJS_TEMPLATE_PEDIDO = os.environ.get('EMAILJS_TEMPLATE_PEDIDO', '').strip()
+EMAILJS_PUBLIC_KEY = os.environ.get('EMAILJS_PUBLIC_KEY', '').strip()
+EMAILJS_PRIVATE_KEY = os.environ.get('EMAILJS_PRIVATE_KEY', '').strip()
+EMAILJS_TIMEOUT = int(os.environ.get('EMAILJS_TIMEOUT', '10'))
+EMAILJS_RECLAMO_SEGUNDOS = int(os.environ.get('EMAILJS_RECLAMO_SEGUNDOS', '120'))
+CONTACTO_CORREO_LIMITE = int(os.environ.get('CONTACTO_CORREO_LIMITE', '5'))
+CONTACTO_CORREO_VENTANA = int(os.environ.get('CONTACTO_CORREO_VENTANA', '600'))
+
 # Tasa de cambio de ejemplo (CLP a USD). En un proyecto real, esto debería obtenerse de una API.
 CLP_TO_USD_RATE = 950 
 

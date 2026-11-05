@@ -814,6 +814,22 @@ class PagoBoleta(models.Model):
         return f"Boleta/Pago Transacción {self.transaccion_id}"
 
 
+class AvisoCorreoPedido(models.Model):
+    """Controla el correo de compra. No participa en el estado del pago."""
+
+    pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE, related_name='aviso_correo')
+    enviado_en = models.DateTimeField(null=True, blank=True)
+    reclamo = models.UUIDField(null=True, blank=True)
+    reclamo_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Aviso de compra'
+        verbose_name_plural = 'Avisos de compra'
+
+    def __str__(self):
+        return f'Aviso de compra del pedido #{self.pedido_id}'
+
+
 # --- 6. FAVORITOS DE USUARIO ---
 
 class Favorito(models.Model):

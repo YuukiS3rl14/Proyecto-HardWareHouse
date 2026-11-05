@@ -44,6 +44,9 @@
                         maxlength="2000" required>{{ form.mensaje.value|default:'' }}</textarea>
                     {% for error in form.mensaje.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
+                {% for error in form.non_field_errors %}
+                <p class="text-danger small" role="alert">{{ error }}</p>
+                {% endfor %}
                 <p id="contacto-error" class="text-danger small" role="alert"></p>
                 <button type="submit" class="btn btn-success px-4 py-2">Contactar ahora</button>
             </form>
