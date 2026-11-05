@@ -156,14 +156,43 @@ class CorreoEmailJsTests(TestCase):
         self.assertEqual(envio.call_args.kwargs['json']['template_id'], 'template-pedido')
         self.assertEqual(pedido.estado, 'PAGADO')
         self.assertEqual(self.cpu.stock, 4)
-        self.assertEqual(parametros['to_email'], 'cliente@example.com')
-        self.assertNotEqual(parametros['to_email'], self.usuario.email)
-        self.assertIn('CPU Aviso', parametros['productos'])
-        self.assertNotIn('CPU renombrada', parametros['productos'])
-        self.assertIn('95.000 CLP', parametros['total_clp'])
+        detalle = '1 x CPU Aviso (CPU) — 95.000 CLP c/u — 95.000 CLP'
+        self.assertEqual(parametros['cliente_email'], 'cuenta@example.com')
+        self.assertEqual(parametros['to_email'], 'cuenta@example.com')
+        self.assertEqual(parametros['email'], 'cuenta@example.com')
+        self.assertNotEqual(parametros['cliente_email'], 'cliente@example.com')
+        self.assertEqual(parametros['cliente_nombre'], 'Ana Soto')
+        self.assertEqual(parametros['pedido_id'], str(pedido.id))
+        self.assertEqual(parametros['total_clp'], '95.000 CLP')
+        self.assertEqual(parametros['detalle_productos'], detalle)
+        self.assertEqual(parametros['productos'], detalle)
+        self.assertNotIn('CPU renombrada', parametros['detalle_productos'])
+        self.assertEqual(pedido.pago_boleta.email_comprador, 'cliente@example.com')
         self.assertEqual(parametros['transaccion_id'], 'TXN-MAIL')
         self.assertIsNotNone(aviso.enviado_en)
         self.assertIsNone(aviso.reclamo)
+
+    def test_sin_correo_de_cuenta_el_aviso_usa_el_pagador_verificado(self):
+        self.usuario.email = 'sandbox-sin-arroba'
+        self.usuario.save(update_fields=['email'])
+        pedido = self.pedido()
+
+        with patch('core.correo.requests.post', return_value=_Respuesta(200)) as envio:
+            self.assertEqual(confirmar_pago_paypal(self.ipn(pedido, txn_id='TXN-FALLBACK')), 'pagado')
+
+        parametros = envio.call_args.kwargs['json']['template_params']
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, 'PAGADO')
+        self.assertEqual(pedido.pago_boleta.email_comprador, 'cliente@example.com')
+        self.assertEqual(parametros['cliente_email'], 'cliente@example.com')
+        self.assertEqual(parametros['to_email'], 'cliente@example.com')
+        self.assertEqual(parametros['cliente_nombre'], 'Ana Soto')
+        self.assertEqual(parametros['pedido_id'], str(pedido.id))
+        self.assertEqual(parametros['total_clp'], '95.000 CLP')
+        self.assertEqual(
+            parametros['detalle_productos'],
+            '1 x CPU Aviso (CPU) — 95.000 CLP c/u — 95.000 CLP',
+        )
 
     def test_si_el_correo_falla_el_pago_queda_y_un_reintento_no_lo_duplica(self):
         pedido = self.pedido()

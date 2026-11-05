@@ -1314,3 +1314,31 @@ INFO 2026-11-05 16:15:40,286 payments 3252 10796 Pedido #44 pagado con la transa
 INFO 2026-11-05 16:15:40,350 payments 3252 10796 IPN recibida. Transacción: TXN-CANCEL. Estado: Completed. Invoice: 7416e987-a9f8-4a31-bb8c-e1f589e2c180.
 WARNING 2026-11-05 16:15:40,352 payments 3252 10796 El pedido #45 ya no está pendiente (CANCELADO, transacción None). No se vuelve a descontar stock.
 WARNING 2026-11-05 16:15:40,413 signals 3252 10796 IPN rechazada por PayPal. id=42 txn=TXN-MALO invoice=6dc33e0d-8237-4816-8428-d02a9b300298 codigo=sin codigo.
+INFO 2026-11-05 18:37:14,378 payments 20996 20616 IPN recibida. Transacción: TXN-MAIL. Estado: Completed. Invoice: ed1a2f0c-437c-422f-b678-0c677ca39e01.
+INFO 2026-11-05 18:37:14,397 payments 20996 20616 Pedido #1 pagado con la transacción TXN-MAIL.
+INFO 2026-11-05 18:37:14,420 payments 20996 20616 IPN recibida. Transacción: TXN-MAIL. Estado: Completed. Invoice: ed1a2f0c-437c-422f-b678-0c677ca39e01.
+WARNING 2026-11-05 18:37:14,423 payments 20996 20616 El pedido #1 ya no está pendiente (PAGADO, transacción TXN-MAIL). No se vuelve a descontar stock.
+INFO 2026-11-05 18:37:14,822 payments 20996 20616 IPN recibida. Transacción: TXN-REINTENTO. Estado: Completed. Invoice: 893f175a-208a-41c3-85a6-d816c9822880.
+INFO 2026-11-05 18:37:14,831 payments 20996 20616 Pedido #2 pagado con la transacción TXN-REINTENTO.
+INFO 2026-11-05 18:37:14,852 payments 20996 20616 IPN recibida. Transacción: TXN-REINTENTO. Estado: Completed. Invoice: 893f175a-208a-41c3-85a6-d816c9822880.
+WARNING 2026-11-05 18:37:14,854 payments 20996 20616 El pedido #2 ya no está pendiente (PAGADO, transacción TXN-REINTENTO). No se vuelve a descontar stock.
+INFO 2026-11-05 18:37:15,252 payments 20996 20616 IPN recibida. Transacción: TXN-FALLBACK. Estado: Completed. Invoice: 1bfd40f8-d8e7-487d-9394-4ae3bd31951c.
+INFO 2026-11-05 18:37:15,259 payments 20996 20616 Pedido #3 pagado con la transacción TXN-FALLBACK.
+INFO 2026-11-05 18:37:16,074 payments 20996 20616 IPN recibida. Transacción: TXN-PENDIENTE. Estado: Pending. Invoice: 4a398531-9145-46e3-8ddb-b295aa1610f8.
+WARNING 2026-11-05 18:37:16,075 payments 20996 20616 Pago no confirmado (Pending) para la transacción TXN-PENDIENTE. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-05 18:37:16,078 payments 20996 20616 IPN recibida. Transacción: TXN-CAE. Estado: Completed. Invoice: 4a398531-9145-46e3-8ddb-b295aa1610f8.
+INFO 2026-11-05 18:37:16,086 payments 20996 20616 Pedido #4 pagado con la transacción TXN-CAE.
+ERROR 2026-11-05 18:37:16,087 payments 20996 20616 El pedido #4 quedó registrado y el aviso por correo no cambió el pago.
+Traceback (most recent call last):
+  File "C:\Users\Manuel\Desktop\A.I\Inacap\Proyecto - HardWareHouse\core\payments.py", line 346, in _avisar_compra
+    notificar_pedido_pagado(pedido_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1228, in _execute_mock_call
+    raise effect
+RuntimeError: correo caído

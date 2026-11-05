@@ -7,6 +7,8 @@ from decimal import Decimal, ROUND_HALF_UP
 import requests
 from django.conf import settings
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
@@ -131,11 +133,14 @@ def _parametros_pedido(pedido, boleta):
         )
     detalle = '\n'.join(lineas) or 'Sin productos registrados.'
     total = _clp(boleta.monto_pagado)
+    destinatario = _correo_destino(pedido, boleta)
     return {
-        'to_email': boleta.email_comprador,
-        'email': boleta.email_comprador,
+        'to_email': destinatario,
+        'email': destinatario,
+        'cliente_email': destinatario,
         'to_name': boleta.nombre_comprador,
         'nombre': boleta.nombre_comprador,
+        'cliente_nombre': boleta.nombre_comprador,
         'pedido_id': str(pedido.id),
         'numero_pedido': f'#{pedido.id}',
         'order_id': str(pedido.id),
@@ -149,7 +154,29 @@ def _parametros_pedido(pedido, boleta):
         'productos': detalle,
         'detalle': detalle,
         'items': detalle,
+        'detalle_productos': detalle,
     }
+
+
+def _correo_destino(pedido, boleta):
+    """La cuenta registrada llega al cliente de prueba; PayPal cubre una cuenta sin correo válido."""
+    cuenta = (pedido.usuario.email or '').strip()
+    if _correo_valido(cuenta):
+        return cuenta
+    pagador = (boleta.email_comprador or '').strip()
+    if _correo_valido(pagador):
+        return pagador
+    return pagador
+
+
+def _correo_valido(valor):
+    if not valor:
+        return False
+    try:
+        validate_email(valor)
+    except ValidationError:
+        return False
+    return True
 
 
 def _clp(valor):
