@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, update_session_auth_hash 
@@ -38,6 +39,8 @@ import json
 import logging
 import uuid
 
+from urllib.parse import urlencode
+
 from django.conf import settings
 from django.db import transaction 
 from django.core.paginator import Paginator
@@ -48,13 +51,14 @@ from core.piezas_demo import es_demo, sin_demo
 from core.tienda_filtros import (
     BANDAS_PRECIO,
     ORDENES,
-    ORDENES_VALIDAS,
     campo_novedad,
     catalogo_tiene_fechas,
+    chips_de_filtros,
+    debe_redirigir_filtros,
     filtro_precio,
-    ids_validos,
     opciones_catalogo,
     ordenar_catalogo,
+    resolver_filtros_tienda,
 )
 
 from .models import *
@@ -367,19 +371,23 @@ def _model_name_tienda(modelo):
 
 
 def mostrarTienda(request):
-    query = (request.GET.get('q') or '').strip()
-    if len(query) > BUSQUEDA_MAX:
+    consulta = request.GET.copy()
+    if len((consulta.get('q') or '').strip()) > BUSQUEDA_MAX:
         messages.error(request, 'La búsqueda admite como máximo 120 caracteres.')
-        query = ''
-    novedades = request.GET.get('novedades') == '1'
-    selected_categorias = [categoria for categoria in request.GET.getlist('categoria') if categoria]
-    selected_proveedores = ids_validos(request.GET.getlist('proveedor'))
-    selected_precio = request.GET.get('precio') or ''
-    selected_orden = request.GET.get('orden') or 'relevancia'
-    if selected_orden not in ORDENES_VALIDAS:
-        selected_orden = 'relevancia'
-    if filtro_precio(selected_precio) is None:
-        selected_precio = ''
+        consulta['q'] = ''
+    estado = resolver_filtros_tienda(consulta)
+    if debe_redirigir_filtros(request.GET):
+        destino = reverse('core:tienda')
+        if estado['pares']:
+            destino = f'{destino}?{urlencode(estado["pares"])}'
+        return redirect(destino)
+
+    query = estado['q']
+    novedades = estado['novedades']
+    selected_categorias = estado['categorias']
+    selected_proveedores = estado['proveedores']
+    selected_precio = estado['precio']
+    selected_orden = estado['orden']
 
     productos_con_modelo = []
 
@@ -435,14 +443,9 @@ def mostrarTienda(request):
                 favoritos_ids[f"{model_name_template}-{prod.id}"] = True
 
     categorias_disponibles, proveedores_disponibles = opciones_catalogo(TIENDA_MODELOS)
-
-    pagination_params = request.GET.copy()
-    pagination_params.pop('page', None)
-    if selected_orden == 'relevancia':
-        pagination_params.pop('orden', None)
-    if not selected_precio:
-        pagination_params.pop('precio', None)
-    pagination_query = pagination_params.urlencode()
+    nombres_proveedor = {proveedor.pk: proveedor.nombre for proveedor in proveedores_disponibles}
+    chips = chips_de_filtros(estado, nombres_proveedor)
+    pagination_query = urlencode([(clave, valor) for clave, valor in estado['pares'] if clave != 'page'])
 
     context = {
         'productos': productos_page.object_list,
@@ -461,6 +464,8 @@ def mostrarTienda(request):
         'selected_orden': selected_orden,
         'novedades': novedades,
         'novedades_pendiente': novedades_pendiente,
+        'origen_home': estado['origen'] == 'home',
+        'chips': chips,
     }
     return render(request, 'core/tienda.html', context)
 

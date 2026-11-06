@@ -1,4 +1,5 @@
 from decimal import Decimal
+from urllib.parse import urlencode
 
 from django.db.models import Q
 
@@ -110,3 +111,157 @@ def campo_novedad(modelo):
 
 def catalogo_tiene_fechas(modelos) -> bool:
     return all(campo_novedad(modelo) for modelo in modelos)
+
+
+# origen=home marca la llegada desde Home. Se consume al cambiar categoría o
+# proveedor. heredado_* es la foto de esa llegada y solo viaja en el envío de Aplicar.
+_CLAVES_DE_ENVIO = ('aplicar', 'heredado_q', 'heredado_categoria', 'heredado_proveedor')
+
+
+def _limpio(valor):
+    return (valor or '').strip()
+
+
+def _ultimo_texto(valores):
+    limpios = [_limpio(valor) for valor in valores if _limpio(valor)]
+    return limpios[-1] if limpios else ''
+
+
+def _ultimo_proveedor(valores):
+    ids = ids_validos(_limpio(valor) for valor in valores)
+    return str(ids[-1]) if ids else ''
+
+
+def resolver_filtros_tienda(get):
+    """Deja como máximo una categoría y un proveedor, y reemplaza lo heredado de Home."""
+    categoria = _ultimo_texto(get.getlist('categoria'))
+    proveedor = _ultimo_proveedor(get.getlist('proveedor'))
+    consulta = _limpio(get.get('q'))
+    precio = _limpio(get.get('precio'))
+    if filtro_precio(precio) is None:
+        precio = ''
+    orden = _limpio(get.get('orden')) or 'relevancia'
+    if orden not in ORDENES_VALIDAS:
+        orden = 'relevancia'
+    novedades = get.get('novedades') == '1'
+    origen = 'home' if get.get('origen') == 'home' else ''
+    pagina = '' if 'aplicar' in get else _limpio(get.get('page'))
+
+    if origen == 'home' and 'aplicar' in get:
+        heredado_q = _limpio(get.get('heredado_q'))
+        heredado_categoria = _limpio(get.get('heredado_categoria'))
+        heredado_proveedor = _ultimo_proveedor([get.get('heredado_proveedor')])
+        cambio_categoria = categoria != heredado_categoria
+        cambio_proveedor = proveedor != heredado_proveedor
+        if cambio_categoria or cambio_proveedor:
+            if consulta == heredado_q:
+                consulta = ''
+            if not cambio_categoria:
+                categoria = ''
+            if not cambio_proveedor:
+                proveedor = ''
+            origen = ''
+
+    pares = []
+    if consulta:
+        pares.append(('q', consulta))
+    if categoria:
+        pares.append(('categoria', categoria))
+    if proveedor:
+        pares.append(('proveedor', proveedor))
+    if precio:
+        pares.append(('precio', precio))
+    if orden != 'relevancia':
+        pares.append(('orden', orden))
+    if novedades:
+        pares.append(('novedades', '1'))
+    if origen:
+        pares.append(('origen', origen))
+    if pagina:
+        pares.append(('page', pagina))
+
+    return {
+        'q': consulta,
+        'categoria': categoria,
+        'proveedor': proveedor,
+        'precio': precio,
+        'orden': orden,
+        'novedades': novedades,
+        'origen': origen,
+        'page': pagina,
+        'pares': pares,
+        'categorias': [categoria] if categoria else [],
+        'proveedores': [int(proveedor)] if proveedor else [],
+    }
+
+
+def debe_redirigir_filtros(get):
+    """Redirige cuando la URL trae duplicados, valores inválidos o el envío de Aplicar."""
+    if any(clave in get for clave in _CLAVES_DE_ENVIO):
+        return True
+    if 'origen' in get and get.get('origen') != 'home':
+        return True
+    categorias = [_limpio(valor) for valor in get.getlist('categoria') if _limpio(valor)]
+    if len(categorias) > 1:
+        return True
+    proveedores = [_limpio(valor) for valor in get.getlist('proveedor') if _limpio(valor)]
+    if len(proveedores) > 1 or (len(proveedores) == 1 and not ids_validos(proveedores)):
+        return True
+    precio = _limpio(get.get('precio'))
+    if precio and filtro_precio(precio) is None:
+        return True
+    orden = _limpio(get.get('orden'))
+    if orden and orden not in ORDENES_VALIDAS:
+        return True
+    return False
+
+
+def consulta_sin(pares, clave):
+    return urlencode([(k, v) for k, v in pares if k not in {clave, 'page'}])
+
+
+def chips_de_filtros(estado, nombres_proveedor):
+    pares = estado['pares']
+    chips = []
+    if estado['q']:
+        chips.append({
+            'nombre': 'búsqueda',
+            'etiqueta': f'Búsqueda: {estado["q"]}',
+            'consulta': consulta_sin(pares, 'q'),
+        })
+    if estado['categoria']:
+        chips.append({
+            'nombre': 'categoría',
+            'etiqueta': estado['categoria'],
+            'consulta': consulta_sin(pares, 'categoria'),
+        })
+    if estado['proveedor']:
+        marca = nombres_proveedor.get(int(estado['proveedor']), estado['proveedor'])
+        chips.append({
+            'nombre': 'proveedor',
+            'etiqueta': marca,
+            'consulta': consulta_sin(pares, 'proveedor'),
+        })
+    if estado['precio']:
+        etiqueta = next(
+            (banda['etiqueta'] for banda in BANDAS_PRECIO if banda['codigo'] == estado['precio']),
+            estado['precio'],
+        )
+        chips.append({
+            'nombre': 'precio',
+            'etiqueta': etiqueta,
+            'consulta': consulta_sin(pares, 'precio'),
+        })
+    if estado['orden'] != 'relevancia':
+        chips.append({
+            'nombre': 'orden',
+            'etiqueta': dict(ORDENES).get(estado['orden'], estado['orden']),
+            'consulta': consulta_sin(pares, 'orden'),
+        })
+    if estado['novedades']:
+        chips.append({
+            'nombre': 'novedades',
+            'etiqueta': 'Novedades',
+            'consulta': consulta_sin(pares, 'novedades'),
+        })
+    return chips

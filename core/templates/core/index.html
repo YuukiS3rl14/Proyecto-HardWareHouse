@@ -121,7 +121,7 @@
             <div class="owl-carousel vendor-carousel"> 
                 
                 <div class="mb-4">
-                    <a href="{% url 'core:tienda' %}?q=Procesador" class="category-card d-block text-decoration-none">
+                    <a href="{% url 'core:tienda' %}?categoria=CPU&origen=home" class="category-card d-block text-decoration-none">
                         <img class="card-img" src="{% static 'core/img/cpu.webp' %}" alt="Procesadores">
                         <div class="card-img-overlay d-flex flex-column justify-content-end p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
                             <h5 class="font-weight-semi-bold m-0 text-white">Procesadores (CPU)</h5>
@@ -130,7 +130,7 @@
                 </div>
                 
                 <div class="mb-4">
-                    <a href="{% url 'core:tienda' %}?q=Tarjeta Gráfica" class="category-card d-block text-decoration-none">
+                    <a href="{% url 'core:tienda' %}?categoria=Tarjeta%20Gr%C3%A1fica&origen=home" class="category-card d-block text-decoration-none">
                         <img class="card-img" src="{% static 'core/img/gpu.webp' %}" alt="Tarjetas Gráficas">
                         <div class="card-img-overlay d-flex flex-column justify-content-end p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
                             <h5 class="font-weight-semi-bold m-0 text-white">Tarjetas Gráficas (GPU)</h5>
@@ -139,7 +139,7 @@
                 </div>
                 
                 <div class="mb-4">
-                    <a href="{% url 'core:tienda' %}?q=Placa Madre" class="category-card d-block text-decoration-none">
+                    <a href="{% url 'core:tienda' %}?categoria=Placa%20Madre&origen=home" class="category-card d-block text-decoration-none">
                         <img class="card-img" src="{% static 'core/img/placa_madre.webp' %}" alt="Placas Madre">
                         <div class="card-img-overlay d-flex flex-column justify-content-end p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
                             <h5 class="font-weight-semi-bold m-0 text-white">Placas Madre</h5>
@@ -148,7 +148,7 @@
                 </div>
                 
                 <div class="mb-4">
-                    <a href="{% url 'core:tienda' %}?q=Memoria RAM" class="category-card d-block text-decoration-none">
+                    <a href="{% url 'core:tienda' %}?categoria=Memoria%20RAM&origen=home" class="category-card d-block text-decoration-none">
                         <img class="card-img" src="{% static 'core/img/ram.webp' %}" alt="RAM">
                         <div class="card-img-overlay d-flex flex-column justify-content-end p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
                             <h5 class="font-weight-semi-bold m-0 text-white">Memoria RAM</h5>
@@ -157,7 +157,7 @@
                 </div>
                 
                 <div class="mb-4">
-                    <a href="{% url 'core:tienda' %}?q=Almacenamiento" class="category-card d-block text-decoration-none">
+                    <a href="{% url 'core:tienda' %}?q=Almacenamiento&origen=home" class="category-card d-block text-decoration-none">
                         <img class="card-img" src="{% static 'core/img/samsung_ssd.webp' %}" alt="SSD / HDD">
                         <div class="card-img-overlay d-flex flex-column justify-content-end p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
                             <h5 class="font-weight-semi-bold m-0 text-white">Almacenamiento</h5>
@@ -166,7 +166,7 @@
                 </div>
                 
                 <div class="mb-4">
-                    <a href="{% url 'core:tienda' %}?q=Fuente de Poder" class="category-card d-block text-decoration-none">
+                    <a href="{% url 'core:tienda' %}?categoria=Fuente%20de%20Poder&origen=home" class="category-card d-block text-decoration-none">
                         <img class="card-img" src="{% static 'core/img/psg105071011690914311_480x480.webp' %}" alt="Fuentes de poder">
                         <div class="card-img-overlay d-flex flex-column justify-content-end p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
                             <h5 class="font-weight-semi-bold m-0 text-white">Fuentes de Poder</h5>
@@ -191,7 +191,7 @@
             <div class="owl-carousel vendor-carousel">
                 {% for proveedor in proveedores %}
                     <div class="vendor-item border p-4 d-flex align-items-center justify-content-center bg-white" style="height: 100px;">
-                        <a href="{% url 'core:tienda' %}?proveedor={{ proveedor.id }}">
+                        <a href="{% url 'core:tienda' %}?proveedor={{ proveedor.id }}&origen=home">
                             <img src="{{ proveedor.logo.url }}" alt="{{ proveedor.nombre }}" class="img-fluid"
                                 style="max-height: 100%; max-width: 100%; object-fit: contain;" />
                         </a>

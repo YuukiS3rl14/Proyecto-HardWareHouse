@@ -54,6 +54,33 @@
     gap: 0.5rem;
 }
 
+.catalog-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: -0.5rem;
+}
+
+.catalog-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--hw-green, #16a34a);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--hw-green-dark, #15803d);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.catalog-chip:hover,
+.catalog-chip:focus-visible {
+    background: var(--hw-green, #16a34a);
+    color: #fff;
+}
+
 .catalog-toolbar .form-select {
     border-color: var(--hw-border);
     border-radius: var(--hw-radius-sm);
