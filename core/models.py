@@ -60,6 +60,16 @@ class ProductoComercial(models.Model):
             'Se actualiza solo al guardar. No reconstruye cambios anteriores a este campo.'
         ),
     )
+    stock_minimo = models.PositiveIntegerField(
+        default=3,
+        verbose_name='Stock mínimo',
+        help_text='Hasta esta cantidad, el stock queda en estado crítico. Cero sigue siendo agotado.',
+    )
+    stock_advertencia = models.PositiveIntegerField(
+        default=5,
+        verbose_name='Umbral de advertencia',
+        help_text='Hasta esta cantidad, por encima del mínimo, el stock queda en advertencia.',
+    )
     en_oferta = models.BooleanField(default=False, verbose_name='En oferta')
     precio_oferta = models.DecimalField(
         max_digits=10,
@@ -84,6 +94,10 @@ class ProductoComercial(models.Model):
             raise ValidationError({
                 'precio_oferta': 'Indica un precio de oferta positivo y menor que el precio original.',
             })
+        if self.stock_advertencia < self.stock_minimo:
+            raise ValidationError({
+                'stock_advertencia': 'El umbral de advertencia debe ser mayor o igual que el stock mínimo.',
+            })
 
     @property
     def precio_vigente(self):
@@ -105,6 +119,15 @@ class ProductoComercial(models.Model):
         )
         valor = int(porcentaje)
         return valor or None
+
+
+def restriccion_stock():
+    return [
+        models.CheckConstraint(
+            check=Q(stock_advertencia__gte=F('stock_minimo')),
+            name='%(app_label)s_%(class)s_umbral_stock',
+        ),
+    ]
 
 
 def restriccion_oferta():
@@ -196,7 +219,7 @@ class Procesador(ProductoComercial):
 
     class Meta:
         verbose_name_plural = "Procesadores (CPU)"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[CPU | {self.proveedor.nombre}] {self.nombre}"
 
@@ -252,7 +275,7 @@ class TarjetaGrafica(ProductoComercial):
 
     class Meta:
         verbose_name_plural = "Tarjetas Gráficas (GPU)"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[GPU | {self.proveedor.nombre}] {self.nombre}"
 
@@ -310,7 +333,7 @@ class MemoriaRam(ProductoComercial):
     
     class Meta:
         verbose_name_plural = "Memorias RAM"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[RAM | {self.proveedor.nombre}] {self.nombre}"
 
@@ -410,7 +433,7 @@ class PlacaMadre(ProductoComercial):
 
     class Meta:
         verbose_name_plural = "Placas Madre"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[MB | {self.proveedor.nombre}] {self.nombre}"
 
@@ -432,7 +455,7 @@ class AlmacenamientoSSD(ProductoComercial):
     
     class Meta:
         verbose_name_plural = "Almacenamiento SSD"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[SSD | {self.proveedor.nombre}] {self.nombre}"
 
@@ -468,7 +491,7 @@ class AlmacenamientoHDD(ProductoComercial):
 
     class Meta:
         verbose_name_plural = "Almacenamiento HDD"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[HDD | {self.proveedor.nombre}] {self.nombre}"
 
@@ -512,7 +535,7 @@ class Gabinete(ProductoComercial):
 
     class Meta:
         verbose_name_plural = "Gabinetes"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[Case | {self.proveedor.nombre}] {self.nombre}"
 
@@ -535,7 +558,7 @@ class FuenteDePoder(ProductoComercial):
     
     class Meta:
         verbose_name_plural = "Fuentes de Poder (PSU)"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[PSU | {self.proveedor.nombre}] {self.nombre}"
     
@@ -576,7 +599,7 @@ class RefrigeracionCooler(ProductoComercial):
 
     class Meta:
         verbose_name_plural = "Refrigeración (Cooler)"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[Cooler | {self.proveedor.nombre}] {self.nombre}"
 
@@ -594,7 +617,7 @@ class Ventilador(ProductoComercial):
 
     class Meta:
         verbose_name_plural = "Ventiladores"
-        constraints = restriccion_oferta()
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[Fan | {self.proveedor.nombre}] {self.nombre}"
 

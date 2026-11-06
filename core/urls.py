@@ -13,6 +13,8 @@ from core.chatbot.api import (
     chat_asistente_config_api,
 )
 
+from core.alertas_stock import vista_alertas_stock
+
 from .forms import LoginForm
 from .views import *
 
@@ -42,6 +44,7 @@ urlpatterns = [
     path('api/catalogo/total-armado/', catalogo_total_armado_api, name='catalogo_total_armado_api'),
     path('api/catalogo/metadata/', catalogo_metadata_api, name='catalogo_metadata_api'),
     path('registro/', mostrarRegistro, name='registro'),
+    path('personal/alertas-stock/', vista_alertas_stock, name='alertas_stock'),
     path('perfil/', verPerfil, name='perfil'),
     path(
         'login/',

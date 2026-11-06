@@ -52,6 +52,10 @@ class ProductoAdminBase(admin.ModelAdmin):
         for nombre, opciones in super().get_fieldsets(request, obj):
             opciones = dict(opciones)
             campos = list(opciones.get('fields') or ())
+            if 'stock' in campos and 'stock_minimo' not in campos:
+                indice_stock = campos.index('stock') + 1
+                campos[indice_stock:indice_stock] = ['stock_minimo', 'stock_advertencia']
+                opciones['fields'] = tuple(campos)
             if nombre == 'Información General' and 'precio' in campos and 'en_oferta' not in campos:
                 indice = campos.index('precio') + 1
                 campos[indice:indice] = ['en_oferta', 'precio_oferta', 'porcentaje_descuento']

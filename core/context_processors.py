@@ -18,5 +18,13 @@ def extras_context(request):
         context['cart_item_count'] = carrito.items.count()
             
         context['favorite_item_count'] = Favorito.objects.filter(usuario=request.user).count()
-        
+
+    usuario = request.user
+    if usuario.is_authenticated and usuario.is_active and usuario.is_staff:
+        from core.alertas_stock import aviso_visible, problemas, resumen
+
+        filas = problemas(request)
+        context['alertas_stock'] = resumen(filas)
+        context['mostrar_aviso_stock'] = aviso_visible(request, filas)
+
     return context
