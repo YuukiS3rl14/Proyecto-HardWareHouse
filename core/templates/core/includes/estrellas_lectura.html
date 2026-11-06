@@ -1,0 +1,8 @@
+<span class="hw-stars-line">
+    <span class="hw-stars-read" aria-hidden="true">
+        {% for estado in estados %}
+        <span class="hw-star-read is-{{ estado }}"><i class="far fa-star"></i><i class="fas fa-star hw-star-fill"></i></span>
+        {% endfor %}
+    </span>
+    <small class="hw-rating-text">{{ texto }}</small>
+</span>

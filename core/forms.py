@@ -4,10 +4,14 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserChangeForm
+from django.core.exceptions import ValidationError
+
+from core.calificaciones import validar_media_estrella
+from core.telefonos import PAISES, normalizar_telefono
+from core.widgets import EstrellasWidget
 from .models import *
 
 _NOMBRE_CONTACTO = re.compile(r"^[^\W\d_]+(?:[ '\u2019-][^\W\d_]+)*$")
-_TELEFONO = re.compile(r'^[0-9+\-().\s]{1,20}$')
 
 
 class LoginForm(AuthenticationForm):
@@ -80,6 +84,18 @@ class UserEditForm(UserChangeForm):
         return email
 
 class ComentarioForm(forms.ModelForm):
+    calificacion = forms.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        label='Calificación',
+        validators=[validar_media_estrella],
+        widget=EstrellasWidget(),
+        error_messages={
+            'required': 'Selecciona una calificación.',
+            'invalid': 'La calificación debe ir de 0,5 a 5, en medios puntos.',
+        },
+    )
+
     class Meta:
         model = Comentario
         fields = ['titulo', 'texto', 'calificacion']
@@ -92,24 +108,32 @@ class ComentarioForm(forms.ModelForm):
             'texto': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 4,
-                'placeholder': 'Escribe tu reseña aquí...'
+                'maxlength': '1500',
+                'placeholder': 'Escribe tu reseña aquí...',
+                'data-contador': 'contador-resena',
             }),
-            'calificacion': forms.Select(choices=[(i, f'{i} estrellas') for i in range(1, 6)], attrs={
-                'class': 'form-control'
-            })
         }
         labels = {
             'titulo': 'Título de tu reseña',
             'texto': 'Tu opinión',
-            'calificacion': 'Calificación'
         }
+        error_messages = {
+            'titulo': {'max_length': 'El título admite como máximo 100 caracteres.'},
+            'texto': {'max_length': 'La reseña admite como máximo 1500 caracteres.'},
+        }
+
+    def clean_calificacion(self):
+        return validar_media_estrella(self.cleaned_data.get('calificacion'))
 
 
 class ContactoForm(forms.Form):
     nombre = forms.CharField(
         max_length=100,
         label='Nombre',
-        error_messages={'required': 'Ingresa tu nombre.'},
+        error_messages={
+            'required': 'Ingresa tu nombre.',
+            'max_length': 'El nombre admite como máximo 100 caracteres.',
+        },
     )
     email = forms.EmailField(
         max_length=254,
@@ -117,9 +141,16 @@ class ContactoForm(forms.Form):
         error_messages={
             'required': 'Ingresa tu correo.',
             'invalid': 'Ingresa un correo válido.',
+            'max_length': 'El correo admite como máximo 254 caracteres.',
         },
     )
-    telefono = forms.CharField(
+    telefono_pais = forms.ChoiceField(
+        required=False,
+        initial='CL',
+        choices=[(pais['codigo'], pais['nombre']) for pais in PAISES],
+        label='País',
+    )
+    telefono_nacional = forms.CharField(
         max_length=20,
         required=False,
         label='Teléfono',
@@ -127,13 +158,19 @@ class ContactoForm(forms.Form):
     asunto = forms.CharField(
         max_length=120,
         label='Asunto',
-        error_messages={'required': 'Ingresa un asunto.'},
+        error_messages={
+            'required': 'Ingresa un asunto.',
+            'max_length': 'El asunto admite como máximo 120 caracteres.',
+        },
     )
     mensaje = forms.CharField(
         max_length=2000,
         label='Mensaje',
         widget=forms.Textarea,
-        error_messages={'required': 'Ingresa un mensaje.'},
+        error_messages={
+            'required': 'Ingresa un mensaje.',
+            'max_length': 'El mensaje admite como máximo 2000 caracteres.',
+        },
     )
 
     def clean_nombre(self):
@@ -144,10 +181,14 @@ class ContactoForm(forms.Form):
             )
         return nombre
 
-    def clean_telefono(self):
-        telefono = (self.cleaned_data.get('telefono') or '').strip()
-        if telefono and _TELEFONO.fullmatch(telefono) is None:
-            raise forms.ValidationError(
-                'El teléfono admite hasta 20 caracteres: números, espacios, +, -, paréntesis y puntos.'
-            )
-        return telefono
+    def clean(self):
+        datos = super().clean()
+        nacional = (datos.get('telefono_nacional') or '').strip()
+        if not nacional:
+            datos['telefono'] = ''
+            return datos
+        try:
+            datos['telefono'] = normalizar_telefono(datos.get('telefono_pais') or 'CL', nacional)
+        except ValidationError as error:
+            self.add_error('telefono_nacional', error)
+        return datos

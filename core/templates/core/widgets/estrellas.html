@@ -1,0 +1,14 @@
+<div class="hw-rating" data-estrellas>
+    <div class="hw-stars" role="radiogroup" aria-label="Calificación de 0,5 a 5 estrellas">
+        {% for estrella in widget.estrellas %}
+        <div class="hw-star" data-full="{{ estrella.entera }}">
+            <input class="hw-star-input" type="radio" name="{{ widget.name }}" id="{{ widget.attrs.id }}_{{ forloop.counter }}_media" value="{{ estrella.mitad }}" {% if estrella.mitad_elegida %}checked{% endif %} {% if forloop.first %}required{% endif %}>
+            <label class="hw-star-hit hw-star-hit-left" for="{{ widget.attrs.id }}_{{ forloop.counter }}_media"><span class="visually-hidden">{{ estrella.etiqueta_mitad }} de 5 estrellas</span></label>
+            <input class="hw-star-input" type="radio" name="{{ widget.name }}" id="{{ widget.attrs.id }}_{{ forloop.counter }}" value="{{ estrella.entera }}" {% if estrella.entera_elegida %}checked{% endif %}>
+            <label class="hw-star-hit hw-star-hit-right" for="{{ widget.attrs.id }}_{{ forloop.counter }}"><span class="visually-hidden">{{ estrella.etiqueta_entera }} de 5 estrellas</span></label>
+            <span class="hw-star-face" aria-hidden="true"><i class="far fa-star"></i><i class="fas fa-star hw-star-fill"></i></span>
+        </div>
+        {% endfor %}
+    </div>
+    <p class="hw-rating-text" aria-live="polite">{{ widget.texto }}</p>
+</div>

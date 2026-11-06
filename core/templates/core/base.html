@@ -25,7 +25,7 @@
     <link href="{% static 'core/css/style.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style2.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/custom.css' %}?v=usuario1" rel="stylesheet">
-    <link href="{% static 'core/css/theme.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/theme.css' %}?v=visual2" rel="stylesheet">
     <link href="{% static 'core/css/responsive.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/chat-widget.css' %}" rel="stylesheet">
 
@@ -249,17 +249,17 @@
     {% endblock %}
 
     {% block footer %}
-    <div class="container-fluid bg-dark text-light mt-5 pt-5 pb-3">
+    <div class="container-fluid bg-dark text-light hw-site-footer pt-5 pb-4">
         <div class="row px-xl-5">
-            <div class="col-md-6 col-lg-4 mb-5">
+            <div class="col-md-6 col-lg-4 mb-4">
                 <h5 class="font-weight-bold text-success mb-4">HardWareHouse</h5>
                 <p>Tu tienda de confianza en hardware de computador. Ofrecemos calidad, asesoría y armado personalizado.
                 </p>
-                <p><i class="fa fa-map-marker-alt text-success mr-2"></i>Av. Tecnología 123, Santiago, Chile</p>
+                <p><i class="fa fa-map-marker-alt text-success mr-2"></i>{{ direccion_publica }}</p>
                 <p><i class="fa fa-envelope text-success mr-2"></i>{{ contacto_email }}</p>
                 <p><i class="fa fa-phone-alt text-success mr-2"></i>+56 9 1234 5678</p>
             </div>
-            <div class="col-md-6 col-lg-4 mb-5">
+            <div class="col-md-6 col-lg-4 mb-4">
                 <h5 class="font-weight-bold text-success mb-4">Enlaces rápidos</h5>
                 <div class="d-flex flex-column">
                     <a class="text-light mb-2" href="{% url 'core:index' %}"><i class="fa fa-angle-right mr-2"></i>Inicio</a>
@@ -271,7 +271,7 @@
                     <a class="text-light" href="{% url 'core:contacto' %}"><i class="fa fa-angle-right mr-2"></i>Contacto</a>
                 </div>
             </div>
-            <div class="col-md-12 col-lg-4 mb-5">
+            <div class="col-md-12 col-lg-4 mb-0">
                 <h5 class="font-weight-bold text-success mb-4">Suscríbete</h5>
                 <form>
                     <div class="input-group">

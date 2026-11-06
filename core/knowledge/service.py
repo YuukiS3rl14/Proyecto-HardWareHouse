@@ -63,7 +63,7 @@ def _bloque_contacto(datos: dict) -> str:
     contacto = datos['contact']
     partes = [
         f'Canales publicados: formulario en {_ruta("core:contacto")}.',
-        'La dirección y el teléfono publicados son datos de ejemplo.',
+        'El teléfono publicado es un dato de ejemplo.',
     ]
     for campo in ('address', 'email', 'phone'):
         item = contacto[campo]

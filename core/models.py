@@ -5,7 +5,9 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxLengthValidator, MaxValueValidator, MinValueValidator
+
+from core.calificaciones import validar_media_estrella
 from django.db import models
 from django.db.models import Case, DecimalField, F, Q, When
 from django.utils import timezone
@@ -629,10 +631,12 @@ class Ventilador(ProductoComercial):
 class Comentario(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     titulo = models.CharField(max_length=100)
-    texto = models.TextField()
-    calificacion = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Calificación de 1 a 5 estrellas."
+    texto = models.TextField(max_length=1500, validators=[MaxLengthValidator(1500)])
+    calificacion = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        validators=[validar_media_estrella],
+        help_text="Calificación de 0,5 a 5 estrellas, en medios puntos.",
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     

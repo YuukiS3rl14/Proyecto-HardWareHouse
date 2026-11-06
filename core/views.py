@@ -282,7 +282,12 @@ def mostrarContacto(request):
                 )
     else:
         form = ContactoForm()
-    return render(request, 'core/contacto.html', {'form': form})
+    from core.telefonos import PAISES, reglas_publicas
+    return render(request, 'core/contacto.html', {
+        'form': form,
+        'paises_telefono': PAISES,
+        'reglas_telefono': reglas_publicas(),
+    })
 
 
 def mostrarSobreNosotros(request):
@@ -311,42 +316,44 @@ PRODUCT_MODEL_MAP = {
     'ventilador': Ventilador,
 }
 
-def mostrarDetalle(request, model_name, pk):
-    model_name_lower = model_name.lower()
+def _producto_publico(model_name, pk):
+    model_name_lower = (model_name or '').lower()
     ModelClass = PRODUCT_MODEL_MAP.get(model_name_lower)
-    
     if not ModelClass:
-        raise Http404("Tipo de producto no encontrado.")
+        return None
+    producto = ModelClass.objects.select_related('proveedor').filter(pk=pk).first()
+    if producto is None or es_demo(producto):
+        return None
+    return producto, model_name_lower
 
-    producto = get_object_or_404(ModelClass.objects.select_related('proveedor'), pk=pk)
-    if es_demo(producto):
-        raise Http404('Producto no encontrado.')
-    
+
+def _render_detalle(request, producto, model_name, comentario_form):
     is_favorito = False
     if request.user.is_authenticated:
-        lookup_kwargs = {f'{model_name_lower}__id': pk, 'usuario': request.user}
+        lookup_kwargs = {f'{model_name}__id': producto.pk, 'usuario': request.user}
         is_favorito = Favorito.objects.filter(**lookup_kwargs).exists()
 
-    comment_lookup = {f'{model_name_lower}_id': pk}
-    comentarios = Comentario.objects.filter(**comment_lookup).order_by('-fecha_creacion')
-    
-    stats_comentarios = comentarios.aggregate(
-        promedio=Avg('calificacion'),
-        total=Count('id')
-    )
-    promedio_calificacion = stats_comentarios['promedio'] or 0
-    total_comentarios = stats_comentarios['total']
-
-    context = {
+    comentarios = Comentario.objects.filter(**{f'{model_name}_id': producto.pk}).order_by('-fecha_creacion')
+    stats_comentarios = comentarios.aggregate(promedio=Avg('calificacion'), total=Count('id'))
+    return render(request, 'core/detalle.html', {
         'producto': producto,
-        'model_name': model_name_lower, 
+        'model_name': model_name,
         'is_favorito': is_favorito,
         'comentarios': comentarios,
-        'promedio_calificacion': promedio_calificacion,
-        'total_comentarios': total_comentarios,
-        'comentario_form': ComentarioForm(),
-    }
-    return render(request, 'core/detalle.html', context)
+        'promedio_calificacion': stats_comentarios['promedio'] or 0,
+        'total_comentarios': stats_comentarios['total'],
+        'comentario_form': comentario_form,
+    })
+
+
+def mostrarDetalle(request, model_name, pk):
+    from core.errores import producto_no_encontrado
+
+    encontrado = _producto_publico(model_name, pk)
+    if encontrado is None:
+        return producto_no_encontrado()
+    producto, model_name_lower = encontrado
+    return _render_detalle(request, producto, model_name_lower, ComentarioForm())
 
 TIENDA_PAGE_SIZE = 50
 BUSQUEDA_MAX = 120
@@ -1392,25 +1399,26 @@ def eliminar_favorito(request, fav_id):
 
 @login_required
 def agregar_comentario(request, model_name, pk):
-    if request.method == 'POST':
-        form = ComentarioForm(request.POST)
-        ModelClass = PRODUCT_MODEL_MAP.get(model_name)
-        
-        if not ModelClass:
-            raise Http404("Tipo de producto no encontrado.")
-        
-        producto = get_object_or_404(ModelClass, pk=pk)
+    from core.errores import producto_no_encontrado
 
-        if form.is_valid():
-            comentario = form.save(commit=False)
-            comentario.usuario = request.user
-            setattr(comentario, model_name, producto)
-            comentario.save()
-            messages.success(request, "¡Gracias por tu reseña! Tu comentario ha sido publicado.")
-        else:
-            messages.error(request, "Hubo un error al publicar tu comentario. Por favor, revisa los campos.")
+    if request.method != 'POST':
+        return redirect('core:detalle', model_name=model_name, pk=pk)
 
-    return redirect('core:detalle', model_name=model_name, pk=pk)
+    encontrado = _producto_publico(model_name, pk)
+    if encontrado is None:
+        return producto_no_encontrado()
+    producto, model_name_lower = encontrado
+    form = ComentarioForm(request.POST)
+    if form.is_valid():
+        comentario = form.save(commit=False)
+        comentario.usuario = request.user
+        setattr(comentario, model_name_lower, producto)
+        comentario.save()
+        messages.success(request, "¡Gracias por tu reseña! Tu comentario ha sido publicado.")
+        return redirect('core:detalle', model_name=model_name_lower, pk=pk)
+
+    messages.error(request, "Hubo un error al publicar tu comentario. Por favor, revisa los campos.")
+    return _render_detalle(request, producto, model_name_lower, form)
 
 # --- VISTAS DE PEDIDOS ---
 

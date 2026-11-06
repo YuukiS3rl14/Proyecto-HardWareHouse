@@ -47,7 +47,8 @@ def _contacto(**cambios):
     datos = {
         'nombre': 'Ana Soto',
         'email': 'ana@example.com',
-        'telefono': '+56 9 1234 5678',
+        'telefono_pais': 'CL',
+        'telefono_nacional': '9 1234 5678',
         'asunto': 'Consulta técnica',
         'mensaje': 'Quiero orientación para un armado.',
     }
@@ -120,13 +121,16 @@ class CorreoEmailJsTests(TestCase):
         self.assertEqual(parametros['email'], 'ana@example.com')
         self.assertEqual(parametros['mensaje'], 'Quiero orientación para un armado.')
         self.assertEqual(parametros['reply_to'], 'ana@example.com')
+        self.assertEqual(parametros['telefono'], '+56912345678')
         self.assertEqual(parametros['contacto_destino'], 'contacto@hardwarehouse.cl')
         self.assertEqual(parametros['destino'], 'contacto@hardwarehouse.cl')
         self.assertNotIn('cliente_email', parametros)
         for correo in CORREOS_PERSONALES:
             self.assertNotIn(correo, str(parametros))
         self.assertContains(respuesta, 'contacto@hardwarehouse.cl')
+        self.assertContains(respuesta, 'INACAP Puente Alto')
         self.assertNotContains(respuesta, 'contacto@techparts.cl')
+        self.assertNotContains(respuesta, 'Av. Tecnología 123')
 
     def test_el_contacto_invalido_o_sin_servicio_no_llama_a_emailjs(self):
         with patch('core.correo.requests.post') as envio:

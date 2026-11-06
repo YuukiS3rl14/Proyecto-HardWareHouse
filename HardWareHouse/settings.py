@@ -403,6 +403,19 @@ CONTACTO_EMAIL = (
     or os.environ.get('CONTACTO_EMAIL')
     or 'contacto@hardwarehouse.cl'
 ).strip()
+DIRECCION_PUBLICA = (
+    'INACAP Puente Alto, Av. Concha y Toro 1341, Puente Alto '
+    '(entre Hospital y Protectora)'
+)
+MAPA_EMBED = (
+    'https://www.google.com/maps?q='
+    'INACAP%20Puente%20Alto%20Av.%20Concha%20y%20Toro%201341%20Puente%20Alto'
+    '&output=embed'
+)
+MAPA_ENLACE = (
+    'https://www.google.com/maps/search/?api=1&query='
+    'INACAP%20Puente%20Alto%20Av.%20Concha%20y%20Toro%201341%20Puente%20Alto'
+)
 
 # EmailJS se llama solo desde el servidor. Las claves no se renderizan en el HTML.
 EMAILJS_SERVICE_ID = os.environ.get('EMAILJS_SERVICE_ID', '').strip()

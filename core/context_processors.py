@@ -12,6 +12,9 @@ def extras_context(request):
         'favorite_item_count': 0,
         'asistente_config': asistente,
         'contacto_email': settings.CONTACTO_EMAIL,
+        'direccion_publica': settings.DIRECCION_PUBLICA,
+        'mapa_embed': settings.MAPA_EMBED,
+        'mapa_enlace': settings.MAPA_ENLACE,
     }
     if request.user.is_authenticated:
         carrito, created = Carrito.objects.get_or_create(usuario=request.user)

@@ -6,7 +6,7 @@
 {% block tittle %} Tienda {% endblock %}
 
 {% block extra_head %}
-<link href="{% static 'core/css/tienda-filtros.css' %}?v=filtros4" rel="stylesheet">
+<link href="{% static 'core/css/tienda-filtros.css' %}?v=filtros5" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
 {% endblock %}
@@ -16,7 +16,7 @@
 <div class="container-fluid pt-5">
     <div class="row px-xl-5">
         <div class="col-12">
-            <button type="button" class="btn btn-outline-dark catalog-filters-toggle d-lg-none mb-3" id="abrir-filtros" aria-controls="panel-filtros" aria-expanded="false">
+            <button type="button" class="btn btn-outline-success catalog-filters-toggle d-lg-none mb-3" id="abrir-filtros" aria-controls="panel-filtros" aria-expanded="false">
                 <i class="fa fa-ellipsis-v" aria-hidden="true"></i> Filtros
             </button>
             <form action="{% url 'core:tienda' %}" method="GET" class="catalog-toolbar" id="filtros-catalogo" aria-label="Filtros del catálogo">
@@ -72,7 +72,7 @@
                     </div>
                     <div class="catalog-filter-actions">
                         <button type="submit" class="btn btn-success">Aplicar</button>
-                        <a href="{% url 'core:tienda' %}" class="btn btn-outline-dark">Limpiar</a>
+                        <a href="{% url 'core:tienda' %}" class="btn btn-outline-success">Limpiar</a>
                     </div>
                 </div>
             </form>

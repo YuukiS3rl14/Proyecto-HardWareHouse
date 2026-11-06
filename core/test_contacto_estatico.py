@@ -33,7 +33,8 @@ class ContactoEstaticoTests(SimpleTestCase):
         self.assertIn("getElementById('contactForm')", texto)
         self.assertLess(texto.index('if (!mensaje)'), texto.index('event.preventDefault()'))
         self.assertIn('nombreOk', texto)
-        self.assertIn('telefonoOk', texto)
+        self.assertIn('telefonoInvalido', texto)
+        self.assertIn('preventDefault', texto)
 
     def test_la_pagina_publica_el_post_y_renueva_main_js(self):
         respuesta = self.client.get(reverse('core:contacto'))
@@ -43,6 +44,8 @@ class ContactoEstaticoTests(SimpleTestCase):
         self.assertContains(respuesta, 'id="contactForm"')
         self.assertContains(respuesta, 'core/js/main.js?v=contacto1')
         self.assertContains(respuesta, 'core/js/contacto.js')
+        self.assertContains(respuesta, 'Chile (+56)')
+        self.assertContains(respuesta, 'name="telefono_nacional"')
         self.assertLess(html.index('core/js/main.js'), html.index('core/js/contacto.js'))
         self.assertNotIn('popup-bg', html)
         self.assertNotIn('login-registro.js', html)

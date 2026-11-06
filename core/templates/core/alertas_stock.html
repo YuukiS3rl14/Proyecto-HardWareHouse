@@ -4,7 +4,7 @@
 {% block tittle %}Control de stock{% endblock %}
 
 {% block extra_head %}
-<link href="{% static 'core/css/inventario.css' %}" rel="stylesheet">
+<link href="{% static 'core/css/inventario.css' %}?v=visual1" rel="stylesheet">
 {% endblock %}
 
 {% block principal %}
@@ -82,10 +82,10 @@
     </div>
 
     <div id="stock-tabla" {% if not pagina.object_list %}hidden{% endif %}>
-    <div class="table-responsive">
-        <table class="table align-middle hw-stock-table">
+    <div class="hw-table-wrap">
+        <table class="table table-hover table-stack align-middle hw-stock-table mb-0">
             <caption class="visually-hidden">Productos con stock por revisar, ordenados por urgencia</caption>
-            <thead>
+            <thead class="thead-dark">
                 <tr>
                     <th scope="col">Producto</th>
                     <th scope="col">Identificador</th>
@@ -101,7 +101,7 @@
             <tbody>
                 {% for fila in pagina.object_list %}
                 <tr data-modelo="{{ fila.model_name }}" data-pk="{{ fila.pk }}" data-minimo="{{ fila.stock_minimo }}" data-advertencia="{{ fila.stock_advertencia }}">
-                    <td data-label="Producto">
+                    <td class="cell-product" data-label="Producto">
                         <div class="d-flex align-items-center gap-2">
                             <img src="{{ fila.imagen_url }}" alt="" width="48" height="48" class="rounded border" style="object-fit: cover;">
                             <span>{{ fila.nombre }}</span>
@@ -123,12 +123,12 @@
                     </td>
                     <td class="js-unidades" data-label="Reponer">{{ fila.unidades }}</td>
                     <td data-label="Gestión">
-                        <a href="{% url 'core:movimientos_producto' fila.model_name fila.pk %}">Historial</a>
+                        <a class="btn btn-sm btn-outline-success" href="{% url 'core:movimientos_producto' fila.model_name fila.pk %}"><i class="fas fa-history mr-1" aria-hidden="true"></i>Historial</a>
                         {% if fila.puede_editar %}
                         <button type="button" class="btn btn-sm btn-outline-success js-editar">Editar</button>
                         <span class="js-acciones-edicion d-none">
                             <button type="button" class="btn btn-sm btn-success js-guardar">Guardar</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary js-cancelar">Cancelar</button>
+                            <button type="button" class="btn btn-sm btn-outline-success js-cancelar">Cancelar</button>
                         </span>
                         {% else %}
                         <span class="text-muted">Sin permiso de edición</span>
