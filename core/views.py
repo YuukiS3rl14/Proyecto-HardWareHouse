@@ -43,6 +43,7 @@ from django.db import transaction
 from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Count
 from core.catalogo.registry import CATALOGO_MODELOS, model_name_for
+from core.cuentas import asignar_grupo_cliente
 from core.piezas_demo import es_demo, sin_demo
 from core.tienda_filtros import (
     BANDAS_PRECIO,
@@ -475,8 +476,10 @@ def mostrarRegistro(request):
         form = RegistroForm(data=request.POST) 
         
         if form.is_valid():
-            user = form.save()
-            
+            with transaction.atomic():
+                user = form.save()
+                asignar_grupo_cliente(user)
+
             user_authenticated = authenticate(
                 request,
                 username=form.cleaned_data["username"], 
