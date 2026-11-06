@@ -63,7 +63,7 @@ def _bloque_contacto(datos: dict) -> str:
     contacto = datos['contact']
     partes = [
         f'Canales publicados: formulario en {_ruta("core:contacto")}.',
-        'Dirección, correo y teléfono que aparecen en el sitio son datos de ejemplo.',
+        'La dirección y el teléfono publicados son datos de ejemplo.',
     ]
     for campo in ('address', 'email', 'phone'):
         item = contacto[campo]
@@ -71,6 +71,8 @@ def _bloque_contacto(datos: dict) -> str:
             partes.append(
                 f'{campo}: "{item["value"]}" está marcado como ejemplo. {item.get("note", "")}'.strip()
             )
+        else:
+            partes.append(f'{campo}: {item["value"]}. {item.get("note", "")}'.strip())
     partes.append(f'Escríbenos en {_ruta("core:contacto")}.')
     return ' '.join(partes)
 

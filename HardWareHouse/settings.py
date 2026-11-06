@@ -396,6 +396,14 @@ PAYPAL_RECEIVER_EMAIL = os.environ.get(
 ).strip()
 PAYPAL_TEST = env_bool('PAYPAL_TEST', default=True)
 
+# Buzón público del formulario. EmailJS entrega aquí; Cloudflare reenvía al equipo.
+# Django no lee WORKER_EMAIL ni ADMIN_EMAIL y no envía por SMTP.
+CONTACTO_EMAIL = (
+    os.environ.get('CONTACT_EMAIL')
+    or os.environ.get('CONTACTO_EMAIL')
+    or 'contacto@hardwarehouse.cl'
+).strip()
+
 # EmailJS se llama solo desde el servidor. Las claves no se renderizan en el HTML.
 EMAILJS_SERVICE_ID = os.environ.get('EMAILJS_SERVICE_ID', '').strip()
 EMAILJS_TEMPLATE_CONTACTO = os.environ.get('EMAILJS_TEMPLATE_CONTACTO', '').strip()

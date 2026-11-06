@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from core.chatbot.assistant_config import get_asistente_config
 
 from .models import *
@@ -9,6 +11,7 @@ def extras_context(request):
         'cart_item_count': 0,
         'favorite_item_count': 0,
         'asistente_config': asistente,
+        'contacto_email': settings.CONTACTO_EMAIL,
     }
     if request.user.is_authenticated:
         carrito, created = Carrito.objects.get_or_create(usuario=request.user)

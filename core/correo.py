@@ -49,6 +49,7 @@ def contacto_bloqueado(request):
 
 
 def enviar_contacto(datos):
+    destino = (getattr(settings, 'CONTACTO_EMAIL', '') or '').strip()
     parametros = {
         'from_name': datos['nombre'],
         'nombre': datos['nombre'],
@@ -62,6 +63,8 @@ def enviar_contacto(datos):
         'mensaje': datos['mensaje'],
         'message': datos['mensaje'],
         'to_name': 'HardWareHouse',
+        'contacto_destino': destino,
+        'destino': destino,
     }
     return _enviar(settings.EMAILJS_TEMPLATE_CONTACTO, parametros)
 

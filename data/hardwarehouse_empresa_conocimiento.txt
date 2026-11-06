@@ -64,7 +64,7 @@ fines del proyecto web:
 
   Dirección de retiro (ejemplo): Av. Tecnología 123, Santiago, Región Metropolitana, Chile.
 
-Correo de contacto (ejemplo): contacto@hardwarehouse.cl
+Correo público de contacto: contacto@hardwarehouse.cl
 Teléfono de contacto (ejemplo): +56 9 1234 5678
 
 Formulario de contacto: disponible en la sección "Contacto" del sitio web.

@@ -1,10 +1,12 @@
 from datetime import timedelta
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from paypal.standard.ipn.models import PayPalIPN
@@ -27,6 +29,12 @@ AJUSTES = dict(
     CONTACTO_CORREO_LIMITE=2,
     CONTACTO_CORREO_VENTANA=600,
     EMAILJS_RECLAMO_SEGUNDOS=120,
+    CONTACTO_EMAIL='contacto@hardwarehouse.cl',
+)
+
+CORREOS_PERSONALES = (
+    'manuelescool11@gmail.com',
+    'yxds3rl14@gmail.com',
 )
 
 
@@ -107,9 +115,18 @@ class CorreoEmailJsTests(TestCase):
         self.assertEqual(cuerpo['user_id'], 'public-test')
         self.assertEqual(cuerpo['accessToken'], CLAVE_PRIVADA)
         self.assertNotIn('accessToken', cuerpo['template_params'])
-        self.assertEqual(cuerpo['template_params']['from_email'], 'ana@example.com')
-        self.assertEqual(cuerpo['template_params']['mensaje'], 'Quiero orientación para un armado.')
-        self.assertEqual(cuerpo['template_params']['reply_to'], 'ana@example.com')
+        parametros = cuerpo['template_params']
+        self.assertEqual(parametros['from_email'], 'ana@example.com')
+        self.assertEqual(parametros['email'], 'ana@example.com')
+        self.assertEqual(parametros['mensaje'], 'Quiero orientación para un armado.')
+        self.assertEqual(parametros['reply_to'], 'ana@example.com')
+        self.assertEqual(parametros['contacto_destino'], 'contacto@hardwarehouse.cl')
+        self.assertEqual(parametros['destino'], 'contacto@hardwarehouse.cl')
+        self.assertNotIn('cliente_email', parametros)
+        for correo in CORREOS_PERSONALES:
+            self.assertNotIn(correo, str(parametros))
+        self.assertContains(respuesta, 'contacto@hardwarehouse.cl')
+        self.assertNotContains(respuesta, 'contacto@techparts.cl')
 
     def test_el_contacto_invalido_o_sin_servicio_no_llama_a_emailjs(self):
         with patch('core.correo.requests.post') as envio:
@@ -161,6 +178,10 @@ class CorreoEmailJsTests(TestCase):
         self.assertEqual(parametros['to_email'], 'cuenta@example.com')
         self.assertEqual(parametros['email'], 'cuenta@example.com')
         self.assertNotEqual(parametros['cliente_email'], 'cliente@example.com')
+        self.assertNotIn('contacto_destino', parametros)
+        self.assertNotEqual(parametros['cliente_email'], 'contacto@hardwarehouse.cl')
+        for correo in CORREOS_PERSONALES:
+            self.assertNotIn(correo, str(parametros))
         self.assertEqual(parametros['cliente_nombre'], 'Ana Soto')
         self.assertEqual(parametros['pedido_id'], str(pedido.id))
         self.assertEqual(parametros['total_clp'], '95.000 CLP')
@@ -248,3 +269,33 @@ class CorreoEmailJsTests(TestCase):
         self.assertEqual(pedido.estado, 'PAGADO')
         self.assertEqual(pedido.paypal_transaccion_id, 'TXN-CAE')
         self.assertEqual(self.cpu.stock, 4)
+
+    def test_contacto_y_compra_no_llaman_a_smtp(self):
+        with patch('core.correo.requests.post', return_value=_Respuesta(200)) as envio, \
+             patch('django.core.mail.send_mail') as smtp, \
+             patch('django.core.mail.EmailMessage.send') as mensaje:
+            self.client.post(reverse('core:contacto'), _contacto())
+            self.assertEqual(
+                confirmar_pago_paypal(self.ipn(self.pedido(), txn_id='TXN-SIN-SMTP')),
+                'pagado',
+            )
+        self.assertEqual(envio.call_count, 2)
+        smtp.assert_not_called()
+        mensaje.assert_not_called()
+        self.assertNotEqual(settings.EMAIL_HOST, 'smtp.mx.cloudflare.net')
+
+
+class DestinosCorreoTests(SimpleTestCase):
+    def test_el_worker_reenvia_el_buzon_publico_a_las_dos_cuentas(self):
+        raiz = Path(__file__).resolve().parents[1]
+        worker = (raiz / 'cloudflare' / 'email-worker' / 'contacto-router.js').read_text(encoding='utf-8')
+        self.assertIn('contacto@hardwarehouse.cl', worker)
+        self.assertIn('trabajadorhardwarehouse@gmail.com', worker)
+        self.assertIn('administradorhardwarehouse@gmail.com', worker)
+        for correo in CORREOS_PERSONALES:
+            self.assertNotIn(correo, worker)
+        django_correo = (raiz / 'core' / 'correo.py').read_text(encoding='utf-8')
+        self.assertNotIn('trabajadorhardwarehouse@gmail.com', django_correo)
+        self.assertNotIn('administradorhardwarehouse@gmail.com', django_correo)
+        for correo in CORREOS_PERSONALES:
+            self.assertNotIn(correo, django_correo)

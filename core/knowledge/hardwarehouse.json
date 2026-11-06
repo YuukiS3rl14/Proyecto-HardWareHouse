@@ -37,8 +37,8 @@
     },
     "email": {
       "value": "contacto@hardwarehouse.cl",
-      "placeholder": true,
-      "note": "Correo de ejemplo en la página de contacto. El pie del sitio muestra contacto@techparts.cl; ambos son datos de ejemplo."
+      "placeholder": false,
+      "note": "Buzón público oficial. El formulario y el pie muestran esta dirección. El reenvío al equipo ocurre en Cloudflare, fuera de Django."
     },
     "phone": {
       "value": "+56 9 1234 5678",
