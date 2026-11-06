@@ -14,6 +14,7 @@ from core.chatbot.api import (
 )
 
 from core.alertas_stock import vista_alertas_stock
+from core.inventario import vista_guardar_umbrales, vista_movimientos, vista_movimientos_producto
 
 from .forms import LoginForm
 from .views import *
@@ -45,6 +46,13 @@ urlpatterns = [
     path('api/catalogo/metadata/', catalogo_metadata_api, name='catalogo_metadata_api'),
     path('registro/', mostrarRegistro, name='registro'),
     path('personal/alertas-stock/', vista_alertas_stock, name='alertas_stock'),
+    path('personal/alertas-stock/umbrales/', vista_guardar_umbrales, name='alertas_stock_umbrales'),
+    path('personal/movimientos-stock/', vista_movimientos, name='movimientos_stock'),
+    path(
+        'personal/movimientos-stock/<str:model_name>/<int:pk>/',
+        vista_movimientos_producto,
+        name='movimientos_producto',
+    ),
     path('perfil/', verPerfil, name='perfil'),
     path(
         'login/',

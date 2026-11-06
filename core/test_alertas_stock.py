@@ -123,7 +123,9 @@ class AlertasStockTests(TestCase):
         self.staff.user_permissions.add(Permission.objects.get(codename='change_procesador'))
         self.staff = User.objects.get(pk=self.staff.pk)
         con_permiso = self.panel(self.staff)
-        self.assertContains(con_permiso, f'/admin/core/procesador/{pieza.pk}/change/')
+        self.assertContains(con_permiso, 'Editar')
+        self.assertContains(con_permiso, 'Historial')
+        self.assertNotContains(con_permiso, f'/admin/core/procesador/{pieza.pk}/change/')
 
     def test_los_contadores_no_duplican_y_el_orden_sigue_la_urgencia(self):
         cpu(self.marca, 'Aviso medio', 5)

@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from paypal.standard.ipn.models import PayPalIPN
 
-from core.models import Carrito, ItemCarrito, ItemPedido, PagoBoleta, Pedido, Procesador, Proveedor
+from core.models import Carrito, ItemCarrito, ItemPedido, MovimientoStock, PagoBoleta, Pedido, Procesador, Proveedor
 from core.payments import clp_a_usd, confirmar_pago_paypal
 
 RECEPTOR = 'sb-merchant@business.example.com'
@@ -724,6 +724,7 @@ class PayPalSandboxTests(TestCase):
         self.notificar(original, txn_id='TXN-ORIGINAL')
         self.assertEqual(original.pago_boleta.transaccion_id, 'TXN-ORIGINAL')
 
+        MovimientoStock.objects.all().delete()
         PagoBoleta.objects.all().delete()
         ItemPedido.objects.all().delete()
         Pedido.objects.all().delete()

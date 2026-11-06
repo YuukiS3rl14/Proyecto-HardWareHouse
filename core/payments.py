@@ -303,8 +303,11 @@ def confirmar_pago_paypal(ipn_obj):
                             pedido.id,
                         )
                         raise PagoNoConfirmado('stock')
-                    bloqueado.stock -= item.cantidad
-                    bloqueado.save(update_fields=['stock'])
+                    from core.inventario import StockInsuficiente, registrar_venta
+                    try:
+                        registrar_venta(bloqueado, item, pedido)
+                    except StockInsuficiente:
+                        raise PagoNoConfirmado('stock')
 
                 pedido.estado = 'PAGADO'
                 pedido.paypal_transaccion_id = txn_id

@@ -54,6 +54,54 @@ body {
     border-bottom: none !important;
 }
 
+.hw-user-col {
+    min-width: 0;
+}
+
+.hw-user-cluster {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-width: 0;
+    gap: 0.25rem;
+}
+
+.hw-user-link {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: 12rem;
+    gap: 0.35rem;
+}
+
+.hw-user-link .fa-user-circle {
+    flex: 0 0 auto;
+}
+
+.hw-user-name {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.hw-user-sep {
+    flex: 0 0 auto;
+}
+
+.hw-user-cluster .hw-chat-logout-form {
+    flex: 0 0 auto;
+    display: inline-flex;
+    margin: 0;
+}
+
+.hw-logout-btn {
+    white-space: nowrap;
+    cursor: pointer;
+}
+
 
 /* --- Página de Inicio (index.html) --- */
 

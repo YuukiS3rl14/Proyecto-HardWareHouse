@@ -2,6 +2,8 @@ import uuid
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -851,6 +853,96 @@ class AvisoCorreoPedido(models.Model):
 
     def __str__(self):
         return f'Aviso de compra del pedido #{self.pedido_id}'
+
+
+class MovimientoStock(models.Model):
+    """Cambio real de existencias. No se edita desde el panel."""
+
+    VENTA = 'VENTA'
+    REPOSICION = 'REPOSICION'
+    AJUSTE = 'AJUSTE'
+    DEVOLUCION = 'DEVOLUCION'
+    TIPOS = [
+        (VENTA, 'Venta'),
+        (REPOSICION, 'Reposición'),
+        (AJUSTE, 'Ajuste'),
+        (DEVOLUCION, 'Devolución'),
+    ]
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
+    object_id = models.PositiveIntegerField()
+    producto = GenericForeignKey('content_type', 'object_id')
+    producto_modelo = models.CharField(max_length=50)
+    producto_pk = models.PositiveIntegerField()
+    nombre_producto = models.CharField(max_length=200)
+    categoria = models.CharField(max_length=50)
+    tipo = models.CharField(max_length=20, choices=TIPOS)
+    cantidad = models.IntegerField()
+    stock_anterior = models.IntegerField()
+    stock_posterior = models.IntegerField()
+    creado_en = models.DateTimeField(auto_now_add=True)
+    usuario = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='movimientos_stock')
+    origen = models.CharField(max_length=30)
+    pedido = models.ForeignKey(Pedido, null=True, blank=True, on_delete=models.PROTECT, related_name='movimientos_stock')
+    item_pedido = models.ForeignKey(ItemPedido, null=True, blank=True, on_delete=models.PROTECT, related_name='movimientos_stock')
+    motivo = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        verbose_name = 'Movimiento de stock'
+        verbose_name_plural = 'Movimientos de stock'
+        ordering = ('-creado_en', '-id')
+        indexes = [
+            models.Index(fields=['producto_modelo', 'producto_pk', '-creado_en'], name='mov_producto_fecha_idx'),
+            models.Index(fields=['-creado_en'], name='mov_fecha_idx'),
+            models.Index(fields=['tipo', '-creado_en'], name='mov_tipo_fecha_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['item_pedido'],
+                condition=Q(tipo='VENTA', item_pedido__isnull=False),
+                name='movimiento_venta_item_unico',
+            ),
+            models.CheckConstraint(
+                check=Q(stock_posterior__gte=0) & Q(stock_posterior=F('stock_anterior') + F('cantidad')),
+                name='movimiento_stock_coherente',
+            ),
+        ]
+
+    def cantidad_visible(self):
+        if self.cantidad > 0:
+            return f'+{self.cantidad}'
+        return str(self.cantidad).replace('-', '−')
+
+    @property
+    def identificador(self):
+        return f'{self.producto_modelo}:{self.producto_pk}'
+
+    def __str__(self):
+        return f'{self.get_tipo_display()} {self.cantidad_visible()} {self.identificador}'
+
+
+class AuditoriaUmbral(models.Model):
+    """Cambio de umbrales. No altera ni registra unidades."""
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
+    object_id = models.PositiveIntegerField()
+    producto = GenericForeignKey('content_type', 'object_id')
+    producto_modelo = models.CharField(max_length=50)
+    producto_pk = models.PositiveIntegerField()
+    nombre_producto = models.CharField(max_length=200)
+    minimo_anterior = models.PositiveIntegerField()
+    minimo_nuevo = models.PositiveIntegerField()
+    advertencia_anterior = models.PositiveIntegerField()
+    advertencia_nueva = models.PositiveIntegerField()
+    usuario = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Cambio de umbral'
+        verbose_name_plural = 'Cambios de umbral'
+        indexes = [
+            models.Index(fields=['producto_modelo', 'producto_pk', '-creado_en'], name='umbral_producto_fecha_idx'),
+        ]
 
 
 # --- 6. FAVORITOS DE USUARIO ---

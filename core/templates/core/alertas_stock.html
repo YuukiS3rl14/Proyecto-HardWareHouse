@@ -1,39 +1,48 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block tittle %}Control de stock{% endblock %}
+
+{% block extra_head %}
+<link href="{% static 'core/css/inventario.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block principal %}
 <div class="container-fluid bg-light mb-4">
     <div class="page-header d-flex flex-column align-items-center justify-content-center text-center px-3">
         <h1 class="font-weight-semi-bold text-uppercase mb-2">Control de stock</h1>
-        <p class="text-muted mb-0">Productos agotados, críticos o en advertencia.</p>
+        <p class="text-muted mb-2">Productos agotados, críticos o en advertencia.</p>
+        <nav class="hw-stock-nav" aria-label="Inventario">
+            <a href="{% url 'core:alertas_stock' %}" aria-current="page">Control de stock</a>
+            <a href="{% url 'core:movimientos_stock' %}">Historial de movimientos</a>
+        </nav>
     </div>
 </div>
 
 <div class="container pb-5">
     <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
-            <div class="border rounded p-3 h-100">
-                <p class="text-muted mb-1"><i class="fas fa-ban text-danger mr-1" aria-hidden="true"></i> Agotados</p>
-                <p class="h3 mb-0">{{ resumen.agotados }}</p>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="hw-stock-card">
+                <p class="hw-stock-label"><i class="fas fa-ban text-danger" aria-hidden="true"></i> Agotados</p>
+                <p class="hw-stock-value" data-stock-contador="agotados">{{ resumen.agotados }}</p>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
-            <div class="border rounded p-3 h-100">
-                <p class="text-muted mb-1"><i class="fas fa-exclamation-circle text-danger mr-1" aria-hidden="true"></i> Críticos</p>
-                <p class="h3 mb-0">{{ resumen.criticos }}</p>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="hw-stock-card">
+                <p class="hw-stock-label"><i class="fas fa-exclamation-circle text-danger" aria-hidden="true"></i> Críticos</p>
+                <p class="hw-stock-value" data-stock-contador="criticos">{{ resumen.criticos }}</p>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
-            <div class="border rounded p-3 h-100">
-                <p class="text-muted mb-1"><i class="fas fa-exclamation-triangle text-warning mr-1" aria-hidden="true"></i> Advertencia</p>
-                <p class="h3 mb-0">{{ resumen.advertencia }}</p>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="hw-stock-card">
+                <p class="hw-stock-label"><i class="fas fa-exclamation-triangle text-warning" aria-hidden="true"></i> Advertencia</p>
+                <p class="hw-stock-value" data-stock-contador="advertencia">{{ resumen.advertencia }}</p>
             </div>
         </div>
-        <div class="col-6 col-lg-3">
-            <div class="border rounded p-3 h-100">
-                <p class="text-muted mb-1"><i class="fas fa-boxes mr-1" aria-hidden="true"></i> Afectados</p>
-                <p class="h3 mb-0">{{ resumen.afectados }}</p>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="hw-stock-card">
+                <p class="hw-stock-label"><i class="fas fa-boxes" aria-hidden="true"></i> Afectados</p>
+                <p class="hw-stock-value" data-stock-contador="afectados">{{ resumen.afectados }}</p>
             </div>
         </div>
     </div>
@@ -66,18 +75,15 @@
         </div>
     </form>
 
-    {% if not pagina.object_list %}
-    <div class="alert alert-success" role="status">
+    <div id="stock-vacio" class="alert alert-success" role="status" {% if pagina.object_list %}hidden{% endif %}>
         <i class="fas fa-check-circle mr-1" aria-hidden="true"></i>
-        {% if resumen.afectados %}
-        Ningún producto coincide con este filtro. El inventario todavía tiene otros avisos.
-        {% else %}
-        Los niveles de inventario son adecuados. No hay productos agotados, críticos ni en advertencia.
-        {% endif %}
+        <span data-vacio="filtros" {% if not resumen.afectados %}hidden{% endif %}>Ningún producto coincide con este filtro. El inventario todavía tiene otros avisos.</span>
+        <span data-vacio="ok" {% if resumen.afectados %}hidden{% endif %}>Los niveles de inventario son adecuados. No hay productos agotados, críticos ni en advertencia.</span>
     </div>
-    {% else %}
+
+    <div id="stock-tabla" {% if not pagina.object_list %}hidden{% endif %}>
     <div class="table-responsive">
-        <table class="table align-middle">
+        <table class="table align-middle hw-stock-table">
             <caption class="visually-hidden">Productos con stock por revisar, ordenados por urgencia</caption>
             <thead>
                 <tr>
@@ -94,19 +100,19 @@
             </thead>
             <tbody>
                 {% for fila in pagina.object_list %}
-                <tr>
-                    <td>
+                <tr data-modelo="{{ fila.model_name }}" data-pk="{{ fila.pk }}" data-minimo="{{ fila.stock_minimo }}" data-advertencia="{{ fila.stock_advertencia }}">
+                    <td data-label="Producto">
                         <div class="d-flex align-items-center gap-2">
                             <img src="{{ fila.imagen_url }}" alt="" width="48" height="48" class="rounded border" style="object-fit: cover;">
                             <span>{{ fila.nombre }}</span>
                         </div>
                     </td>
-                    <td>{{ fila.identificador }}</td>
-                    <td>{{ fila.categoria }}</td>
-                    <td>{{ fila.stock }}</td>
-                    <td>{{ fila.stock_minimo }}</td>
-                    <td>{{ fila.stock_advertencia }}</td>
-                    <td>
+                    <td data-label="Identificador">{{ fila.identificador }}</td>
+                    <td data-label="Categoría">{{ fila.categoria }}</td>
+                    <td class="js-stock" data-label="Stock">{{ fila.stock }}</td>
+                    <td class="js-minimo" data-label="Mínimo">{{ fila.stock_minimo }}</td>
+                    <td class="js-advertencia" data-label="Advertencia">{{ fila.stock_advertencia }}</td>
+                    <td class="js-estado" data-label="Estado">
                         {% if fila.estado == 'AGOTADO' %}
                         <span class="badge bg-danger"><i class="fas fa-ban mr-1" aria-hidden="true"></i> Agotado</span>
                         {% elif fila.estado == 'CRITICO' %}
@@ -115,13 +121,19 @@
                         <span class="badge badge-warning"><i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i> Advertencia</span>
                         {% endif %}
                     </td>
-                    <td>{{ fila.unidades }}</td>
-                    <td>
+                    <td class="js-unidades" data-label="Reponer">{{ fila.unidades }}</td>
+                    <td data-label="Gestión">
+                        <a href="{% url 'core:movimientos_producto' fila.model_name fila.pk %}">Historial</a>
                         {% if fila.puede_editar %}
-                        <a href="{{ fila.url_edicion }}">Editar</a>
+                        <button type="button" class="btn btn-sm btn-outline-success js-editar">Editar</button>
+                        <span class="js-acciones-edicion d-none">
+                            <button type="button" class="btn btn-sm btn-success js-guardar">Guardar</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary js-cancelar">Cancelar</button>
+                        </span>
                         {% else %}
                         <span class="text-muted">Sin permiso de edición</span>
                         {% endif %}
+                        <p class="js-error text-danger small mb-0" role="alert"></p>
                     </td>
                 </tr>
                 {% endfor %}
@@ -141,6 +153,11 @@
         </ul>
     </nav>
     {% endif %}
-    {% endif %}
+    </div>
+    <form id="umbral-csrf" hidden>{% csrf_token %}</form>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'core/js/alertas_stock.js' %}" data-umbral-url="{% url 'core:alertas_stock_umbrales' %}"></script>
 {% endblock %}

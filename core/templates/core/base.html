@@ -24,7 +24,7 @@
     <link href="{% static 'core/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/style2.css' %}" rel="stylesheet">
-    <link href="{% static 'core/css/custom.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/custom.css' %}?v=usuario1" rel="stylesheet">
     <link href="{% static 'core/css/theme.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/responsive.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/chat-widget.css' %}" rel="stylesheet">
@@ -91,17 +91,17 @@
                 </nav>
             </div>
 
-            <div class="col-lg-3 col-6 text-right d-none d-lg-block">
-                <div class="d-inline-flex align-items-center">
+            <div class="col-lg-3 col-6 text-right d-none d-lg-block hw-user-col">
+                <div class="hw-user-cluster">
                     {% if user.is_authenticated %}
-                    <a href="{% url 'core:perfil' %}" class="nav-item nav-link py-0 px-2 text-dark">
-                        <i class="fas fa-user-circle text-success mr-1"></i> {{ user.username }}
+                    <a href="{% url 'core:perfil' %}" class="nav-item nav-link py-0 px-2 text-dark hw-user-link" title="{{ user.username }}">
+                        <i class="fas fa-user-circle text-success" aria-hidden="true"></i>
+                        <span class="hw-user-name">{{ user.username }}</span>
                     </a>
-                    <span class="text-muted">|</span>
-                    <form method="post" action="{% url 'logout' %}" class="hw-chat-logout-form" style="display: inline;">
+                    <span class="text-muted hw-user-sep" aria-hidden="true">|</span>
+                    <form method="post" action="{% url 'logout' %}" class="hw-chat-logout-form">
                         {% csrf_token %}
-                        <button type="submit" class="nav-item nav-link py-0 px-2 text-dark border-0 bg-transparent"
-                            style="cursor: pointer;">
+                        <button type="submit" class="nav-item nav-link py-0 px-2 text-dark border-0 bg-transparent hw-logout-btn">
                             Cerrar Sesión
                         </button>
                     </form>
@@ -133,14 +133,17 @@
                 <h6 class="text-muted text-uppercase small mb-2">Mi cuenta</h6>
                 <nav class="nav flex-column">
                     {% if user.is_authenticated %}
-                    <a href="{% url 'core:perfil' %}" class="nav-link"><i class="fas fa-user-circle fa-fw text-success mr-2"></i>{{ user.username }}</a>
+                    <a href="{% url 'core:perfil' %}" class="nav-link" title="{{ user.username }}"><i class="fas fa-user-circle fa-fw text-success mr-2" aria-hidden="true"></i>{{ user.username }}</a>
                     <a href="{% url 'core:mis_pedidos' %}" class="nav-link"><i class="fas fa-box-open fa-fw mr-2"></i>Mis Pedidos</a>
                     <a href="{% url 'core:favoritos' %}" class="nav-link"><i class="far fa-heart fa-fw mr-2"></i>Favoritos (<span data-favorite-count>{{ favorite_item_count }}</span>)</a>
                     <a href="{% url 'core:carrito' %}" class="nav-link"><i class="fas fa-shopping-cart fa-fw mr-2"></i>Carrito (<span data-cart-count>{{ cart_item_count }}</span>)</a>
                     {% if user.is_staff %}
                     <a href="{% url 'core:alertas_stock' %}" class="nav-link">
                         <i class="fas fa-boxes fa-fw mr-2" aria-hidden="true"></i>Control de stock
-                        {% if alertas_stock.afectados %}<span class="badge">{{ alertas_stock.afectados }}</span>{% endif %}
+                        <span class="badge hw-stock-nav-count" data-stock-nav="afectados" {% if not alertas_stock.afectados %}hidden{% endif %}>{{ alertas_stock.afectados }}</span>
+                    </a>
+                    <a href="{% url 'core:movimientos_stock' %}" class="nav-link">
+                        <i class="fas fa-history fa-fw mr-2" aria-hidden="true"></i>Historial de movimientos
                     </a>
                     {% endif %}
                     {% if user.is_superuser %}
@@ -200,7 +203,10 @@
                 {% if user.is_staff %}
                 <a href="{% url 'core:alertas_stock' %}" class="btn sub-navbar-btn icon-btn" title="Control de stock">
                     <i class="fas fa-boxes text-success" aria-hidden="true"></i>
-                    {% if alertas_stock.afectados %}<span class="badge">{{ alertas_stock.afectados }}</span>{% endif %}
+                    <span class="badge hw-stock-nav-count" data-stock-nav="afectados" {% if not alertas_stock.afectados %}hidden{% endif %}>{{ alertas_stock.afectados }}</span>
+                </a>
+                <a href="{% url 'core:movimientos_stock' %}" class="btn sub-navbar-btn icon-btn" title="Historial de movimientos">
+                    <i class="fas fa-history text-success" aria-hidden="true"></i>
                 </a>
                 {% endif %}
                 <a href="{% url 'core:carrito' %}" class="btn sub-navbar-btn icon-btn" title="Mi Carrito">

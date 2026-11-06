@@ -68,6 +68,32 @@ class ProductoAdminBase(admin.ModelAdmin):
             ))
         return resultado
 
+    def save_model(self, request, obj, form, change):
+        from django.core.exceptions import ValidationError
+        from django.db import transaction
+
+        from core.inventario import anotar_ajuste_ya_guardado, auditar_umbrales
+
+        if obj.stock < 0:
+            raise ValidationError('El stock no puede quedar negativo.')
+        with transaction.atomic():
+            stock_antes = minimo_antes = advertencia_antes = None
+            if change and obj.pk:
+                previo = type(obj).objects.select_for_update().filter(pk=obj.pk).first()
+                if previo is not None:
+                    stock_antes = previo.stock
+                    minimo_antes = previo.stock_minimo
+                    advertencia_antes = previo.stock_advertencia
+            super().save_model(request, obj, form, change)
+            if stock_antes is not None and obj.stock != stock_antes:
+                anotar_ajuste_ya_guardado(
+                    obj, stock_antes,
+                    usuario=request.user, origen='admin',
+                    motivo='Ajuste desde el administrador',
+                )
+            if minimo_antes is not None:
+                auditar_umbrales(obj, minimo_antes, advertencia_antes, request.user)
+
 class ProcesadorAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts', 'incluye_cooler', 'graficos_integrados')
     list_filter = ('proveedor',)
@@ -318,6 +344,46 @@ class PagoBoletaAdmin(admin.ModelAdmin):
 
 admin.site.register(Favorito, FavoritoAdmin)
 admin.site.register(PagoBoleta, PagoBoletaAdmin)
+
+
+class MovimientoStockAdmin(admin.ModelAdmin):
+    list_display = (
+        'creado_en', 'nombre_producto', 'producto_modelo', 'producto_pk',
+        'tipo', 'cantidad', 'stock_anterior', 'stock_posterior', 'origen', 'usuario',
+    )
+    list_filter = ('tipo', 'origen', 'categoria')
+    search_fields = ('nombre_producto', 'producto_modelo', 'motivo')
+    ordering = ('-creado_en', '-id')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class AuditoriaUmbralAdmin(admin.ModelAdmin):
+    list_display = (
+        'creado_en', 'nombre_producto', 'producto_modelo', 'producto_pk',
+        'minimo_anterior', 'minimo_nuevo', 'advertencia_anterior', 'advertencia_nueva', 'usuario',
+    )
+    ordering = ('-creado_en', '-id')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+admin.site.register(MovimientoStock, MovimientoStockAdmin)
+admin.site.register(AuditoriaUmbral, AuditoriaUmbralAdmin)
 
 # ----------------------------------------------------------------------
 # 5. Sobrescribir títulos del Admin Site
