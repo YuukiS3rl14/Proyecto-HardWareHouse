@@ -2,7 +2,9 @@ from django.contrib import admin
 from django import forms
 from django.utils.html import format_html
 
-from .admin_dashboard import resumen_dashboard
+from django.shortcuts import render
+
+from .admin_dashboard import datos_tarjeta, resumen_dashboard
 from .imagenes import url_imagen_producto
 from .models import *
 
@@ -407,7 +409,16 @@ admin.site.index_title = 'Gestión de la Plataforma'
 _index_original = admin.site.index
 
 
+_TARJETAS = {
+    'pedidos': 'admin/includes/tarjeta_pedidos.html',
+    'alertas': 'admin/includes/tarjeta_alertas.html',
+}
+
+
 def index(request, extra_context=None):
+    nombre = request.GET.get('hw_tarjeta')
+    if request.method == 'GET' and nombre in _TARJETAS:
+        return render(request, _TARJETAS[nombre], {'hw': datos_tarjeta(request, nombre)})
     extra_context = dict(extra_context or {})
     extra_context['hw'] = resumen_dashboard(request)
     return _index_original(request, extra_context)

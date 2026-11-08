@@ -339,6 +339,80 @@ class DashboardAdminTests(TestCase):
         self.assertNotContains(respuesta, 'GPU-OCULTA-0')
         self.assertContains(respuesta, 'No tienes permiso para ver los pedidos.')
 
+    def test_la_tarjeta_parcial_no_trae_el_resto_del_dashboard(self):
+        creados = [
+            self.pedido('PAGADO', '1000.00', self.inicio + timedelta(minutes=indice))
+            for indice in range(9)
+        ]
+        for indice in range(9):
+            self.cpu(f'CPU-A-{indice:02d}', 0)
+        self.client.force_login(self.superuser)
+        with CaptureQueriesContext(connection) as consultas:
+            pedidos = self.client.get(reverse('admin:index'), {
+                'hw_tarjeta': 'pedidos',
+                'pedidos_pagina': 2,
+                'alertas_pagina': 3,
+            })
+        sql = ' '.join(consulta['sql'] for consulta in consultas.captured_queries)
+        self.assertEqual(pedidos.status_code, 200)
+        self.assertContains(pedidos, '<!-- hw-tarjeta:pedidos -->')
+        self.assertContains(pedidos, 'Página 2 de 2')
+        self.assertContains(pedidos, reverse('admin:core_pedido_change', args=[creados[0].pk]))
+        self.assertContains(pedidos, 'alertas_pagina=3#hw-ultimos-pedidos')
+        self.assertNotContains(pedidos, 'hw_tarjeta')
+        self.assertNotContains(pedidos, 'Ventas del mes')
+        self.assertNotContains(pedidos, 'hw-chart-ventas')
+        self.assertNotContains(pedidos, '<!-- hw-tarjeta:alertas -->')
+        self.assertNotContains(pedidos, 'CPU-A-00')
+        self.assertNotIn('core_procesador', sql)
+
+        self.client.force_login(self.superuser)
+        alertas = self.client.get(reverse('admin:index'), {
+            'hw_tarjeta': 'alertas',
+            'pedidos_pagina': 4,
+        })
+        self.assertContains(alertas, '<!-- hw-tarjeta:alertas -->')
+        self.assertContains(alertas, 'CPU-A-00')
+        self.assertContains(alertas, 'pedidos_pagina=4')
+        self.assertContains(alertas, 'alertas_pagina=2#hw-alertas')
+        self.assertNotContains(alertas, 'Ventas del mes')
+        self.assertNotContains(alertas, 'hw_tarjeta')
+
+        completo = self.client.get(reverse('admin:index'), {'hw_tarjeta': 'otra'})
+        self.assertContains(completo, 'Ventas del mes')
+        self.assertContains(completo, 'id="hw-chart-ventas"')
+
+    def test_la_tarjeta_parcial_respeta_permisos_y_el_enlace_html(self):
+        for indice in range(9):
+            self.pedido('PAGADO', '1000.00', self.inicio + timedelta(minutes=indice))
+            self.cpu(f'CPU-PAR-{indice}', 0)
+        pedidos = self.staff('parcial-pedidos', 'view_pedido')
+        self.client.force_login(pedidos)
+        with CaptureQueriesContext(connection) as consultas:
+            respuesta = self.client.get(reverse('admin:index'), {'hw_tarjeta': 'alertas', 'alertas_pagina': 2})
+        sql = ' '.join(consulta['sql'] for consulta in consultas.captured_queries)
+        self.assertContains(respuesta, 'No tienes permiso para ver el inventario.')
+        self.assertNotContains(respuesta, 'CPU-PAR-0')
+        self.assertNotIn('core_procesador', sql)
+        self.assertContains(
+            self.client.get(reverse('admin:index'), {'hw_tarjeta': 'pedidos'}),
+            'href="/admin/?pedidos_pagina=2#hw-ultimos-pedidos"',
+        )
+
+        cpu = self.staff('parcial-cpu', 'view_procesador')
+        self.client.force_login(cpu)
+        with CaptureQueriesContext(connection) as consultas:
+            respuesta = self.client.get(reverse('admin:index'), {'hw_tarjeta': 'pedidos', 'pedidos_pagina': 2})
+        sql = ' '.join(consulta['sql'] for consulta in consultas.captured_queries)
+        self.assertContains(respuesta, 'No tienes permiso para ver los pedidos.')
+        self.assertNotIn('core_pedido', sql)
+        self.assertNotContains(respuesta, '1000')
+
+        self.client.force_login(self.cliente)
+        anonima = self.client.get(reverse('admin:index'), {'hw_tarjeta': 'pedidos'})
+        self.assertEqual(anonima.status_code, 302)
+        self.assertIn('/admin/login/', anonima.url)
+
     def test_sin_permiso_de_staff_no_entra_al_panel(self):
         self.pedido('PAGADO', '180000.00', self.inicio)
         self.client.force_login(self.cliente)
@@ -432,3 +506,30 @@ class DashboardAdminTests(TestCase):
         html = visible.content.decode()
         self.assertNotIn('"valor": 4', html)
         self.assertNotIn('"valor":4', html)
+        self.assertContains(visible, '7 unidades')
+        self.assertContains(visible, '$70\xa0000')
+        self.assertNotContains(visible, 'hw-chart-vendidos')
+
+    def test_mas_vendidos_ordena_por_unidades_y_omite_pendientes(self):
+        productos = [self.cpu(f'RANK-{indice}', 8) for indice in range(6)]
+        pagado = self.pedido('PAGADO', '1000.00', self.inicio)
+        pendiente = self.pedido('PENDIENTE', '1000.00', self.inicio)
+        cancelado = self.pedido('CANCELADO', '1000.00', self.inicio)
+        for indice, producto in enumerate(productos):
+            self.linea(pagado, producto, indice + 1, 'procesador')
+        self.linea(pendiente, productos[0], 50, 'procesador')
+        self.linea(cancelado, productos[1], 40, 'procesador')
+
+        puntos = self.panel(self.superuser).context['hw']['graficos']['vendidos']['puntos']
+        self.assertEqual(
+            [(punto['etiqueta'], punto['valor'], punto['ingresos']) for punto in puntos],
+            [
+                ('RANK-5 · CPU', 6, 60000),
+                ('RANK-4 · CPU', 5, 50000),
+                ('RANK-3 · CPU', 4, 40000),
+                ('RANK-2 · CPU', 3, 30000),
+                ('RANK-1 · CPU', 2, 20000),
+            ],
+        )
+        self.assertEqual(puntos[0]['ancho'], 100)
+        self.assertNotIn('RANK-0', [punto['etiqueta'] for punto in puntos])

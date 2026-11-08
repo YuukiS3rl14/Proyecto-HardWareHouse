@@ -129,114 +129,22 @@
 
         <div class="row hw-split">
             <div class="col-lg-7">
-                <section class="card hw-panel" aria-labelledby="hw-ultimos-pedidos">
+                <section class="card hw-panel" data-hw-tarjeta="pedidos" aria-labelledby="hw-ultimos-pedidos">
                     <div class="card-header">
                         <h2 id="hw-ultimos-pedidos" class="h6 mb-0">Últimos pedidos</h2>
                     </div>
-                    <div class="card-body">
-                        {% if hw.pedidos.permitido %}
-                            {% if hw.pedidos.recientes %}
-                                <div class="table-responsive">
-                                    <table class="table table-sm hw-table">
-                                        <caption class="sr-only">Últimos pedidos registrados</caption>
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">Pedido</th>
-                                                <th scope="col">Cliente</th>
-                                                <th scope="col">Fecha</th>
-                                                <th scope="col">Total</th>
-                                                <th scope="col">Estado</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for pedido in hw.pedidos.recientes %}
-                                                <tr>
-                                                    <td><a href="{% url 'admin:core_pedido_change' pedido.pk %}">#{{ pedido.pk }}</a></td>
-                                                    <td>{{ pedido.usuario.username }}</td>
-                                                    <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
-                                                    <td>${{ pedido.total_monto|floatformat:"0"|intcomma }}</td>
-                                                    <td><span class="hw-pill hw-pill-{{ pedido.estado|lower }}">{{ pedido.get_estado_display }}</span></td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            {% else %}
-                                <p class="hw-placeholder">No hay pedidos registrados.</p>
-                            {% endif %}
-                            {% if hw.pedidos.paginacion.total %}
-                                <nav class="hw-pager" aria-label="Páginas de últimos pedidos">
-                                    {% if hw.pedidos.paginacion.anterior %}
-                                        <a class="hw-pager-link" href="{{ hw.pedidos.paginacion.anterior }}">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</a>
-                                    {% else %}
-                                        <span class="hw-pager-link is-disabled" aria-disabled="true">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</span>
-                                    {% endif %}
-                                    <span class="hw-pager-status">Página {{ hw.pedidos.paginacion.numero }} de {{ hw.pedidos.paginacion.paginas }}</span>
-                                    {% if hw.pedidos.paginacion.siguiente %}
-                                        <a class="hw-pager-link" href="{{ hw.pedidos.paginacion.siguiente }}">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</a>
-                                    {% else %}
-                                        <span class="hw-pager-link is-disabled" aria-disabled="true">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</span>
-                                    {% endif %}
-                                </nav>
-                            {% endif %}
-                        {% else %}
-                            <p class="hw-placeholder">No tienes permiso para ver los pedidos.</p>
-                        {% endif %}
+                    <div class="card-body" data-hw-cuerpo>
+                        {% include "admin/includes/tarjeta_pedidos.html" %}
                     </div>
                 </section>
             </div>
             <div class="col-lg-5">
-                <section class="card hw-panel" aria-labelledby="hw-alertas">
+                <section class="card hw-panel" data-hw-tarjeta="alertas" aria-labelledby="hw-alertas">
                     <div class="card-header">
                         <h2 id="hw-alertas" class="h6 mb-0">Alertas de inventario</h2>
                     </div>
-                    <div class="card-body">
-                        {% if hw.productos.permitido %}
-                            {% if hw.productos.alertas %}
-                                <div class="table-responsive">
-                                    <table class="table table-sm hw-table">
-                                        <caption class="sr-only">Productos con stock bajo o agotado</caption>
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">Producto</th>
-                                                <th scope="col">Tipo</th>
-                                                <th scope="col">Stock</th>
-                                                <th scope="col">Estado</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for alerta in hw.productos.alertas %}
-                                                <tr>
-                                                    <td><a href="{{ alerta.url }}">{{ alerta.nombre }}</a></td>
-                                                    <td>{{ alerta.tipo }}</td>
-                                                    <td>{{ alerta.stock }}</td>
-                                                    <td><span class="hw-pill {% if alerta.estado == 'Agotado' %}hw-pill-agotado{% else %}hw-pill-bajo{% endif %}">{{ alerta.estado }}</span></td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            {% else %}
-                                <p class="hw-placeholder">No hay productos con stock bajo ni agotados.</p>
-                            {% endif %}
-                            {% if hw.productos.paginacion.total %}
-                                <nav class="hw-pager" aria-label="Páginas de alertas de inventario">
-                                    {% if hw.productos.paginacion.anterior %}
-                                        <a class="hw-pager-link" href="{{ hw.productos.paginacion.anterior }}">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</a>
-                                    {% else %}
-                                        <span class="hw-pager-link is-disabled" aria-disabled="true">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</span>
-                                    {% endif %}
-                                    <span class="hw-pager-status">Página {{ hw.productos.paginacion.numero }} de {{ hw.productos.paginacion.paginas }}</span>
-                                    {% if hw.productos.paginacion.siguiente %}
-                                        <a class="hw-pager-link" href="{{ hw.productos.paginacion.siguiente }}">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</a>
-                                    {% else %}
-                                        <span class="hw-pager-link is-disabled" aria-disabled="true">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</span>
-                                    {% endif %}
-                                </nav>
-                            {% endif %}
-                        {% else %}
-                            <p class="hw-placeholder">No tienes permiso para ver el inventario.</p>
-                        {% endif %}
+                    <div class="card-body" data-hw-cuerpo>
+                        {% include "admin/includes/tarjeta_alertas.html" %}
                     </div>
                 </section>
             </div>
@@ -252,15 +160,22 @@
                 {% elif hw.graficos.vendidos.vacio %}
                     <p class="hw-placeholder">No hay ventas registradas.</p>
                 {% else %}
-                    {{ hw.graficos.vendidos|json_script:"hw-grafico-vendidos" }}
-                    <div class="hw-chart-frame hw-chart-frame-alta">
-                        <canvas id="hw-chart-vendidos" role="img" aria-label="Hasta diez productos más vendidos, en unidades"></canvas>
-                    </div>
-                    <ul class="sr-only">
+                    <ol class="hw-ranking">
                         {% for punto in hw.graficos.vendidos.puntos %}
-                            <li>{{ punto.etiqueta }}: {{ punto.valor }} unidades</li>
+                            <li class="hw-ranking-item">
+                                <div class="hw-ranking-meta">
+                                    <span class="hw-ranking-nombre">{{ punto.etiqueta }}</span>
+                                    <span class="hw-ranking-cifra">
+                                        <strong>{{ punto.valor }} unidad{{ punto.valor|pluralize:"es" }}</strong>
+                                        <span class="hw-ranking-ingreso">${{ punto.ingresos|floatformat:"0"|intcomma }}</span>
+                                    </span>
+                                </div>
+                                <div class="hw-ranking-track" aria-hidden="true">
+                                    <span class="hw-ranking-barra" style="width: {{ punto.ancho }}%"></span>
+                                </div>
+                            </li>
                         {% endfor %}
-                    </ul>
+                    </ol>
                 {% endif %}
             </div>
         </section>
@@ -291,6 +206,6 @@
 {% block extrajs %}
     {% if hw.graficos.cargar %}
         <script src="{% static 'core/vendor/chart.umd.min.js' %}"></script>
-        <script src="{% static 'core/js/admin-charts.js' %}?v=20261107d"></script>
+        <script src="{% static 'core/js/admin-charts.js' %}?v=20261108h"></script>
     {% endif %}
 {% endblock %}

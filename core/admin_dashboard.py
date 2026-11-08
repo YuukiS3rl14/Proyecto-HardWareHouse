@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 from django.core.paginator import Paginator
 from django.db import connection
-from django.db.models import Count, Max, Q, Sum
+from django.db.models import Count, F, Max, Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 
@@ -27,7 +27,7 @@ ESTADOS_VENTA = ('PAGADO', 'ENVIADO', 'ENTREGADO')
 STOCK_BAJO_MINIMO = 1
 STOCK_BAJO_MAXIMO = 5
 TAMANO_PAGINA = 8
-LIMITE_MAS_VENDIDOS = 10
+LIMITE_MAS_VENDIDOS = 5
 ZONA_VENTAS = ZoneInfo('America/Santiago')
 _MESES = (
     'ene', 'feb', 'mar', 'abr', 'may', 'jun',
@@ -76,6 +76,16 @@ def resumen_dashboard(request):
         'productos': productos,
         'graficos': _graficos(request, pedidos['permitido'], productos['permitido']),
     }
+
+
+def datos_tarjeta(request, nombre):
+    """Datos de una sola tarjeta. No calcula gráficos ni la otra lista."""
+    if nombre == 'pedidos':
+        _ventas, pedidos = _ventas_y_pedidos(request)
+        return {'pedidos': pedidos}
+    if nombre == 'alertas':
+        return {'productos': _productos(request)}
+    return None
 
 
 def _puede_ver(request, modelo):
@@ -136,6 +146,7 @@ def _controles(request, clave, pagina):
 
     def enlace(numero):
         params = request.GET.copy()
+        params.pop('hw_tarjeta', None)
         if numero <= 1:
             params.pop(clave, None)
         else:
@@ -302,7 +313,7 @@ def _graficos(request, puede_pedidos, puede_productos):
         'ventas': ventas,
         'estados': estados,
         'vendidos': vendidos,
-        'cargar': _grafico_visible(ventas) or _grafico_visible(estados) or _grafico_visible(vendidos),
+        'cargar': _grafico_visible(ventas) or _grafico_visible(estados),
     }
 
 
@@ -353,6 +364,7 @@ def _grafico_vendidos(request):
             producto_pk__isnull=False,
         ).values('producto_modelo', 'producto_pk').annotate(
             unidades=Sum('cantidad'),
+            ingresos=Sum(F('precio_unitario') * F('cantidad')),
             nombre_linea=Max('producto_nombre'),
             tipo_linea=Max('producto_tipo'),
         ).order_by('-unidades', 'producto_modelo', 'producto_pk')[:LIMITE_MAS_VENDIDOS]
@@ -375,15 +387,20 @@ def _grafico_vendidos(request):
     for fila in filas:
         clave = (fila['producto_modelo'], fila['producto_pk'])
         nombre, tipo = nombres.get(clave, (fila['nombre_linea'], fila['tipo_linea']))
-        base.append((clave[1], nombre, tipo, int(fila['unidades'] or 0)))
+        base.append((
+            clave[1], nombre, tipo, int(fila['unidades'] or 0), _pesos(fila['ingresos']),
+        ))
     repetidas = {}
-    for _pk, nombre, tipo, _unidades in base:
+    for _pk, nombre, tipo, _unidades, _ingresos in base:
         etiqueta = f'{nombre} · {tipo}'
         repetidas[etiqueta] = repetidas.get(etiqueta, 0) + 1
     puntos = []
-    for pk, nombre, tipo, unidades in base:
+    for pk, nombre, tipo, unidades, ingresos in base:
         etiqueta = f'{nombre} · {tipo}'
         if repetidas[etiqueta] > 1:
             etiqueta = f'{etiqueta} · #{pk}'
-        puntos.append({'etiqueta': etiqueta, 'valor': unidades})
+        puntos.append({'etiqueta': etiqueta, 'valor': unidades, 'ingresos': ingresos})
+    maximo = max(punto['valor'] for punto in puntos) or 1
+    for punto in puntos:
+        punto['ancho'] = round(punto['valor'] * 100 / maximo)
     return {'vacio': False, 'puntos': puntos}

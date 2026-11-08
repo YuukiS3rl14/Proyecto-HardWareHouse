@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
@@ -65,8 +66,10 @@ if railway_domain:
 
 # Requiere que el sitio se sirva por HTTPS (Nginx debe enviar la cabecera X-Forwarded-Proto).
 # Si en AWS todavía accedes por http://, define USE_HTTPS=False en el .env o no podrás iniciar sesión.
+# manage.py test usa HTTP. Sin esta excepción cada prueba recibe 301 hacia HTTPS.
+_EJECUTA_PRUEBAS = len(sys.argv) > 1 and sys.argv[1] == 'test'
 USE_HTTPS = env_bool('USE_HTTPS', default=not DEBUG)
-if USE_HTTPS:
+if USE_HTTPS and not _EJECUTA_PRUEBAS:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True

@@ -163,49 +163,4 @@
         });
     }
 
-    var vendidos = leer("hw-grafico-vendidos");
-    var lienzoVendidos = document.getElementById("hw-chart-vendidos");
-    if (vendidos && lienzoVendidos && !vendidos.vacio) {
-        var filas = vendidos.puntos.length;
-        lienzoVendidos.parentElement.style.height = Math.min(20, Math.max(7.5, filas * 2.15)) + "rem";
-        new Chart(lienzoVendidos, {
-            type: "bar",
-            data: {
-                labels: etiquetas(vendidos.puntos),
-                datasets: [{
-                    label: "Unidades",
-                    data: valores(vendidos.puntos),
-                    backgroundColor: verde,
-                    borderRadius: 8,
-                    maxBarThickness: 18
-                }]
-            },
-            options: {
-                indexAxis: "y",
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function (ctx) { return ctx.parsed.x + " unidades"; }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        border: { display: false },
-                        grid: { color: cuadricula },
-                        ticks: { precision: 0, color: muted }
-                    },
-                    y: {
-                        border: { display: false },
-                        grid: { display: false },
-                        ticks: { color: tinta, font: { size: 11 }, autoSkip: false }
-                    }
-                }
-            }
-        });
-    }
 })();

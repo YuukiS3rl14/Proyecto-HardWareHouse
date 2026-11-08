@@ -1,0 +1,47 @@
+{% load humanize %}<!-- hw-tarjeta:alertas -->
+{% if hw.productos.permitido %}
+    {% if hw.productos.alertas %}
+        <div class="table-responsive">
+            <table class="table table-sm hw-table">
+                <caption class="sr-only">Productos con stock bajo o agotado</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col">Stock</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alerta in hw.productos.alertas %}
+                        <tr>
+                            <td><a href="{{ alerta.url }}">{{ alerta.nombre }}</a></td>
+                            <td>{{ alerta.tipo }}</td>
+                            <td>{{ alerta.stock }}</td>
+                            <td><span class="hw-pill {% if alerta.estado == 'Agotado' %}hw-pill-agotado{% else %}hw-pill-bajo{% endif %}">{{ alerta.estado }}</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="hw-placeholder">No hay productos con stock bajo ni agotados.</p>
+    {% endif %}
+    {% if hw.productos.paginacion.total %}
+        <nav class="hw-pager" aria-label="Páginas de alertas de inventario">
+            {% if hw.productos.paginacion.anterior %}
+                <a class="hw-pager-link" href="{{ hw.productos.paginacion.anterior }}">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</a>
+            {% else %}
+                <span class="hw-pager-link is-disabled" aria-disabled="true">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</span>
+            {% endif %}
+            <span class="hw-pager-status">Página {{ hw.productos.paginacion.numero }} de {{ hw.productos.paginacion.paginas }}</span>
+            {% if hw.productos.paginacion.siguiente %}
+                <a class="hw-pager-link" href="{{ hw.productos.paginacion.siguiente }}">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</a>
+            {% else %}
+                <span class="hw-pager-link is-disabled" aria-disabled="true">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</span>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% else %}
+    <p class="hw-placeholder">No tienes permiso para ver el inventario.</p>
+{% endif %}
