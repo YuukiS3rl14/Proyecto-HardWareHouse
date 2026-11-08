@@ -1,5 +1,8 @@
 {% load humanize %}<!-- hw-tarjeta:comercial -->
-<form class="hw-filtros" method="get" action="{% url 'admin:index' %}">
+<noscript>
+    <style>.hw-filtros .hw-filtro-extra { display: flex !important; }</style>
+</noscript>
+<form class="hw-filtros" method="get" action="{% url 'admin:index' %}" data-modo="{{ hw.periodo.modo }}">
     {% if request.GET.pedidos_pagina %}
         <input type="hidden" name="pedidos_pagina" value="{{ request.GET.pedidos_pagina }}">
     {% endif %}
@@ -14,16 +17,16 @@
             <option value="rango" {% if hw.periodo.modo == "rango" %}selected{% endif %}>Rango personalizado</option>
         </select>
     </label>
-    <label>Mes
+    <label class="hw-filtro-extra hw-filtro-elegir">Mes
         <input type="number" name="hw_mes" min="1" max="12" inputmode="numeric" value="{{ hw.periodo.mes }}">
     </label>
-    <label>Año
+    <label class="hw-filtro-extra hw-filtro-elegir">Año
         <input type="number" name="hw_anio" min="2000" max="2100" inputmode="numeric" value="{{ hw.periodo.anio }}">
     </label>
-    <label>Desde
+    <label class="hw-filtro-extra hw-filtro-rango">Desde
         <input type="date" name="hw_desde" value="{{ hw.periodo.desde }}">
     </label>
-    <label>Hasta
+    <label class="hw-filtro-extra hw-filtro-rango">Hasta
         <input type="date" name="hw_hasta" value="{{ hw.periodo.hasta }}">
     </label>
     <button type="submit" class="hw-filtro-aplicar">Aplicar filtros</button>
@@ -31,7 +34,7 @@
 </form>
 <p class="hw-periodo-activo">Período activo: {{ hw.periodo.etiqueta }}</p>
 {% if hw.periodo.error %}
-    <p class="hw-filtro-error" role="alert">{{ hw.periodo.error }} Se muestra este mes.</p>
+    <p class="hw-filtro-error" role="alert">{{ hw.periodo.error }} Se muestra este año.</p>
 {% endif %}
 
 <div class="hw-stat-grid">
@@ -40,10 +43,13 @@
         <h2 class="h6">Ventas confirmadas</h2>
         {% if hw.ventas.permitido %}
             <p class="hw-stat-value">${{ hw.ventas.monto|floatformat:"0"|intcomma }}</p>
-            <p class="hw-variacion{% if hw.ventas.variacion_monto.sube %} is-up{% elif hw.ventas.variacion_monto.baja %} is-down{% endif %}">
-                {% if hw.ventas.variacion_monto.disponible %}{{ hw.ventas.variacion_monto.texto }} frente a {{ hw.periodo.comparado_con }}{% else %}Sin comparación disponible{% endif %}
+            <p class="hw-variacion">
+                {% if hw.ventas.variacion_monto.disponible %}
+                    <span class="{% if hw.ventas.variacion_monto.sube %}is-up{% elif hw.ventas.variacion_monto.baja %}is-down{% endif %}">{{ hw.ventas.variacion_monto.texto }}</span>
+                    <span class="hw-variacion-detalle">antes ${{ hw.ventas.variacion_monto.anterior|floatformat:"0"|intcomma }} · {{ hw.periodo.comparado_con }}</span>
+                {% else %}Sin comparación disponible{% endif %}
             </p>
-            <p class="hw-note">Pedidos pagados, enviados o entregados. Sin pendientes ni cancelados.</p>
+            <p class="hw-note">Pagados, enviados o entregados.</p>
         {% else %}
             <p class="hw-stat-value" aria-hidden="true"></p>
             <p class="hw-stat-secondary">No tienes permiso para ver las ventas.</p>
@@ -55,10 +61,13 @@
         <h2 class="h6">Pedidos confirmados</h2>
         {% if hw.ventas.permitido %}
             <p class="hw-stat-value">{{ hw.ventas.confirmados|intcomma }}</p>
-            <p class="hw-variacion{% if hw.ventas.variacion_pedidos.sube %} is-up{% elif hw.ventas.variacion_pedidos.baja %} is-down{% endif %}">
-                {% if hw.ventas.variacion_pedidos.disponible %}{{ hw.ventas.variacion_pedidos.texto }} frente a {{ hw.periodo.comparado_con }}{% else %}Sin comparación disponible{% endif %}
+            <p class="hw-variacion">
+                {% if hw.ventas.variacion_pedidos.disponible %}
+                    <span class="{% if hw.ventas.variacion_pedidos.sube %}is-up{% elif hw.ventas.variacion_pedidos.baja %}is-down{% endif %}">{{ hw.ventas.variacion_pedidos.texto }}</span>
+                    <span class="hw-variacion-detalle">antes {{ hw.ventas.variacion_pedidos.anterior|floatformat:"0"|intcomma }} · {{ hw.periodo.comparado_con }}</span>
+                {% else %}Sin comparación disponible{% endif %}
             </p>
-            <p class="hw-note">No cuenta las unidades de cada pedido.</p>
+            <p class="hw-note">Pedidos, no unidades.</p>
         {% else %}
             <p class="hw-stat-value" aria-hidden="true"></p>
             <p class="hw-stat-secondary">No tienes permiso para ver los pedidos.</p>
@@ -70,10 +79,13 @@
         <h2 class="h6">Ticket promedio</h2>
         {% if hw.ventas.permitido %}
             <p class="hw-stat-value">${{ hw.ventas.ticket|floatformat:"0"|intcomma }}</p>
-            <p class="hw-variacion{% if hw.ventas.variacion_ticket.sube %} is-up{% elif hw.ventas.variacion_ticket.baja %} is-down{% endif %}">
-                {% if hw.ventas.variacion_ticket.disponible %}{{ hw.ventas.variacion_ticket.texto }} frente a {{ hw.periodo.comparado_con }}{% else %}Sin comparación disponible{% endif %}
+            <p class="hw-variacion">
+                {% if hw.ventas.variacion_ticket.disponible %}
+                    <span class="{% if hw.ventas.variacion_ticket.sube %}is-up{% elif hw.ventas.variacion_ticket.baja %}is-down{% endif %}">{{ hw.ventas.variacion_ticket.texto }}</span>
+                    <span class="hw-variacion-detalle">antes ${{ hw.ventas.variacion_ticket.anterior|floatformat:"0"|intcomma }} · {{ hw.periodo.comparado_con }}</span>
+                {% else %}Sin comparación disponible{% endif %}
             </p>
-            <p class="hw-note">Venta confirmada dividida por esos pedidos.</p>
+            <p class="hw-note">Venta confirmada ÷ pedidos.</p>
         {% else %}
             <p class="hw-stat-value" aria-hidden="true"></p>
             <p class="hw-stat-secondary">No tienes permiso para ver las ventas.</p>
@@ -93,10 +105,13 @@
             <p class="hw-note"></p>
         {% else %}
             <p class="hw-stat-value">{{ hw.ventas.unidades|intcomma }}</p>
-            <p class="hw-variacion{% if hw.ventas.variacion_unidades.sube %} is-up{% elif hw.ventas.variacion_unidades.baja %} is-down{% endif %}">
-                {% if hw.ventas.variacion_unidades.disponible %}{{ hw.ventas.variacion_unidades.texto }} frente a {{ hw.periodo.comparado_con }}{% else %}Sin comparación disponible{% endif %}
+            <p class="hw-variacion">
+                {% if hw.ventas.variacion_unidades.disponible %}
+                    <span class="{% if hw.ventas.variacion_unidades.sube %}is-up{% elif hw.ventas.variacion_unidades.baja %}is-down{% endif %}">{{ hw.ventas.variacion_unidades.texto }}</span>
+                    <span class="hw-variacion-detalle">antes {{ hw.ventas.variacion_unidades.anterior|floatformat:"0"|intcomma }} · {{ hw.periodo.comparado_con }}</span>
+                {% else %}Sin comparación disponible{% endif %}
             </p>
-            <p class="hw-note">Suma de las líneas de pedidos confirmados.</p>
+            <p class="hw-note">Líneas de pedidos confirmados.</p>
         {% endif %}
     </article>
 </div>
@@ -108,7 +123,7 @@
         <h3 class="h6">Productos disponibles</h3>
         {% if hw.productos.permitido %}
             <p class="hw-stat-value">{{ hw.productos.disponibles|intcomma }}</p>
-            <p class="hw-note">Fichas con stock. No depende del filtro de ventas.</p>
+            <p class="hw-note">Con stock. No usa el filtro.</p>
         {% else %}
             <p class="hw-stat-secondary">No tienes permiso para ver los productos.</p>
         {% endif %}
@@ -129,7 +144,7 @@
         <h3 class="h6">Pedidos pendientes</h3>
         {% if hw.pedidos.permitido %}
             <p class="hw-stat-value">{{ hw.pedidos.pendientes|intcomma }}</p>
-            <p class="hw-note">Estado actual. No usa el período comercial.</p>
+            <p class="hw-note">Estado actual. No usa el filtro.</p>
         {% else %}
             <p class="hw-stat-secondary">No tienes permiso para ver los pedidos.</p>
         {% endif %}
@@ -248,21 +263,66 @@
     </div>
 </div>
 
-<section class="card hw-panel" aria-labelledby="hw-unidades">
-    <div class="card-header">
-        <h2 id="hw-unidades" class="h6 mb-0">{% if hw.graficos.unidades %}{{ hw.graficos.unidades.titulo }}{% else %}Unidades vendidas{% endif %}</h2>
-    </div>
-    <div class="card-body">
-        {% if not hw.graficos.unidades %}
-            <p class="hw-placeholder">No tienes permiso para ver los productos vendidos.</p>
-        {% elif hw.graficos.unidades.vacio %}
-            <p class="hw-placeholder">No hay ventas registradas.</p>
-        {% else %}
-            <p class="hw-note">Cuenta unidades, no pesos. El monto del mismo período está en la evolución de ventas.</p>
-            {{ hw.graficos.unidades|json_script:"hw-grafico-unidades" }}
-            <div class="hw-chart-frame hw-chart-frame-baja">
-                <canvas id="hw-chart-unidades" role="img" aria-label="{{ hw.graficos.unidades.titulo }}"></canvas>
+<div class="row hw-split">
+    <div class="col-lg-6">
+        <section class="card hw-panel" aria-labelledby="hw-unidades">
+            <div class="card-header">
+                <h2 id="hw-unidades" class="h6 mb-0">{% if hw.graficos.unidades %}{{ hw.graficos.unidades.titulo }}{% else %}Unidades vendidas{% endif %}</h2>
             </div>
-        {% endif %}
+            <div class="card-body">
+                {% if not hw.graficos.unidades %}
+                    <p class="hw-placeholder">No tienes permiso para ver los productos vendidos.</p>
+                {% elif hw.graficos.unidades.vacio %}
+                    <p class="hw-placeholder">No hay ventas registradas.</p>
+                {% else %}
+                    <p class="hw-note">Unidades, no pesos. El monto está en la evolución de ventas.</p>
+                    {{ hw.graficos.unidades|json_script:"hw-grafico-unidades" }}
+                    <div class="hw-chart-frame">
+                        <canvas id="hw-chart-unidades" role="img" aria-label="{{ hw.graficos.unidades.titulo }}"></canvas>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
     </div>
-</section>
+    <div class="col-lg-6">
+        <section class="card hw-panel" aria-labelledby="hw-resumen-periodo">
+            <div class="card-header">
+                <h2 id="hw-resumen-periodo" class="h6 mb-0">Resumen del período</h2>
+            </div>
+            <div class="card-body">
+                {% if not hw.graficos.resumen %}
+                    <p class="hw-placeholder">No tienes permiso para ver las ventas.</p>
+                {% else %}
+                    <dl class="hw-resumen">
+                        <div>
+                            <dt>Pedidos del período</dt>
+                            <dd>{{ hw.graficos.resumen.pedidos|intcomma }}</dd>
+                        </div>
+                        <div>
+                            <dt>Mayor venta</dt>
+                            <dd>
+                                {% if hw.graficos.resumen.mejor %}
+                                    {{ hw.graficos.resumen.mejor.etiqueta }} · ${{ hw.graficos.resumen.mejor.valor|intcomma }}
+                                {% else %}
+                                    Sin ventas confirmadas
+                                {% endif %}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Categoría líder</dt>
+                            <dd>
+                                {% if not hw.graficos.categorias %}
+                                    No tienes permiso para ver los productos vendidos.
+                                {% elif hw.graficos.resumen.categoria %}
+                                    {{ hw.graficos.resumen.categoria.etiqueta }} · ${{ hw.graficos.resumen.categoria.valor|intcomma }}
+                                {% else %}
+                                    Sin ventas por categoría
+                                {% endif %}
+                            </dd>
+                        </div>
+                    </dl>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</div>

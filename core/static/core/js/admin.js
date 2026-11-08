@@ -297,6 +297,18 @@
         });
     });
 
+    document.addEventListener("change", function (evento) {
+        var campo = evento.target;
+        if (!campo || campo.name !== "hw_periodo") {
+            return;
+        }
+        var formulario = campo.closest ? campo.closest(".hw-filtros") : null;
+        if (!formulario || !formulario.closest(".hw-dashboard")) {
+            return;
+        }
+        formulario.setAttribute("data-modo", campo.value);
+    }, true);
+
     document.addEventListener("submit", function (evento) {
         var formulario = evento.target;
         if (!formulario || !formulario.classList || !formulario.classList.contains("hw-filtros")) {

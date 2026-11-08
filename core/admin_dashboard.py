@@ -174,64 +174,66 @@ def _url_sin_periodo(request):
     return f'{base}?{consulta}' if consulta else base
 
 
+def _anio_en_curso(ahora):
+    return (
+        datetime(ahora.year, 1, 1, tzinfo=ZONA_VENTAS),
+        datetime(ahora.year + 1, 1, 1, tzinfo=ZONA_VENTAS),
+    )
+
+
 def leer_periodo(request):
-    """Lee el filtro comercial. Si llega manipulado, deja este mes y explica el error."""
+    """Lee el filtro comercial. Si llega manipulado, deja el año en curso y explica el error."""
     ahora = _ahora_santiago()
-    pedido = (request.GET.get('hw_periodo') or 'mes').strip().lower()
+    pedido = (request.GET.get('hw_periodo') or 'anio').strip().lower()
     mes_form = request.GET.get('hw_mes') or str(ahora.month)
     anio_form = request.GET.get('hw_anio') or str(ahora.year)
     desde_form = (request.GET.get('hw_desde') or '').strip()
     hasta_form = (request.GET.get('hw_hasta') or '').strip()
     error = ''
-    modo = pedido
-    if modo not in _MODOS_PERIODO:
+    modo = pedido if pedido in _MODOS_PERIODO else 'anio'
+    if pedido not in _MODOS_PERIODO:
         error = 'El período no es válido.'
-        modo = 'mes'
 
-    inicio, fin = _mes_completo(ahora.year, ahora.month)
-    if not error and modo == 'anio':
-        inicio = datetime(ahora.year, 1, 1, tzinfo=ZONA_VENTAS)
-        fin = datetime(ahora.year + 1, 1, 1, tzinfo=ZONA_VENTAS)
-    elif not error and modo == 'elegir':
+    if modo == 'mes':
+        inicio, fin = _mes_completo(ahora.year, ahora.month)
+    elif modo == 'elegir' and not error:
         mes = _entero(mes_form, 1, 12)
         anio = _entero(anio_form, _ANIO_MINIMO, _ANIO_MAXIMO)
         if mes is None or anio is None:
             error = 'La fecha no es válida.'
-            modo = 'mes'
-            inicio, fin = _mes_completo(ahora.year, ahora.month)
+            inicio, fin = _anio_en_curso(ahora)
         else:
             inicio, fin = _mes_completo(anio, mes)
-    elif not error and modo == 'rango':
+    elif modo == 'rango' and not error:
         desde = _fecha_iso(desde_form)
         hasta = _fecha_iso(hasta_form)
         if desde is None or hasta is None:
             error = 'La fecha no es válida.'
-            modo = 'mes'
         elif desde > hasta:
             error = 'El rango está invertido.'
-            modo = 'mes'
         elif (hasta - desde).days + 1 > _RANGO_MAXIMO_DIAS:
             error = 'El rango es demasiado amplio.'
-            modo = 'mes'
+        if error:
+            inicio, fin = _anio_en_curso(ahora)
         else:
             inicio = _inicio_dia(desde)
             fin = _inicio_dia(hasta + timedelta(days=1))
-        if error:
-            inicio, fin = _mes_completo(ahora.year, ahora.month)
+    else:
+        inicio, fin = _anio_en_curso(ahora)
 
-    agrupacion = _agrupacion(modo if not error else 'mes', inicio, fin)
-    comparado = _periodo_anterior(inicio, fin, 'mes' if error else modo)
+    aplicado = 'anio' if error else modo
+    comparado = _periodo_anterior(inicio, fin, aplicado)
     return {
-        'modo': 'mes' if error and pedido not in _MODOS_PERIODO else (pedido if pedido in _MODOS_PERIODO else 'mes'),
-        'aplicado': 'mes' if error else modo,
+        'modo': modo,
+        'aplicado': aplicado,
         'error': error,
-        'etiqueta': _etiqueta_periodo(inicio, fin, 'mes' if error else modo),
-        'comparado_con': _etiqueta_periodo(comparado[0], comparado[1], 'mes' if error else modo),
+        'etiqueta': _etiqueta_periodo(inicio, fin, aplicado),
+        'comparado_con': _etiqueta_periodo(comparado[0], comparado[1], aplicado),
         'inicio': inicio,
         'fin': fin,
         'anterior_inicio': comparado[0],
         'anterior_fin': comparado[1],
-        'agrupacion': agrupacion,
+        'agrupacion': _agrupacion(aplicado, inicio, fin),
         'mes': mes_form,
         'anio': anio_form,
         'desde': desde_form,
@@ -291,6 +293,7 @@ def _variacion(actual, anterior):
     return {
         'disponible': True,
         'porcentaje': int(porcentaje),
+        'anterior': anterior,
         'texto': f'{int(porcentaje):+}%',
         'sube': porcentaje > 0,
         'baja': porcentaje < 0,
@@ -600,8 +603,21 @@ def _graficos(request, puede_pedidos, puede_productos, periodo):
         'vendidos': vendidos,
         'categorias': categorias,
         'unidades': unidades,
+        'resumen': _resumen_visual(ventas, estados, categorias) if puede_pedidos else None,
         'cargar': bool(puede_pedidos),
     }
+
+
+def _resumen_visual(ventas, estados, categorias):
+    """Arma el resumen con puntos que los gráficos ya calcularon."""
+    mejor = None
+    if ventas and ventas.get('puntos'):
+        candidato = max(ventas['puntos'], key=lambda punto: punto['valor'])
+        if candidato['valor']:
+            mejor = candidato
+    categoria = categorias['puntos'][0] if categorias and categorias.get('puntos') else None
+    pedidos = sum(punto['valor'] for punto in estados['puntos']) if estados and estados.get('puntos') else 0
+    return {'mejor': mejor, 'categoria': categoria, 'pedidos': pedidos}
 
 
 def _cubetas(periodo):

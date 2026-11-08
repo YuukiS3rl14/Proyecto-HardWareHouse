@@ -81,7 +81,10 @@ class DashboardAdminTests(TestCase):
         self.assertEqual(datos['productos']['stock_bajo'], 0)
         self.assertEqual(datos['productos']['agotados'], 0)
         self.assertEqual(datos['productos']['alertas'], [])
-        self.assertEqual(len(datos['graficos']['ventas']['puntos']), monthrange(self.inicio.year, self.inicio.month)[1])
+        self.assertEqual(datos['periodo']['aplicado'], 'anio')
+        self.assertEqual(datos['periodo']['etiqueta'], str(self.inicio.year))
+        self.assertEqual(datos['graficos']['ventas']['titulo'], 'Ventas por mes')
+        self.assertEqual(len(datos['graficos']['ventas']['puntos']), 12)
         self.assertTrue(all(punto['valor'] == 0 for punto in datos['graficos']['ventas']['puntos']))
         self.assertTrue(datos['graficos']['estados']['vacio'])
         self.assertTrue(datos['graficos']['vendidos']['vacio'])
@@ -132,7 +135,8 @@ class DashboardAdminTests(TestCase):
             carrito=carrito, procesador=cpu_baja, cantidad=1, precio_unitario=Decimal('999999.00'),
         )
 
-        respuesta = self.panel(self.superuser)
+        self.client.force_login(self.superuser)
+        respuesta = self.client.get(reverse('admin:index'), {'hw_periodo': 'mes'})
         datos = respuesta.context['hw']
 
         self.assertEqual(datos['ventas']['mes'], Decimal('27000.00'))
@@ -447,7 +451,8 @@ class DashboardAdminTests(TestCase):
         self.pedido('PENDIENTE', '444.00', self.inicio + timedelta(hours=1))
         self.pedido('CANCELADO', '555.00', self.inicio + timedelta(hours=2))
 
-        respuesta = self.panel(self.superuser)
+        self.client.force_login(self.superuser)
+        respuesta = self.client.get(reverse('admin:index'), {'hw_periodo': 'mes'})
         puntos = respuesta.context['hw']['graficos']['ventas']['puntos']
         estados = {
             punto['clave']: punto['valor']
@@ -563,8 +568,9 @@ class DashboardAdminTests(TestCase):
         self.assertLess(inicio_paginacion, texto.index('evento.preventDefault()'))
         self.assertIn('}, true);', texto[inicio_paginacion:])
         respuesta = self.panel(self.superuser)
-        self.assertContains(respuesta, 'core/js/admin.js?v=20261108l')
-        self.assertContains(respuesta, 'core/css/admin.css?v=20261108l')
+        self.assertContains(respuesta, 'core/js/admin.js?v=20261108m')
+        self.assertContains(respuesta, 'core/css/admin.css?v=20261108m')
+        self.assertIn('data-modo', texto)
         self.assertIn('hw_periodo', texto)
         self.assertIn('firmaFiltro', texto)
         self.assertIn('popstate', texto)
@@ -599,7 +605,9 @@ class DashboardAdminTests(TestCase):
             'hw_hasta': '2026-11-01',
         })
         self.assertContains(invertido, 'El rango está invertido.')
-        self.assertEqual(invertido.context['hw']['periodo']['aplicado'], 'mes')
+        self.assertContains(invertido, 'Se muestra este año.')
+        self.assertEqual(invertido.context['hw']['periodo']['aplicado'], 'anio')
+        self.assertEqual(invertido.context['hw']['periodo']['etiqueta'], str(self.inicio.year))
 
         invalido = self.client.get(reverse('admin:index'), {
             'hw_periodo': 'elegir',
@@ -607,11 +615,23 @@ class DashboardAdminTests(TestCase):
             'hw_anio': '1999',
         })
         self.assertContains(invalido, 'La fecha no es válida.')
-        self.assertEqual(invalido.context['hw']['periodo']['aplicado'], 'mes')
+        self.assertEqual(invalido.context['hw']['periodo']['aplicado'], 'anio')
+        self.assertEqual(invalido.context['hw']['periodo']['modo'], 'elegir')
 
         manipulado = self.client.get(reverse('admin:index'), {'hw_periodo': 'todo'})
         self.assertContains(manipulado, 'El período no es válido.')
+        self.assertEqual(manipulado.context['hw']['periodo']['aplicado'], 'anio')
         self.assertEqual(manipulado.context['hw']['ventas']['mes'], Decimal('9000.00'))
+
+        explicito = self.client.get(reverse('admin:index'), {'hw_periodo': 'mes', 'pedidos_pagina': 2})
+        self.assertEqual(explicito.context['hw']['periodo']['aplicado'], 'mes')
+        self.assertNotIn('hw_periodo', explicito.context['hw']['periodo']['restablecer'])
+        self.assertIn('pedidos_pagina=2', explicito.context['hw']['periodo']['restablecer'])
+        restablecido = self.client.get(explicito.context['hw']['periodo']['restablecer'])
+        self.assertEqual(restablecido.context['hw']['periodo']['aplicado'], 'anio')
+        self.assertEqual(restablecido.context['hw']['periodo']['etiqueta'], str(self.inicio.year))
+        self.assertContains(restablecido, 'data-modo="anio"')
+        self.assertContains(restablecido, 'Página 2 de 2')
 
     def test_periodo_sin_ventas_comparacion_categoria_y_ranking(self):
         anterior = self.pedido('PAGADO', '4000.00', self.inicio - timedelta(days=1))
@@ -648,7 +668,7 @@ class DashboardAdminTests(TestCase):
         self.assertTrue(datos_vacios['graficos']['vendidos']['vacio'])
         self.assertNotContains(vacio, 'CPU-FILTRO')
 
-        mes = self.client.get(reverse('admin:index'))
+        mes = self.client.get(reverse('admin:index'), {'hw_periodo': 'mes'})
         datos = mes.context['hw']
         self.assertEqual(datos['ventas']['unidades'], 3)
         self.assertEqual(datos['ventas']['variacion_unidades']['texto'], '-40%')

@@ -70,6 +70,34 @@
         };
     }
 
+    Chart.register({
+        id: "hwCentroPedidos",
+        afterDraw: function (chart) {
+            if (!chart.canvas || chart.canvas.id !== "hw-chart-estados") {
+                return;
+            }
+            var meta = chart.getDatasetMeta(0);
+            if (!meta.data.length) {
+                return;
+            }
+            var total = chart.data.datasets[0].data.reduce(function (suma, valor) {
+                return suma + valor;
+            }, 0);
+            var punto = meta.data[0];
+            var ctx = chart.ctx;
+            ctx.save();
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = tinta;
+            ctx.font = '700 1.35rem Poppins, "Segoe UI", sans-serif';
+            ctx.fillText(new Intl.NumberFormat("es-CL").format(total), punto.x, punto.y - 8);
+            ctx.fillStyle = muted;
+            ctx.font = '600 0.72rem Poppins, "Segoe UI", sans-serif';
+            ctx.fillText("pedidos", punto.x, punto.y + 12);
+            ctx.restore();
+        }
+    });
+
     window.hwIniciarGraficos = function (raiz) {
         raiz = raiz || document;
 
@@ -133,7 +161,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: "68%",
+                    cutout: "62%",
                     plugins: {
                         legend: {
                             position: "bottom",
@@ -158,13 +186,17 @@
                                 }
                             }
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: function (ctx) {
-                                    return ctx.label + ": " + ctx.parsed + " pedidos";
-                                }
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var datos = ctx.dataset.data;
+                                var total = datos.reduce(function (suma, valor) { return suma + valor; }, 0);
+                                var porcentaje = total ? (ctx.parsed * 100 / total) : 0;
+                                var texto = porcentaje.toLocaleString("es-CL", { maximumFractionDigits: 1 });
+                                return ctx.label + ": " + ctx.parsed + " pedidos (" + texto + "%)";
                             }
                         }
+                    }
                     }
                 }
             });
