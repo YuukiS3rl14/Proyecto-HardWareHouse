@@ -412,6 +412,7 @@ _index_original = admin.site.index
 _TARJETAS = {
     'pedidos': 'admin/includes/tarjeta_pedidos.html',
     'alertas': 'admin/includes/tarjeta_alertas.html',
+    'comercial': 'admin/includes/panel_comercial.html',
 }
 
 

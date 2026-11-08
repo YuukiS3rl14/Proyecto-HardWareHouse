@@ -119,6 +119,18 @@
             return null;
         }
         var actual = new URL(window.location.href);
+        if (tarjeta === "comercial") {
+            ["hw_periodo", "hw_mes", "hw_anio", "hw_desde", "hw_hasta"].forEach(function (clave) {
+                if (destino.searchParams.has(clave)) {
+                    actual.searchParams.set(clave, destino.searchParams.get(clave));
+                } else {
+                    actual.searchParams.delete(clave);
+                }
+            });
+            actual.searchParams.delete("hw_tarjeta");
+            actual.hash = "";
+            return actual;
+        }
         var clave = tarjeta === "pedidos" ? "pedidos_pagina" : "alertas_pagina";
         if (destino.searchParams.has(clave)) {
             actual.searchParams.set(clave, destino.searchParams.get(clave));
@@ -201,11 +213,26 @@
             }
             var scrollX = window.scrollX;
             var scrollY = window.scrollY;
+            if (tarjeta === "comercial" && window.Chart && Chart.getChart) {
+                ["hw-chart-ventas", "hw-chart-estados", "hw-chart-categorias", "hw-chart-unidades"].forEach(function (id) {
+                    var lienzo = seccion.querySelector("#" + id);
+                    var grafico = lienzo ? Chart.getChart(lienzo) : null;
+                    if (grafico) {
+                        grafico.destroy();
+                    }
+                });
+            }
             aplicar(seccion, html, tarjeta);
+            if (tarjeta === "comercial" && window.hwIniciarGraficos) {
+                window.hwIniciarGraficos(seccion);
+            }
             window.scrollTo(scrollX, scrollY);
             if (empujar) {
                 var visible = urlVisible(href, tarjeta);
                 history.pushState({ hwTarjeta: tarjeta }, "", visible.pathname + visible.search + visible.hash);
+            }
+            if (tarjeta === "comercial") {
+                firmaFiltros = firmaFiltro();
             }
             paginas[tarjeta] = paginaDe(tarjeta);
         }).catch(function (error) {
@@ -227,13 +254,20 @@
         var nodo = evento.target;
         var enlace = null;
         while (nodo && nodo !== document) {
-            if (nodo.nodeType === 1 && nodo.tagName === "A" && nodo.classList && nodo.classList.contains("hw-pager-link")) {
+            if (nodo.nodeType === 1 && nodo.tagName === "A" && nodo.classList && (
+                nodo.classList.contains("hw-pager-link") || nodo.classList.contains("hw-filtros-reset")
+            )) {
                 enlace = nodo;
                 break;
             }
             nodo = nodo.parentNode;
         }
         if (!enlace || !enlace.closest(".hw-dashboard")) {
+            return;
+        }
+        if (enlace.classList.contains("hw-filtros-reset")) {
+            evento.preventDefault();
+            cargar(enlace.getAttribute("href"), "comercial", true);
             return;
         }
         var seccion = enlace.closest("[data-hw-tarjeta]");
@@ -245,6 +279,11 @@
     }, true);
 
     window.addEventListener("popstate", function () {
+        var nuevaFirma = firmaFiltro();
+        if (nuevaFirma !== firmaFiltros && seccionDe("comercial")) {
+            cargar(window.location.pathname + window.location.search, "comercial", false);
+        }
+        firmaFiltros = nuevaFirma;
         Object.keys(anclas).forEach(function (tarjeta) {
             if (!seccionDe(tarjeta)) {
                 return;
@@ -258,5 +297,32 @@
         });
     });
 
+    document.addEventListener("submit", function (evento) {
+        var formulario = evento.target;
+        if (!formulario || !formulario.classList || !formulario.classList.contains("hw-filtros")) {
+            return;
+        }
+        if (!formulario.closest(".hw-dashboard")) {
+            return;
+        }
+        evento.preventDefault();
+        var datos = new FormData(formulario);
+        var destino = new URL(formulario.getAttribute("action") || window.location.pathname, window.location.origin);
+        datos.forEach(function (valor, clave) {
+            if (String(valor) !== "") {
+                destino.searchParams.append(clave, valor);
+            }
+        });
+        cargar(destino.toString(), "comercial", true);
+    }, true);
+
+    function firmaFiltro() {
+        var params = new URLSearchParams(window.location.search);
+        return ["hw_periodo", "hw_mes", "hw_anio", "hw_desde", "hw_hasta"].map(function (clave) {
+            return params.get(clave) || "";
+        }).join("|");
+    }
+
+    var firmaFiltros = firmaFiltro();
     recordarPaginas();
 })();

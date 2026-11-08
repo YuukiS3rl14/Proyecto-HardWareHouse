@@ -1,4 +1,5 @@
 from datetime import timedelta
+from calendar import monthrange
 from decimal import Decimal
 
 from django.contrib.auth.models import Permission, User
@@ -80,7 +81,7 @@ class DashboardAdminTests(TestCase):
         self.assertEqual(datos['productos']['stock_bajo'], 0)
         self.assertEqual(datos['productos']['agotados'], 0)
         self.assertEqual(datos['productos']['alertas'], [])
-        self.assertEqual(len(datos['graficos']['ventas']['puntos']), 12)
+        self.assertEqual(len(datos['graficos']['ventas']['puntos']), monthrange(self.inicio.year, self.inicio.month)[1])
         self.assertTrue(all(punto['valor'] == 0 for punto in datos['graficos']['ventas']['puntos']))
         self.assertTrue(datos['graficos']['estados']['vacio'])
         self.assertTrue(datos['graficos']['vendidos']['vacio'])
@@ -88,9 +89,10 @@ class DashboardAdminTests(TestCase):
         self.assertContains(respuesta, 'No hay productos con stock bajo ni agotados.')
         self.assertContains(respuesta, 'No hay ventas registradas.')
         self.assertContains(respuesta, 'Aún no hay ventas registradas.')
+        self.assertContains(respuesta, 'Sin comparación disponible')
         self.assertNotContains(respuesta, 'id="hw-chart-ventas"')
-        self.assertNotContains(respuesta, '/static/core/vendor/chart.umd.min.js')
-        self.assertNotContains(respuesta, '/static/core/js/admin-charts.js')
+        self.assertContains(respuesta, '/static/core/vendor/chart.umd.min.js')
+        self.assertContains(respuesta, '/static/core/js/admin-charts.js')
         self.assertNotContains(respuesta, 'cdn.jsdelivr.net')
         self.assertNotContains(respuesta, 'cdnjs.cloudflare.com')
         self.assertContains(respuesta, '$0')
@@ -135,12 +137,16 @@ class DashboardAdminTests(TestCase):
 
         self.assertEqual(datos['ventas']['mes'], Decimal('27000.00'))
         self.assertEqual(datos['ventas']['historico'], Decimal('37000.00'))
+        self.assertEqual(datos['ventas']['confirmados'], 3)
+        self.assertEqual(datos['ventas']['ticket'], Decimal('9000'))
+        self.assertEqual(datos['ventas']['unidades'], 0)
+        self.assertEqual(datos['ventas']['variacion_monto']['texto'], '+170%')
         self.assertFalse(datos['graficos']['ventas']['vacio'])
         self.assertContains(respuesta, 'id="hw-chart-ventas"')
         self.assertContains(respuesta, '/static/core/vendor/chart.umd.min.js')
         self.assertNotContains(respuesta, 'Aún no hay ventas registradas.')
-        self.assertEqual(datos['graficos']['ventas']['puntos'][-1]['valor'], 27000)
-        self.assertEqual(datos['graficos']['ventas']['puntos'][-2]['valor'], 10000)
+        self.assertEqual(datos['graficos']['ventas']['puntos'][0]['valor'], 27000)
+        self.assertTrue(all(punto['valor'] == 0 for punto in datos['graficos']['ventas']['puntos'][1:]))
         self.assertEqual(datos['pedidos']['registrados'], 6)
         self.assertEqual(datos['pedidos']['pendientes'], 1)
         self.assertEqual(datos['pedidos']['recientes'][0].pk, pendiente.pk)
@@ -360,7 +366,7 @@ class DashboardAdminTests(TestCase):
         self.assertContains(pedidos, reverse('admin:core_pedido_change', args=[creados[0].pk]))
         self.assertContains(pedidos, 'alertas_pagina=3#hw-ultimos-pedidos')
         self.assertNotContains(pedidos, 'hw_tarjeta')
-        self.assertNotContains(pedidos, 'Ventas del mes')
+        self.assertNotContains(pedidos, 'Ventas confirmadas')
         self.assertNotContains(pedidos, 'hw-chart-ventas')
         self.assertNotContains(pedidos, '<!-- hw-tarjeta:alertas -->')
         self.assertNotContains(pedidos, 'CPU-A-00')
@@ -375,11 +381,11 @@ class DashboardAdminTests(TestCase):
         self.assertContains(alertas, 'CPU-A-00')
         self.assertContains(alertas, 'pedidos_pagina=4')
         self.assertContains(alertas, 'alertas_pagina=2#hw-alertas')
-        self.assertNotContains(alertas, 'Ventas del mes')
+        self.assertNotContains(alertas, 'Ventas confirmadas')
         self.assertNotContains(alertas, 'hw_tarjeta')
 
         completo = self.client.get(reverse('admin:index'), {'hw_tarjeta': 'otra'})
-        self.assertContains(completo, 'Ventas del mes')
+        self.assertContains(completo, 'Ventas confirmadas')
         self.assertContains(completo, 'id="hw-chart-ventas"')
 
     def test_la_tarjeta_parcial_respeta_permisos_y_el_enlace_html(self):
@@ -448,15 +454,12 @@ class DashboardAdminTests(TestCase):
             for punto in respuesta.context['hw']['graficos']['estados']['puntos']
         }
 
-        self.assertEqual(len(puntos), 12)
-        self.assertEqual(puntos[0]['valor'], 222)
-        self.assertEqual(puntos[-1]['valor'], 333)
-        self.assertTrue(all(punto['valor'] == 0 for punto in puntos[1:-1]))
-        self.assertIn(str(inicio.year), puntos[0]['etiqueta'])
-        self.assertIn(str(self.inicio.year), puntos[-1]['etiqueta'])
+        self.assertEqual(len(puntos), monthrange(self.inicio.year, self.inicio.month)[1])
+        self.assertEqual(puntos[0]['valor'], 333)
+        self.assertTrue(all(punto['valor'] == 0 for punto in puntos[1:]))
         self.assertEqual(estados, {
             'PENDIENTE': 1,
-            'PAGADO': 2,
+            'PAGADO': 0,
             'ENVIADO': 1,
             'ENTREGADO': 1,
             'CANCELADO': 1,
@@ -464,6 +467,17 @@ class DashboardAdminTests(TestCase):
         self.assertContains(respuesta, 'id="hw-chart-ventas"')
         self.assertContains(respuesta, '"valor": 0')
         self.assertNotContains(respuesta, 'Aún no hay ventas registradas.')
+
+        anual = self.client.get(reverse('admin:index'), {'hw_periodo': 'anio'})
+        anuales = anual.context['hw']['graficos']['ventas']['puntos']
+        self.assertEqual(len(anuales), 12)
+        self.assertEqual(anuales[self.inicio.month - 1]['valor'], 333)
+        self.assertTrue(all(
+            punto['valor'] == 0
+            for indice, punto in enumerate(anuales)
+            if indice != self.inicio.month - 1
+        ))
+        self.assertIn(str(self.inicio.year), anuales[self.inicio.month - 1]['etiqueta'])
 
     def test_mas_vendidos_separa_el_mismo_nombre_en_modelos_distintos(self):
         cpu_a = self.cpu('Repetido', 8)
@@ -549,5 +563,152 @@ class DashboardAdminTests(TestCase):
         self.assertLess(inicio_paginacion, texto.index('evento.preventDefault()'))
         self.assertIn('}, true);', texto[inicio_paginacion:])
         respuesta = self.panel(self.superuser)
-        self.assertContains(respuesta, 'core/js/admin.js?v=20261108k')
-        self.assertContains(respuesta, 'core/css/admin.css?v=20261108k')
+        self.assertContains(respuesta, 'core/js/admin.js?v=20261108l')
+        self.assertContains(respuesta, 'core/css/admin.css?v=20261108l')
+        self.assertIn('hw_periodo', texto)
+        self.assertIn('firmaFiltro', texto)
+        self.assertIn('popstate', texto)
+        self.assertIn('hw-filtros', texto)
+
+    def test_filtros_de_periodo_validan_fechas_y_no_mezclan_paginacion(self):
+        for indice in range(9):
+            self.pedido('PAGADO', '1000.00', self.inicio + timedelta(minutes=indice))
+        self.client.force_login(self.superuser)
+        dia = self.inicio.date().isoformat()
+        rango = self.client.get(reverse('admin:index'), {
+            'hw_periodo': 'rango',
+            'hw_desde': dia,
+            'hw_hasta': dia,
+            'pedidos_pagina': 2,
+        })
+        datos = rango.context['hw']
+        self.assertEqual(datos['periodo']['aplicado'], 'rango')
+        self.assertEqual(datos['periodo']['agrupacion'], 'dia')
+        self.assertEqual(datos['ventas']['mes'], Decimal('9000.00'))
+        self.assertEqual(datos['ventas']['confirmados'], 9)
+        self.assertEqual(datos['ventas']['ticket'], Decimal('1000'))
+        self.assertEqual(len(datos['graficos']['ventas']['puntos']), 1)
+        self.assertEqual(datos['graficos']['ventas']['puntos'][0]['valor'], 9000)
+        self.assertContains(rango, 'Página 2 de 2')
+        self.assertContains(rango, 'hw_periodo=rango')
+        self.assertContains(rango, 'Período activo:')
+
+        invertido = self.client.get(reverse('admin:index'), {
+            'hw_periodo': 'rango',
+            'hw_desde': '2026-11-08',
+            'hw_hasta': '2026-11-01',
+        })
+        self.assertContains(invertido, 'El rango está invertido.')
+        self.assertEqual(invertido.context['hw']['periodo']['aplicado'], 'mes')
+
+        invalido = self.client.get(reverse('admin:index'), {
+            'hw_periodo': 'elegir',
+            'hw_mes': '13',
+            'hw_anio': '1999',
+        })
+        self.assertContains(invalido, 'La fecha no es válida.')
+        self.assertEqual(invalido.context['hw']['periodo']['aplicado'], 'mes')
+
+        manipulado = self.client.get(reverse('admin:index'), {'hw_periodo': 'todo'})
+        self.assertContains(manipulado, 'El período no es válido.')
+        self.assertEqual(manipulado.context['hw']['ventas']['mes'], Decimal('9000.00'))
+
+    def test_periodo_sin_ventas_comparacion_categoria_y_ranking(self):
+        anterior = self.pedido('PAGADO', '4000.00', self.inicio - timedelta(days=1))
+        actual = self.pedido('PAGADO', '9000.00', self.inicio)
+        self.pedido('PENDIENTE', '8000.00', self.inicio)
+        self.pedido('CANCELADO', '7000.00', self.inicio)
+        cpu = self.cpu('CPU-FILTRO', 6)
+        gpu = self.gpu('GPU-FILTRO', 6)
+        self.linea(anterior, cpu, 5, 'procesador')
+        self.linea(actual, cpu, 2, 'procesador')
+        linea_gpu = self.linea(actual, gpu, 1, 'tarjeta_grafica')
+        linea_gpu.precio_unitario = Decimal('1500.00')
+        linea_gpu.save(update_fields=['precio_unitario'])
+        gpu.precio = Decimal('99999.00')
+        gpu.save(update_fields=['precio'])
+        gpu.delete()
+
+        self.client.force_login(self.superuser)
+        vacio = self.client.get(reverse('admin:index'), {
+            'hw_periodo': 'elegir',
+            'hw_mes': 3,
+            'hw_anio': 2001,
+        })
+        datos_vacios = vacio.context['hw']
+        self.assertEqual(datos_vacios['ventas']['mes'], Decimal('0'))
+        self.assertEqual(datos_vacios['ventas']['confirmados'], 0)
+        self.assertEqual(datos_vacios['ventas']['ticket'], Decimal('0'))
+        self.assertEqual(datos_vacios['ventas']['unidades'], 0)
+        self.assertFalse(datos_vacios['ventas']['variacion_monto']['disponible'])
+        self.assertContains(vacio, 'Sin comparación disponible')
+        self.assertTrue(datos_vacios['graficos']['ventas']['vacio'])
+        self.assertEqual(len(datos_vacios['graficos']['ventas']['puntos']), 31)
+        self.assertTrue(all(punto['valor'] == 0 for punto in datos_vacios['graficos']['ventas']['puntos']))
+        self.assertTrue(datos_vacios['graficos']['vendidos']['vacio'])
+        self.assertNotContains(vacio, 'CPU-FILTRO')
+
+        mes = self.client.get(reverse('admin:index'))
+        datos = mes.context['hw']
+        self.assertEqual(datos['ventas']['unidades'], 3)
+        self.assertEqual(datos['ventas']['variacion_unidades']['texto'], '-40%')
+        self.assertEqual(
+            [(punto['etiqueta'], punto['valor'], punto['ingresos']) for punto in datos['graficos']['vendidos']['puntos']],
+            [('CPU-FILTRO · CPU', 2, 20000), ('GPU-FILTRO · Tarjeta Gráfica', 1, 1500)],
+        )
+        self.assertEqual(
+            [(punto['etiqueta'], punto['valor']) for punto in datos['graficos']['categorias']['puntos']],
+            [('CPU', 20000), ('Tarjeta Gráfica', 1500)],
+        )
+        self.assertEqual(datos['graficos']['unidades']['puntos'][0]['valor'], 3)
+        self.assertContains(mes, 'Unidades vendidas por día')
+        self.assertNotContains(mes, 'RANK-AUSENTE')
+
+        amplio = self.client.get(reverse('admin:index'), {
+            'hw_periodo': 'rango',
+            'hw_desde': '2026-01-01',
+            'hw_hasta': '2026-06-01',
+        })
+        self.assertEqual(amplio.context['hw']['periodo']['agrupacion'], 'mes')
+        semana = self.client.get(reverse('admin:index'), {
+            'hw_periodo': 'rango',
+            'hw_desde': '2026-08-01',
+            'hw_hasta': '2026-10-01',
+        })
+        self.assertEqual(semana.context['hw']['periodo']['agrupacion'], 'semana')
+
+    def test_la_tarjeta_comercial_es_parcial_y_respeta_permisos(self):
+        self.pedido('PAGADO', '180000.00', self.inicio)
+        self.cpu('CPU-VISIBLE', 4)
+        self.client.force_login(self.superuser)
+        parcial = self.client.get(reverse('admin:index'), {
+            'hw_tarjeta': 'comercial',
+            'hw_periodo': 'mes',
+            'pedidos_pagina': 2,
+            'alertas_pagina': 3,
+        })
+        self.assertContains(parcial, '<!-- hw-tarjeta:comercial -->')
+        self.assertContains(parcial, 'Ventas confirmadas')
+        self.assertContains(parcial, 'Aplicar filtros')
+        self.assertContains(parcial, 'Restablecer')
+        self.assertNotContains(parcial, 'Últimos pedidos')
+        self.assertNotContains(parcial, 'hw_tarjeta')
+        self.assertContains(parcial, 'pedidos_pagina=2')
+        self.assertContains(parcial, 'alertas_pagina=3')
+        self.assertEqual(parcial.context['hw']['productos']['disponibles'], 1)
+        self.assertNotIn('alertas', parcial.context['hw']['productos'])
+
+        cpu = self.staff('comercial-cpu', 'view_procesador')
+        self.client.force_login(cpu)
+        with CaptureQueriesContext(connection) as consultas:
+            respuesta = self.client.get(reverse('admin:index'), {'hw_tarjeta': 'comercial'})
+        sql = ' '.join(consulta['sql'] for consulta in consultas.captured_queries)
+        self.assertContains(respuesta, 'No tienes permiso para ver los pedidos.')
+        self.assertNotContains(respuesta, '180000')
+        self.assertNotContains(respuesta, '180.000')
+        self.assertNotIn('core_pedido', sql)
+
+        self.client.force_login(self.cliente)
+        anonima = self.client.get(reverse('admin:index'), {'hw_tarjeta': 'comercial'})
+        self.assertEqual(anonima.status_code, 302)
+        self.assertIn('/admin/login/', anonima.url)

@@ -583,6 +583,110 @@ body.hw-dashboard .content-wrapper {
     align-items: stretch;
 }
 
+.hw-stat-grid-operativa {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.hw-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.65rem 0.75rem;
+    margin: 0 0 0.55rem;
+    padding: 0.75rem 0.85rem;
+    background: #fff;
+    border: 1px solid var(--hw-border);
+    border-radius: 16px;
+}
+
+.hw-filtros label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin: 0;
+    color: var(--hw-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.hw-filtros select,
+.hw-filtros input {
+    min-width: 8.5rem;
+    height: 2.15rem;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--hw-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--hw-ink);
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 500;
+}
+
+.hw-filtro-aplicar,
+a.hw-filtros-reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.15rem;
+    padding: 0 0.9rem;
+    border: 1px solid var(--hw-green) !important;
+    border-radius: 999px;
+    background: #fff !important;
+    color: var(--hw-green-dark) !important;
+    font-size: 0.84rem;
+    font-weight: 650;
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+a.hw-filtro-aplicar:hover,
+.hw-filtro-aplicar:hover,
+a.hw-filtros-reset:hover,
+a.hw-filtros-reset:focus {
+    background: var(--hw-green-soft) !important;
+    color: var(--hw-green-dark) !important;
+}
+
+.hw-periodo-activo {
+    margin: 0 0 0.75rem;
+    color: var(--hw-ink);
+    font-size: 0.88rem;
+    font-weight: 650;
+}
+
+.hw-filtro-error {
+    margin: -0.35rem 0 0.75rem;
+    color: var(--hw-danger);
+    font-size: 0.84rem;
+    font-weight: 650;
+}
+
+.hw-variacion {
+    color: var(--hw-muted);
+    font-size: 0.78rem;
+    font-weight: 650;
+}
+
+.hw-variacion.is-up {
+    color: var(--hw-green-dark);
+}
+
+.hw-variacion.is-down {
+    color: var(--hw-danger);
+}
+
+.hw-seccion-titulo {
+    margin: 0.15rem 0 0.55rem;
+    color: var(--hw-ink);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.hw-chart-frame-baja {
+    height: 12rem;
+}
+
 .hw-stat-card {
     display: grid;
     grid-template-rows: subgrid;

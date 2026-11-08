@@ -1,0 +1,268 @@
+{% load humanize %}<!-- hw-tarjeta:comercial -->
+<form class="hw-filtros" method="get" action="{% url 'admin:index' %}">
+    {% if request.GET.pedidos_pagina %}
+        <input type="hidden" name="pedidos_pagina" value="{{ request.GET.pedidos_pagina }}">
+    {% endif %}
+    {% if request.GET.alertas_pagina %}
+        <input type="hidden" name="alertas_pagina" value="{{ request.GET.alertas_pagina }}">
+    {% endif %}
+    <label>Período
+        <select name="hw_periodo">
+            <option value="mes" {% if hw.periodo.modo == "mes" %}selected{% endif %}>Este mes</option>
+            <option value="anio" {% if hw.periodo.modo == "anio" %}selected{% endif %}>Este año</option>
+            <option value="elegir" {% if hw.periodo.modo == "elegir" %}selected{% endif %}>Mes específico</option>
+            <option value="rango" {% if hw.periodo.modo == "rango" %}selected{% endif %}>Rango personalizado</option>
+        </select>
+    </label>
+    <label>Mes
+        <input type="number" name="hw_mes" min="1" max="12" inputmode="numeric" value="{{ hw.periodo.mes }}">
+    </label>
+    <label>Año
+        <input type="number" name="hw_anio" min="2000" max="2100" inputmode="numeric" value="{{ hw.periodo.anio }}">
+    </label>
+    <label>Desde
+        <input type="date" name="hw_desde" value="{{ hw.periodo.desde }}">
+    </label>
+    <label>Hasta
+        <input type="date" name="hw_hasta" value="{{ hw.periodo.hasta }}">
+    </label>
+    <button type="submit" class="hw-filtro-aplicar">Aplicar filtros</button>
+    <a class="hw-filtros-reset" href="{{ hw.periodo.restablecer }}">Restablecer</a>
+</form>
+<p class="hw-periodo-activo">Período activo: {{ hw.periodo.etiqueta }}</p>
+{% if hw.periodo.error %}
+    <p class="hw-filtro-error" role="alert">{{ hw.periodo.error }} Se muestra este mes.</p>
+{% endif %}
+
+<div class="hw-stat-grid">
+    <article class="card hw-stat-card">
+        <span class="hw-stat-icon" aria-hidden="true"><i class="fas fa-dollar-sign"></i></span>
+        <h2 class="h6">Ventas confirmadas</h2>
+        {% if hw.ventas.permitido %}
+            <p class="hw-stat-value">${{ hw.ventas.monto|floatformat:"0"|intcomma }}</p>
+            <p class="hw-variacion{% if hw.ventas.variacion_monto.sube %} is-up{% elif hw.ventas.variacion_monto.baja %} is-down{% endif %}">
+                {% if hw.ventas.variacion_monto.disponible %}{{ hw.ventas.variacion_monto.texto }} frente a {{ hw.periodo.comparado_con }}{% else %}Sin comparación disponible{% endif %}
+            </p>
+            <p class="hw-note">Pedidos pagados, enviados o entregados. Sin pendientes ni cancelados.</p>
+        {% else %}
+            <p class="hw-stat-value" aria-hidden="true"></p>
+            <p class="hw-stat-secondary">No tienes permiso para ver las ventas.</p>
+            <p class="hw-note"></p>
+        {% endif %}
+    </article>
+    <article class="card hw-stat-card">
+        <span class="hw-stat-icon hw-stat-icon-pedidos" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+        <h2 class="h6">Pedidos confirmados</h2>
+        {% if hw.ventas.permitido %}
+            <p class="hw-stat-value">{{ hw.ventas.confirmados|intcomma }}</p>
+            <p class="hw-variacion{% if hw.ventas.variacion_pedidos.sube %} is-up{% elif hw.ventas.variacion_pedidos.baja %} is-down{% endif %}">
+                {% if hw.ventas.variacion_pedidos.disponible %}{{ hw.ventas.variacion_pedidos.texto }} frente a {{ hw.periodo.comparado_con }}{% else %}Sin comparación disponible{% endif %}
+            </p>
+            <p class="hw-note">No cuenta las unidades de cada pedido.</p>
+        {% else %}
+            <p class="hw-stat-value" aria-hidden="true"></p>
+            <p class="hw-stat-secondary">No tienes permiso para ver los pedidos.</p>
+            <p class="hw-note"></p>
+        {% endif %}
+    </article>
+    <article class="card hw-stat-card">
+        <span class="hw-stat-icon hw-stat-icon-productos" aria-hidden="true"><i class="fas fa-calculator"></i></span>
+        <h2 class="h6">Ticket promedio</h2>
+        {% if hw.ventas.permitido %}
+            <p class="hw-stat-value">${{ hw.ventas.ticket|floatformat:"0"|intcomma }}</p>
+            <p class="hw-variacion{% if hw.ventas.variacion_ticket.sube %} is-up{% elif hw.ventas.variacion_ticket.baja %} is-down{% endif %}">
+                {% if hw.ventas.variacion_ticket.disponible %}{{ hw.ventas.variacion_ticket.texto }} frente a {{ hw.periodo.comparado_con }}{% else %}Sin comparación disponible{% endif %}
+            </p>
+            <p class="hw-note">Venta confirmada dividida por esos pedidos.</p>
+        {% else %}
+            <p class="hw-stat-value" aria-hidden="true"></p>
+            <p class="hw-stat-secondary">No tienes permiso para ver las ventas.</p>
+            <p class="hw-note"></p>
+        {% endif %}
+    </article>
+    <article class="card hw-stat-card">
+        <span class="hw-stat-icon hw-stat-icon-stock" aria-hidden="true"><i class="fas fa-boxes"></i></span>
+        <h2 class="h6">Unidades vendidas</h2>
+        {% if not hw.ventas.permitido %}
+            <p class="hw-stat-value" aria-hidden="true"></p>
+            <p class="hw-stat-secondary">No tienes permiso para ver los pedidos.</p>
+            <p class="hw-note"></p>
+        {% elif hw.ventas.unidades == None %}
+            <p class="hw-stat-value" aria-hidden="true"></p>
+            <p class="hw-stat-secondary">No tienes permiso para ver los productos vendidos.</p>
+            <p class="hw-note"></p>
+        {% else %}
+            <p class="hw-stat-value">{{ hw.ventas.unidades|intcomma }}</p>
+            <p class="hw-variacion{% if hw.ventas.variacion_unidades.sube %} is-up{% elif hw.ventas.variacion_unidades.baja %} is-down{% endif %}">
+                {% if hw.ventas.variacion_unidades.disponible %}{{ hw.ventas.variacion_unidades.texto }} frente a {{ hw.periodo.comparado_con }}{% else %}Sin comparación disponible{% endif %}
+            </p>
+            <p class="hw-note">Suma de las líneas de pedidos confirmados.</p>
+        {% endif %}
+    </article>
+</div>
+
+<h2 class="hw-seccion-titulo" id="hw-inventario-actual">Inventario actual</h2>
+<div class="hw-stat-grid hw-stat-grid-operativa">
+    <article class="card hw-stat-card">
+        <span class="hw-stat-icon hw-stat-icon-productos" aria-hidden="true"><i class="fas fa-box"></i></span>
+        <h3 class="h6">Productos disponibles</h3>
+        {% if hw.productos.permitido %}
+            <p class="hw-stat-value">{{ hw.productos.disponibles|intcomma }}</p>
+            <p class="hw-note">Fichas con stock. No depende del filtro de ventas.</p>
+        {% else %}
+            <p class="hw-stat-secondary">No tienes permiso para ver los productos.</p>
+        {% endif %}
+    </article>
+    <article class="card hw-stat-card">
+        <span class="hw-stat-icon hw-stat-icon-stock" aria-hidden="true"><i class="fas fa-exclamation-triangle"></i></span>
+        <h3 class="h6">Stock bajo</h3>
+        {% if hw.productos.permitido %}
+            <p class="hw-stat-value">{{ hw.productos.stock_bajo|intcomma }}</p>
+            <p class="hw-stat-secondary">Agotados: {{ hw.productos.agotados|intcomma }}</p>
+            <p class="hw-note">Stock bajo: de 1 a 5 unidades.</p>
+        {% else %}
+            <p class="hw-stat-secondary">No tienes permiso para ver el inventario.</p>
+        {% endif %}
+    </article>
+    <article class="card hw-stat-card">
+        <span class="hw-stat-icon hw-stat-icon-pedidos" aria-hidden="true"><i class="fas fa-clock"></i></span>
+        <h3 class="h6">Pedidos pendientes</h3>
+        {% if hw.pedidos.permitido %}
+            <p class="hw-stat-value">{{ hw.pedidos.pendientes|intcomma }}</p>
+            <p class="hw-note">Estado actual. No usa el período comercial.</p>
+        {% else %}
+            <p class="hw-stat-secondary">No tienes permiso para ver los pedidos.</p>
+        {% endif %}
+    </article>
+</div>
+
+<div class="row hw-split">
+    <div class="col-lg-8">
+        <section class="card hw-panel" aria-labelledby="hw-ventas-mes">
+            <div class="card-header">
+                <h2 id="hw-ventas-mes" class="h6 mb-0">{% if hw.graficos.ventas %}{{ hw.graficos.ventas.titulo }}{% else %}Evolución de ventas{% endif %}</h2>
+            </div>
+            <div class="card-body">
+                {% if not hw.graficos.ventas %}
+                    <p class="hw-placeholder hw-empty-state">No tienes permiso para ver las ventas.</p>
+                {% elif hw.graficos.ventas.vacio %}
+                    <p class="hw-placeholder hw-empty-state">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i>
+                        <span>Aún no hay ventas registradas.</span>
+                    </p>
+                {% else %}
+                    {{ hw.graficos.ventas|json_script:"hw-grafico-ventas" }}
+                    <div class="hw-chart-frame">
+                        <canvas id="hw-chart-ventas" role="img" aria-label="{{ hw.graficos.ventas.titulo }}, en pesos chilenos"></canvas>
+                    </div>
+                    <ul class="sr-only">
+                        {% for punto in hw.graficos.ventas.puntos %}
+                            <li>{{ punto.etiqueta }}: ${{ punto.valor|intcomma }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-4">
+        <section class="card hw-panel" aria-labelledby="hw-pedidos-estado">
+            <div class="card-header">
+                <h2 id="hw-pedidos-estado" class="h6 mb-0">Pedidos por estado</h2>
+            </div>
+            <div class="card-body">
+                {% if not hw.graficos.estados %}
+                    <p class="hw-placeholder hw-empty-state">No tienes permiso para ver los pedidos.</p>
+                {% elif hw.graficos.estados.vacio %}
+                    <p class="hw-placeholder hw-empty-state">No hay pedidos registrados.</p>
+                {% else %}
+                    {{ hw.graficos.estados|json_script:"hw-grafico-estados" }}
+                    <div class="hw-chart-frame">
+                        <canvas id="hw-chart-estados" role="img" aria-label="Cantidad de pedidos por estado en el período"></canvas>
+                    </div>
+                    <ul class="sr-only">
+                        {% for punto in hw.graficos.estados.puntos %}
+                            <li>{{ punto.etiqueta }}: {{ punto.valor }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="row hw-split">
+    <div class="col-lg-6">
+        <section class="card hw-panel" aria-labelledby="hw-mas-vendidos">
+            <div class="card-header">
+                <h2 id="hw-mas-vendidos" class="h6 mb-0">Productos más vendidos</h2>
+            </div>
+            <div class="card-body">
+                {% if not hw.graficos.vendidos %}
+                    <p class="hw-placeholder">No tienes permiso para ver los productos vendidos.</p>
+                {% elif hw.graficos.vendidos.vacio %}
+                    <p class="hw-placeholder">No hay ventas registradas.</p>
+                {% else %}
+                    <ol class="hw-ranking">
+                        {% for punto in hw.graficos.vendidos.puntos %}
+                            <li class="hw-ranking-item">
+                                <div class="hw-ranking-meta">
+                                    <span class="hw-ranking-nombre">{{ punto.etiqueta }}</span>
+                                    <span class="hw-ranking-cifra">
+                                        <strong>{{ punto.valor }} unidad{{ punto.valor|pluralize:"es" }}</strong>
+                                        <span class="hw-ranking-ingreso">${{ punto.ingresos|floatformat:"0"|intcomma }}</span>
+                                    </span>
+                                </div>
+                                <div class="hw-ranking-track" aria-hidden="true">
+                                    <span class="hw-ranking-barra" style="width: {{ punto.ancho }}%"></span>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-6">
+        <section class="card hw-panel" aria-labelledby="hw-ventas-categoria">
+            <div class="card-header">
+                <h2 id="hw-ventas-categoria" class="h6 mb-0">Ventas por categoría</h2>
+            </div>
+            <div class="card-body">
+                {% if not hw.graficos.categorias %}
+                    <p class="hw-placeholder">No tienes permiso para ver los productos vendidos.</p>
+                {% elif hw.graficos.categorias.vacio %}
+                    <p class="hw-placeholder">No hay ventas registradas.</p>
+                {% else %}
+                    {{ hw.graficos.categorias|json_script:"hw-grafico-categorias" }}
+                    <div class="hw-chart-frame">
+                        <canvas id="hw-chart-categorias" role="img" aria-label="Ingresos confirmados por categoría, en pesos chilenos"></canvas>
+                    </div>
+                    <ul class="sr-only">
+                        {% for punto in hw.graficos.categorias.puntos %}
+                            <li>{{ punto.etiqueta }}: ${{ punto.valor|intcomma }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="card hw-panel" aria-labelledby="hw-unidades">
+    <div class="card-header">
+        <h2 id="hw-unidades" class="h6 mb-0">{% if hw.graficos.unidades %}{{ hw.graficos.unidades.titulo }}{% else %}Unidades vendidas{% endif %}</h2>
+    </div>
+    <div class="card-body">
+        {% if not hw.graficos.unidades %}
+            <p class="hw-placeholder">No tienes permiso para ver los productos vendidos.</p>
+        {% elif hw.graficos.unidades.vacio %}
+            <p class="hw-placeholder">No hay ventas registradas.</p>
+        {% else %}
+            <p class="hw-note">Cuenta unidades, no pesos. El monto del mismo período está en la evolución de ventas.</p>
+            {{ hw.graficos.unidades|json_script:"hw-grafico-unidades" }}
+            <div class="hw-chart-frame hw-chart-frame-baja">
+                <canvas id="hw-chart-unidades" role="img" aria-label="{{ hw.graficos.unidades.titulo }}"></canvas>
+            </div>
+        {% endif %}
+    </div>
+</section>
