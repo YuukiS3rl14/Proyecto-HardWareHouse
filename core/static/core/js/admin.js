@@ -1,4 +1,5 @@
 (function () {
+    try {
     var menu = document.querySelector("#jazzy-sidebar .nav-sidebar");
     if (!menu) {
         return;
@@ -76,22 +77,35 @@
             abrir(grupo, !grupo.classList.contains("is-open"));
         });
     });
+    } catch (error) {
+        /* El menú no debe abortar el script: la paginación va después. */
+    }
 })();
 
 (function () {
-    var raiz = document.querySelector(".hw-dashboard");
-    if (!raiz) {
-        return;
-    }
-
     var controles = {};
     var anclas = {
         pedidos: "hw-ultimos-pedidos",
         alertas: "hw-alertas"
     };
+    var paginas = {};
+
+    function claveDe(tarjeta) {
+        return tarjeta === "pedidos" ? "pedidos_pagina" : "alertas_pagina";
+    }
+
+    function paginaDe(tarjeta) {
+        return new URLSearchParams(window.location.search).get(claveDe(tarjeta)) || "1";
+    }
+
+    function recordarPaginas() {
+        Object.keys(anclas).forEach(function (tarjeta) {
+            paginas[tarjeta] = paginaDe(tarjeta);
+        });
+    }
 
     function seccionDe(tarjeta) {
-        return raiz.querySelector('[data-hw-tarjeta="' + tarjeta + '"]');
+        return document.querySelector('.hw-dashboard [data-hw-tarjeta="' + tarjeta + '"]');
     }
 
     function urlVisible(href, tarjeta) {
@@ -182,14 +196,18 @@
             }
             return respuesta.text();
         }).then(function (html) {
-            if (control.signal.aborted) {
+            if (controles[tarjeta] !== control) {
                 return;
             }
+            var scrollX = window.scrollX;
+            var scrollY = window.scrollY;
             aplicar(seccion, html, tarjeta);
+            window.scrollTo(scrollX, scrollY);
             if (empujar) {
                 var visible = urlVisible(href, tarjeta);
                 history.pushState({ hwTarjeta: tarjeta }, "", visible.pathname + visible.search + visible.hash);
             }
+            paginas[tarjeta] = paginaDe(tarjeta);
         }).catch(function (error) {
             if (error && error.name === "AbortError") {
                 return;
@@ -202,12 +220,20 @@
         });
     }
 
-    raiz.addEventListener("click", function (evento) {
-        var enlace = evento.target.closest("a.hw-pager-link");
-        if (!enlace || !raiz.contains(enlace)) {
+    document.addEventListener("click", function (evento) {
+        if (evento.button > 0 || evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey) {
             return;
         }
-        if (evento.button !== 0 || evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey) {
+        var nodo = evento.target;
+        var enlace = null;
+        while (nodo && nodo !== document) {
+            if (nodo.nodeType === 1 && nodo.tagName === "A" && nodo.classList && nodo.classList.contains("hw-pager-link")) {
+                enlace = nodo;
+                break;
+            }
+            nodo = nodo.parentNode;
+        }
+        if (!enlace || !enlace.closest(".hw-dashboard")) {
             return;
         }
         var seccion = enlace.closest("[data-hw-tarjeta]");
@@ -216,15 +242,21 @@
         }
         evento.preventDefault();
         cargar(enlace.getAttribute("href"), seccion.getAttribute("data-hw-tarjeta"), true);
-    });
+    }, true);
 
     window.addEventListener("popstate", function () {
         Object.keys(anclas).forEach(function (tarjeta) {
             if (!seccionDe(tarjeta)) {
                 return;
             }
+            var nueva = paginaDe(tarjeta);
+            if (nueva === paginas[tarjeta]) {
+                return;
+            }
             var visible = window.location.pathname + window.location.search + "#" + anclas[tarjeta];
             cargar(visible, tarjeta, false);
         });
     });
+
+    recordarPaginas();
 })();

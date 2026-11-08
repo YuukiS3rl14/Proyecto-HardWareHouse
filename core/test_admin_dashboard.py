@@ -533,3 +533,21 @@ class DashboardAdminTests(TestCase):
         )
         self.assertEqual(puntos[0]['ancho'], 100)
         self.assertNotIn('RANK-0', [punto['etiqueta'] for punto in puntos])
+
+    def test_el_script_intercepta_el_clic_aunque_falle_el_menu(self):
+        from pathlib import Path
+
+        from django.conf import settings
+
+        texto = (Path(settings.BASE_DIR) / 'core' / 'static' / 'core' / 'js' / 'admin.js').read_text(encoding='utf-8')
+        inicio_menu = texto.index('var menu = document.querySelector')
+        inicio_paginacion = texto.index('document.addEventListener("click"')
+        self.assertLess(inicio_menu, texto.index('} catch (error) {'))
+        self.assertLess(texto.index('} catch (error) {'), inicio_paginacion)
+        self.assertIn('parentNode', texto)
+        self.assertIn('evento.button > 0', texto)
+        self.assertLess(inicio_paginacion, texto.index('evento.preventDefault()'))
+        self.assertIn('}, true);', texto[inicio_paginacion:])
+        respuesta = self.panel(self.superuser)
+        self.assertContains(respuesta, 'core/js/admin.js?v=20261108k')
+        self.assertContains(respuesta, 'core/css/admin.css?v=20261108k')

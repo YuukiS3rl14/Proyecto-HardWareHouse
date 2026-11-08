@@ -675,7 +675,7 @@ body.hw-dashboard .content-wrapper {
     padding: 0.28rem 0.75rem;
     border: 1px solid var(--hw-green);
     border-radius: 999px;
-    background: var(--hw-green-soft);
+    background: #fff;
     color: var(--hw-green-dark);
     font-size: 0.8rem;
     font-weight: 600;
@@ -690,10 +690,22 @@ body.hw-dashboard .content-wrapper {
     flex: 0 0 auto;
 }
 
-.hw-pager-link:hover {
-    background: var(--hw-green);
-    border-color: var(--hw-green-dark);
-    color: #fff;
+a.hw-pager-link,
+a.hw-pager-link:visited,
+a.hw-pager-link:hover,
+a.hw-pager-link:focus,
+a.hw-pager-link:active {
+    background: #fff !important;
+    color: var(--hw-green-dark) !important;
+    border-color: var(--hw-green) !important;
+    text-decoration: none !important;
+}
+
+a.hw-pager-link:hover,
+a.hw-pager-link:focus,
+a.hw-pager-link:active {
+    background: var(--hw-green-soft) !important;
+    color: var(--hw-green-dark) !important;
 }
 
 .hw-pager-link:focus-visible {
@@ -701,10 +713,13 @@ body.hw-dashboard .content-wrapper {
     outline-offset: 2px;
 }
 
-.hw-pager-link.is-disabled {
-    border-color: var(--hw-border);
-    background: var(--hw-surface-alt);
-    color: var(--hw-muted);
+.hw-pager-link.is-disabled,
+.hw-pager-link.is-disabled:hover,
+.hw-pager-link.is-disabled:focus,
+.hw-pager-link.is-disabled:active {
+    border-color: var(--hw-border) !important;
+    background: var(--hw-surface-alt) !important;
+    color: var(--hw-muted) !important;
     font-weight: 500;
     pointer-events: none;
 }
