@@ -220,7 +220,8 @@ a:hover {
 }
 
 .main-sidebar .nav-sidebar > .nav-item > .nav-link,
-.main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link {
+.main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link,
+.main-sidebar .hw-menu-sub > .nav-item > .nav-link {
     color: rgba(255, 255, 255, 0.86);
     border-radius: 0.6rem;
     margin: 0.08rem 0.65rem;
@@ -229,13 +230,16 @@ a:hover {
 }
 
 .main-sidebar .nav-sidebar > .nav-item > .nav-link:hover,
-.main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link:hover {
+.main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link:hover,
+.main-sidebar .hw-menu-sub > .nav-item > .nav-link:hover,
+.main-sidebar .hw-menu-toggle:hover {
     background: rgba(255, 255, 255, 0.08);
     color: #fff;
 }
 
 .main-sidebar .nav-sidebar > .nav-item > .nav-link.active,
-.main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link.active {
+.main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link.active,
+.main-sidebar .hw-menu-sub > .nav-item > .nav-link.active {
     background: rgba(22, 163, 74, 0.22) !important;
     color: #fff !important;
     box-shadow: inset 3px 0 0 var(--hw-green);
@@ -251,9 +255,55 @@ a:hover {
     color: #fff !important;
 }
 
-.main-sidebar .nav-link:focus-visible {
+.main-sidebar .nav-link:focus-visible,
+.main-sidebar .hw-menu-toggle:focus-visible {
     outline: 3px solid rgba(147, 197, 253, 0.95);
     outline-offset: 2px;
+}
+
+.main-sidebar .hw-menu-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: calc(100% - 1.3rem);
+    border: 0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.main-sidebar .hw-menu-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 600;
+}
+
+.main-sidebar .hw-menu-chevron {
+    flex: 0 0 auto;
+    margin-left: auto;
+    font-size: 0.72rem;
+    opacity: 0.8;
+    transition: transform 0.18s var(--hw-ease);
+}
+
+.main-sidebar .hw-menu-group.is-open > .hw-menu-toggle .hw-menu-chevron {
+    transform: rotate(180deg);
+}
+
+.main-sidebar .hw-menu-sub {
+    margin: 0 0 0.2rem;
+    padding: 0;
+    list-style: none;
+}
+
+.main-sidebar .hw-menu-sub > .nav-item > .nav-link {
+    margin-left: 1.15rem;
+    margin-right: 0.65rem;
+}
+
+.main-sidebar .hw-menu-sub[hidden] {
+    display: none !important;
 }
 
 .main-footer {
@@ -934,6 +984,7 @@ fieldset .card,
 
 @media (prefers-reduced-motion: reduce) {
     .nav-sidebar .nav-link,
+    .hw-menu-chevron,
     .btn {
         transition: none;
     }

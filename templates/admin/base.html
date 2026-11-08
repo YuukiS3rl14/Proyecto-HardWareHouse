@@ -36,7 +36,7 @@
 
     {% if jazzmin_settings.custom_css %}
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static jazzmin_settings.custom_css %}?v=20261107f">
+    <link rel="stylesheet" href="{% static jazzmin_settings.custom_css %}?v=20261108a">
     {% endif %}
 
     <!-- favicons -->
@@ -211,10 +211,9 @@
                     </div>
 
                     <nav class="mt-2">
-                        <ul class="nav nav-pills nav-sidebar flex-column {{ jazzmin_ui.sidebar_list_classes }}" data-widget="treeview" role="menu" data-collapsible="false">
+                        <ul class="nav nav-pills nav-sidebar flex-column hw-side-menu {{ jazzmin_ui.sidebar_list_classes }}" role="menu">
 
                             {% agrupar_menu side_menu_list as menu_grupos %}
-                            <li class="nav-header">Dashboard</li>
                             <li class="nav-item">
                                 <a href="{% url 'admin:index' %}" class="nav-link">
                                     <i class="nav-icon fas fa-th-large"></i>
@@ -222,20 +221,28 @@
                                 </a>
                             </li>
                             {% for grupo in menu_grupos %}
-                                <li class="nav-header">{{ grupo.nombre }}</li>
-                                {% for model in grupo.modelos %}
-                                    <li class="nav-item">
-                                        {% if model.url %}
-                                            <a href="{{ model.url }}" class="nav-link">
-                                                <i class="nav-icon {{ model.icon }}"></i> <p>{{ model.name }}</p>
-                                            </a>
-                                        {% else %}
-                                            <span class="nav-link disabled">
-                                                <i class="nav-icon {{ model.icon }}"></i> <p>{{ model.name }}</p>
-                                            </span>
-                                        {% endif %}
-                                    </li>
-                                {% endfor %}
+                                <li class="nav-item hw-menu-group{% if grupo.abierto %} is-open{% endif %}">
+                                    <button type="button" class="nav-link hw-menu-toggle" aria-expanded="{% if grupo.abierto %}true{% else %}false{% endif %}" aria-controls="hw-menu-{{ forloop.counter }}">
+                                        <i class="nav-icon {{ grupo.icono }}" aria-hidden="true"></i>
+                                        <span class="hw-menu-label">{{ grupo.nombre }}</span>
+                                        <i class="fas fa-chevron-down hw-menu-chevron" aria-hidden="true"></i>
+                                    </button>
+                                    <ul class="nav flex-column hw-menu-sub" id="hw-menu-{{ forloop.counter }}" {% if not grupo.abierto %}hidden{% endif %}>
+                                        {% for model in grupo.modelos %}
+                                            <li class="nav-item">
+                                                {% if model.url %}
+                                                    <a href="{{ model.url }}" class="nav-link">
+                                                        <i class="nav-icon {{ model.icon }}"></i> <p>{{ model.name }}</p>
+                                                    </a>
+                                                {% else %}
+                                                    <span class="nav-link disabled">
+                                                        <i class="nav-icon {{ model.icon }}"></i> <p>{{ model.name }}</p>
+                                                    </span>
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
                             {% endfor %}
                         </ul>
                     </nav>
@@ -353,7 +360,7 @@
 <script src="{% static "jazzmin/js/main.js" %}"></script>
 
 {% if jazzmin_settings.custom_js %}
-<script src="{% static jazzmin_settings.custom_js %}"></script>
+<script src="{% static jazzmin_settings.custom_js %}?v=20261108a"></script>
 {% endif %}
 
 {% if jazzmin_settings.show_ui_builder %}

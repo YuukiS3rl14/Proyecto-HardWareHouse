@@ -17,24 +17,16 @@ COMPONENTES = (
 )
 
 GRUPOS = (
-    ('Catálogo y componentes', COMPONENTES + ('core.proveedor',)),
+    ('Catálogo y componentes', COMPONENTES + ('core.proveedor',), 'fas fa-microchip'),
     ('Pedidos y ventas', (
         'core.pedido',
         'core.pagoboleta',
         'ipn.paypalipn',
-    )),
-    ('Clientes y actividad', (
-        'core.carrito',
-        'core.itemcarrito',
-        'core.favorito',
-        'core.comentario',
+    ), 'fas fa-receipt'),
+    ('Usuarios y permisos', (
         'auth.user',
-    )),
-    ('Configuración', (
-        'core.region',
-        'core.comuna',
         'auth.group',
-    )),
+    ), 'fas fa-user-shield'),
 )
 
 
@@ -102,28 +94,54 @@ def accesos_principales(side_menu):
     return accesos
 
 
-@register.simple_tag
-def agrupar_menu(side_menu):
+def _ruta(url):
+    return (url or '').split('#', 1)[0].rstrip('/') or '/'
+
+
+def _coincide(url, ruta):
+    if not url or not ruta or '#' in url:
+        return False
+    base = _ruta(url)
+    if base == '/admin':
+        return ruta == '/admin'
+    return ruta == base or ruta.startswith(base + '/')
+
+
+def _grupo(nombre, icono, modelos, ruta):
+    return {
+        'nombre': nombre,
+        'icono': icono,
+        'modelos': modelos,
+        'abierto': any(_coincide(modelo.get('url'), ruta) for modelo in modelos),
+    }
+
+
+@register.simple_tag(takes_context=True)
+def agrupar_menu(context, side_menu):
     """Agrupa el menú que Jazzmin ya filtró por permisos. No oculta modelos desconocidos."""
+    request = context.get('request') if context else None
+    ruta = _ruta(getattr(request, 'path', ''))
     encontrados = _modelos(side_menu)
     usados = set()
     grupos = []
-    for nombre, claves in GRUPOS:
-        modelos = _tomar(encontrados, claves, usados)
-        if modelos:
-            grupos.append({'nombre': nombre, 'modelos': modelos})
-        if nombre == 'Catálogo y componentes' and any(clave in encontrados for clave in COMPONENTES):
-            grupos.append({
-                'nombre': 'Inventario',
-                'modelos': [{
+    for nombre, claves, icono in GRUPOS:
+        if nombre == 'Pedidos y ventas':
+            inventario = []
+            if any(clave in encontrados for clave in COMPONENTES):
+                inventario.append({
                     'name': 'Alertas de inventario',
                     'url': reverse('admin:index') + '#hw-alertas',
                     'icon': 'fas fa-exclamation-triangle',
-                }],
-            })
+                })
+            inventario.extend(_tomar(encontrados, ('core.movimientostock',), usados))
+            if inventario:
+                grupos.append(_grupo('Inventario', 'fas fa-boxes', inventario, ruta))
+        modelos = _tomar(encontrados, claves, usados)
+        if modelos:
+            grupos.append(_grupo(nombre, icono, modelos, ruta))
     restantes = [modelo for clave, modelo in encontrados.items() if clave not in usados]
     if restantes:
-        grupos.append({'nombre': 'Otros', 'modelos': restantes})
+        grupos.append(_grupo('Otros', 'fas fa-ellipsis-h', restantes, ruta))
     return grupos
 
 
