@@ -277,6 +277,8 @@ class DashboardAdminTests(TestCase):
         ))
         self.assertNotIn('OFFSET 8', sql)
         self.assertContains(primera, 'Página 1 de 2')
+        self.assertContains(primera, 'hw-pager-link is-disabled')
+        self.assertContains(primera, 'aria-disabled="true"')
         self.assertContains(primera, 'pedidos_pagina=2#hw-ultimos-pedidos')
         self.assertContains(primera, reverse('admin:core_pedido_change', args=[creados[-1].pk]))
 

@@ -167,15 +167,15 @@
                             {% if hw.pedidos.paginacion.total %}
                                 <nav class="hw-pager" aria-label="Páginas de últimos pedidos">
                                     {% if hw.pedidos.paginacion.anterior %}
-                                        <a class="hw-pager-link" href="{{ hw.pedidos.paginacion.anterior }}">Anterior</a>
+                                        <a class="hw-pager-link" href="{{ hw.pedidos.paginacion.anterior }}">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</a>
                                     {% else %}
-                                        <span class="hw-pager-link is-disabled">Anterior</span>
+                                        <span class="hw-pager-link is-disabled" aria-disabled="true">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</span>
                                     {% endif %}
                                     <span class="hw-pager-status">Página {{ hw.pedidos.paginacion.numero }} de {{ hw.pedidos.paginacion.paginas }}</span>
                                     {% if hw.pedidos.paginacion.siguiente %}
-                                        <a class="hw-pager-link" href="{{ hw.pedidos.paginacion.siguiente }}">Siguiente</a>
+                                        <a class="hw-pager-link" href="{{ hw.pedidos.paginacion.siguiente }}">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</a>
                                     {% else %}
-                                        <span class="hw-pager-link is-disabled">Siguiente</span>
+                                        <span class="hw-pager-link is-disabled" aria-disabled="true">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</span>
                                     {% endif %}
                                 </nav>
                             {% endif %}
@@ -222,15 +222,15 @@
                             {% if hw.productos.paginacion.total %}
                                 <nav class="hw-pager" aria-label="Páginas de alertas de inventario">
                                     {% if hw.productos.paginacion.anterior %}
-                                        <a class="hw-pager-link" href="{{ hw.productos.paginacion.anterior }}">Anterior</a>
+                                        <a class="hw-pager-link" href="{{ hw.productos.paginacion.anterior }}">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</a>
                                     {% else %}
-                                        <span class="hw-pager-link is-disabled">Anterior</span>
+                                        <span class="hw-pager-link is-disabled" aria-disabled="true">{% include "admin/includes/pager_arrow.html" with direccion="izquierda" %} Anterior</span>
                                     {% endif %}
                                     <span class="hw-pager-status">Página {{ hw.productos.paginacion.numero }} de {{ hw.productos.paginacion.paginas }}</span>
                                     {% if hw.productos.paginacion.siguiente %}
-                                        <a class="hw-pager-link" href="{{ hw.productos.paginacion.siguiente }}">Siguiente</a>
+                                        <a class="hw-pager-link" href="{{ hw.productos.paginacion.siguiente }}">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</a>
                                     {% else %}
-                                        <span class="hw-pager-link is-disabled">Siguiente</span>
+                                        <span class="hw-pager-link is-disabled" aria-disabled="true">Siguiente {% include "admin/includes/pager_arrow.html" with direccion="derecha" %}</span>
                                     {% endif %}
                                 </nav>
                             {% endif %}
