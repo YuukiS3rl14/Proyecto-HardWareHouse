@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load humanize %}
+{% load formato_clp %}
 {% load producto_extras %} 
 
 {% block tittle %} Tienda {% endblock %}
@@ -142,10 +142,10 @@
                                 <div class="d-flex flex-column align-items-center">
                                     {% if producto.precio_vigente < producto.precio %}
                                         {% if producto.porcentaje_descuento %}<span class="badge bg-danger mb-1">-{{ producto.porcentaje_descuento }}%</span>{% endif %}
-                                        <h6 class="text-muted mb-0"><s>${{ producto.precio|floatformat:"0"|intcomma }}</s></h6>
-                                        <h6 class="text-success mb-0">${{ producto.precio_vigente|floatformat:"0"|intcomma }}</h6>
+                                        <h6 class="text-muted mb-0"><s>{{ producto.precio|pesos }}</s></h6>
+                                        <h6 class="text-success mb-0">{{ producto.precio_vigente|pesos }}</h6>
                                     {% else %}
-                                        <h6 class="mb-0">${{ producto.precio|floatformat:"0"|intcomma }}</h6>
+                                        <h6 class="mb-0">{{ producto.precio|pesos }}</h6>
                                     {% endif %}
                                 </div>
                                 <small class="text-muted d-block mt-1">{{ producto.categoria }}</small>

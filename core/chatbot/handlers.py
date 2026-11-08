@@ -11,6 +11,7 @@ from core.chatbot.intents import Intent
 from core.chatbot.nlp import extraer_termino_busqueda, termino_busqueda_especifico
 from core.chatbot.private_data import respuesta_mis_pedidos
 from core.chatbot.search import FiltrosCatalogo, buscar_catalogo
+from core.formato_clp import formatear_pesos
 
 
 def _path(name: str, **kwargs) -> str:
@@ -20,7 +21,7 @@ def _path(name: str, **kwargs) -> str:
 
 
 def _formato_clp(valor: int) -> str:
-    return f'${valor:,}'.replace(',', '.')
+    return formatear_pesos(valor)
 
 
 def _linea_producto(item: dict) -> str:

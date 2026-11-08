@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load humanize %}
+{% load formato_clp %}
 {% load producto_extras %}
 
 {% block tittle %} Mis Favoritos {% endblock %}
@@ -45,10 +45,10 @@
                         <td class="align-middle" data-label="Precio">
                             {% if item.producto.precio_vigente < item.producto.precio %}
                                 {% if item.producto.porcentaje_descuento %}<span class="badge bg-danger">-{{ item.producto.porcentaje_descuento }}%</span>{% endif %}
-                                <s class="text-muted">${{ item.producto.precio|floatformat:"0"|intcomma }}</s>
-                                ${{ item.producto.precio_vigente|floatformat:"0"|intcomma }}
+                                <s class="text-muted">{{ item.producto.precio|pesos }}</s>
+                                {{ item.producto.precio_vigente|pesos }}
                             {% else %}
-                                ${{ item.producto.precio|floatformat:"0"|intcomma }}
+                                {{ item.producto.precio|pesos }}
                             {% endif %}
                         </td>
                         <td class="align-middle" data-label="Stock">

@@ -1,6 +1,7 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load humanize %}
+{% load formato_clp %}
+{% load l10n %}
 {% load producto_extras %}
 
 {% block tittle %} Carrito {% endblock %}
@@ -32,7 +33,7 @@
                             <img src="{{ producto|imagen_producto }}" alt="{{ producto.nombre }}" style="width: 50px;">
                             {{ producto.nombre }}
                         </td>
-                        <td class="align-middle" data-label="Precio">${{ item.precio_unitario|floatformat:"0"|intcomma }}</td>
+                        <td class="align-middle" data-label="Precio">{{ item.precio_unitario|pesos }}</td>
                         <td class="align-middle hw-qty" data-label="Cantidad">
                             <form action="{% url 'core:actualizar_carrito' item.id %}" method="POST" id="form-{{ item.id }}" class="d-inline">
                                 {% csrf_token %}
@@ -47,7 +48,7 @@
                                         value="{{ item.cantidad }}"
                                         data-cantidad="{{ item.cantidad }}"
                                         data-stock="{{ producto.stock }}"
-                                        data-precio="{{ item.precio_unitario }}"
+                                        data-precio="{{ item.precio_unitario|unlocalize }}"
                                         min="1" max="{{ producto.stock }}"
                                         aria-label="Cantidad">
                                     <div class="input-group-btn">
@@ -59,7 +60,7 @@
                                 <p class="small text-danger mb-0" data-cantidad-error role="alert"></p>
                             </form>
                         </td>
-                        <td class="align-middle" data-label="Total">${{ item.get_total|floatformat:"0"|intcomma }}</td>
+                        <td class="align-middle" data-label="Total">{{ item.get_total|pesos }}</td>
                         <td class="align-middle" data-label="Quitar">
                             <a href="{% url 'core:eliminar_del_carrito' item.id %}" class="btn btn-sm btn-danger" title="Quitar del carrito"><i class="fas fa-trash-alt" aria-hidden="true"></i><span class="sr-only">Quitar</span></a>
                         </td>
@@ -78,7 +79,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-3 pt-1">
                         <h6 class="font-weight-medium">Subtotal</h6>
-                        <h6 class="font-weight-medium">${{ total_carrito|floatformat:"0"|intcomma }}</h6>
+                        <h6 class="font-weight-medium">{{ total_carrito|pesos }}</h6>
                     </div>
                     <div class="d-flex justify-content-between">
                         <h6 class="font-weight-medium">Envío</h6>
@@ -88,7 +89,7 @@
                 <div class="card-footer border-secondary bg-transparent">
                     <div class="d-flex justify-content-between mt-2">
                         <h5 class="font-weight-bold">Total</h5>
-                        <h5 class="font-weight-bold">${{ total_carrito|floatformat:"0"|intcomma }}</h5>
+                        <h5 class="font-weight-bold">{{ total_carrito|pesos }}</h5>
                     </div>
                     <a href="{% url 'core:checkout' %}" class="btn btn-block btn-success my-3 py-3"><i class="fas fa-lock mr-2" aria-hidden="true"></i>Proceder al Pago</a>
                 </div>

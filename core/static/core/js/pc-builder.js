@@ -10,6 +10,10 @@ function iniciarArmado() {
         }
         return imagenesCategoria[clave] || '';
     }
+    function pesosClp(valor) {
+        return window.hwPesos(valor);
+    }
+
     const builderContainer = document.getElementById('pc-builder');
     const summaryList = document.getElementById('summary-list');
     const totalPriceEl = document.getElementById('total-price');
@@ -82,7 +86,7 @@ function iniciarArmado() {
         const hay = discos.length > 0;
         const detalle = hay ? htmlEstadoTarjeta('almacenamiento', label) : '';
         const totalDiscos = discos.reduce((suma, disco) => suma + parseFloat(disco.precio) * disco.cantidad, 0);
-        const precio = hay ? `$${totalDiscos.toLocaleString('es-CL')}` : '-';
+        const precio = hay ? pesosClp(totalDiscos) : '-';
         const lineas = hay ? discos.map(disco => {
             const subtotal = parseFloat(disco.precio) * disco.cantidad;
             return `
@@ -93,7 +97,7 @@ function iniciarArmado() {
                         <label class="small mb-0">Cantidad
                             <input type="number" min="1" max="${disco.stock}" step="1" class="form-control form-control-sm cantidad-disco d-inline-block ml-1" style="width: 4.5rem;" data-model-name="${escaparHtml(disco.model_name)}" data-id="${disco.id}" value="${disco.cantidad}">
                         </label>
-                        <strong class="small">$${subtotal.toLocaleString('es-CL')}</strong>
+                        <strong class="small">${pesosClp(subtotal)}</strong>
                         <button type="button" class="btn btn-sm btn-outline-danger quitar-disco-btn" data-model-name="${escaparHtml(disco.model_name)}" data-id="${disco.id}">Quitar</button>
                     </div>
                 </div>`;
@@ -124,7 +128,7 @@ function iniciarArmado() {
         const hay = memorias.length > 0;
         const detalle = hay ? htmlEstadoTarjeta('memoria_ram', label) : '';
         const totalRam = memorias.reduce((suma, ram) => suma + parseFloat(ram.precio) * ram.cantidad, 0);
-        const precio = hay ? `$${totalRam.toLocaleString('es-CL')}` : '-';
+        const precio = hay ? pesosClp(totalRam) : '-';
         const lineas = hay ? memorias.map(ram => {
             const subtotal = parseFloat(ram.precio) * ram.cantidad;
             return `
@@ -135,7 +139,7 @@ function iniciarArmado() {
                         <label class="small mb-0">Cantidad
                             <input type="number" min="1" max="${ram.stock}" step="1" class="form-control form-control-sm cantidad-ram d-inline-block ml-1" style="width: 4.5rem;" data-id="${ram.id}" value="${ram.cantidad}">
                         </label>
-                        <strong class="small">$${subtotal.toLocaleString('es-CL')}</strong>
+                        <strong class="small">${pesosClp(subtotal)}</strong>
                         <button type="button" class="btn btn-sm btn-outline-secondary select-component-btn" data-type="memoria_ram" data-modo="reemplazar" data-reemplaza-id="${ram.id}">Editar</button>
                         <button type="button" class="btn btn-sm btn-outline-danger quitar-ram-btn" data-id="${ram.id}">Quitar</button>
                     </div>
@@ -195,7 +199,7 @@ function iniciarArmado() {
         if (key === 'almacenamiento') {
             return htmlAlmacenamiento(label);
         }
-        const price = component ? `$${parseInt(component.precio).toLocaleString('es-CL')}` : '-';
+        const price = component ? pesosClp(parseInt(component.precio, 10)) : '-';
         const name = component ? component.nombre : `No seleccionado`;
         const image = imagenComponente(component, key);
 
@@ -520,7 +524,7 @@ function iniciarArmado() {
             html += '<div class="list-group">';
             visibles.forEach(candidato => {
                 const local = productoDeCandidato(candidato);
-                const price = parseInt(local.precio).toLocaleString('es-CL');
+                const price = pesosClp(parseInt(local.precio, 10));
                 const image = local.imagen || imagenesCategoria[categoriaModal] || '';
                 const detalle = detalleRecomendacion(candidato, local);
                 const etiquetaStock = candidato.seleccionable ? '' : '<span class="badge badge-secondary ml-2">Sin stock</span>';
@@ -533,7 +537,7 @@ function iniciarArmado() {
                             <div class="flex-grow-1 min-w-0">
                                 <div class="d-flex justify-content-between gap-2">
                                     <h6 class="mb-1 armado-opcion-nombre">${escaparHtml(local.nombre)}${etiquetaStock}</h6>
-                                    <strong class="armado-opcion-precio flex-shrink-0">$${price}</strong>
+                                    <strong class="armado-opcion-precio flex-shrink-0">${price}</strong>
                                 </div>
                                 ${detalle}
                             </div>
@@ -1173,7 +1177,7 @@ function iniciarArmado() {
             summaryItem.innerHTML = `
                 <div class="d-flex justify-content-between gap-2">
                     <span class="fw-bold">${escaparHtml(label)}</span>
-                    <span class="text-nowrap">$${subtotal.toLocaleString('es-CL')}</span>
+                    <span class="text-nowrap">${pesosClp(subtotal)}</span>
                 </div>
                 ${nombres}
                 <div class="armado-resumen-estado">${clase.html}</div>
@@ -1267,7 +1271,7 @@ function iniciarArmado() {
 
         montarPopovers(summaryList);
 
-        totalPriceEl.textContent = `$${total.toLocaleString('es-CL')}`;
+        totalPriceEl.textContent = pesosClp(total);
 
         downloadExcelBtn.disabled = componentCount === 0;
         actualizarBotonCarrito(componentCount);
@@ -2494,10 +2498,6 @@ function iniciarArmado() {
             }
             aplicarPropuesta(indiceDetalle);
         });
-    }
-
-    function pesosClp(valor) {
-        return `$${Number(valor).toLocaleString('es-CL')}`;
     }
 
     function esDisco(tipo) {

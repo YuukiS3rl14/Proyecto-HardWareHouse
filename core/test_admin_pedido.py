@@ -42,7 +42,9 @@ class AdminPedidoDetalleTests(TestCase):
         respuesta = self.client.get(reverse('admin:core_pedido_change', args=[self.pedido.pk]))
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertContains(respuesta, '30000.00')
+        self.assertContains(respuesta, '$30.000')
+        self.assertContains(respuesta, '$10.000')
+        self.assertContains(respuesta, '$99.999')
         self.assertContains(respuesta, 'empty-form')
         self.assertNotContains(respuesta, 'Precio o cantidad inválidos')
         self.pedido.refresh_from_db()

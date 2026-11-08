@@ -526,7 +526,7 @@ class DashboardAdminTests(TestCase):
         self.assertNotIn('"valor": 4', html)
         self.assertNotIn('"valor":4', html)
         self.assertContains(visible, '7 unidades')
-        self.assertContains(visible, '$70\xa0000')
+        self.assertContains(visible, '$70.000')
         self.assertNotContains(visible, 'hw-chart-vendidos')
 
     def test_mas_vendidos_ordena_por_unidades_y_omite_pendientes(self):

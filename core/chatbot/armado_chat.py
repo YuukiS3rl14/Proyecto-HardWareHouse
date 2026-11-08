@@ -6,6 +6,7 @@ from django.urls import reverse
 from core.chatbot.fallbacks import clasificar_motivo_armado, etiquetar
 
 from core.armado_recomendacion import ResultadoArmadoAutomatico, construir_armado_automatico
+from core.formato_clp import formatear_pesos
 from core.armado_servicio import crear_propuesta_pendiente_armado
 from core.chatbot.nlp_armado import SolicitudArmadoNL, parsear_solicitud_armado
 from core.chatbot.serializers import producto_a_dict
@@ -35,7 +36,7 @@ _MODELO_POR_TIPO = {
 
 
 def _formato_clp(valor: int) -> str:
-    return f'${valor:,}'.replace(',', '.')
+    return formatear_pesos(valor)
 
 
 def _cargar_productos_armado(resultado: ResultadoArmadoAutomatico) -> list[dict]:

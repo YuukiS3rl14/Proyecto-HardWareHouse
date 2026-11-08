@@ -1,4 +1,5 @@
-{% load humanize %}<!-- hw-tarjeta:comercial -->
+{% load humanize %}
+{% load formato_clp %}<!-- hw-tarjeta:comercial -->
 <noscript>
     <style>.hw-filtros .hw-filtro-extra { display: flex !important; }</style>
 </noscript>
@@ -42,11 +43,11 @@
         <span class="hw-stat-icon" aria-hidden="true"><i class="fas fa-dollar-sign"></i></span>
         <h2 class="h6">Ventas confirmadas</h2>
         {% if hw.ventas.permitido %}
-            <p class="hw-stat-value">${{ hw.ventas.monto|floatformat:"0"|intcomma }}</p>
+            <p class="hw-stat-value">{{ hw.ventas.monto|pesos }}</p>
             <p class="hw-variacion">
                 {% if hw.ventas.variacion_monto.disponible %}
                     <span class="{% if hw.ventas.variacion_monto.sube %}is-up{% elif hw.ventas.variacion_monto.baja %}is-down{% endif %}">{{ hw.ventas.variacion_monto.texto }}</span>
-                    <span class="hw-variacion-detalle">antes ${{ hw.ventas.variacion_monto.anterior|floatformat:"0"|intcomma }} · {{ hw.periodo.comparado_con }}</span>
+                    <span class="hw-variacion-detalle">antes {{ hw.ventas.variacion_monto.anterior|pesos }} · {{ hw.periodo.comparado_con }}</span>
                 {% else %}Sin comparación disponible{% endif %}
             </p>
             <p class="hw-note">Pagados, enviados o entregados.</p>
@@ -78,11 +79,11 @@
         <span class="hw-stat-icon hw-stat-icon-productos" aria-hidden="true"><i class="fas fa-calculator"></i></span>
         <h2 class="h6">Ticket promedio</h2>
         {% if hw.ventas.permitido %}
-            <p class="hw-stat-value">${{ hw.ventas.ticket|floatformat:"0"|intcomma }}</p>
+            <p class="hw-stat-value">{{ hw.ventas.ticket|pesos }}</p>
             <p class="hw-variacion">
                 {% if hw.ventas.variacion_ticket.disponible %}
                     <span class="{% if hw.ventas.variacion_ticket.sube %}is-up{% elif hw.ventas.variacion_ticket.baja %}is-down{% endif %}">{{ hw.ventas.variacion_ticket.texto }}</span>
-                    <span class="hw-variacion-detalle">antes ${{ hw.ventas.variacion_ticket.anterior|floatformat:"0"|intcomma }} · {{ hw.periodo.comparado_con }}</span>
+                    <span class="hw-variacion-detalle">antes {{ hw.ventas.variacion_ticket.anterior|pesos }} · {{ hw.periodo.comparado_con }}</span>
                 {% else %}Sin comparación disponible{% endif %}
             </p>
             <p class="hw-note">Venta confirmada ÷ pedidos.</p>
@@ -172,7 +173,7 @@
                     </div>
                     <ul class="sr-only">
                         {% for punto in hw.graficos.ventas.puntos %}
-                            <li>{{ punto.etiqueta }}: ${{ punto.valor|intcomma }}</li>
+                            <li>{{ punto.etiqueta }}: {{ punto.valor|pesos }}</li>
                         {% endfor %}
                     </ul>
                 {% endif %}
@@ -224,7 +225,7 @@
                                     <span class="hw-ranking-nombre">{{ punto.etiqueta }}</span>
                                     <span class="hw-ranking-cifra">
                                         <strong>{{ punto.valor }} unidad{{ punto.valor|pluralize:"es" }}</strong>
-                                        <span class="hw-ranking-ingreso">${{ punto.ingresos|floatformat:"0"|intcomma }}</span>
+                                        <span class="hw-ranking-ingreso">{{ punto.ingresos|pesos }}</span>
                                     </span>
                                 </div>
                                 <div class="hw-ranking-track" aria-hidden="true">
@@ -254,7 +255,7 @@
                     </div>
                     <ul class="sr-only">
                         {% for punto in hw.graficos.categorias.puntos %}
-                            <li>{{ punto.etiqueta }}: ${{ punto.valor|intcomma }}</li>
+                            <li>{{ punto.etiqueta }}: {{ punto.valor|pesos }}</li>
                         {% endfor %}
                     </ul>
                 {% endif %}
@@ -302,7 +303,7 @@
                             <dt>Mayor venta</dt>
                             <dd>
                                 {% if hw.graficos.resumen.mejor %}
-                                    {{ hw.graficos.resumen.mejor.etiqueta }} · ${{ hw.graficos.resumen.mejor.valor|intcomma }}
+                                    {{ hw.graficos.resumen.mejor.etiqueta }} · {{ hw.graficos.resumen.mejor.valor|pesos }}
                                 {% else %}
                                     Sin ventas confirmadas
                                 {% endif %}
@@ -314,7 +315,7 @@
                                 {% if not hw.graficos.categorias %}
                                     No tienes permiso para ver los productos vendidos.
                                 {% elif hw.graficos.resumen.categoria %}
-                                    {{ hw.graficos.resumen.categoria.etiqueta }} · ${{ hw.graficos.resumen.categoria.valor|intcomma }}
+                                    {{ hw.graficos.resumen.categoria.etiqueta }} · {{ hw.graficos.resumen.categoria.valor|pesos }}
                                 {% else %}
                                     Sin ventas por categoría
                                 {% endif %}

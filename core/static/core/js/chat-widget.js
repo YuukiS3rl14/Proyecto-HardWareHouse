@@ -21,7 +21,7 @@
         if (Number.isNaN(n)) {
             return '—';
         }
-        return '$' + n.toLocaleString('es-CL');
+        return window.hwPesos(n);
     }
 
     function linkifySafe(container, text) {

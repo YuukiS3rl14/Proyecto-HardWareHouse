@@ -10,10 +10,11 @@ import secrets
 from datetime import timedelta
 from typing import Any
 
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from django.urls import reverse
+from core.formato_clp import formatear_pesos
 
 from core.armado_recomendacion import candidatos_para_categoria
 from core.compatibilidad import (
@@ -127,7 +128,7 @@ def _linea_componente(tipo: str, producto, cantidad: int = 1) -> str:
 
 
 def _formato_clp(valor: int) -> str:
-    return f'${valor:,}'.replace(',', '.')
+    return formatear_pesos(valor)
 
 
 def analizar_armado(componentes: list[dict]) -> dict:

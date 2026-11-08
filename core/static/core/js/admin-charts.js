@@ -35,11 +35,7 @@
     }
 
     function pesos(valor) {
-        return new Intl.NumberFormat("es-CL", {
-            style: "currency",
-            currency: "CLP",
-            maximumFractionDigits: 0
-        }).format(valor);
+        return window.hwPesos(valor);
     }
 
     function etiquetas(puntos) {

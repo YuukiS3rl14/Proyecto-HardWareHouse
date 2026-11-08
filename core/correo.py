@@ -2,7 +2,6 @@
 import logging
 import uuid
 from datetime import timedelta
-from decimal import Decimal, ROUND_HALF_UP
 
 import requests
 from django.conf import settings
@@ -12,6 +11,7 @@ from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from .formato_clp import miles_clp
 from .models import AvisoCorreoPedido, PagoBoleta, Pedido
 
 logger = logging.getLogger('hardwarehouse.correo')
@@ -183,8 +183,7 @@ def _correo_valido(valor):
 
 
 def _clp(valor):
-    entero = int(Decimal(valor).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
-    return f'{entero:,}'.replace(',', '.') + ' CLP'
+    return miles_clp(valor) + ' CLP'
 
 
 def _fecha(momento):

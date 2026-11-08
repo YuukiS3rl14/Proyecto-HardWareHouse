@@ -543,7 +543,7 @@ class InterpretarSolicitudVistaTests(TestCase):
         self.assertContains(pagina, 'id="recomendador-presupuesto"')
         self.assertContains(pagina, 'Generar recomendación')
         self.assertContains(pagina, 'Preferencias avanzadas')
-        self.assertContains(pagina, 'pc-builder.js?v=selector19')
+        self.assertContains(pagina, 'pc-builder.js?v=selector20')
         self.assertContains(pagina, 'armado.css?v=selector12')
 
     def test_cancelar_no_escribe_el_formulario_y_aplicar_no_recomienda(self):

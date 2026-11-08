@@ -1,4 +1,4 @@
-{% load humanize %}<!-- hw-tarjeta:pedidos -->
+{% load formato_clp %}<!-- hw-tarjeta:pedidos -->
 {% if hw.pedidos.permitido %}
     {% if hw.pedidos.recientes %}
         <div class="table-responsive">
@@ -19,7 +19,7 @@
                             <td><a href="{% url 'admin:core_pedido_change' pedido.pk %}">#{{ pedido.pk }}</a></td>
                             <td>{{ pedido.usuario.username }}</td>
                             <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
-                            <td>${{ pedido.total_monto|floatformat:"0"|intcomma }}</td>
+                            <td>{{ pedido.total_monto|pesos }}</td>
                             <td><span class="hw-pill hw-pill-{{ pedido.estado|lower }}">{{ pedido.get_estado_display }}</span></td>
                         </tr>
                     {% endfor %}

@@ -230,7 +230,7 @@ class ArmadoCompletoTests(TestCase):
         self.assertIn('Almacenamiento', respuesta.json()['faltantes'])
         self.assertIn('Placa Madre', respuesta.json()['faltantes'])
         pagina = self.client.get(reverse('core:armado'))
-        self.assertContains(pagina, 'pc-builder.js?v=selector19')
+        self.assertContains(pagina, 'pc-builder.js?v=selector20')
         js = Path(__file__).resolve().parent.joinpath(
             'static', 'core', 'js', 'pc-builder.js',
         ).read_text(encoding='utf-8')

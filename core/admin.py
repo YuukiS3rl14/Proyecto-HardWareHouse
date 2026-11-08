@@ -5,6 +5,7 @@ from django.utils.html import format_html
 from django.shortcuts import render
 
 from .admin_dashboard import datos_tarjeta, resumen_dashboard
+from .formato_clp import formatear_pesos
 from .imagenes import url_imagen_producto
 from .models import *
 
@@ -241,7 +242,7 @@ class VentiladorAdmin(ProductoAdminBase):
 
 class ItemPedidoInline(admin.TabularInline):
     model = ItemPedido
-    readonly_fields = ('producto_nombre', 'producto_tipo', 'precio_unitario', 'cantidad', 'producto_modelo', 'producto_pk', 'get_subtotal')
+    readonly_fields = ('producto_nombre', 'producto_tipo', 'precio_visible', 'cantidad', 'producto_modelo', 'producto_pk', 'subtotal_visible')
     can_delete = False
     extra = 0
 
@@ -255,8 +256,21 @@ class ItemPedidoInline(admin.TabularInline):
             return 'Precio o cantidad inválidos'
         return obj.get_subtotal()
 
+    @admin.display(description='Precio unitario')
+    def precio_visible(self, obj):
+        if obj.precio_unitario is None:
+            return ''
+        return formatear_pesos(obj.precio_unitario)
+
+    @admin.display(description='Subtotal')
+    def subtotal_visible(self, obj):
+        valor = self.get_subtotal(obj)
+        if valor == '' or valor == 'Precio o cantidad inválidos':
+            return valor
+        return formatear_pesos(valor)
+
 class PedidoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'usuario', 'fecha_pedido', 'total_monto', 'estado', 'paypal_transaccion_id', 'paypal_invoice')
+    list_display = ('id', 'usuario', 'fecha_pedido', 'total_visible', 'estado', 'paypal_transaccion_id', 'paypal_invoice')
     list_display_links = ('id',)
     list_filter = ('estado', 'fecha_pedido')
     date_hierarchy = 'fecha_pedido'
@@ -266,10 +280,14 @@ class PedidoAdmin(admin.ModelAdmin):
     ordering = ('-fecha_pedido',)
     inlines = [ItemPedidoInline]
     readonly_fields = (
-        'usuario', 'total_monto', 'fecha_pedido', 'paypal_transaccion_id',
+        'usuario', 'total_visible', 'fecha_pedido', 'paypal_transaccion_id',
         'paypal_invoice', 'paypal_invoice_legado',
     )
     save_on_top = True
+
+    @admin.display(description='Total', ordering='total_monto')
+    def total_visible(self, obj):
+        return formatear_pesos(obj.total_monto)
 
 # ----------------------------------------------------------------------
 # 4. REGISTRO DE MODELOS (Usando clases específicas)
@@ -316,19 +334,27 @@ admin.site.register(Ventilador, VentiladorAdmin)
 admin.site.register(Comentario, ComentarioAdmin)
 
 class CarritoAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'fecha_creacion', 'get_total_precio')
+    list_display = ('usuario', 'fecha_creacion', 'total_visible')
     list_display_links = ('usuario',)
     search_fields = ('usuario__username',)
     list_select_related = ('usuario',)
     list_per_page = 20
-    readonly_fields = ('get_total_precio',)
+    readonly_fields = ('total_visible',)
+
+    @admin.display(description='Total')
+    def total_visible(self, obj):
+        return formatear_pesos(obj.get_total_precio())
 
 class ItemCarritoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'carrito', 'cantidad', 'precio_unitario', 'producto')
+    list_display = ('id', 'carrito', 'cantidad', 'precio_visible', 'producto')
     list_display_links = ('id',)
     search_fields = ('carrito__usuario__username',)
     list_select_related = ('carrito__usuario',)
     list_per_page = 20
+
+    @admin.display(description='Precio unitario')
+    def precio_visible(self, obj):
+        return formatear_pesos(obj.precio_unitario)
 
     @admin.display(description='Producto')
     def producto(self, obj):
@@ -347,13 +373,17 @@ class FavoritoAdmin(admin.ModelAdmin):
     ordering = ('-fecha_agregado',)
 
 class PagoBoletaAdmin(admin.ModelAdmin):
-    list_display = ('transaccion_id', 'pedido', 'monto_pagado', 'metodo_pago', 'email_comprador', 'fecha_pago')
+    list_display = ('transaccion_id', 'pedido', 'monto_visible', 'metodo_pago', 'email_comprador', 'fecha_pago')
     list_display_links = ('transaccion_id',)
     search_fields = ('transaccion_id', 'email_comprador', 'nombre_comprador')
     list_filter = ('metodo_pago', 'fecha_pago')
     list_select_related = ('pedido',)
     date_hierarchy = 'fecha_pago'
     ordering = ('-fecha_pago',)
+
+    @admin.display(description='Monto pagado', ordering='monto_pagado')
+    def monto_visible(self, obj):
+        return formatear_pesos(obj.monto_pagado)
 
 admin.site.register(Favorito, FavoritoAdmin)
 admin.site.register(PagoBoleta, PagoBoletaAdmin)

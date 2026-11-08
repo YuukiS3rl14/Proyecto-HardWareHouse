@@ -358,7 +358,7 @@ class EvaluacionVisualTests(TestCase):
         self.assertLess(js.index('El Excel no se generó'), hasta_archivo)
         self.assertContains(pagina, 'data-evaluar-url')
         self.assertContains(pagina, 'data-exportar-url')
-        self.assertContains(pagina, 'pc-builder.js?v=selector19')
+        self.assertContains(pagina, 'pc-builder.js?v=selector20')
         self.assertIn('sin_configuracion_completa', js)
         self.assertIn('Ver detalles', js)
         self.assertIn('Aplicar recomendación', js)

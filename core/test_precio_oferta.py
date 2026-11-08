@@ -104,8 +104,8 @@ class OfertaYFechasTests(TestCase):
         self.assertContains(tienda, 'CPU Oferta Visible')
         self.assertContains(tienda, 'CPU Normal')
         self.assertContains(tienda, '-80%')
-        self.assertContains(tienda, '<s>$200\xa0000</s>')
-        self.assertContains(tienda, '$40\xa0000')
+        self.assertContains(tienda, '<s>$200.000</s>')
+        self.assertContains(tienda, '$40.000')
         nombres = [item[0].nombre for item in tienda.context['productos']]
         self.assertLess(nombres.index('CPU Oferta Visible'), nombres.index('CPU Normal'))
 
@@ -115,8 +115,8 @@ class OfertaYFechasTests(TestCase):
 
         detalle = self.client.get(reverse('core:detalle', args=['procesador', oferta.pk]))
         self.assertContains(detalle, '-80%')
-        self.assertContains(detalle, '<s>$200\xa0000 CLP</s>')
-        self.assertContains(detalle, '$40\xa0000 CLP')
+        self.assertContains(detalle, '<s>$200.000 CLP</s>')
+        self.assertContains(detalle, '$40.000 CLP')
 
         self.client.post(reverse('core:agregar_al_carrito'), {
             'product_id': oferta.id,

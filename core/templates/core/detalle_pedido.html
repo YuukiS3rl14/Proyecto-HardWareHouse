@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load humanize %}
+{% load formato_clp %}
 
 {% block tittle %} Detalle del Pedido #{{ pedido.id }} {% endblock %}
 
@@ -25,9 +25,9 @@
                             <div class="text-break">
                                 <strong>{{ item.producto_nombre }}</strong> ({{ item.producto_tipo }})
                                 <br>
-                                <small class="text-muted">{{ item.cantidad }} x ${{ item.precio_unitario|floatformat:"0"|intcomma }} CLP</small>
+                                <small class="text-muted">{{ item.cantidad }} x {{ item.precio_unitario|pesos }} CLP</small>
                             </div>
-                            <span class="font-weight-bold">${{ item.get_subtotal|floatformat:"0"|intcomma }} CLP</span>
+                            <span class="font-weight-bold">{{ item.get_subtotal|pesos }} CLP</span>
                         </li>
                         {% endfor %}
                     </ul>
@@ -72,7 +72,7 @@
                     {% else %}
                     <h5 class="d-flex justify-content-between">
                         <span>Total:</span>
-                        <span>${{ pedido.total_monto|floatformat:"0"|intcomma }} CLP</span>
+                        <span>{{ pedido.total_monto|pesos }} CLP</span>
                     </h5>
                     {% endif %}
                 </div>

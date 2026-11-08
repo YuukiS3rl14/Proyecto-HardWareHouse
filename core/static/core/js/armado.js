@@ -1,7 +1,13 @@
 // Helpers
 function formatCLP(value) {
     if (!value || isNaN(value)) return '—';
-    return value.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+    if (typeof window.hwPesos === 'function') {
+        return window.hwPesos(value);
+    }
+    var entero = Math.round(Number(value));
+    var signo = entero < 0 ? '-' : '';
+    var texto = String(Math.abs(entero)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return signo + '$' + texto;
 }
 
 function getSelectedInfo(selectEl) {
