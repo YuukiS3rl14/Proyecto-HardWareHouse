@@ -582,9 +582,47 @@ body.hw-dashboard .content-wrapper {
 }
 
 .hw-dashboard .hw-split > [class*="col-"] > .hw-panel {
+    display: flex;
+    flex-direction: column;
     flex: 1 1 auto;
     width: 100%;
     height: auto;
+}
+
+.hw-dashboard .hw-split > [class*="col-"] > .hw-panel > .card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: auto;
+    overflow: visible;
+}
+
+.hw-pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+}
+
+.hw-pager-status {
+    color: var(--hw-muted);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.hw-pager-link {
+    flex: 0 0 auto;
+    color: var(--hw-green-dark);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.hw-pager-link.is-disabled {
+    color: var(--hw-muted);
+    font-weight: 500;
 }
 
 /* Estas secciones son hijas directas de la columna. No deben heredar

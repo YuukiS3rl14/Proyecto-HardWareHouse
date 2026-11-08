@@ -36,7 +36,7 @@
 
     {% if jazzmin_settings.custom_css %}
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static jazzmin_settings.custom_css %}?v=20261108d">
+    <link rel="stylesheet" href="{% static jazzmin_settings.custom_css %}?v=20261108e">
     {% endif %}
 
     <!-- favicons -->
@@ -217,7 +217,7 @@
                             <li class="nav-item">
                                 <a href="{% url 'admin:index' %}" class="nav-link">
                                     <i class="nav-icon fas fa-th-large"></i>
-                                    <p>Panel</p>
+                                    <p>Dashboard</p>
                                 </a>
                             </li>
                             {% for grupo in menu_grupos %}

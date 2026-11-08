@@ -1,6 +1,8 @@
 from decimal import Decimal, ROUND_HALF_UP
 from zoneinfo import ZoneInfo
 
+from django.core.paginator import Paginator
+from django.db import connection
 from django.db.models import Count, Max, Q, Sum
 from django.urls import reverse
 from django.utils import timezone
@@ -24,8 +26,7 @@ from core.models import (
 ESTADOS_VENTA = ('PAGADO', 'ENVIADO', 'ENTREGADO')
 STOCK_BAJO_MINIMO = 1
 STOCK_BAJO_MAXIMO = 5
-LIMITE_PEDIDOS_RECIENTES = 8
-LIMITE_ALERTAS = 20
+TAMANO_PAGINA = 8
 LIMITE_MAS_VENDIDOS = 10
 ZONA_VENTAS = ZoneInfo('America/Santiago')
 _MESES = (
@@ -101,6 +102,62 @@ def _pesos(valor):
     return int(_decimal(valor).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
 
 
+class _Paginador(Paginator):
+    """Usa un total ya calculado y solo lee la página pedida."""
+
+    def __init__(self, object_list, total):
+        self._total = total
+        super().__init__(object_list, TAMANO_PAGINA)
+
+    @property
+    def count(self):
+        return self._total
+
+
+class _Corte:
+    def __init__(self, leer):
+        self.leer = leer
+
+    def __getitem__(self, corte):
+        inicio = corte.start or 0
+        cantidad = (corte.stop or inicio) - inicio
+        if cantidad <= 0:
+            return []
+        return self.leer(inicio, cantidad)
+
+
+def _pagina(request, clave, total, leer):
+    pagina = _Paginador(_Corte(leer), total).get_page(request.GET.get(clave))
+    return list(pagina.object_list), _controles(request, clave, pagina)
+
+
+def _controles(request, clave, pagina):
+    ancla = 'hw-ultimos-pedidos' if clave == 'pedidos_pagina' else 'hw-alertas'
+
+    def enlace(numero):
+        params = request.GET.copy()
+        if numero <= 1:
+            params.pop(clave, None)
+        else:
+            params[clave] = numero
+        consulta = params.urlencode()
+        base = reverse('admin:index')
+        url = f'{base}?{consulta}' if consulta else base
+        return f'{url}#{ancla}'
+
+    return {
+        'numero': pagina.number,
+        'paginas': pagina.paginator.num_pages,
+        'total': pagina.paginator.count,
+        'anterior': enlace(pagina.previous_page_number()) if pagina.has_previous() else '',
+        'siguiente': enlace(pagina.next_page_number()) if pagina.has_next() else '',
+    }
+
+
+def _cita(nombre):
+    return connection.ops.quote_name(nombre)
+
+
 def _ventas_y_pedidos(request):
     if not _puede_ver(request, Pedido):
         return {'permitido': False}, {'permitido': False, 'recientes': []}
@@ -113,9 +170,14 @@ def _ventas_y_pedidos(request):
         registrados=Count('pk'),
         pendientes=Count('pk', filter=Q(estado='PENDIENTE')),
     )
-    recientes = list(
-        Pedido.objects.select_related('usuario').order_by('-fecha_pedido', '-pk')[:LIMITE_PEDIDOS_RECIENTES]
-    )
+    registrados = totales['registrados'] or 0
+
+    def leer(inicio, cantidad):
+        return list(
+            Pedido.objects.select_related('usuario').order_by('-fecha_pedido', '-pk')[inicio:inicio + cantidad]
+        )
+
+    recientes, paginacion = _pagina(request, 'pedidos_pagina', registrados, leer)
     return (
         {
             'permitido': True,
@@ -124,9 +186,10 @@ def _ventas_y_pedidos(request):
         },
         {
             'permitido': True,
-            'registrados': totales['registrados'] or 0,
+            'registrados': registrados,
             'pendientes': totales['pendientes'] or 0,
             'recientes': recientes,
+            'paginacion': paginacion,
         },
     )
 
@@ -139,7 +202,7 @@ def _productos(request):
     disponibles = 0
     stock_bajo = 0
     agotados = 0
-    candidatos = []
+    con_alerta = []
     for modelo in modelos:
         conteo = modelo.objects.aggregate(
             disponibles=Count('pk', filter=Q(stock__gt=0)),
@@ -149,30 +212,63 @@ def _productos(request):
         disponibles += conteo['disponibles'] or 0
         stock_bajo += conteo['stock_bajo'] or 0
         agotados += conteo['agotados'] or 0
-        if not conteo['stock_bajo'] and not conteo['agotados']:
-            continue
-        filas = modelo.objects.filter(
-            stock__gte=0,
-            stock__lte=STOCK_BAJO_MAXIMO,
-        ).order_by('stock', 'nombre').values('pk', 'nombre', 'categoria', 'stock')[:LIMITE_ALERTAS]
-        for fila in filas:
-            candidatos.append({
-                'nombre': fila['nombre'],
-                'tipo': fila['categoria'],
-                'stock': fila['stock'],
-                'estado': 'Agotado' if fila['stock'] == 0 else 'Stock bajo',
-                'url': _url_cambio(modelo, fila['pk']),
-            })
+        if conteo['stock_bajo'] or conteo['agotados']:
+            con_alerta.append(modelo)
 
-    candidatos.sort(key=lambda alerta: (alerta['stock'], alerta['nombre'].lower(), alerta['tipo']))
+    def leer(inicio, cantidad):
+        return _leer_alertas(con_alerta, inicio, cantidad)
+
+    alertas, paginacion = _pagina(request, 'alertas_pagina', stock_bajo + agotados, leer)
     return {
         'permitido': True,
         'disponibles': disponibles,
         'stock_bajo': stock_bajo,
         'agotados': agotados,
-        'alertas': candidatos[:LIMITE_ALERTAS],
+        'alertas': alertas,
         'alertas_totales': stock_bajo + agotados,
+        'paginacion': paginacion,
     }
+
+
+def _leer_alertas(modelos, inicio, cantidad):
+    if not modelos or cantidad <= 0:
+        return []
+    partes = []
+    parametros = []
+    for modelo in modelos:
+        tabla = _cita(modelo._meta.db_table)
+        campos = [
+            _cita(modelo._meta.pk.column),
+            _cita(modelo._meta.get_field('nombre').column),
+            _cita(modelo._meta.get_field('categoria').column),
+            _cita(modelo._meta.get_field('stock').column),
+        ]
+        partes.append(
+            f'SELECT {campos[0]} AS pk, {campos[1]} AS nombre, {campos[2]} AS categoria, '
+            f'{campos[3]} AS stock, %s AS origen FROM {tabla} '
+            f'WHERE {campos[3]} >= %s AND {campos[3]} <= %s'
+        )
+        parametros.extend([modelo._meta.model_name, 0, STOCK_BAJO_MAXIMO])
+    consulta = (
+        'SELECT pk, nombre, categoria, stock, origen FROM ('
+        + ' UNION ALL '.join(partes)
+        + ') alertas ORDER BY stock ASC, nombre ASC, origen ASC, pk ASC LIMIT %s OFFSET %s'
+    )
+    parametros.extend([cantidad, inicio])
+    indices = {modelo._meta.model_name: modelo for modelo in modelos}
+    with connection.cursor() as cursor:
+        cursor.execute(consulta, parametros)
+        filas = cursor.fetchall()
+    return [
+        {
+            'nombre': nombre,
+            'tipo': categoria,
+            'stock': stock,
+            'estado': 'Agotado' if stock == 0 else 'Stock bajo',
+            'url': _url_cambio(indices[origen], pk),
+        }
+        for pk, nombre, categoria, stock, origen in filas
+    ]
 
 
 def _claves_producto_visibles(request):

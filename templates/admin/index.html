@@ -4,12 +4,12 @@
 
 {% block bodyclass %}{{ block.super }} dashboard hw-dashboard{% endblock %}
 
-{% block content_title %}Panel{% endblock %}
+{% block content_title %}Dashboard{% endblock %}
 
 {% block breadcrumbs %}
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">Inicio</a></li>
-        <li class="breadcrumb-item">Panel</li>
+        <li class="breadcrumb-item">Dashboard</li>
     </ol>
 {% endblock %}
 
@@ -164,6 +164,21 @@
                             {% else %}
                                 <p class="hw-placeholder">No hay pedidos registrados.</p>
                             {% endif %}
+                            {% if hw.pedidos.paginacion.total %}
+                                <nav class="hw-pager" aria-label="Páginas de últimos pedidos">
+                                    {% if hw.pedidos.paginacion.anterior %}
+                                        <a class="hw-pager-link" href="{{ hw.pedidos.paginacion.anterior }}">Anterior</a>
+                                    {% else %}
+                                        <span class="hw-pager-link is-disabled">Anterior</span>
+                                    {% endif %}
+                                    <span class="hw-pager-status">Página {{ hw.pedidos.paginacion.numero }} de {{ hw.pedidos.paginacion.paginas }}</span>
+                                    {% if hw.pedidos.paginacion.siguiente %}
+                                        <a class="hw-pager-link" href="{{ hw.pedidos.paginacion.siguiente }}">Siguiente</a>
+                                    {% else %}
+                                        <span class="hw-pager-link is-disabled">Siguiente</span>
+                                    {% endif %}
+                                </nav>
+                            {% endif %}
                         {% else %}
                             <p class="hw-placeholder">No tienes permiso para ver los pedidos.</p>
                         {% endif %}
@@ -201,11 +216,23 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                {% if hw.productos.alertas_totales > hw.productos.alertas|length %}
-                                    <p class="hw-note mt-2">Se muestran {{ hw.productos.alertas|length }} de {{ hw.productos.alertas_totales }} alertas, empezando por el menor stock.</p>
-                                {% endif %}
                             {% else %}
                                 <p class="hw-placeholder">No hay productos con stock bajo ni agotados.</p>
+                            {% endif %}
+                            {% if hw.productos.paginacion.total %}
+                                <nav class="hw-pager" aria-label="Páginas de alertas de inventario">
+                                    {% if hw.productos.paginacion.anterior %}
+                                        <a class="hw-pager-link" href="{{ hw.productos.paginacion.anterior }}">Anterior</a>
+                                    {% else %}
+                                        <span class="hw-pager-link is-disabled">Anterior</span>
+                                    {% endif %}
+                                    <span class="hw-pager-status">Página {{ hw.productos.paginacion.numero }} de {{ hw.productos.paginacion.paginas }}</span>
+                                    {% if hw.productos.paginacion.siguiente %}
+                                        <a class="hw-pager-link" href="{{ hw.productos.paginacion.siguiente }}">Siguiente</a>
+                                    {% else %}
+                                        <span class="hw-pager-link is-disabled">Siguiente</span>
+                                    {% endif %}
+                                </nav>
                             {% endif %}
                         {% else %}
                             <p class="hw-placeholder">No tienes permiso para ver el inventario.</p>

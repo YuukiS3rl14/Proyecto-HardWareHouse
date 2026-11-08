@@ -94,6 +94,8 @@ class DashboardAdminTests(TestCase):
         self.assertNotContains(respuesta, 'cdn.jsdelivr.net')
         self.assertNotContains(respuesta, 'cdnjs.cloudflare.com')
         self.assertContains(respuesta, '$0')
+        self.assertContains(respuesta, 'Dashboard')
+        self.assertNotContains(respuesta, '>Panel<')
         self.assertContains(respuesta, 'Catálogo y componentes')
         self.assertContains(respuesta, 'Inventario')
         self.assertContains(respuesta, 'Pedidos y ventas')
@@ -256,6 +258,84 @@ class DashboardAdminTests(TestCase):
             ],
         )
         self.assertEqual(accesos_principales([]), [])
+
+    def test_los_pedidos_se_paginan_de_a_ocho_y_conservan_el_mas_antiguo(self):
+        creados = [
+            self.pedido('PAGADO', '1000.00', self.inicio + timedelta(minutes=indice))
+            for indice in range(9)
+        ]
+        with CaptureQueriesContext(connection) as consultas:
+            primera = self.panel(self.superuser)
+        sql = ' '.join(consulta['sql'] for consulta in consultas.captured_queries)
+        recientes = primera.context['hw']['pedidos']['recientes']
+        self.assertEqual(len(recientes), 8)
+        self.assertEqual(recientes[0].pk, creados[-1].pk)
+        self.assertNotIn(creados[0].pk, [pedido.pk for pedido in recientes])
+        self.assertTrue(any(
+            'LIMIT 8' in consulta['sql'] and 'core_pedido' in consulta['sql']
+            for consulta in consultas.captured_queries
+        ))
+        self.assertNotIn('OFFSET 8', sql)
+        self.assertContains(primera, 'Página 1 de 2')
+        self.assertContains(primera, 'pedidos_pagina=2#hw-ultimos-pedidos')
+        self.assertContains(primera, reverse('admin:core_pedido_change', args=[creados[-1].pk]))
+
+        segunda = self.client.get(reverse('admin:index'), {'pedidos_pagina': 2, 'alertas_pagina': 3})
+        self.assertEqual(
+            [pedido.pk for pedido in segunda.context['hw']['pedidos']['recientes']],
+            [creados[0].pk],
+        )
+        self.assertContains(segunda, reverse('admin:core_pedido_change', args=[creados[0].pk]))
+        self.assertContains(segunda, 'alertas_pagina=3#hw-ultimos-pedidos')
+        invalida = self.client.get(reverse('admin:index'), {'pedidos_pagina': 'no'})
+        self.assertEqual(invalida.context['hw']['pedidos']['paginacion']['numero'], 1)
+
+    def test_las_alertas_se_paginan_priorizando_agotados(self):
+        productos = [self.cpu(f'CPU-{indice:02d}', 0 if indice < 10 else 1) for indice in range(21)]
+        primera = self.panel(self.superuser)
+        alertas = primera.context['hw']['productos']['alertas']
+        self.assertEqual(len(alertas), 8)
+        self.assertEqual([alerta['estado'] for alerta in alertas], ['Agotado'] * 8)
+        self.assertEqual(alertas[0]['nombre'], 'CPU-00')
+        self.assertContains(primera, 'Página 1 de 3')
+        self.assertContains(primera, reverse('admin:core_procesador_change', args=[productos[0].pk]))
+
+        tercera = self.client.get(reverse('admin:index'), {'alertas_pagina': 3, 'pedidos_pagina': 4})
+        self.assertEqual(
+            [alerta['nombre'] for alerta in tercera.context['hw']['productos']['alertas']],
+            ['CPU-16', 'CPU-17', 'CPU-18', 'CPU-19', 'CPU-20'],
+        )
+        self.assertEqual(tercera.context['hw']['pedidos']['paginacion']['numero'], 1)
+        self.assertContains(tercera, 'pedidos_pagina=4#hw-alertas')
+        self.assertContains(tercera, reverse('admin:core_procesador_change', args=[productos[20].pk]))
+
+    def test_cada_paginacion_respeta_el_permiso_y_no_consulta_lo_ajeno(self):
+        for indice in range(9):
+            self.pedido('PAGADO', '1000.00', self.inicio + timedelta(minutes=indice))
+            self.cpu(f'CPU-PAG-{indice}', 0)
+            self.gpu(f'GPU-OCULTA-{indice}', 0)
+        pedidos = self.staff('pagina-pedidos', 'view_pedido')
+        self.client.force_login(pedidos)
+        with CaptureQueriesContext(connection) as consultas:
+            respuesta = self.client.get(reverse('admin:index'), {'pedidos_pagina': 2, 'alertas_pagina': 2})
+        sql = ' '.join(consulta['sql'] for consulta in consultas.captured_queries)
+        self.assertEqual(len(respuesta.context['hw']['pedidos']['recientes']), 1)
+        self.assertNotIn('core_procesador', sql)
+        self.assertNotIn('core_tarjetagrafica', sql)
+        self.assertNotContains(respuesta, 'CPU-PAG-0')
+        self.assertNotContains(respuesta, 'GPU-OCULTA-0')
+
+        cpu = self.staff('pagina-cpu', 'view_procesador')
+        self.client.force_login(cpu)
+        with CaptureQueriesContext(connection) as consultas:
+            respuesta = self.client.get(reverse('admin:index'), {'pedidos_pagina': 2, 'alertas_pagina': 2})
+        sql = ' '.join(consulta['sql'] for consulta in consultas.captured_queries)
+        self.assertEqual(len(respuesta.context['hw']['productos']['alertas']), 1)
+        self.assertEqual(respuesta.context['hw']['productos']['alertas'][0]['nombre'], 'CPU-PAG-8')
+        self.assertNotIn('core_pedido', sql)
+        self.assertNotIn('core_tarjetagrafica', sql)
+        self.assertNotContains(respuesta, 'GPU-OCULTA-0')
+        self.assertContains(respuesta, 'No tienes permiso para ver los pedidos.')
 
     def test_sin_permiso_de_staff_no_entra_al_panel(self):
         self.pedido('PAGADO', '180000.00', self.inicio)
