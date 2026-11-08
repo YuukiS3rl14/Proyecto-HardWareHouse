@@ -2,6 +2,7 @@ from django.contrib import admin
 from django import forms
 from django.utils.html import format_html
 
+from .admin_dashboard import resumen_dashboard
 from .imagenes import url_imagen_producto
 from .models import *
 
@@ -184,6 +185,16 @@ class ItemPedidoInline(admin.TabularInline):
     can_delete = False
     extra = 0
 
+    @admin.display(description='Subtotal')
+    def get_subtotal(self, obj):
+        # La fila plantilla del inline no tiene precio ni cantidad. El cálculo
+        # de un ítem guardado sigue en ItemPedido.get_subtotal().
+        if obj.precio_unitario is None or obj.cantidad is None:
+            if obj.pk is None:
+                return ''
+            return 'Precio o cantidad inválidos'
+        return obj.get_subtotal()
+
 class PedidoAdmin(admin.ModelAdmin):
     list_display = ('id', 'usuario', 'fecha_pedido', 'total_monto', 'estado', 'paypal_transaccion_id', 'paypal_invoice')
     list_display_links = ('id',)
@@ -294,3 +305,14 @@ admin.site.register(PagoBoleta, PagoBoletaAdmin)
 admin.site.site_header = 'HardWareHouse | Panel de Control'
 admin.site.site_title = 'Admin HardWareHouse'
 admin.site.index_title = 'Gestión de la Plataforma'
+
+_index_original = admin.site.index
+
+
+def index(request, extra_context=None):
+    extra_context = dict(extra_context or {})
+    extra_context['hw'] = resumen_dashboard(request)
+    return _index_original(request, extra_context)
+
+
+admin.site.index = index

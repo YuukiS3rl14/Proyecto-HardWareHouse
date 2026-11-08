@@ -1,0 +1,269 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static humanize jazzmin admin_menu %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+{% block bodyclass %}{{ block.super }} dashboard hw-dashboard{% endblock %}
+
+{% block content_title %}Panel{% endblock %}
+
+{% block breadcrumbs %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">Inicio</a></li>
+        <li class="breadcrumb-item">Panel</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+    {% get_side_menu using="app_list" as dashboard_list %}
+    <div class="col-12">
+        <p class="hw-dashboard-intro">Cifras y gráficos de los pedidos y el inventario que tu usuario puede ver.</p>
+
+        <div class="hw-stat-grid">
+            <article class="card hw-stat-card">
+                <span class="hw-stat-icon" aria-hidden="true"><i class="fas fa-dollar-sign"></i></span>
+                <h2 class="h6">Ventas del mes</h2>
+                {% if hw.ventas.permitido %}
+                    <p class="hw-stat-value">${{ hw.ventas.mes|floatformat:"0"|intcomma }}</p>
+                    <p class="hw-stat-secondary">Histórico: ${{ hw.ventas.historico|floatformat:"0"|intcomma }}</p>
+                    <p class="hw-note">Pedidos pagados, enviados o entregados. Sin pendientes ni cancelados.</p>
+                {% else %}
+                    <p class="hw-stat-value" aria-hidden="true"></p>
+                    <p class="hw-stat-secondary">No tienes permiso para ver las ventas.</p>
+                    <p class="hw-note"></p>
+                {% endif %}
+            </article>
+            <article class="card hw-stat-card">
+                <span class="hw-stat-icon hw-stat-icon-pedidos" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+                <h2 class="h6">Pedidos registrados</h2>
+                {% if hw.pedidos.permitido %}
+                    <p class="hw-stat-value">{{ hw.pedidos.registrados|intcomma }}</p>
+                    <p class="hw-stat-secondary">Pendientes: {{ hw.pedidos.pendientes|intcomma }}</p>
+                    <p class="hw-note"></p>
+                {% else %}
+                    <p class="hw-stat-value" aria-hidden="true"></p>
+                    <p class="hw-stat-secondary">No tienes permiso para ver los pedidos.</p>
+                    <p class="hw-note"></p>
+                {% endif %}
+            </article>
+            <article class="card hw-stat-card">
+                <span class="hw-stat-icon hw-stat-icon-productos" aria-hidden="true"><i class="fas fa-box"></i></span>
+                <h2 class="h6">Productos disponibles</h2>
+                {% if hw.productos.permitido %}
+                    <p class="hw-stat-value">{{ hw.productos.disponibles|intcomma }}</p>
+                    <p class="hw-stat-secondary">Fichas con stock que puedes ver. No son unidades de inventario.</p>
+                    <p class="hw-note"></p>
+                {% else %}
+                    <p class="hw-stat-value" aria-hidden="true"></p>
+                    <p class="hw-stat-secondary">No tienes permiso para ver los productos.</p>
+                    <p class="hw-note"></p>
+                {% endif %}
+            </article>
+            <article class="card hw-stat-card">
+                <span class="hw-stat-icon hw-stat-icon-stock" aria-hidden="true"><i class="fas fa-exclamation-triangle"></i></span>
+                <h2 class="h6">Productos con stock bajo</h2>
+                {% if hw.productos.permitido %}
+                    <p class="hw-stat-value">{{ hw.productos.stock_bajo|intcomma }}</p>
+                    <p class="hw-stat-secondary">Agotados: {{ hw.productos.agotados|intcomma }}</p>
+                    <p class="hw-note">Stock bajo: de 1 a 5 unidades.</p>
+                {% else %}
+                    <p class="hw-stat-value" aria-hidden="true"></p>
+                    <p class="hw-stat-secondary">No tienes permiso para ver el inventario.</p>
+                    <p class="hw-note"></p>
+                {% endif %}
+            </article>
+        </div>
+
+        <div class="row hw-split">
+            <div class="col-lg-8">
+                <section class="card hw-panel" aria-labelledby="hw-ventas-mes">
+                    <div class="card-header">
+                        <h2 id="hw-ventas-mes" class="h6 mb-0">Ventas por mes</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if not hw.graficos.ventas %}
+                            <p class="hw-placeholder hw-empty-state">No tienes permiso para ver las ventas.</p>
+                        {% elif hw.graficos.ventas.vacio %}
+                            <p class="hw-placeholder hw-empty-state">
+                                <i class="fas fa-chart-line" aria-hidden="true"></i>
+                                <span>Aún no hay ventas registradas.</span>
+                            </p>
+                        {% else %}
+                            {{ hw.graficos.ventas|json_script:"hw-grafico-ventas" }}
+                            <div class="hw-chart-frame">
+                                <canvas id="hw-chart-ventas" role="img" aria-label="Ventas de los últimos 12 meses, en pesos chilenos"></canvas>
+                            </div>
+                            <ul class="sr-only">
+                                {% for punto in hw.graficos.ventas.puntos %}
+                                    <li>{{ punto.etiqueta }}: ${{ punto.valor|intcomma }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+            <div class="col-lg-4">
+                <section class="card hw-panel" aria-labelledby="hw-pedidos-estado">
+                    <div class="card-header">
+                        <h2 id="hw-pedidos-estado" class="h6 mb-0">Pedidos por estado</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if not hw.graficos.estados %}
+                            <p class="hw-placeholder hw-empty-state">No tienes permiso para ver los pedidos.</p>
+                        {% elif hw.graficos.estados.vacio %}
+                            <p class="hw-placeholder hw-empty-state">No hay pedidos registrados.</p>
+                        {% else %}
+                            {{ hw.graficos.estados|json_script:"hw-grafico-estados" }}
+                            <div class="hw-chart-frame">
+                                <canvas id="hw-chart-estados" role="img" aria-label="Cantidad de pedidos por estado"></canvas>
+                            </div>
+                            <ul class="sr-only">
+                                {% for punto in hw.graficos.estados.puntos %}
+                                    <li>{{ punto.etiqueta }}: {{ punto.valor }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="row hw-split">
+            <div class="col-lg-7">
+                <section class="card hw-panel" aria-labelledby="hw-ultimos-pedidos">
+                    <div class="card-header">
+                        <h2 id="hw-ultimos-pedidos" class="h6 mb-0">Últimos pedidos</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if hw.pedidos.permitido %}
+                            {% if hw.pedidos.recientes %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm hw-table">
+                                        <caption class="sr-only">Últimos pedidos registrados</caption>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Pedido</th>
+                                                <th scope="col">Cliente</th>
+                                                <th scope="col">Fecha</th>
+                                                <th scope="col">Total</th>
+                                                <th scope="col">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for pedido in hw.pedidos.recientes %}
+                                                <tr>
+                                                    <td><a href="{% url 'admin:core_pedido_change' pedido.pk %}">#{{ pedido.pk }}</a></td>
+                                                    <td>{{ pedido.usuario.username }}</td>
+                                                    <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
+                                                    <td>${{ pedido.total_monto|floatformat:"0"|intcomma }}</td>
+                                                    <td><span class="hw-pill hw-pill-{{ pedido.estado|lower }}">{{ pedido.get_estado_display }}</span></td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="hw-placeholder">No hay pedidos registrados.</p>
+                            {% endif %}
+                        {% else %}
+                            <p class="hw-placeholder">No tienes permiso para ver los pedidos.</p>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+            <div class="col-lg-5">
+                <section class="card hw-panel" aria-labelledby="hw-alertas">
+                    <div class="card-header">
+                        <h2 id="hw-alertas" class="h6 mb-0">Alertas de inventario</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if hw.productos.permitido %}
+                            {% if hw.productos.alertas %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm hw-table">
+                                        <caption class="sr-only">Productos con stock bajo o agotado</caption>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Producto</th>
+                                                <th scope="col">Tipo</th>
+                                                <th scope="col">Stock</th>
+                                                <th scope="col">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for alerta in hw.productos.alertas %}
+                                                <tr>
+                                                    <td><a href="{{ alerta.url }}">{{ alerta.nombre }}</a></td>
+                                                    <td>{{ alerta.tipo }}</td>
+                                                    <td>{{ alerta.stock }}</td>
+                                                    <td><span class="hw-pill {% if alerta.estado == 'Agotado' %}hw-pill-agotado{% else %}hw-pill-bajo{% endif %}">{{ alerta.estado }}</span></td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% if hw.productos.alertas_totales > hw.productos.alertas|length %}
+                                    <p class="hw-note mt-2">Se muestran {{ hw.productos.alertas|length }} de {{ hw.productos.alertas_totales }} alertas, empezando por el menor stock.</p>
+                                {% endif %}
+                            {% else %}
+                                <p class="hw-placeholder">No hay productos con stock bajo ni agotados.</p>
+                            {% endif %}
+                        {% else %}
+                            <p class="hw-placeholder">No tienes permiso para ver el inventario.</p>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <section class="card hw-panel" aria-labelledby="hw-mas-vendidos">
+            <div class="card-header">
+                <h2 id="hw-mas-vendidos" class="h6 mb-0">Productos más vendidos</h2>
+            </div>
+            <div class="card-body">
+                {% if not hw.graficos.vendidos %}
+                    <p class="hw-placeholder">No tienes permiso para ver los productos vendidos.</p>
+                {% elif hw.graficos.vendidos.vacio %}
+                    <p class="hw-placeholder">No hay ventas registradas.</p>
+                {% else %}
+                    {{ hw.graficos.vendidos|json_script:"hw-grafico-vendidos" }}
+                    <div class="hw-chart-frame hw-chart-frame-alta">
+                        <canvas id="hw-chart-vendidos" role="img" aria-label="Hasta diez productos más vendidos, en unidades"></canvas>
+                    </div>
+                    <ul class="sr-only">
+                        {% for punto in hw.graficos.vendidos.puntos %}
+                            <li>{{ punto.etiqueta }}: {{ punto.valor }} unidades</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </section>
+
+        {% accesos_principales dashboard_list as accesos %}
+        {% if accesos %}
+        <section class="card hw-panel hw-panel-quiet" aria-labelledby="hw-accesos">
+            <div class="card-header">
+                <h2 id="hw-accesos" class="h6 mb-0">Accesos rápidos</h2>
+            </div>
+            <div class="card-body">
+                <ul class="hw-access-grid">
+                    {% for acceso in accesos %}
+                        <li>
+                            <a class="hw-access" href="{{ acceso.url }}">
+                                <span class="hw-access-icon hw-access-icon-{{ acceso.clave }}" aria-hidden="true"><i class="{{ acceso.icono }}"></i></span>
+                                {{ acceso.nombre }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block extrajs %}
+    {% if hw.graficos.cargar %}
+        <script src="{% static 'core/vendor/chart.umd.min.js' %}"></script>
+        <script src="{% static 'core/js/admin-charts.js' %}?v=20261107d"></script>
+    {% endif %}
+{% endblock %}
