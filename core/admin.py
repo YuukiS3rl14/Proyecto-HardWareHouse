@@ -20,8 +20,11 @@ class ProveedorAdmin(admin.ModelAdmin):
 # 2. CLASES DE ADMINISTRACIÓN DE PRODUCTOS INDEPENDIENTES
 # ----------------------------------------------------------------------
 
-PRODUCTO_LIST_DISPLAY = ('id', 'miniatura', 'nombre', 'categoria', 'proveedor', 'precio', 'stock')
-PRODUCTO_EDITABLE = ('nombre', 'precio', 'stock')
+PRODUCTO_LIST_DISPLAY = (
+    'id', 'miniatura', 'nombre', 'categoria', 'proveedor',
+    'precio', 'en_oferta', 'precio_oferta', 'descuento', 'stock',
+)
+PRODUCTO_EDITABLE = ('nombre', 'precio', 'en_oferta', 'precio_oferta', 'stock')
 
 class ProductoAdminBase(admin.ModelAdmin):
     search_fields = ('nombre', 'proveedor__nombre')
@@ -29,6 +32,7 @@ class ProductoAdminBase(admin.ModelAdmin):
     list_per_page = 20
     list_select_related = ('proveedor',)
     save_on_top = True
+    readonly_fields = ('creado_en', 'actualizado_en', 'porcentaje_descuento')
 
     @admin.display(description='Imagen')
     def miniatura(self, obj):
@@ -36,6 +40,60 @@ class ProductoAdminBase(admin.ModelAdmin):
             '<img src="{}" alt="" class="hw-admin-thumb">',
             url_imagen_producto(obj),
         )
+
+    @admin.display(description='Descuento')
+    def descuento(self, obj):
+        valor = obj.porcentaje_descuento
+        if valor is None:
+            return '—'
+        return f'{valor}%'
+
+    def get_fieldsets(self, request, obj=None):
+        resultado = []
+        for nombre, opciones in super().get_fieldsets(request, obj):
+            opciones = dict(opciones)
+            campos = list(opciones.get('fields') or ())
+            if 'stock' in campos and 'stock_minimo' not in campos:
+                indice_stock = campos.index('stock') + 1
+                campos[indice_stock:indice_stock] = ['stock_minimo', 'stock_advertencia']
+                opciones['fields'] = tuple(campos)
+            if nombre == 'Información General' and 'precio' in campos and 'en_oferta' not in campos:
+                indice = campos.index('precio') + 1
+                campos[indice:indice] = ['en_oferta', 'precio_oferta', 'porcentaje_descuento']
+                opciones['fields'] = tuple(campos)
+            resultado.append((nombre, opciones))
+        if not any(nombre == 'Registro' for nombre, _opciones in resultado):
+            resultado.append((
+                'Registro',
+                {'fields': ('creado_en', 'actualizado_en')},
+            ))
+        return resultado
+
+    def save_model(self, request, obj, form, change):
+        from django.core.exceptions import ValidationError
+        from django.db import transaction
+
+        from core.inventario import anotar_ajuste_ya_guardado, auditar_umbrales
+
+        if obj.stock < 0:
+            raise ValidationError('El stock no puede quedar negativo.')
+        with transaction.atomic():
+            stock_antes = minimo_antes = advertencia_antes = None
+            if change and obj.pk:
+                previo = type(obj).objects.select_for_update().filter(pk=obj.pk).first()
+                if previo is not None:
+                    stock_antes = previo.stock
+                    minimo_antes = previo.stock_minimo
+                    advertencia_antes = previo.stock_advertencia
+            super().save_model(request, obj, form, change)
+            if stock_antes is not None and obj.stock != stock_antes:
+                anotar_ajuste_ya_guardado(
+                    obj, stock_antes,
+                    usuario=request.user, origen='admin',
+                    motivo='Ajuste desde el administrador',
+                )
+            if minimo_antes is not None:
+                auditar_umbrales(obj, minimo_antes, advertencia_antes, request.user)
 
 class ProcesadorAdmin(ProductoAdminBase):
     list_display = PRODUCTO_LIST_DISPLAY + ('socket', 'nucleos', 'frecuencia_base', 'potencia_referencia_watts', 'incluye_cooler', 'graficos_integrados')
@@ -297,6 +355,46 @@ class PagoBoletaAdmin(admin.ModelAdmin):
 
 admin.site.register(Favorito, FavoritoAdmin)
 admin.site.register(PagoBoleta, PagoBoletaAdmin)
+
+
+class MovimientoStockAdmin(admin.ModelAdmin):
+    list_display = (
+        'creado_en', 'nombre_producto', 'producto_modelo', 'producto_pk',
+        'tipo', 'cantidad', 'stock_anterior', 'stock_posterior', 'origen', 'usuario',
+    )
+    list_filter = ('tipo', 'origen', 'categoria')
+    search_fields = ('nombre_producto', 'producto_modelo', 'motivo')
+    ordering = ('-creado_en', '-id')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class AuditoriaUmbralAdmin(admin.ModelAdmin):
+    list_display = (
+        'creado_en', 'nombre_producto', 'producto_modelo', 'producto_pk',
+        'minimo_anterior', 'minimo_nuevo', 'advertencia_anterior', 'advertencia_nueva', 'usuario',
+    )
+    ordering = ('-creado_en', '-id')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+admin.site.register(MovimientoStock, MovimientoStockAdmin)
+admin.site.register(AuditoriaUmbral, AuditoriaUmbralAdmin)
 
 # ----------------------------------------------------------------------
 # 5. Sobrescribir títulos del Admin Site

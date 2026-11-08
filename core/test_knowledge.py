@@ -23,7 +23,9 @@ class KnowledgeSourceTests(TestCase):
     def test_json_valido_y_anos(self):
         datos = cargar_conocimiento()
         self.assertEqual(datos['identity']['years_in_business'], 5)
-        self.assertTrue(datos['contact']['address']['placeholder'])
+        self.assertFalse(datos['contact']['address']['placeholder'])
+        self.assertIn('INACAP Puente Alto', datos['contact']['address']['value'])
+        self.assertTrue(datos['contact']['phone']['placeholder'])
 
     def test_sobre_nosotros_usa_la_misma_mision(self):
         perfil = perfil_publico()
@@ -61,6 +63,11 @@ class KnowledgeSourceTests(TestCase):
         contacto = generar_respuesta('cuál es el teléfono de la tienda')
         self.assertIn('ejemplo', contacto['reply'].lower())
         self.assertIn('/contacto/', contacto['reply'])
+
+        pagina = Client().get(reverse('core:contacto'))
+        self.assertContains(pagina, 'INACAP Puente Alto')
+        self.assertContains(pagina, 'Abrir en Maps')
+        self.assertNotContains(pagina, 'Av. Tecnología 123')
 
     def test_historia(self):
         data = generar_respuesta('cuántos años llevan en el mercado')

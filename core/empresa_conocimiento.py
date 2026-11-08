@@ -61,16 +61,14 @@ en reconocimiento por:
 - Acompañar al cliente en cada etapa: elección de piezas, compra y retiro en tienda.
 
 --------------------------------------------------------------------------------
-5. UBICACIÓN Y CONTACTO (DATOS DE EJEMPLO DEL SITIO)
+5. UBICACIÓN Y CONTACTO
 --------------------------------------------------------------------------------
 
-HardWareHouse opera con un punto de referencia para retiro en tienda en la Región
-Metropolitana. La dirección publicada en el sitio es de ejemplo / ficticia para
-fines del proyecto web:
+HardWareHouse recibe el retiro en tienda en INACAP Puente Alto:
 
-  Dirección de retiro (ejemplo): Av. Tecnología 123, Santiago, Región Metropolitana, Chile.
+  Dirección de retiro: INACAP Puente Alto, Av. Concha y Toro 1341, Puente Alto (entre Hospital y Protectora).
 
-Correo de contacto (ejemplo): contacto@hardwarehouse.cl
+Correo público de contacto: contacto@hardwarehouse.cl
 Teléfono de contacto (ejemplo): +56 9 1234 5678
 
 Formulario de contacto: disponible en la sección "Contacto" del sitio web.
@@ -232,8 +230,8 @@ ayudar a elegir, no solo en vender.
 --------------------------------------------------------------------------------
 
 P: ¿Dónde están ubicados?
-R: Punto de retiro de referencia en Av. Tecnología 123, Santiago, Región Metropolitana
-   (dirección de ejemplo del sitio). Horario y coordinación se confirman al gestionar
+R: El retiro es en INACAP Puente Alto, Av. Concha y Toro 1341, Puente Alto
+   (entre Hospital y Protectora). Horario y coordinación se confirman al gestionar
    el pedido vía contacto.
 
 P: ¿Hacen despachos o envíos?
@@ -277,7 +275,7 @@ R: Coordinar con el equipo vía contacto al confirmar el pedido; no hay procedim
 15. LO QUE EL ASISTENTE NO DEBE AFIRMAR
 --------------------------------------------------------------------------------
 
-- No inventar direcciones distintas a la de ejemplo sin indicar que es referencial.
+- No inventar direcciones distintas a INACAP Puente Alto, Av. Concha y Toro 1341.
 - No prometer envío, delivery, plazos de courier ni cobertura geográfica de despacho.
 - No inventar precios o stock de productos (usar base de productos).
 - No prometer stock infinito ni garantías no mencionadas en el sitio.

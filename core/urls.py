@@ -13,6 +13,10 @@ from core.chatbot.api import (
     chat_asistente_config_api,
 )
 
+from core.alertas_stock import vista_alertas_stock
+from core.inventario import vista_guardar_umbrales, vista_movimientos, vista_movimientos_producto
+
+from .forms import LoginForm
 from .views import *
 
 urlpatterns = [
@@ -41,8 +45,20 @@ urlpatterns = [
     path('api/catalogo/total-armado/', catalogo_total_armado_api, name='catalogo_total_armado_api'),
     path('api/catalogo/metadata/', catalogo_metadata_api, name='catalogo_metadata_api'),
     path('registro/', mostrarRegistro, name='registro'),
+    path('personal/alertas-stock/', vista_alertas_stock, name='alertas_stock'),
+    path('personal/alertas-stock/umbrales/', vista_guardar_umbrales, name='alertas_stock_umbrales'),
+    path('personal/movimientos-stock/', vista_movimientos, name='movimientos_stock'),
+    path(
+        'personal/movimientos-stock/<str:model_name>/<int:pk>/',
+        vista_movimientos_producto,
+        name='movimientos_producto',
+    ),
     path('perfil/', verPerfil, name='perfil'),
-    path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path(
+        'login/',
+        LoginView.as_view(template_name='registration/login.html', authentication_form=LoginForm),
+        name='login',
+    ),
 
     # URLs del Carrito
     path('carrito/agregar/', agregar_al_carrito, name='agregar_al_carrito'),

@@ -7,6 +7,15 @@ document.addEventListener('DOMContentLoaded', function() {
             // Prevenimos el envío normal del formulario
             event.preventDefault();
 
+            const quantityInput = form.querySelector('input[name="quantity"]');
+            if (quantityInput && window.HW && window.HW.mensajeCantidad) {
+                const errorCantidad = window.HW.mensajeCantidad(quantityInput);
+                if (errorCantidad) {
+                    window.HW.showToast(errorCantidad, 'error');
+                    return;
+                }
+            }
+
             const formData = new FormData(form);
             const url = form.action;
             const submitButton = event.submitter || form.querySelector('button[type="submit"]');

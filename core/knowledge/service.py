@@ -8,6 +8,7 @@ from pathlib import Path
 
 from django.core.cache import cache
 from django.urls import reverse
+from django.utils.html import escape, format_html
 
 _JSON_PATH = Path(__file__).resolve().parent / 'hardwarehouse.json'
 _CACHE_PREFIX = 'hw_company_knowledge'
@@ -62,7 +63,7 @@ def _bloque_contacto(datos: dict) -> str:
     contacto = datos['contact']
     partes = [
         f'Canales publicados: formulario en {_ruta("core:contacto")}.',
-        'Dirección, correo y teléfono que aparecen en el sitio son datos de ejemplo.',
+        'El teléfono publicado es un dato de ejemplo.',
     ]
     for campo in ('address', 'email', 'phone'):
         item = contacto[campo]
@@ -70,6 +71,8 @@ def _bloque_contacto(datos: dict) -> str:
             partes.append(
                 f'{campo}: "{item["value"]}" está marcado como ejemplo. {item.get("note", "")}'.strip()
             )
+        else:
+            partes.append(f'{campo}: {item["value"]}. {item.get("note", "")}'.strip())
     partes.append(f'Escríbenos en {_ruta("core:contacto")}.')
     return ' '.join(partes)
 
@@ -135,6 +138,20 @@ def texto_faq(clave: str) -> str | None:
     return _aplicar_plantilla(faq['answer'], cargar_conocimiento())
 
 
+def _respuesta_pagina(answer: str, datos: dict) -> str:
+    """En Sobre nosotros, {contacto} es el enlace «Contacto». El chat conserva la ruta."""
+    trozos = re.split(r'(\{contacto\})', answer)
+    partes = []
+    for trozo in trozos:
+        if trozo == '{contacto}':
+            partes.append(format_html('<a href="{}">Contacto</a>', _ruta('core:contacto')))
+        elif trozo:
+            partes.append(escape(_aplicar_plantilla(trozo, datos)))
+    if not partes:
+        return ''
+    return format_html('{}' * len(partes), *partes)
+
+
 def faq_items_pagina() -> list[dict]:
     datos = cargar_conocimiento()
     items = []
@@ -145,7 +162,7 @@ def faq_items_pagina() -> list[dict]:
             {
                 'clave': faq['id'],
                 'titulo': faq['question'],
-                'respuesta': _aplicar_plantilla(faq['answer'], datos),
+                'respuesta': _respuesta_pagina(faq['answer'], datos),
             }
         )
     return items

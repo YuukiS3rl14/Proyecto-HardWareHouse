@@ -11,43 +11,71 @@
     </div>
     <div class="row">
         <div class="col-lg-7 mb-5">
-            <form id="contactForm">
-                <div class="form-group">
-                    <input type="text" id="name" class="form-control" placeholder="Tu nombre" required>
+            <form id="contactForm" method="post" action="{% url 'core:contacto' %}">
+                {% csrf_token %}
+                <div class="form-group mb-3">
+                    <label class="form-label" for="name">Nombre</label>
+                    <input type="text" id="name" name="nombre" class="form-control" placeholder="Tu nombre"
+                        maxlength="100" required value="{{ form.nombre.value|default:'' }}" autocomplete="name">
+                    {% for error in form.nombre.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
-                <div class="form-group">
-                    <input type="email" id="email" class="form-control" placeholder="Tu correo" required>
+                <div class="form-group mb-3">
+                    <label class="form-label" for="email">Correo</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="Tu correo"
+                        maxlength="254" required value="{{ form.email.value|default:'' }}" autocomplete="email">
+                    {% for error in form.email.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
-                <div class="form-group">
-                    <input type="text" id="phone" class="form-control" placeholder="Tu teléfono">
+                <div class="form-group mb-3">
+                    <label class="form-label" for="phone-country">Teléfono</label>
+                    <div class="hw-phone">
+                        <select id="phone-country" name="telefono_pais" class="form-select" autocomplete="tel-country-code">
+                            {% for pais in paises_telefono %}
+                            <option value="{{ pais.codigo }}" {% if form.telefono_pais.value == pais.codigo %}selected{% endif %}>{{ pais.bandera }} {{ pais.nombre }} (+{{ pais.prefijo }})</option>
+                            {% endfor %}
+                        </select>
+                        <input type="tel" id="phone" name="telefono_nacional" class="form-control" inputmode="numeric"
+                            autocomplete="tel-national" maxlength="20" placeholder="912345678"
+                            value="{{ form.telefono_nacional.value|default:'' }}" aria-describedby="phone-ayuda">
+                    </div>
+                    <p id="phone-ayuda" class="hw-counter mb-0">Opcional. Para Chile, 9 dígitos que empiezan con 9.</p>
+                    {% for error in form.telefono_nacional.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    {{ reglas_telefono|json_script:"reglas-telefono" }}
                 </div>
-                <div class="form-group">
-                    <input type="text" id="subject" class="form-control" placeholder="Asunto" required>
+                <div class="form-group mb-3">
+                    <label class="form-label" for="subject">Asunto</label>
+                    <input type="text" id="subject" name="asunto" class="form-control" placeholder="Asunto"
+                        maxlength="120" required value="{{ form.asunto.value|default:'' }}">
+                    {% for error in form.asunto.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
-                <div class="form-group">
-                    <textarea id="message" class="form-control" rows="5" placeholder="Tu mensaje" required></textarea>
+                <div class="form-group mb-3">
+                    <label class="form-label" for="message">Mensaje</label>
+                    <textarea id="message" name="mensaje" class="form-control" rows="5" placeholder="Tu mensaje"
+                        maxlength="2000" required data-contador="contador-mensaje">{{ form.mensaje.value|default:'' }}</textarea>
+                    <p id="contador-mensaje" class="hw-counter mb-0"></p>
+                    {% for error in form.mensaje.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                 </div>
+                {% for error in form.non_field_errors %}
+                <p class="text-danger small" role="alert">{{ error }}</p>
+                {% endfor %}
+                <p id="contacto-error" class="text-danger small" role="alert"></p>
                 <button type="submit" class="btn btn-success px-4 py-2">Contactar ahora</button>
             </form>
         </div>
         <div class="col-lg-5">
             <h5 class="font-weight-bold mb-3 text-success">Información de contacto</h5>
-            <p><i class="fa fa-map-marker-alt text-success mr-2"></i>Av. Tecnología 123, Santiago, Chile</p>
-            <p><i class="fa fa-envelope text-success mr-2"></i>contacto@hardwarehouse.cl</p>
+            <p><i class="fa fa-map-marker-alt text-success mr-2"></i>{{ direccion_publica }}</p>
+            <p><i class="fa fa-envelope text-success mr-2"></i>{{ contacto_email }}</p>
             <p><i class="fa fa-phone-alt text-success mr-2"></i>+56 9 1234 5678</p>
+            <p class="mb-0"><a class="text-success" href="{{ mapa_enlace }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt mr-1"></i>Abrir en Maps</a></p>
             <div class="mt-4">
-                <iframe src="https://www.google.com/maps?q=santiago%20chile&output=embed" width="100%" height="250" style="border:0;" allowfullscreen></iframe>
+                <iframe src="{{ mapa_embed }}" title="Mapa de INACAP Puente Alto" width="100%" height="250" style="border:0;" allowfullscreen loading="lazy"></iframe>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- Popup -->
-<div id="popup-bg">
-    <div id="popup">
-        <i class="fas fa-check-circle"></i>
-        <h4 id="popup-msg"></h4>
-        <button onclick="closePopup()">Volver al formulario</button>
-    </div>
-</div>
+{% block extra_scripts %}
+<script src="{% static 'core/js/contacto.js' %}?v=telefono1"></script>
+<script src="{% static 'core/js/estrellas.js' %}?v=resena1"></script>
 {% endblock %}

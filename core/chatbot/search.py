@@ -10,7 +10,7 @@ from django.db.models import Q
 from core.catalogo.registry import CATALOGO_MODELOS, categorias_disponibles
 from core.chatbot.ranking import puntuar_producto
 from core.chatbot.serializers import producto_a_dict
-from core.models import Proveedor
+from core.models import Proveedor, expresion_precio_vigente
 from core.piezas_demo import sin_demo
 
 OrdenCatalogo = Literal['relevancia', 'precio_asc', 'precio_desc', 'stock_desc']
@@ -121,6 +121,7 @@ def buscar_catalogo(filtros: FiltrosCatalogo) -> dict:
             pks = None
 
         qs = sin_demo(modelo.objects.select_related('proveedor'))
+        qs = qs.annotate(_precio_vigente=expresion_precio_vigente())
         if pks is not None:
             qs = qs.filter(pk__in=pks)
 
@@ -136,9 +137,9 @@ def buscar_catalogo(filtros: FiltrosCatalogo) -> dict:
         elif marca_nombre:
             qs = qs.filter(proveedor__nombre__iexact=marca_nombre)
         if filtros.precio_min is not None:
-            qs = qs.filter(precio__gte=filtros.precio_min)
+            qs = qs.filter(_precio_vigente__gte=filtros.precio_min)
         if filtros.precio_max is not None:
-            qs = qs.filter(precio__lte=filtros.precio_max)
+            qs = qs.filter(_precio_vigente__lte=filtros.precio_max)
         if filtros.solo_con_stock:
             qs = qs.filter(stock__gt=0)
 
@@ -172,12 +173,12 @@ def _ordenar(
     orden: OrdenCatalogo,
 ) -> list[tuple[object, str, float]]:
     if orden == 'precio_asc':
-        return sorted(candidatos, key=lambda t: (t[0].precio, -t[2]))
+        return sorted(candidatos, key=lambda t: (t[0].precio_vigente, -t[2]))
     if orden == 'precio_desc':
-        return sorted(candidatos, key=lambda t: (-t[0].precio, -t[2]))
+        return sorted(candidatos, key=lambda t: (-t[0].precio_vigente, -t[2]))
     if orden == 'stock_desc':
         return sorted(candidatos, key=lambda t: (t[0].stock, -t[2]), reverse=True)
-    return sorted(candidatos, key=lambda t: (-t[2], t[0].precio))
+    return sorted(candidatos, key=lambda t: (-t[2], t[0].precio_vigente))
 
 
 def _filtros_respuesta(filtros: FiltrosCatalogo, marca_nombre: str | None) -> dict:

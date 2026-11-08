@@ -216,6 +216,8 @@ def confirmar_pago_paypal(ipn_obj):
         )
         return 'invoice_desconocido'
 
+    aviso_pedido_id = None
+    aviso_resultado = None
     try:
         with transaction.atomic():
             if identificador is not None:
@@ -252,83 +254,104 @@ def confirmar_pago_paypal(ipn_obj):
                     pedido.estado,
                     pedido.paypal_transaccion_id,
                 )
-                return 'ya_procesado'
-
-            if PagoBoleta.objects.filter(transaccion_id=txn_id).exists():
+                aviso_pedido_id = pedido.id
+                aviso_resultado = 'ya_procesado'
+            elif PagoBoleta.objects.filter(transaccion_id=txn_id).exists():
                 paypal_logger.warning('La transacción %s ya tiene una boleta. No se descuenta stock otra vez.', txn_id)
-                return 'ya_procesado'
+                aviso_pedido_id = pedido.id
+                aviso_resultado = 'ya_procesado'
+            else:
+                try:
+                    pagado = Decimal(ipn_obj.mc_gross).quantize(Decimal('0.01'))
+                except (InvalidOperation, TypeError):
+                    raise PagoNoConfirmado('monto')
 
+                if pagado != clp_a_usd(pedido.total_monto):
+                    paypal_logger.warning(
+                        'El monto de la transacción %s (%s USD) no coincide con el pedido #%s.',
+                        txn_id,
+                        pagado,
+                        pedido.id,
+                    )
+                    raise PagoNoConfirmado('monto')
+
+                items = list(pedido.items_pedido.select_for_update().order_by('id'))
+                if not items:
+                    raise PagoNoConfirmado('sin_items')
+
+                reservados = []
+                for item in items:
+                    producto = item.get_related_product()
+                    if producto is None:
+                        paypal_logger.error(
+                            'El ítem %s del pedido #%s no apunta a un producto con stock.',
+                            item.id,
+                            pedido.id,
+                        )
+                        raise PagoNoConfirmado('producto')
+                    reservados.append((item, producto))
+
+                reservados.sort(key=lambda par: (par[1]._meta.label, par[1].pk, par[0].pk))
+                for item, producto in reservados:
+                    bloqueado = producto.__class__.objects.select_for_update().get(pk=producto.pk)
+                    if bloqueado.stock < item.cantidad:
+                        paypal_logger.error(
+                            'Stock insuficiente de %s (hay %s, se piden %s). El pedido #%s sigue pendiente.',
+                            bloqueado.nombre,
+                            bloqueado.stock,
+                            item.cantidad,
+                            pedido.id,
+                        )
+                        raise PagoNoConfirmado('stock')
+                    from core.inventario import StockInsuficiente, registrar_venta
+                    try:
+                        registrar_venta(bloqueado, item, pedido)
+                    except StockInsuficiente:
+                        raise PagoNoConfirmado('stock')
+
+                pedido.estado = 'PAGADO'
+                pedido.paypal_transaccion_id = txn_id
+                pedido.save(update_fields=['estado', 'paypal_transaccion_id'])
+                PagoBoleta.objects.create(
+                    pedido=pedido,
+                    monto_pagado=pedido.total_monto,
+                    metodo_pago='PayPal',
+                    transaccion_id=txn_id,
+                    nombre_comprador=_nombre_comprador(ipn_obj, pedido),
+                    email_comprador=_correo_comprador(ipn_obj, pedido),
+                )
+                aviso_pedido_id = pedido.id
+                aviso_resultado = 'pagado'
+        if aviso_resultado == 'pagado':
+            paypal_logger.info('Pedido #%s pagado con la transacción %s.', pedido.id, txn_id)
             try:
-                pagado = Decimal(ipn_obj.mc_gross).quantize(Decimal('0.01'))
-            except (InvalidOperation, TypeError):
-                raise PagoNoConfirmado('monto')
-
-            if pagado != clp_a_usd(pedido.total_monto):
-                paypal_logger.warning(
-                    'El monto de la transacción %s (%s USD) no coincide con el pedido #%s.',
-                    txn_id,
-                    pagado,
+                retirar_carrito_si_coincide(pedido)
+            except Exception:
+                paypal_logger.exception(
+                    'El pedido #%s quedó pagado, pero no se pudo actualizar el carrito.',
                     pedido.id,
                 )
-                raise PagoNoConfirmado('monto')
-
-            items = list(pedido.items_pedido.select_for_update().order_by('id'))
-            if not items:
-                raise PagoNoConfirmado('sin_items')
-
-            reservados = []
-            for item in items:
-                producto = item.get_related_product()
-                if producto is None:
-                    paypal_logger.error(
-                        'El ítem %s del pedido #%s no apunta a un producto con stock.',
-                        item.id,
-                        pedido.id,
-                    )
-                    raise PagoNoConfirmado('producto')
-                reservados.append((item, producto))
-
-            reservados.sort(key=lambda par: (par[1]._meta.label, par[1].pk, par[0].pk))
-            for item, producto in reservados:
-                bloqueado = producto.__class__.objects.select_for_update().get(pk=producto.pk)
-                if bloqueado.stock < item.cantidad:
-                    paypal_logger.error(
-                        'Stock insuficiente de %s (hay %s, se piden %s). El pedido #%s sigue pendiente.',
-                        bloqueado.nombre,
-                        bloqueado.stock,
-                        item.cantidad,
-                        pedido.id,
-                    )
-                    raise PagoNoConfirmado('stock')
-                bloqueado.stock -= item.cantidad
-                bloqueado.save(update_fields=['stock'])
-
-            pedido.estado = 'PAGADO'
-            pedido.paypal_transaccion_id = txn_id
-            pedido.save(update_fields=['estado', 'paypal_transaccion_id'])
-            PagoBoleta.objects.create(
-                pedido=pedido,
-                monto_pagado=pedido.total_monto,
-                metodo_pago='PayPal',
-                transaccion_id=txn_id,
-                nombre_comprador=_nombre_comprador(ipn_obj, pedido),
-                email_comprador=_correo_comprador(ipn_obj, pedido),
-            )
-        paypal_logger.info('Pedido #%s pagado con la transacción %s.', pedido.id, txn_id)
-        try:
-            retirar_carrito_si_coincide(pedido)
-        except Exception:
-            paypal_logger.exception(
-                'El pedido #%s quedó pagado, pero no se pudo actualizar el carrito.',
-                pedido.id,
-            )
-        return 'pagado'
+        _avisar_compra(aviso_pedido_id, aviso_resultado)
+        return aviso_resultado
     except PagoNoConfirmado as exc:
         paypal_logger.error('Pago no aplicado (%s) para la transacción %s.', exc.motivo, txn_id)
         return 'rechazado'
     except IntegrityError:
         paypal_logger.error('No se pudo guardar la transacción %s sin duplicarla.', txn_id)
         return 'rechazado'
+
+
+def _avisar_compra(pedido_id, resultado):
+    if resultado not in ('pagado', 'ya_procesado') or not pedido_id:
+        return
+    try:
+        from .correo import notificar_pedido_pagado
+        notificar_pedido_pagado(pedido_id)
+    except Exception:
+        paypal_logger.exception(
+            'El pedido #%s quedó registrado y el aviso por correo no cambió el pago.',
+            pedido_id,
+        )
 
 
 def _uuid_o_nada(valor):

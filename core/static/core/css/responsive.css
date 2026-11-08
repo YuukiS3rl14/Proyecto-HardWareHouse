@@ -279,11 +279,6 @@
         bottom: 16px;
     }
 
-    #popup {
-        width: 90%;
-        padding: 30px 20px;
-    }
-
     .login-container,
     .register-container {
         margin: 30px auto;

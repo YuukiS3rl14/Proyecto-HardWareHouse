@@ -149,7 +149,7 @@ def candidatos_para_categoria(
                     'id': producto.id,
                     'model_name': model_name,
                     'nombre': producto.nombre,
-                    'precio': producto.precio,
+                    'precio': producto.precio_vigente,
                     'stock': producto.stock,
                     'estado': evaluacion.estado,
                     'etiqueta': evaluacion.etiqueta,
@@ -410,7 +410,7 @@ def _construir_pasada(
             )
 
         producto = elegido['producto']
-        precio = producto.precio
+        precio = producto.precio_vigente
         total += precio
 
         if categoria == 'memoria_ram':

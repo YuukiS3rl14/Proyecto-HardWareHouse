@@ -107,17 +107,17 @@ def cargar_seleccion_items(
 def _total_clp(seleccion: dict, almacenamientos: list, memorias: list) -> int:
     total = 0
     for producto in seleccion.values():
-        total += int(producto.precio)
+        total += int(producto.precio_vigente)
     for item in almacenamientos:
-        total += int(item['producto'].precio) * int(item['cantidad'])
+        total += int(item['producto'].precio_vigente) * int(item['cantidad'])
     for linea in memorias:
-        total += int(linea.producto.precio) * int(linea.cantidad)
+        total += int(linea.producto.precio_vigente) * int(linea.cantidad)
     return total
 
 
 def _linea_componente(tipo: str, producto, cantidad: int = 1) -> str:
     nombre = getattr(producto, 'nombre_completo', None) or str(producto)
-    precio = int(producto.precio) * cantidad
+    precio = int(producto.precio_vigente) * cantidad
     stock = int(getattr(producto, 'stock', 0))
     url = reverse('core:detalle', kwargs={'model_name': tipo, 'pk': producto.pk})
     return (

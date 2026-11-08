@@ -117,7 +117,7 @@ def presupuesto_armado_simple(items: list[dict]) -> dict:
         producto = modelo.objects.select_related('proveedor').filter(pk=pk).first()
         if producto is None:
             continue
-        precio = precio_a_entero(producto.precio)
+        precio = precio_a_entero(producto.precio_vigente)
         total += precio
         detalle.append(producto_a_dict(producto, model_name))
 

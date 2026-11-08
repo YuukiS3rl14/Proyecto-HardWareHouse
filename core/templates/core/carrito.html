@@ -12,9 +12,10 @@
 <div class="container-fluid pt-5">
     <div class="row px-xl-5">
         {% if items %}
-        <div class="col-lg-8 table-responsive mb-5">
-            <table class="table table-bordered table-stack text-center mb-0">
-                <thead class="bg-secondary text-dark">
+        <div class="col-lg-8 mb-5">
+            <div class="hw-table-wrap">
+            <table class="table table-hover table-stack mb-0">
+                <thead class="thead-dark">
                     <tr>
                         <th>Producto</th>
                         <th>Precio</th>
@@ -27,42 +28,51 @@
                     {% for item in items %}
                     {% with producto=item.get_related_product %}
                     <tr>
-                        <td class="align-middle text-left cell-product">
+                        <td class="align-middle text-left cell-product" data-label="Producto">
                             <img src="{{ producto|imagen_producto }}" alt="{{ producto.nombre }}" style="width: 50px;">
                             {{ producto.nombre }}
                         </td>
                         <td class="align-middle" data-label="Precio">${{ item.precio_unitario|floatformat:"0"|intcomma }}</td>
-                        <td class="align-middle" data-label="Cantidad">
+                        <td class="align-middle hw-qty" data-label="Cantidad">
                             <form action="{% url 'core:actualizar_carrito' item.id %}" method="POST" id="form-{{ item.id }}" class="d-inline">
                                 {% csrf_token %}
-                                <div class="input-group quantity mx-auto flex-nowrap" style="width: 100px;">
+                                <div class="input-group quantity mx-auto flex-nowrap">
                                     <div class="input-group-btn">
-                                        <button type="button" class="btn btn-sm btn-success btn-minus">
+                                        <button type="button" class="btn btn-sm btn-success btn-minus" aria-label="Disminuir cantidad">
                                         <i class="fa fa-minus"></i>
                                         </button>
                                     </div>
-                                    <input type="text" name="quantity" class="form-control form-control-sm bg-light text-center" value="{{ item.cantidad }}">
+                                    <input type="text" inputmode="numeric" name="quantity"
+                                        class="form-control form-control-sm bg-light text-center"
+                                        value="{{ item.cantidad }}"
+                                        data-cantidad="{{ item.cantidad }}"
+                                        data-stock="{{ producto.stock }}"
+                                        data-precio="{{ item.precio_unitario }}"
+                                        min="1" max="{{ producto.stock }}"
+                                        aria-label="Cantidad">
                                     <div class="input-group-btn">
-                                        <button type="button" class="btn btn-sm btn-success btn-plus">
+                                        <button type="button" class="btn btn-sm btn-success btn-plus" aria-label="Aumentar cantidad">
                                             <i class="fa fa-plus"></i>
                                         </button>
                                     </div>
                                 </div>
+                                <p class="small text-danger mb-0" data-cantidad-error role="alert"></p>
                             </form>
                         </td>
                         <td class="align-middle" data-label="Total">${{ item.get_total|floatformat:"0"|intcomma }}</td>
                         <td class="align-middle" data-label="Quitar">
-                            <a href="{% url 'core:eliminar_del_carrito' item.id %}" class="btn btn-sm btn-danger"><i class="fa fa-times"></i></a>
+                            <a href="{% url 'core:eliminar_del_carrito' item.id %}" class="btn btn-sm btn-danger" title="Quitar del carrito"><i class="fas fa-trash-alt" aria-hidden="true"></i><span class="sr-only">Quitar</span></a>
                         </td>
                     </tr>
                     {% endwith %}
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
         <div class="col-lg-4">
             <div class="card border-secondary mb-5">
-                <div class="card-header bg-secondary border-0">
+                <div class="card-header hw-panel-head">
                     <h4 class="font-weight-semi-bold m-0">Resumen del Carrito</h4>
                 </div>
                 <div class="card-body">
@@ -80,18 +90,20 @@
                         <h5 class="font-weight-bold">Total</h5>
                         <h5 class="font-weight-bold">${{ total_carrito|floatformat:"0"|intcomma }}</h5>
                     </div>
-                    <a href="{% url 'core:checkout' %}" class="btn btn-block btn-success my-3 py-3">Proceder al Pago</a>
+                    <a href="{% url 'core:checkout' %}" class="btn btn-block btn-success my-3 py-3"><i class="fas fa-lock mr-2" aria-hidden="true"></i>Proceder al Pago</a>
                 </div>
             </div>
         </div>
         {% else %}
-        <div class="col-12 text-center py-5">
-            <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+        <div class="col-12">
+            <div class="hw-empty">
+            <i class="fas fa-shopping-cart fa-3x hw-empty-icon" aria-hidden="true"></i>
             <h3 class="font-weight-bold">Tu carrito está vacío</h3>
             <p class="text-muted">Parece que aún no has agregado productos a tu carrito.</p>
             <a href="{% url 'core:tienda' %}" class="btn btn-success mt-3">
                 <i class="fas fa-store mr-2"></i>Ir a la Tienda
             </a>
+            </div>
         </div>
         {% endif %}
     </div>

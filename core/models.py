@@ -1,8 +1,15 @@
 import uuid
+from decimal import Decimal, ROUND_HALF_UP
 
-from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxLengthValidator, MaxValueValidator, MinValueValidator
+
+from core.calificaciones import validar_media_estrella
+from django.db import models
+from django.db.models import Case, DecimalField, F, Q, When
 from django.utils import timezone
 
 
@@ -39,7 +46,123 @@ class Proveedor(models.Model):
 
 # --- 2. MODELOS DE PRODUCTOS INDEPENDIENTES ---
 
-class Procesador(models.Model):
+class ProductoComercial(models.Model):
+    """Fechas y oferta compartidas. El precio original sigue en cada familia."""
+
+    creado_en = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Registrado en',
+        help_text=(
+            'Se completa solo. En productos que ya existían, esta fecha es la de la '
+            'migración que agregó el campo, no la fecha real de alta.'
+        ),
+    )
+    actualizado_en = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Actualizado en',
+        help_text=(
+            'Se actualiza solo al guardar. No reconstruye cambios anteriores a este campo.'
+        ),
+    )
+    stock_minimo = models.PositiveIntegerField(
+        default=3,
+        verbose_name='Stock mínimo',
+        help_text='Hasta esta cantidad, el stock queda en estado crítico. Cero sigue siendo agotado.',
+    )
+    stock_advertencia = models.PositiveIntegerField(
+        default=5,
+        verbose_name='Umbral de advertencia',
+        help_text='Hasta esta cantidad, por encima del mínimo, el stock queda en advertencia.',
+    )
+    en_oferta = models.BooleanField(default=False, verbose_name='En oferta')
+    precio_oferta = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name='Precio de oferta',
+    )
+
+    class Meta:
+        abstract = True
+
+    def clean(self):
+        super().clean()
+        oferta = self.precio_oferta
+        if oferta is not None and (oferta <= 0 or self.precio is None or oferta >= self.precio):
+            raise ValidationError({
+                'precio_oferta': 'El precio de oferta debe ser positivo y menor que el precio original.',
+            })
+        if self.en_oferta and oferta is None:
+            raise ValidationError({
+                'precio_oferta': 'Indica un precio de oferta positivo y menor que el precio original.',
+            })
+        if self.stock_advertencia < self.stock_minimo:
+            raise ValidationError({
+                'stock_advertencia': 'El umbral de advertencia debe ser mayor o igual que el stock mínimo.',
+            })
+
+    @property
+    def precio_vigente(self):
+        oferta = self.precio_oferta
+        if self.en_oferta and oferta is not None and oferta > 0 and self.precio is not None and oferta < self.precio:
+            return oferta
+        return self.precio
+
+    @property
+    def porcentaje_descuento(self):
+        if not self.en_oferta or self.precio is None or self.precio <= 0:
+            return None
+        vigente = self.precio_vigente
+        if vigente is None or vigente >= self.precio:
+            return None
+        porcentaje = ((self.precio - vigente) * Decimal('100') / self.precio).quantize(
+            Decimal('1'),
+            rounding=ROUND_HALF_UP,
+        )
+        valor = int(porcentaje)
+        return valor or None
+
+
+def restriccion_stock():
+    return [
+        models.CheckConstraint(
+            check=Q(stock_advertencia__gte=F('stock_minimo')),
+            name='%(app_label)s_%(class)s_umbral_stock',
+        ),
+    ]
+
+
+def restriccion_oferta():
+    return [
+        models.CheckConstraint(
+            check=(
+                Q(precio_oferta__isnull=True)
+                | (Q(precio_oferta__gt=0) & Q(precio_oferta__lt=F('precio')))
+            ) & (
+                Q(en_oferta=False) | Q(precio_oferta__isnull=False)
+            ),
+            name='%(app_label)s_%(class)s_oferta_valida',
+        ),
+    ]
+
+
+def expresion_precio_vigente():
+    return Case(
+        When(
+            en_oferta=True,
+            precio_oferta__isnull=False,
+            precio_oferta__gt=0,
+            precio_oferta__lt=F('precio'),
+            then=F('precio_oferta'),
+        ),
+        default=F('precio'),
+        output_field=DecimalField(max_digits=10, decimal_places=2),
+    )
+
+
+class Procesador(ProductoComercial):
     categoria = models.CharField(max_length=50, default='CPU', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -100,10 +223,11 @@ class Procesador(models.Model):
 
     class Meta:
         verbose_name_plural = "Procesadores (CPU)"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[CPU | {self.proveedor.nombre}] {self.nombre}"
 
-class TarjetaGrafica(models.Model):
+class TarjetaGrafica(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Tarjeta Gráfica', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -155,10 +279,11 @@ class TarjetaGrafica(models.Model):
 
     class Meta:
         verbose_name_plural = "Tarjetas Gráficas (GPU)"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[GPU | {self.proveedor.nombre}] {self.nombre}"
 
-class MemoriaRam(models.Model):
+class MemoriaRam(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Memoria RAM', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -212,10 +337,11 @@ class MemoriaRam(models.Model):
     
     class Meta:
         verbose_name_plural = "Memorias RAM"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[RAM | {self.proveedor.nombre}] {self.nombre}"
 
-class PlacaMadre(models.Model):
+class PlacaMadre(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Placa Madre', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -311,10 +437,11 @@ class PlacaMadre(models.Model):
 
     class Meta:
         verbose_name_plural = "Placas Madre"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[MB | {self.proveedor.nombre}] {self.nombre}"
 
-class AlmacenamientoSSD(models.Model):
+class AlmacenamientoSSD(ProductoComercial):
     categoria = models.CharField(max_length=50, default='SSD', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -332,10 +459,11 @@ class AlmacenamientoSSD(models.Model):
     
     class Meta:
         verbose_name_plural = "Almacenamiento SSD"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[SSD | {self.proveedor.nombre}] {self.nombre}"
 
-class AlmacenamientoHDD(models.Model):
+class AlmacenamientoHDD(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Disco Duro HDD', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -367,10 +495,11 @@ class AlmacenamientoHDD(models.Model):
 
     class Meta:
         verbose_name_plural = "Almacenamiento HDD"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[HDD | {self.proveedor.nombre}] {self.nombre}"
 
-class Gabinete(models.Model):
+class Gabinete(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Gabinete', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -410,10 +539,11 @@ class Gabinete(models.Model):
 
     class Meta:
         verbose_name_plural = "Gabinetes"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[Case | {self.proveedor.nombre}] {self.nombre}"
 
-class FuenteDePoder(models.Model):
+class FuenteDePoder(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Fuente de Poder', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -432,10 +562,11 @@ class FuenteDePoder(models.Model):
     
     class Meta:
         verbose_name_plural = "Fuentes de Poder (PSU)"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[PSU | {self.proveedor.nombre}] {self.nombre}"
     
-class RefrigeracionCooler(models.Model):
+class RefrigeracionCooler(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Refrigeración', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -472,10 +603,11 @@ class RefrigeracionCooler(models.Model):
 
     class Meta:
         verbose_name_plural = "Refrigeración (Cooler)"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[Cooler | {self.proveedor.nombre}] {self.nombre}"
 
-class Ventilador(models.Model):
+class Ventilador(ProductoComercial):
     categoria = models.CharField(max_length=50, default='Ventilador', editable=False)
     proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, verbose_name="Marca/Proveedor")
     nombre = models.CharField(max_length=200)
@@ -489,19 +621,22 @@ class Ventilador(models.Model):
 
     class Meta:
         verbose_name_plural = "Ventiladores"
+        constraints = restriccion_oferta() + restriccion_stock()
     def __str__(self):
         return f"[Fan | {self.proveedor.nombre}] {self.nombre}"
 
-    
+
 # --- 3. COMENTARIOS Y RESEÑAS (CLAVES FORÁNEAS MÚLTIPLES) ---
 
 class Comentario(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     titulo = models.CharField(max_length=100)
-    texto = models.TextField()
-    calificacion = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Calificación de 1 a 5 estrellas."
+    texto = models.TextField(max_length=1500, validators=[MaxLengthValidator(1500)])
+    calificacion = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        validators=[validar_media_estrella],
+        help_text="Calificación de 0,5 a 5 estrellas, en medios puntos.",
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
@@ -706,6 +841,112 @@ class PagoBoleta(models.Model):
     
     def __str__(self):
         return f"Boleta/Pago Transacción {self.transaccion_id}"
+
+
+class AvisoCorreoPedido(models.Model):
+    """Controla el correo de compra. No participa en el estado del pago."""
+
+    pedido = models.OneToOneField(Pedido, on_delete=models.CASCADE, related_name='aviso_correo')
+    enviado_en = models.DateTimeField(null=True, blank=True)
+    reclamo = models.UUIDField(null=True, blank=True)
+    reclamo_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Aviso de compra'
+        verbose_name_plural = 'Avisos de compra'
+
+    def __str__(self):
+        return f'Aviso de compra del pedido #{self.pedido_id}'
+
+
+class MovimientoStock(models.Model):
+    """Cambio real de existencias. No se edita desde el panel."""
+
+    VENTA = 'VENTA'
+    REPOSICION = 'REPOSICION'
+    AJUSTE = 'AJUSTE'
+    DEVOLUCION = 'DEVOLUCION'
+    TIPOS = [
+        (VENTA, 'Venta'),
+        (REPOSICION, 'Reposición'),
+        (AJUSTE, 'Ajuste'),
+        (DEVOLUCION, 'Devolución'),
+    ]
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
+    object_id = models.PositiveIntegerField()
+    producto = GenericForeignKey('content_type', 'object_id')
+    producto_modelo = models.CharField(max_length=50)
+    producto_pk = models.PositiveIntegerField()
+    nombre_producto = models.CharField(max_length=200)
+    categoria = models.CharField(max_length=50)
+    tipo = models.CharField(max_length=20, choices=TIPOS)
+    cantidad = models.IntegerField()
+    stock_anterior = models.IntegerField()
+    stock_posterior = models.IntegerField()
+    creado_en = models.DateTimeField(auto_now_add=True)
+    usuario = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='movimientos_stock')
+    origen = models.CharField(max_length=30)
+    pedido = models.ForeignKey(Pedido, null=True, blank=True, on_delete=models.PROTECT, related_name='movimientos_stock')
+    item_pedido = models.ForeignKey(ItemPedido, null=True, blank=True, on_delete=models.PROTECT, related_name='movimientos_stock')
+    motivo = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        verbose_name = 'Movimiento de stock'
+        verbose_name_plural = 'Movimientos de stock'
+        ordering = ('-creado_en', '-id')
+        indexes = [
+            models.Index(fields=['producto_modelo', 'producto_pk', '-creado_en'], name='mov_producto_fecha_idx'),
+            models.Index(fields=['-creado_en'], name='mov_fecha_idx'),
+            models.Index(fields=['tipo', '-creado_en'], name='mov_tipo_fecha_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['item_pedido'],
+                condition=Q(tipo='VENTA', item_pedido__isnull=False),
+                name='movimiento_venta_item_unico',
+            ),
+            models.CheckConstraint(
+                check=Q(stock_posterior__gte=0) & Q(stock_posterior=F('stock_anterior') + F('cantidad')),
+                name='movimiento_stock_coherente',
+            ),
+        ]
+
+    def cantidad_visible(self):
+        if self.cantidad > 0:
+            return f'+{self.cantidad}'
+        return str(self.cantidad).replace('-', '−')
+
+    @property
+    def identificador(self):
+        return f'{self.producto_modelo}:{self.producto_pk}'
+
+    def __str__(self):
+        return f'{self.get_tipo_display()} {self.cantidad_visible()} {self.identificador}'
+
+
+class AuditoriaUmbral(models.Model):
+    """Cambio de umbrales. No altera ni registra unidades."""
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
+    object_id = models.PositiveIntegerField()
+    producto = GenericForeignKey('content_type', 'object_id')
+    producto_modelo = models.CharField(max_length=50)
+    producto_pk = models.PositiveIntegerField()
+    nombre_producto = models.CharField(max_length=200)
+    minimo_anterior = models.PositiveIntegerField()
+    minimo_nuevo = models.PositiveIntegerField()
+    advertencia_anterior = models.PositiveIntegerField()
+    advertencia_nueva = models.PositiveIntegerField()
+    usuario = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Cambio de umbral'
+        verbose_name_plural = 'Cambios de umbral'
+        indexes = [
+            models.Index(fields=['producto_modelo', 'producto_pk', '-creado_en'], name='umbral_producto_fecha_idx'),
+        ]
 
 
 # --- 6. FAVORITOS DE USUARIO ---

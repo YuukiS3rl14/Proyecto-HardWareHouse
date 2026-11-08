@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, update_session_auth_hash 
@@ -32,25 +33,32 @@ from .recomendador_pc import (
     generar_recomendaciones,
     interpretar_pedido,
 )
+from .cantidad_carrito import CantidadInvalida, parsear_cantidad, revalidar_lineas
 from .forms import *
 import json
 import logging
 import uuid
+
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.db import transaction 
 from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Count
 from core.catalogo.registry import CATALOGO_MODELOS, model_name_for
+from core.cuentas import asignar_grupo_cliente
 from core.piezas_demo import es_demo, sin_demo
 from core.tienda_filtros import (
     BANDAS_PRECIO,
     ORDENES,
-    ORDENES_VALIDAS,
+    campo_novedad,
+    catalogo_tiene_fechas,
+    chips_de_filtros,
+    debe_redirigir_filtros,
     filtro_precio,
-    ids_validos,
     opciones_catalogo,
     ordenar_catalogo,
+    resolver_filtros_tienda,
 )
 
 from .models import *
@@ -83,7 +91,10 @@ def mostrarArmado(request):
                 'marca': item.proveedor.nombre,
             }
             for field in fields:
-                data[field] = getattr(item, field)
+                if field == 'precio':
+                    data[field] = item.precio_vigente
+                else:
+                    data[field] = getattr(item, field)
             data['imagen'] = url_imagen_producto(item)
             components.append(data)
         return components
@@ -126,6 +137,19 @@ def mostrarCarrito(request):
     }
     return render(request, 'core/carrito.html', context)
 
+
+def _sincronizar_precios_carrito(items):
+    """Copia el precio vigente a las líneas del carrito antes de crear el pedido."""
+    for item in items:
+        producto = item.get_related_product()
+        if producto is None:
+            continue
+        vigente = producto.precio_vigente
+        if item.precio_unitario != vigente:
+            item.precio_unitario = vigente
+            item.save(update_fields=['precio_unitario'])
+
+
 @login_required
 def mostrarCheckout(request):
     carrito = get_object_or_404(Carrito, usuario=request.user)
@@ -135,12 +159,14 @@ def mostrarCheckout(request):
         messages.warning(request, "Tu carrito está vacío. Agrega productos antes de proceder al pago.")
         return redirect('core:carrito')
 
-    # Verificación de stock antes de proceder
-    for item_carrito in items_carrito:
-        producto = item_carrito.get_related_product()
-        if producto.stock < item_carrito.cantidad:
-            messages.error(request, f"No hay suficiente stock para '{producto.nombre}'. Solo quedan {producto.stock} unidades. Por favor, ajusta tu carrito.")
-            return redirect('core:carrito')
+    # El precio cobrado es el vigente al entrar al checkout. El IPN no vuelve a leer el catálogo.
+    _sincronizar_precios_carrito(items_carrito)
+    # El descuento real sigue en el IPN, con select_for_update. Aquí solo se relee el stock.
+    errores_stock = revalidar_lineas(items_carrito)
+    if errores_stock:
+        for texto in errores_stock:
+            messages.error(request, texto)
+        return redirect('core:carrito')
 
 
     pedidos_antes = set(
@@ -237,7 +263,35 @@ def paymentFailed(request):
     return render(request, 'core/payment_failed.html', context)
 
 def mostrarContacto(request):
-    return render(request, 'core/contacto.html')
+    if request.method == 'POST':
+        form = ContactoForm(request.POST)
+        if form.is_valid():
+            from .correo import contacto_bloqueado, enviar_contacto
+
+            if contacto_bloqueado(request):
+                form.add_error(
+                    None,
+                    'Demasiados mensajes desde esta conexión. Espera unos minutos e inténtalo de nuevo.',
+                )
+            elif enviar_contacto(form.cleaned_data):
+                messages.success(
+                    request,
+                    'Recibimos tu mensaje. Te responderemos al correo que indicaste.',
+                )
+                return redirect('core:contacto')
+            else:
+                form.add_error(
+                    None,
+                    'No pudimos enviar el mensaje. Inténtalo de nuevo en unos minutos.',
+                )
+    else:
+        form = ContactoForm()
+    from core.telefonos import PAISES, reglas_publicas
+    return render(request, 'core/contacto.html', {
+        'form': form,
+        'paises_telefono': PAISES,
+        'reglas_telefono': reglas_publicas(),
+    })
 
 
 def mostrarSobreNosotros(request):
@@ -266,44 +320,48 @@ PRODUCT_MODEL_MAP = {
     'ventilador': Ventilador,
 }
 
-def mostrarDetalle(request, model_name, pk):
-    model_name_lower = model_name.lower()
+def _producto_publico(model_name, pk):
+    model_name_lower = (model_name or '').lower()
     ModelClass = PRODUCT_MODEL_MAP.get(model_name_lower)
-    
     if not ModelClass:
-        raise Http404("Tipo de producto no encontrado.")
+        return None
+    producto = ModelClass.objects.select_related('proveedor').filter(pk=pk).first()
+    if producto is None or es_demo(producto):
+        return None
+    return producto, model_name_lower
 
-    producto = get_object_or_404(ModelClass.objects.select_related('proveedor'), pk=pk)
-    if es_demo(producto):
-        raise Http404('Producto no encontrado.')
-    
+
+def _render_detalle(request, producto, model_name, comentario_form):
     is_favorito = False
     if request.user.is_authenticated:
-        lookup_kwargs = {f'{model_name_lower}__id': pk, 'usuario': request.user}
+        lookup_kwargs = {f'{model_name}__id': producto.pk, 'usuario': request.user}
         is_favorito = Favorito.objects.filter(**lookup_kwargs).exists()
 
-    comment_lookup = {f'{model_name_lower}_id': pk}
-    comentarios = Comentario.objects.filter(**comment_lookup).order_by('-fecha_creacion')
-    
-    stats_comentarios = comentarios.aggregate(
-        promedio=Avg('calificacion'),
-        total=Count('id')
-    )
-    promedio_calificacion = stats_comentarios['promedio'] or 0
-    total_comentarios = stats_comentarios['total']
-
-    context = {
+    comentarios = Comentario.objects.filter(**{f'{model_name}_id': producto.pk}).order_by('-fecha_creacion')
+    stats_comentarios = comentarios.aggregate(promedio=Avg('calificacion'), total=Count('id'))
+    return render(request, 'core/detalle.html', {
         'producto': producto,
-        'model_name': model_name_lower, 
+        'model_name': model_name,
         'is_favorito': is_favorito,
         'comentarios': comentarios,
-        'promedio_calificacion': promedio_calificacion,
-        'total_comentarios': total_comentarios,
-        'comentario_form': ComentarioForm(),
-    }
-    return render(request, 'core/detalle.html', context)
+        'promedio_calificacion': stats_comentarios['promedio'] or 0,
+        'total_comentarios': stats_comentarios['total'],
+        'comentario_form': comentario_form,
+    })
+
+
+def mostrarDetalle(request, model_name, pk):
+    from core.errores import producto_no_encontrado
+
+    encontrado = _producto_publico(model_name, pk)
+    if encontrado is None:
+        return producto_no_encontrado()
+    producto, model_name_lower = encontrado
+    return _render_detalle(request, producto, model_name_lower, ComentarioForm())
 
 TIENDA_PAGE_SIZE = 50
+BUSQUEDA_MAX = 120
+NOVEDADES_LIMITE = 30
 
 TIENDA_MODELOS = [modelo for modelo, _ in CATALOGO_MODELOS]
 
@@ -313,15 +371,23 @@ def _model_name_tienda(modelo):
 
 
 def mostrarTienda(request):
-    query = request.GET.get('q')
-    selected_categorias = [categoria for categoria in request.GET.getlist('categoria') if categoria]
-    selected_proveedores = ids_validos(request.GET.getlist('proveedor'))
-    selected_precio = request.GET.get('precio') or ''
-    selected_orden = request.GET.get('orden') or 'relevancia'
-    if selected_orden not in ORDENES_VALIDAS:
-        selected_orden = 'relevancia'
-    if filtro_precio(selected_precio) is None:
-        selected_precio = ''
+    consulta = request.GET.copy()
+    if len((consulta.get('q') or '').strip()) > BUSQUEDA_MAX:
+        messages.error(request, 'La búsqueda admite como máximo 120 caracteres.')
+        consulta['q'] = ''
+    estado = resolver_filtros_tienda(consulta)
+    if debe_redirigir_filtros(request.GET):
+        destino = reverse('core:tienda')
+        if estado['pares']:
+            destino = f'{destino}?{urlencode(estado["pares"])}'
+        return redirect(destino)
+
+    query = estado['q']
+    novedades = estado['novedades']
+    selected_categorias = estado['categorias']
+    selected_proveedores = estado['proveedores']
+    selected_precio = estado['precio']
+    selected_orden = estado['orden']
 
     productos_con_modelo = []
 
@@ -343,6 +409,7 @@ def mostrarTienda(request):
         if selected_proveedores:
             qs = qs.filter(proveedor__id__in=selected_proveedores)
 
+        qs = qs.annotate(_precio_vigente=expresion_precio_vigente())
         banda = filtro_precio(selected_precio)
         if banda is not None:
             qs = qs.filter(banda)
@@ -351,6 +418,16 @@ def mostrarTienda(request):
             productos_con_modelo.append((producto, model_name))
 
     ordenar_catalogo(productos_con_modelo, selected_orden, query)
+    novedades_pendiente = novedades and not catalogo_tiene_fechas(TIENDA_MODELOS)
+    if novedades and not novedades_pendiente:
+        productos_con_modelo.sort(
+            key=lambda item: (
+                getattr(item[0], campo_novedad(item[0].__class__)),
+                item[0].pk,
+            ),
+            reverse=True,
+        )
+        productos_con_modelo = productos_con_modelo[:NOVEDADES_LIMITE]
 
     paginator = Paginator(productos_con_modelo, TIENDA_PAGE_SIZE)
     productos_page = paginator.get_page(request.GET.get('page'))
@@ -366,14 +443,9 @@ def mostrarTienda(request):
                 favoritos_ids[f"{model_name_template}-{prod.id}"] = True
 
     categorias_disponibles, proveedores_disponibles = opciones_catalogo(TIENDA_MODELOS)
-
-    pagination_params = request.GET.copy()
-    pagination_params.pop('page', None)
-    if selected_orden == 'relevancia':
-        pagination_params.pop('orden', None)
-    if not selected_precio:
-        pagination_params.pop('precio', None)
-    pagination_query = pagination_params.urlencode()
+    nombres_proveedor = {proveedor.pk: proveedor.nombre for proveedor in proveedores_disponibles}
+    chips = chips_de_filtros(estado, nombres_proveedor)
+    pagination_query = urlencode([(clave, valor) for clave, valor in estado['pares'] if clave != 'page'])
 
     context = {
         'productos': productos_page.object_list,
@@ -390,6 +462,10 @@ def mostrarTienda(request):
         'selected_proveedores': selected_proveedores,
         'selected_precio': selected_precio,
         'selected_orden': selected_orden,
+        'novedades': novedades,
+        'novedades_pendiente': novedades_pendiente,
+        'origen_home': estado['origen'] == 'home',
+        'chips': chips,
     }
     return render(request, 'core/tienda.html', context)
 
@@ -412,8 +488,10 @@ def mostrarRegistro(request):
         form = RegistroForm(data=request.POST) 
         
         if form.is_valid():
-            user = form.save()
-            
+            with transaction.atomic():
+                user = form.save()
+                asignar_grupo_cliente(user)
+
             user_authenticated = authenticate(
                 request,
                 username=form.cleaned_data["username"], 
@@ -480,39 +558,55 @@ def agregar_al_carrito(request):
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
         model_name = request.POST.get('model_name')
-        quantity = int(request.POST.get('quantity', 1))
-
         ModelClass = PRODUCT_MODEL_MAP.get(model_name)
         if not ModelClass or not product_id:
             messages.error(request, "Error al intentar agregar el producto.")
             return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
 
         producto = get_object_or_404(ModelClass, id=product_id)
+        es_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
-        # --- VALIDACIÓN DE STOCK ---
-        if producto.stock <= 0:
-            messages.error(request, f"Lo sentimos, '{producto.nombre}' está agotado y no se puede agregar al carrito.")
+        def rechazar(mensaje):
+            if es_ajax:
+                return JsonResponse({'status': 'error', 'message': mensaje}, status=400)
+            messages.error(request, mensaje)
             return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
 
-        carrito, created = Carrito.objects.get_or_create(usuario=request.user)
+        if producto.stock <= 0:
+            return rechazar(f"Lo sentimos, '{producto.nombre}' está agotado y no se puede agregar al carrito.")
 
-        lookup_kwargs = {f'{model_name}__id': product_id}
-        item, created = ItemCarrito.objects.get_or_create(carrito=carrito, **lookup_kwargs)
+        try:
+            solicitada = parsear_cantidad(request.POST.get('quantity', '1'), producto.stock)
+        except CantidadInvalida as exc:
+            return rechazar(exc.mensaje)
 
-        if created:
+        carrito, _creado = Carrito.objects.get_or_create(usuario=request.user)
+        item = ItemCarrito.objects.filter(
+            carrito=carrito, **{f'{model_name}__id': product_id}
+        ).first()
+
+        if item is None:
+            item = ItemCarrito(
+                carrito=carrito,
+                cantidad=solicitada,
+                precio_unitario=producto.precio_vigente,
+            )
             setattr(item, model_name, producto)
-            item.cantidad = max(1, quantity) 
-            item.precio_unitario = producto.precio 
+            item.save()
             message = f"'{producto.nombre}' se agregó a tu carrito."
         else:
-            item.cantidad += max(1, quantity)
+            try:
+                final = parsear_cantidad(item.cantidad + solicitada, producto.stock)
+            except CantidadInvalida as exc:
+                return rechazar(exc.mensaje)
+            item.cantidad = final
+            item.precio_unitario = producto.precio_vigente
+            item.save(update_fields=['cantidad', 'precio_unitario'])
             message = f"Se actualizó la cantidad de '{producto.nombre}' en tu carrito."
-        
-        item.save()
 
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        if es_ajax:
             return JsonResponse({'status': 'success', 'message': message, 'cart_count': carrito.items.count()})
-        
+
         messages.success(request, message)
 
     return redirect(request.META.get('HTTP_REFERER', 'core:tienda'))
@@ -765,7 +859,7 @@ def _filas_de_exportacion(seleccion, almacenamientos, memorias, por_categoria):
                     'componente': componente,
                     'producto': producto.nombre,
                     'cantidad': linea.cantidad,
-                    'precio': pesos_enteros(producto.precio),
+                    'precio': pesos_enteros(producto.precio_vigente),
                     'estado': evaluacion.estado,
                     'texto_estado': texto_de_estado(evaluacion),
                     'especificaciones': especificaciones,
@@ -784,7 +878,7 @@ def _filas_de_exportacion(seleccion, almacenamientos, memorias, por_categoria):
                     'componente': componente,
                     'producto': producto.nombre,
                     'cantidad': disco['cantidad'],
-                    'precio': pesos_enteros(producto.precio),
+                    'precio': pesos_enteros(producto.precio_vigente),
                     'estado': evaluacion.estado,
                     'texto_estado': (
                         'No verificada'
@@ -802,7 +896,7 @@ def _filas_de_exportacion(seleccion, almacenamientos, memorias, por_categoria):
             'componente': componente,
             'producto': producto.nombre,
             'cantidad': 1,
-            'precio': pesos_enteros(producto.precio),
+            'precio': pesos_enteros(producto.precio_vigente),
             'estado': evaluacion.estado,
             'texto_estado': texto_de_estado(evaluacion),
             'especificaciones': especificaciones_de(producto),
@@ -943,7 +1037,7 @@ def recomendar_armado(request):
                     'id': producto.id,
                     'model_name': model_name,
                     'nombre': producto.nombre,
-                    'precio': producto.precio,
+                    'precio': producto.precio_vigente,
                     'stock': producto.stock,
                     'estado': evaluacion.estado,
                     'etiqueta': evaluacion.etiqueta,
@@ -1202,12 +1296,13 @@ def agregar_armado_al_carrito(request):
             if existentes:
                 item = existentes[0]
                 item.cantidad += pedidas
-                item.save(update_fields=['cantidad'])
+                item.precio_unitario = producto.precio_vigente
+                item.save(update_fields=['cantidad', 'precio_unitario'])
             else:
                 item = ItemCarrito(
                     carrito=carrito,
                     cantidad=pedidas,
-                    precio_unitario=producto.precio,
+                    precio_unitario=producto.precio_vigente,
                 )
                 setattr(item, model_name, producto)
                 item.save()
@@ -1231,15 +1326,20 @@ def eliminar_del_carrito(request, item_id):
 def actualizar_carrito(request, item_id):
     if request.method == 'POST':
         item = get_object_or_404(ItemCarrito, id=item_id, carrito__usuario=request.user)
-        new_quantity = int(request.POST.get('quantity', 1))
+        producto = item.get_related_product()
+        if producto is None:
+            messages.error(request, 'Un producto del carrito ya no está disponible.')
+            return redirect('core:carrito')
+        try:
+            cantidad = parsear_cantidad(request.POST.get('quantity'), producto.stock)
+        except CantidadInvalida as exc:
+            messages.error(request, exc.mensaje)
+            return redirect('core:carrito')
+        item.cantidad = cantidad
+        item.precio_unitario = producto.precio_vigente
+        item.save(update_fields=['cantidad', 'precio_unitario'])
+        messages.success(request, 'Cantidad actualizada.')
 
-        if new_quantity > 0:
-            item.cantidad = new_quantity
-            item.save()
-            messages.success(request, "Cantidad actualizada.")
-        else:
-            return eliminar_del_carrito(request, item_id)
-            
     return redirect('core:carrito')
 
 # --- VISTAS DE FAVORITOS ---
@@ -1304,25 +1404,26 @@ def eliminar_favorito(request, fav_id):
 
 @login_required
 def agregar_comentario(request, model_name, pk):
-    if request.method == 'POST':
-        form = ComentarioForm(request.POST)
-        ModelClass = PRODUCT_MODEL_MAP.get(model_name)
-        
-        if not ModelClass:
-            raise Http404("Tipo de producto no encontrado.")
-        
-        producto = get_object_or_404(ModelClass, pk=pk)
+    from core.errores import producto_no_encontrado
 
-        if form.is_valid():
-            comentario = form.save(commit=False)
-            comentario.usuario = request.user
-            setattr(comentario, model_name, producto)
-            comentario.save()
-            messages.success(request, "¡Gracias por tu reseña! Tu comentario ha sido publicado.")
-        else:
-            messages.error(request, "Hubo un error al publicar tu comentario. Por favor, revisa los campos.")
+    if request.method != 'POST':
+        return redirect('core:detalle', model_name=model_name, pk=pk)
 
-    return redirect('core:detalle', model_name=model_name, pk=pk)
+    encontrado = _producto_publico(model_name, pk)
+    if encontrado is None:
+        return producto_no_encontrado()
+    producto, model_name_lower = encontrado
+    form = ComentarioForm(request.POST)
+    if form.is_valid():
+        comentario = form.save(commit=False)
+        comentario.usuario = request.user
+        setattr(comentario, model_name_lower, producto)
+        comentario.save()
+        messages.success(request, "¡Gracias por tu reseña! Tu comentario ha sido publicado.")
+        return redirect('core:detalle', model_name=model_name_lower, pk=pk)
+
+    messages.error(request, "Hubo un error al publicar tu comentario. Por favor, revisa los campos.")
+    return _render_detalle(request, producto, model_name_lower, form)
 
 # --- VISTAS DE PEDIDOS ---
 

@@ -54,6 +54,54 @@ body {
     border-bottom: none !important;
 }
 
+.hw-user-col {
+    min-width: 0;
+}
+
+.hw-user-cluster {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-width: 0;
+    gap: 0.25rem;
+}
+
+.hw-user-link {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: 12rem;
+    gap: 0.35rem;
+}
+
+.hw-user-link .fa-user-circle {
+    flex: 0 0 auto;
+}
+
+.hw-user-name {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.hw-user-sep {
+    flex: 0 0 auto;
+}
+
+.hw-user-cluster .hw-chat-logout-form {
+    flex: 0 0 auto;
+    display: inline-flex;
+    margin: 0;
+}
+
+.hw-logout-btn {
+    white-space: nowrap;
+    cursor: pointer;
+}
+
 
 /* --- Página de Inicio (index.html) --- */
 
@@ -70,21 +118,6 @@ body {
 .feature-box:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-}
-
-/* Cinta "En Desarrollo" para el bloque de soporte técnico */
-#soporte-tecnico-box::after {
-    content: 'En Desarrollo';
-    position: absolute;
-    top: 10px;
-    right: -30px;
-    background-color: #ffc107; /* Amarillo warning */
-    color: #212529;
-    padding: 2px 30px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    transform: rotate(45deg);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 /* Estilo para los logos de proveedores */

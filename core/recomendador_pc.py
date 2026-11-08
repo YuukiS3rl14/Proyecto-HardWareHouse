@@ -496,7 +496,7 @@ def _marcar_parciales(resultado):
 
 
 def _precio_minimo_disco(catalogo):
-    precios = [producto.precio for _tipo, producto in catalogo['almacenamiento'] if producto.stock >= 1]
+    precios = [producto.precio_vigente for _tipo, producto in catalogo['almacenamiento'] if producto.stock >= 1]
     if not precios:
         return None
     return min(precios)
@@ -526,13 +526,13 @@ def _referencia_disco(parcial, catalogo, presupuesto):
         viables.append(producto)
     if not viables:
         return None
-    barato = min(viables, key=lambda producto: (producto.precio, producto.pk))
-    adicional = barato.precio - restante
+    barato = min(viables, key=lambda producto: (producto.precio_vigente, producto.pk))
+    adicional = barato.precio_vigente - restante
     if adicional <= 0:
         return None
     return {
         'nombre': barato.nombre,
-        'precio': int(barato.precio),
+        'precio': int(barato.precio_vigente),
         'adicional': int(adicional),
     }
 
@@ -1358,9 +1358,9 @@ def _reserva_para_cooler(parcial, catalogo, uso):
     for cooler in catalogo['refrigeracion']:
         if cooler.tipo != 'Aire':
             continue
-        if Decimal(cooler.precio) < 0 or not _cooler_aceptado(parcial, cooler):
+        if Decimal(cooler.precio_vigente) < 0 or not _cooler_aceptado(parcial, cooler):
             continue
-        precios.append(Decimal(cooler.precio))
+        precios.append(Decimal(cooler.precio_vigente))
     if not precios:
         return Decimal('0')
     return min(precios)
@@ -1376,9 +1376,9 @@ def _opciones(parcial, etapa, catalogo, presupuesto, uso, preferencias=None, exi
     if etapa == 'memoria_ram':
         opciones = []
         for producto in catalogo['memoria_ram']:
-            if producto.precio <= restante and producto.stock >= 1:
+            if producto.precio_vigente <= restante and producto.stock >= 1:
                 opciones.append([LineaRam(producto, 1)])
-            if producto.precio * 2 <= restante and producto.stock >= 2:
+            if producto.precio_vigente * 2 <= restante and producto.stock >= 2:
                 opciones.append([LineaRam(producto, 2)])
         if prefs.exigir('ram', exigir_opcionales):
             opciones = [
@@ -1389,7 +1389,7 @@ def _opciones(parcial, etapa, catalogo, presupuesto, uso, preferencias=None, exi
     if etapa == 'almacenamiento':
         opciones = []
         for tipo, producto in catalogo['almacenamiento']:
-            if producto.precio <= restante and producto.stock >= 1:
+            if producto.precio_vigente <= restante and producto.stock >= 1:
                 opciones.append({'tipo': tipo, 'producto': producto, 'cantidad': 1})
         opciones = [
             opcion for opcion in opciones
@@ -1410,13 +1410,13 @@ def _opciones(parcial, etapa, catalogo, presupuesto, uso, preferencias=None, exi
                 cooler
                 for cooler in catalogo['refrigeracion']
                 if cooler.tipo == 'Aire'
-                and cooler.precio <= restante
+                and cooler.precio_vigente <= restante
                 and _cooler_queda_verificado(parcial, cooler)
             ]
         opciones = [
             cooler
             for cooler in catalogo['refrigeracion']
-            if cooler.precio <= restante and _cooler_aceptado(parcial, cooler)
+            if cooler.precio_vigente <= restante and _cooler_aceptado(parcial, cooler)
         ]
         aire = [cooler for cooler in opciones if cooler.tipo == 'Aire']
         return aire or opciones
@@ -1424,7 +1424,7 @@ def _opciones(parcial, etapa, catalogo, presupuesto, uso, preferencias=None, exi
     productos = [
         producto
         for producto in catalogo[clave]
-        if producto.precio <= restante and producto.stock >= 1
+        if producto.precio_vigente <= restante and producto.stock >= 1
         and _producto_de_etapa_permitido(etapa, producto, prefs, exigir_opcionales)
     ]
     return productos
@@ -1457,7 +1457,7 @@ def _piezas_contadas(parcial):
 def _total(parcial):
     total = Decimal('0')
     for producto, cantidad in _piezas_contadas(parcial):
-        total += Decimal(producto.precio) * cantidad
+        total += Decimal(producto.precio_vigente) * cantidad
     return total
 
 
@@ -1724,22 +1724,22 @@ def _puntaje(parcial, uso, resolucion):
     puntaje = Decimal('0')
     cpu = parcial.seleccion.get('procesador')
     if cpu is not None:
-        puntaje += _aporte(_indice_cpu(cpu), pesos['procesador'], cpu.precio, uso)
+        puntaje += _aporte(_indice_cpu(cpu), pesos['procesador'], cpu.precio_vigente, uso)
     if parcial.memorias:
         capacidad = sum(Decimal(linea.producto.capacidad_gb) * linea.cantidad for linea in parcial.memorias)
-        precio = sum(Decimal(linea.producto.precio) * linea.cantidad for linea in parcial.memorias)
+        precio = sum(Decimal(linea.producto.precio_vigente) * linea.cantidad for linea in parcial.memorias)
         puntaje += _aporte(_indice_ram(capacidad, uso), pesos['memoria_ram'], precio, uso)
     gpu = parcial.seleccion.get('tarjeta_grafica')
     if gpu is not None:
         puntaje += _aporte(
             _saturar(gpu.vram_gb, REFERENCIAS['vram_gb']),
             pesos['tarjeta_grafica'],
-            gpu.precio,
+            gpu.precio_vigente,
             uso,
         )
     if parcial.discos:
         capacidad = sum(Decimal(disco['producto'].capacidad_gb) * disco['cantidad'] for disco in parcial.discos)
-        precio = sum(Decimal(disco['producto'].precio) * disco['cantidad'] for disco in parcial.discos)
+        precio = sum(Decimal(disco['producto'].precio_vigente) * disco['cantidad'] for disco in parcial.discos)
         puntaje += _aporte(_saturar(capacidad, REFERENCIAS['disco_gb']), pesos['almacenamiento'], precio, uso)
     return puntaje
 
@@ -1996,7 +1996,7 @@ def _componentes_serializados(parcial, por_categoria, uso):
 
 
 def _fila(tipo, etiqueta, producto, cantidad, frase, evaluacion):
-    precio = Decimal(producto.precio)
+    precio = Decimal(producto.precio_vigente)
     motivo = frase
     if evaluacion is not None and evaluacion.etiqueta:
         motivo = f'{frase} {evaluacion.etiqueta}'

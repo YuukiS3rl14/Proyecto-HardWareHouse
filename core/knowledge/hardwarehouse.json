@@ -31,14 +31,14 @@
   },
   "contact": {
     "address": {
-      "value": "Av. Tecnología 123, Santiago, Región Metropolitana, Chile",
-      "placeholder": true,
-      "note": "Dirección de ejemplo publicada en el sitio. No confirmarla como sucursal real."
+      "value": "INACAP Puente Alto, Av. Concha y Toro 1341, Puente Alto (entre Hospital y Protectora)",
+      "placeholder": false,
+      "note": "Sede de retiro en INACAP Puente Alto, entre Hospital y Protectora."
     },
     "email": {
       "value": "contacto@hardwarehouse.cl",
-      "placeholder": true,
-      "note": "Correo de ejemplo en la página de contacto. El pie del sitio muestra contacto@techparts.cl; ambos son datos de ejemplo."
+      "placeholder": false,
+      "note": "Buzón público oficial. El formulario y el pie muestran esta dirección. El reenvío al equipo ocurre en Cloudflare, fuera de Django."
     },
     "phone": {
       "value": "+56 9 1234 5678",
@@ -99,7 +99,7 @@
     {
       "id": "ubicacion_horario",
       "question": "¿Dónde están ubicados?",
-      "answer": "El punto de referencia publicado para retiro en tienda es Av. Tecnología 123, Santiago, Región Metropolitana. Esa dirección es un ejemplo del sitio, no una sucursal verificada. El horario se confirma al coordinar el pedido. Escríbenos en {contacto}.",
+      "answer": "El retiro en tienda es en INACAP Puente Alto, Av. Concha y Toro 1341, Puente Alto (entre Hospital y Protectora). El horario se confirma al coordinar el pedido. Escríbenos en {contacto}.",
       "intent": "ubicacion_horario",
       "show_on_about": true,
       "aliases": ["donde estan", "dónde están", "ubicados", "dirección de la tienda", "horario de atencion", "horario de atención"]
