@@ -251,7 +251,7 @@
                     datasets: [{
                         label: "Unidades",
                         data: valores(unidades.puntos),
-                        backgroundColor: celeste,
+                        backgroundColor: verde,
                         borderRadius: 6,
                         maxBarThickness: 22
                     }]
