@@ -45,15 +45,17 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '8w96bzrx-8000.brs.devtunnels.ms',
-    'url-ejemplo',
     'proyecto-hardwarehouse-production.up.railway.app',
+    'hardwarehouse.cl',
+    'www.hardwarehouse.cl'
 ]
 
 # Mismo dominio que en ALLOWED_HOSTS, pero aquí con el esquema 'https://'.
 CSRF_TRUSTED_ORIGINS = [
     'https://8w96bzrx-8000.brs.devtunnels.ms',
-    'https://url-ejemplo',
     'https://proyecto-hardwarehouse-production.up.railway.app',
+    'https://hardwarehouse.cl',
+    'https://www.hardwarehouse.cl'
 ]
 
 railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN")
