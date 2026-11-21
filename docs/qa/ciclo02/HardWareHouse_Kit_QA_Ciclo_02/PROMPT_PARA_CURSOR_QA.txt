@@ -1,0 +1,14 @@
+CURSOR — VALIDACIÓN INTEGRAL DEL CICLO QA 02 DE HARDWAREHOUSE
+
+Usa el archivo Word HardWareHouse_QA_Ciclo_02_Matriz_de_Pruebas.docx como listado de 78 casos. Conserva el documento previo Registro QA Ciclo 01 como patrón de clasificación y evidencia. Inspecciona el repositorio real y la configuración; no inventes tests exitosos.
+
+1) Registra el commit SHA y despliegue probado, versiones reales de Python/Django/PostgreSQL.
+2) Configura una BD PostgreSQL de test separada, sin riesgo para producción. Jamás ejecutes manage.py test sobre BD de producción. Mockea PayPal, EmailJS y Ollama. Ejecuta python manage.py check, python manage.py check --deploy y python manage.py test --verbosity 2. Entrega stdout/stderr sanitizado.
+3) Añade los casos faltantes de compatibilidad PC, stock mínimo, movimiento de inventario, compra doble, concurrencia de última unidad, permisos, grupos, formulario contacto, valoración media estrella, carrito y filtros, sin alterar lógica de negocio al preparar los tests.
+4) Ejecuta pruebas funcionales Django Client con usuarios ficticios cliente/staff/superuser y CSRF enforcement; comprueba IDOR en pedidos, acceso a panel interno, registro y autenticación.
+5) Genera pruebas de interfaz con Playwright (320, 375, 768, 1366, 1920 px), teclado, foco, contrastes, imágenes, formularios, búsqueda, catálogo, carrito, gestión de stock. Guarda capturas anonimizadas.
+6) Audita ORM con CaptureQueriesContext y assertNumQueries en home/tienda/detalle/carrito/favoritos/control stock/historial; documenta SQL EXPLAIN (ANALYZE, BUFFERS) únicamente sobre staging/test y detecta N+1 antes de corregir.
+7) Corre revisión de seguridad pasiva: headers, cookie flags, DEBUG, SECRET_KEY en entorno, dependencias pip-audit, validaciones server-side, XSS escapado, CSRF, permisos sobre POST. No realizar ataques ni fuerza bruta a producción.
+8) Ejecuta smoke HTTP únicamente después de autorización. Carga/estrés con Locust SOLO en staging aprobado, 1 usuario 60s primero; después 5/10 usuarios con monitoreo y criterios de parada, sin operaciones mutables.
+9) Documenta cada resultado con ID, fecha UTC, URL, usuario de pruebas, esperado, observado, severidad, captura, log, SHA y Deployment ID. Separa APROBADO / PARCIAL / FALLIDO / PENDIENTE / BLOQUEADO.
+10) Entrega reporte de cobertura, resultados y plan de corrección en un lote. No hagas deploy ni alteres datos reales automáticamente.

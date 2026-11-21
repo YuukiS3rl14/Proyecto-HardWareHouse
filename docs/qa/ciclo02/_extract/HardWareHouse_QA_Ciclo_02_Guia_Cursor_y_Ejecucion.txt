@@ -1,0 +1,72 @@
+HWH  /  CONTROL DE CALIDAD
+Guía de ejecución técnica y evidencias — Ciclo 02
+HardWareHouse · Manual para Cursor y staging · Ejecución controlada
+1. Orden de ejecución
+1. Preparar una rama QA y confirmar commit, Railway Deployment ID y URL. No usar DB de producción para tests mutables.
+2. Ejecutar manage.py check y manage.py test con base de datos aislada y valores de prueba para servicios externos.
+3. Ejecutar humo GET de sólo lectura mediante hwh_http_smoke.py. Registrar JSON/CSV y capturas.
+4. Ejecutar automatización de navegador y pruebas manuales en móvil/tablet/escritorio.
+5. Medir consultas ORM y generar resultados sanitizados.
+6. Comprobar controles de seguridad en staging sin agresión externa ni pruebas de fuerza bruta.
+7. Levantar escenario Locust en staging, monitorear métricas y detener si hay error/agotamiento.
+8. Documentar incidentes, corregir por lote y repetir pruebas de regresión.
+2. Comandos de Django (Cursor/local)
+python manage.py check
+python manage.py check --deploy
+python manage.py test --verbosity 2
+python manage.py test core.tests core.test_correo_emailjs core.test_contacto_estatico --verbosity 2
+CUIDADO  Django crea/modifica una base de pruebas para las pruebas basadas en TestCase. Configurar credenciales y acceso a una BD de test separada y verificar los settings antes de ejecutar. --deploy reporta recomendaciones, no altera el despliegue.
+3. Comandos del script HTTP
+python scripts/hwh_http_smoke.py --base-url https://proyecto-hardwarehouse-production.up.railway.app/
+python scripts/hwh_http_smoke.py --base-url https://proyecto-hardwarehouse-production.up.railway.app/ --run --allow-production --delay 2 --output evidencias/smoke_railway.json
+python scripts/test_smoke_script.py
+La primera orden muestra el plan sin contactar al servidor. La segunda realiza ocho GET espaciados sobre producción con autorización explícita; no prueba interacción de UI, correo ni operaciones POST. La tercera verifica exclusivamente el instrumento en un servidor simulado.
+4. Carga en staging (no producción)
+python -m pip install locust
+locust -f scripts/locustfile_hwh.py --headless --host https://STAGING-APROBADO --users 1 --spawn-rate 1 --run-time 60s --csv evidencias/locust_hwh_01
+locust -f scripts/locustfile_hwh.py --headless --host https://STAGING-APROBADO --users 5 --spawn-rate 1 --run-time 120s --csv evidencias/locust_hwh_05
+LÍMITE  No ejecutar un estrés progresivo contra las URLs de producción sin ventana de mantenimiento, autorización del proyecto y límites definidos. El script bloquea por defecto esos hosts.
+5. Auditoría ORM desde Cursor
+• Identificar vistas GET y queries en core/views.py, core/alertas_stock.py, core/inventario.py y core/context_processors.py.
+• Usar django.test.utils.CaptureQueriesContext con connection y assertNumQueries para comparar N=1 vs N=20 productos.
+• Registrar número de SELECT, tiempo total, consultas repetidas y posible N+1 sin volcar parámetros sensibles.
+• Observar SQL EXPLAIN ANALYZE con transacciones y datos de pruebas, no bloquear PostgreSQL de producción.
+• Proponer select_related/prefetch_related, anotaciones, paginación e índices solo tras evidencia cuantificada.
+6. Accesibilidad y dispositivos
+Matriz de viewports: 320×568, 375×812, 768×1024, 1366×768 y 1920×1080. Navegación por teclado, zoom 200%, contraste, alternativas de iconos, labels, errores asociados a campos, estados de filtros y tablas responsive. Registrar criterio WCAG 2.2 aplicable y captura.
+7. Texto listo para Cursor
+En el repositorio Proyecto-HardWareHouse crea/ejecuta una suite QA integral basada en la matriz Ciclo 02. 1) Confirma commit y Django/Python/PostgreSQL efectivos. 2) Ejecuta manage.py check y tests con BD de test aislada; nunca producción. 3) Agrupa y ejecuta unitarias de compatibilidad, cantidad, stock, ventas idempotentes, permisos y formularios; mockea PayPal, EmailJS y Ollama. 4) Añade pruebas Django Client/Playwright para navegación, filtros, carrito, reseñas, 404/500 y responsive. 5) Audita consultas con assertNumQueries/CaptureQueriesContext y explica índices y N+1 con métricas. 6) Verifica acceso cruzado a pedidos, CSRF y cabeceras pasivas, sin fuerza bruta. 7) No ejecutes estrés contra producción; prepara Locust para staging y resultados CSV. 8) Devuelve comandos, total de tests, aprobadas/fallidas, trace de errores sanitizado, capturas, URLs, fecha, SHA y Deployment ID; no declares aprobado lo no ejecutado y no hagas deploy ni modifiques datos reales.
+8. Registro mínimo de ejecución
+Campo
+Completar
+Fecha/hora (UTC)
+Usuario técnico / equipo
+Git commit SHA
+Railway deployment ID
+URL exacta
+BD aislada / fixtures
+Comando exacto
+Cantidad pass/fail/skip
+Logs de salida
+Incidencias
+9. Acta de cierre del ciclo
+Total de casos ejecutados: __________  Aprobadas: __________  Parciales: __________  Fallidas: __________  Bloqueadas: __________
+Resultado del ciclo:  [   ] Cierre aprobado   [   ] Aprobado con riesgos aceptados   [   ] No aprobado
+Incidencias P0/P1 abiertas: _______________________________   Fecha de reejecución: __________________________
+Observaciones finales: __________________________________________________________________________
+___________________________________________________________________________________________
+Responsable técnico: ______________________________  Validación del equipo: ______________________________
+Nota: esta hoja está deliberadamente sin completar porque no se ha ejecutado la batería de pruebas sobre la versión desplegada.
+
+---TABLE---
+Campo | Completar
+Fecha/hora (UTC) | 
+Usuario técnico / equipo | 
+Git commit SHA | 
+Railway deployment ID | 
+URL exacta | 
+BD aislada / fixtures | 
+Comando exacto | 
+Cantidad pass/fail/skip | 
+Logs de salida | 
+Incidencias | 

@@ -1,0 +1,431 @@
+HWH  /  CONTROL DE CALIDAD
+Matriz de casos de prueba — Ciclo 02
+HardWareHouse · Casos reproducibles · Ejecución en Cursor, navegador y staging
+CAMPO
+VALOR
+Fecha de diseño
+20-11-2026
+Casos
+78 casos distribuidos en nueve familias
+Formato de evidencia
+ID, pasos, esperado, observado, log/captura y estado
+Estado de ejecución
+Todos PENDIENTES; las observaciones preliminares están en el informe general
+Entorno
+Railway preferido para smoke; PostgreSQL test para operaciones; staging para carga
+Caja negra / interfaces y formularios
+10 casos previstos. Registrar ejecución, resultado observado, captura y versión bajo cada ID.
+UI-01  ·  Navegación pública
+Procedimiento: Abrir Inicio, Tienda, Armado, Sobre nosotros y Contacto; comprobar enlaces y retorno a Inicio.
+Resultado esperado: Todas las rutas públicas muestran contenido sin error 5xx; enlaces conducen a la vista esperada.
+Método: Navegador + capturas   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UI-02  ·  Búsqueda de catálogo
+Procedimiento: Buscar nombre real de un procesador y un término inexistente.
+Resultado esperado: Coincidencias relevantes, vacíos informativos y sin errores; búsqueda no conserva filtros incompatibles.
+Método: Navegador + capturas   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UI-03  ·  Categoría y proveedor heredados
+Procedimiento: Entrar desde Home a una categoría; dentro de Tienda cambiar categoría y proveedor.
+Resultado esperado: Los filtros heredados se reemplazan según regla; combinaciones intencionales se conservan.
+Método: Navegador + capturas   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UI-04  ·  Formulario de registro
+Procedimiento: Probar campos válidos y errores: email inválido, contraseñas distintas, duplicado.
+Resultado esperado: Errores legibles sin guardar datos incorrectos; alta válida agrega grupo Cliente.
+Método: Cursor + base de pruebas   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UI-05  ·  Autenticación y sesión
+Procedimiento: Ingresar con cuentas de prueba de cliente/staff; cerrar sesión.
+Resultado esperado: Roles y vistas correctos; la sesión termina y recursos protegidos exigen autenticación.
+Método: Cursor + navegador   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UI-06  ·  Formulario contacto
+Procedimiento: Dejar obligatorios vacíos, escribir mensaje excesivo y un envío simulado.
+Resultado esperado: Validaciones consistentes y sin mensajes duplicados; EmailJS se simula en test.
+Método: Cursor + mock EmailJS   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UI-07  ·  Teléfono internacional
+Procedimiento: Seleccionar Chile +56; introducir móvil válido y formatos erróneos; cambiar país.
+Resultado esperado: Se normaliza correctamente según país sin duplicar prefijo.
+Método: Cursor + navegador   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UI-08  ·  Reseña con medias estrellas
+Procedimiento: Probar 0,5; 3,5; 5; texto excedido; publicación sin permiso.
+Resultado esperado: Sólo valores válidos; límites respetados y controles de usuario aplicados.
+Método: Cursor + navegador   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UI-09  ·  Carrito y favoritos
+Procedimiento: Agregar, modificar cantidad, retirar y mostrar estados vacíos.
+Resultado esperado: Recalcula totales; respeta disponibilidad y no mezcla productos de modelos diferentes.
+Método: Cursor + navegador   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UI-10  ·  Páginas de error
+Procedimiento: Visitar URL inexistente y producto inexistente; forzar 500 sólo en test aislado.
+Resultado esperado: 404/500 correctos con plantilla amigable y sin información sensible.
+Método: Cursor + DEBUG=False en test   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+Humo / módulos
+8 casos previstos. Registrar ejecución, resultado observado, captura y versión bajo cada ID.
+SM-01  ·  Inicio
+Procedimiento: GET / sin credenciales.
+Resultado esperado: 200, HTML principal.
+Método: Script HTTP + Cursor   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SM-02  ·  Tienda
+Procedimiento: GET /tienda/ y búsqueda controlada.
+Resultado esperado: 200, catálogo legible.
+Método: Script HTTP + Cursor   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SM-03  ·  Armado PC
+Procedimiento: GET /armado/.
+Resultado esperado: 200, interfaz de armado.
+Método: Script HTTP + Cursor   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SM-04  ·  Contacto
+Procedimiento: GET /contacto/.
+Resultado esperado: 200, formulario visible.
+Método: Script HTTP + Cursor   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SM-05  ·  Registro/Login
+Procedimiento: GET /registro/ y /login/.
+Resultado esperado: 200 o redirección prevista, sin error 5xx.
+Método: Script HTTP + Cursor   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SM-06  ·  Cuenta y pedidos
+Procedimiento: Solicitar /pedidos/ sin sesión.
+Resultado esperado: Login o 403 adecuado; sin datos privados.
+Método: Script HTTP + Cursor   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SM-07  ·  Backoffice staff
+Procedimiento: Solicitar /personal/alertas-stock/ sin sesión.
+Resultado esperado: Vista protegida; sin contenido interno.
+Método: Script HTTP + Cursor   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SM-08  ·  404 producto
+Procedimiento: GET /detalle/procesador/999999999/.
+Resultado esperado: HTTP 404, mensaje seguro.
+Método: Script HTTP + Cursor   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+Unitarias / reglas de negocio
+12 casos previstos. Registrar ejecución, resultado observado, captura y versión bajo cada ID.
+UT-01  ·  Compatibilidad CPU/placa
+Procedimiento: Validar sockets coincidentes y diferentes.
+Resultado esperado: Concordancia correcta; incompatibilidad bloqueada.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-02  ·  Compatibilidad RAM/placa
+Procedimiento: Comprobar DDR, formato, capacidad y módulos.
+Resultado esperado: Mensajes de incompatibilidad precisos.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-03  ·  Compatibilidad gabinete/GPU
+Procedimiento: Comprobar factor de forma y largo GPU.
+Resultado esperado: Evita configuraciones físicamente inválidas.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-04  ·  Cálculo de totales
+Procedimiento: Carrito con cantidades/precios de prueba y descuentos.
+Resultado esperado: Subtotal y total se calculan sin redondeos erróneos.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-05  ·  Límites de cantidad
+Procedimiento: Probar cero, negativos, texto y cantidades superiores a stock.
+Resultado esperado: Entradas inválidas rechazadas.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-06  ·  Stock agotado/crítico/advertencia
+Procedimiento: Probar stock 0,1,3,4,5,6 y umbrales propios.
+Resultado esperado: Estados y contadores corresponden a reglas.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-07  ·  Operaciones de inventario
+Procedimiento: Reponer, ajustar y vender en transacción aislada.
+Resultado esperado: Stock y movimiento coherentes; rollback íntegro.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-08  ·  Idempotencia de pago
+Procedimiento: Confirmar dos veces mismo identificador PayPal simulado.
+Resultado esperado: Un único descuento y un único registro de operación.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-09  ·  Concurrencia de último stock
+Procedimiento: Dos solicitudes simultáneas con stock inicial 1.
+Resultado esperado: No hay sobreventa ni stock negativo.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-10  ·  Grupo Cliente
+Procedimiento: Registro público y alta staff manual.
+Resultado esperado: Cliente al grupo; staff no afectado.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-11  ·  Media estrella y promedio
+Procedimiento: Probar 0,5 a 5,0 y valores decimales inválidos.
+Resultado esperado: Validación y promedio coherentes.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+UT-12  ·  EmailJS mock
+Procedimiento: Simular éxito, error y reintento para contacto y pedido.
+Resultado esperado: Pago persistente; correo no duplica pedido.
+Método: Cursor: Django TestCase   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+Auditoría ORM / PostgreSQL
+8 casos previstos. Registrar ejecución, resultado observado, captura y versión bajo cada ID.
+ORM-01  ·  Listado y paginación
+Procedimiento: Capturar consultas GET /tienda/ con 10, 50 y 100 artículos.
+Resultado esperado: Contador y tiempo razonables sin crecimiento N+1.
+Método: Cursor + PostgreSQL de pruebas   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+ORM-02  ·  Detalle y relaciones
+Procedimiento: Capturar SELECT de producto y proveedor por 10 productos.
+Resultado esperado: No hace un SELECT adicional por relación por fila.
+Método: Cursor + PostgreSQL de pruebas   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+ORM-03  ·  Favoritos y carrito
+Procedimiento: Medir consultas con 1, 5 y 20 elementos.
+Resultado esperado: No multiplica consultas innecesariamente.
+Método: Cursor + PostgreSQL de pruebas   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+ORM-04  ·  Control de stock
+Procedimiento: Medir ORM de resumen y lista filtrada/paginada.
+Resultado esperado: No consulta familias completas innecesariamente.
+Método: Cursor + PostgreSQL de pruebas   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+ORM-05  ·  Historial de movimientos
+Procedimiento: Medir SELECT por páginas y relaciones a usuario/pedido.
+Resultado esperado: Paginación y select_related efectivos.
+Método: Cursor + PostgreSQL de pruebas   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+ORM-06  ·  SQL e índices
+Procedimiento: EXPLAIN (ANALYZE, BUFFERS) sólo en BD de pruebas.
+Resultado esperado: Identificar scans/ordenamientos costosos; proponer índices con evidencia.
+Método: Cursor + PostgreSQL de pruebas   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+ORM-07  ·  Transacciones
+Procedimiento: Auditar select_for_update en inventario y pagos.
+Resultado esperado: Bloqueos coherentes y de duración mínima.
+Método: Cursor + PostgreSQL de pruebas   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+ORM-08  ·  Consultas en templates
+Procedimiento: Capturar consultas durante renderizado navbar, stock y favoritos.
+Resultado esperado: No duplicación excesiva en context_processors.
+Método: Cursor + PostgreSQL de pruebas   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+Accesibilidad / usabilidad / responsive
+8 casos previstos. Registrar ejecución, resultado observado, captura y versión bajo cada ID.
+AX-01  ·  Viewport móvil 320/375
+Procedimiento: Revisar Inicio, Tienda, filtros y botones a 320 y 375 px.
+Resultado esperado: No desbordamiento ni solapamiento de elementos.
+Método: Navegador + Lighthouse/axe + inspección manual   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+AX-02  ·  Viewport tablet 768
+Procedimiento: Revisar menús, tablas, filtros y formularios.
+Resultado esperado: Interacción usable y layout coherente.
+Método: Navegador + Lighthouse/axe + inspección manual   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+AX-03  ·  Desktop 1366/1920
+Procedimiento: Probar navegación, tablas y modales.
+Resultado esperado: Sin huecos o cortes significativos.
+Método: Navegador + Lighthouse/axe + inspección manual   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+AX-04  ·  Teclado
+Procedimiento: Navegar con Tab, Enter, Escape; foco visible en formularios y menú.
+Resultado esperado: Todo control esencial es operable sin mouse.
+Método: Navegador + Lighthouse/axe + inspección manual   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+AX-05  ·  Contraste y foco
+Procedimiento: Verificar texto, estados, errores y enlaces verdes.
+Resultado esperado: Cumple contraste/indicadores según WCAG 2.2 AA objetivo.
+Método: Navegador + Lighthouse/axe + inspección manual   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+AX-06  ·  Etiquetas y mensajes
+Procedimiento: Revisar label, aria, ayudas de teléfono, reseñas y errores.
+Resultado esperado: Campos entendibles por lector de pantalla.
+Método: Navegador + Lighthouse/axe + inspección manual   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+AX-07  ·  Imágenes, iconos y tablas
+Procedimiento: Inspeccionar alt, encabezados, labels y acceso responsive.
+Resultado esperado: Contenido no textual tiene alternativa y tablas son comprensibles.
+Método: Navegador + Lighthouse/axe + inspección manual   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+AX-08  ·  Zoom 200% y texto
+Procedimiento: Probar zoom 200%, 400% y tamaño de texto.
+Resultado esperado: No se pierde contenido ni funcionalidad crítica.
+Método: Navegador + Lighthouse/axe + inspección manual   |   Riesgo: Media   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+Rendimiento / estrés
+6 casos previstos. Registrar ejecución, resultado observado, captura y versión bajo cada ID.
+PF-01  ·  Línea base
+Procedimiento: Medir p50/p95 en GET /, /tienda/, /armado/, /contacto/.
+Resultado esperado: Distribución de latencia y tasa de error registrada.
+Método: Locust (sólo staging aprobado)   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+PF-02  ·  Concurrencia ligera
+Procedimiento: Escalonar 1, 5 y 10 usuarios sólo en staging.
+Resultado esperado: Registrar p95, error, RPS y CPU/RAM por etapa.
+Método: Locust (sólo staging aprobado)   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+PF-03  ·  Estrés controlado
+Procedimiento: Aumentar gradualmente hasta degradación controlada en staging.
+Resultado esperado: Encontrar punto de saturación sin perjudicar producción.
+Método: Locust (sólo staging aprobado)   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+PF-04  ·  Recuperación
+Procedimiento: Reducir a 0 usuarios tras prueba y observar sistema.
+Resultado esperado: La plataforma vuelve al nivel base.
+Método: Locust (sólo staging aprobado)   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+PF-05  ·  Catálogo con filtros
+Procedimiento: Repetir consulta de catálogo con filtro y páginas.
+Resultado esperado: Tiempo estable con volumen creciente.
+Método: Locust (sólo staging aprobado)   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+PF-06  ·  Comparación de release
+Procedimiento: Comparar métricas con misma carga antes/después de cambios.
+Resultado esperado: Sin regresión estadísticamente significativa o justificar cambio.
+Método: Locust (sólo staging aprobado)   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+Funcionales / integración
+10 casos previstos. Registrar ejecución, resultado observado, captura y versión bajo cada ID.
+IN-01  ·  Registro a login
+Procedimiento: Crear cuenta en BD de prueba e iniciar sesión.
+Resultado esperado: Usuario/grupo persistidos; sesión correcta.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+IN-02  ·  Filtro a detalle
+Procedimiento: Filtrar CPU y abrir ficha, volver a Tienda.
+Resultado esperado: Consistencia del catálogo y sus parámetros.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+IN-03  ·  Armado a carrito
+Procedimiento: Crear armado compatible, agregar componentes y exportar Excel.
+Resultado esperado: Configuración consistente y archivo válido.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+IN-04  ·  Checkout y PayPal Sandbox
+Procedimiento: Crear pedido y simular/capturar pago Sandbox aislado.
+Resultado esperado: Pedido y monto correctos; sin cobro real.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+IN-05  ·  Pago a inventario
+Procedimiento: Confirmar pedido con stock disponible.
+Resultado esperado: Estado PAGADO, stock descontado y movimiento creado una vez.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+IN-06  ·  Pago a EmailJS
+Procedimiento: Mock de notificación cliente y ruta de error externo.
+Resultado esperado: Correo no altera estado del pedido ni genera duplicados.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+IN-07  ·  Contacto a EmailJS
+Procedimiento: Validar parámetros enviados desde Django con mock.
+Resultado esperado: Destino contacto@; reply-to usuario, sin cuentas antiguas.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+IN-08  ·  Umbrales del staff
+Procedimiento: Staff cambia stock_minimo/advertencia desde panel.
+Resultado esperado: Se persiste y se recalculan avisos; clientes sin permiso.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+IN-09  ·  Pedidos entre usuarios
+Procedimiento: Crear pedidos de usuario A y abrir con usuario B.
+Resultado esperado: Acceso denegado; ninguna información privada.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+IN-10  ·  Chatbot/servicio externo
+Procedimiento: Usar mocks para respuestas, timeouts y fallos de Ollama.
+Resultado esperado: Respuesta segura y degradación controlada sin bloquear el resto.
+Método: Cursor + fixtures/mocks   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+Regresión
+6 casos previstos. Registrar ejecución, resultado observado, captura y versión bajo cada ID.
+RG-01  ·  Navegación y catálogo
+Procedimiento: Repetir humo y filtros después de release.
+Resultado esperado: No reaparece acumulación de filtros.
+Método: Cursor + navegador   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+RG-02  ·  Cuenta cliente/staff
+Procedimiento: Repetir login, logout, permisos y grupo Cliente.
+Resultado esperado: Comportamiento sin cambios no intencionales.
+Método: Cursor + navegador   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+RG-03  ·  Carrito a pedido
+Procedimiento: Comparar cantidades/precios/stock antes y después.
+Resultado esperado: No se alteran totales ni pedidos.
+Método: Cursor + navegador   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+RG-04  ·  Armado de PC
+Procedimiento: Repetir compatibilidad, exportación y agregar al carrito.
+Resultado esperado: No se pierde selección ni validación.
+Método: Cursor + navegador   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+RG-05  ·  Inventario / historial
+Procedimiento: Repetir umbrales y movimientos tras ajustes visuales.
+Resultado esperado: Sin cambios funcionales por refactor UI.
+Método: Cursor + navegador   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+RG-06  ·  Reseñas y contacto
+Procedimiento: Repetir validaciones y mock de envío.
+Resultado esperado: Sin regresiones de formulario.
+Método: Cursor + navegador   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+Seguridad
+10 casos previstos. Registrar ejecución, resultado observado, captura y versión bajo cada ID.
+SC-01  ·  Autenticación y roles
+Procedimiento: Probar sesión cliente, staff sin permiso y superusuario en BD de pruebas.
+Resultado esperado: Autorización por vista/acción; ocultar botones no es control suficiente.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SC-02  ·  IDOR en pedidos
+Procedimiento: Cambiar pedido_id por el de otro usuario en cliente Django.
+Resultado esperado: HTTP 403/404; sin datos privados.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SC-03  ·  CSRF
+Procedimiento: Enviar POST de modificación sin token en cliente con enforcement.
+Resultado esperado: Solicitud rechazada.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SC-04  ·  XSS almacenado
+Procedimiento: Guardar texto inofensivo con símbolos HTML en reseña de prueba.
+Resultado esperado: Se escapa, no se interpreta como HTML activo.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SC-05  ·  Validación de entrada
+Procedimiento: Enviar enteros negativos, valores fuera de rango y datos excesivos.
+Resultado esperado: Validaciones backend consistentes.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SC-06  ·  Configuración producción
+Procedimiento: Revisar DEBUG, SECRET_KEY, HTTPS, cookies, CORS y hosts.
+Resultado esperado: Valores endurecidos sin exposición de secretos.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SC-07  ·  Dependencias
+Procedimiento: Ejecutar pip-audit y revisión de requisitos en entorno aislado.
+Resultado esperado: Inventario de CVE y plan de remediación documentado.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SC-08  ·  Cabeceras
+Procedimiento: Inspeccionar HSTS, nosniff, X-Frame-Options y CSP si aplica.
+Resultado esperado: Registrar presentes/ausentes; justificar política sin falsos positivos.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SC-09  ·  Rate limiting
+Procedimiento: Simular intentos limitados de contacto/login en staging.
+Resultado esperado: Protecciones aplicadas; no bloquear cuentas reales.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+SC-10  ·  Errores y secretos
+Procedimiento: Forzar excepciones controladas en test y revisar logs sanitizados.
+Resultado esperado: No muestra stack trace ni datos personales al cliente.
+Método: Cursor / auditoría pasiva + staging   |   Riesgo: Alta   |   Estado: PENDIENTE
+Evidencia / resultado observado / fecha / incidencia: ________________________________________
+
+---TABLE---
+CAMPO | VALOR
+Fecha de diseño | 20-11-2026
+Casos | 78 casos distribuidos en nueve familias
+Formato de evidencia | ID, pasos, esperado, observado, log/captura y estado
+Estado de ejecución | Todos PENDIENTES; las observaciones preliminares están en el informe general
+Entorno | Railway preferido para smoke; PostgreSQL test para operaciones; staging para carga

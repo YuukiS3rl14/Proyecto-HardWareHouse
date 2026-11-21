@@ -1,0 +1,246 @@
+HWH  /  CONTROL DE CALIDAD
+Plan y registro de pruebas de software — Ciclo 02
+HardWareHouse · Django · PostgreSQL · Railway · Evaluación integral / 28 de octubre de 2026
+CONTROL DEL DOCUMENTO
+DETALLE
+Proyecto
+HardWareHouse (HWH)
+Ciclo
+02 · Auditoría integral
+Elaboración
+28-10-2026
+Ambiente preferido
+https://proyecto-hardwarehouse-production.up.railway.app/
+Ambiente alternativo
+https://hardwarehouse.cl/ (comparación pendiente)
+Código examinado
+Repositorio GitHub main accesible; versión desplegada NO identificada
+Responsable de cierre
+Equipo de desarrollo
+Estado global
+NO CERTIFICADO: ejecución integral pendiente
+Alcance: catálogo y filtros, registro y acceso, armado de PC, compras de prueba, stock, administración, chatbot, correo, seguridad, rendimiento y experiencia de usuario.
+1. Alcance, ambientes y limitaciones
+El ciclo se divide en una revisión pública de sólo lectura, una inspección estática puntual del repositorio conectado, y una batería de pruebas que requiere ejecutar Django y PostgreSQL en una base de datos aislada. No se modificaron pedidos, existencias, cuentas, correos ni configuraciones de producción.
+Elemento
+Observación documentada
+Límite
+Dominio Railway
+Consulta externa desde este entorno: error de recuperación (cache miss / DNS del contenedor).
+No equivale a indisponibilidad real; comprobar con cliente HTTP desde red autorizada.
+Dominio propio
+Se recuperó HTML de Inicio y Contacto desde la herramienta web; aparecen menús, secciones públicas y campos del contacto.
+No prueba envío del formulario, JS, responsividad ni tiempos HTTP en vivo.
+Repositorio
+Se inspeccionaron archivos de Django en la rama principal vía conexión GitHub.
+La coincidencia con el SHA desplegado no está acreditada.
+Carga y seguridad activa
+NO ejecutadas contra producción.
+Requieren staging y autorización de ventana/volumen.
+2. Estrategia y criterios de evaluación
+FASE
+ACCIÓN
+EVIDENCIA
+Preparación
+Confirmar commit, Deployment ID, DEBUG, URL, fixtures y ventana.
+Hoja de ambiente / SHA.
+Humo
+GET de rutas públicas y comprobación de rutas protegidas.
+JSON/CSV, capturas, status.
+Unidad e integración
+Django TestCase; mocks externos; test PostgreSQL.
+Salida de manage.py test, fallos.
+ORM
+Captura de queries, EXPLAIN y N+1.
+SQL sanitizado, conteos, tiempos.
+UX, accesibilidad
+Viewport y teclado, Lighthouse/axe + revisión manual.
+Capturas, incidencias WCAG.
+Rendimiento
+Locust progresivo SOLO staging.
+CSV p50/p95/RPS/error, CPU/RAM.
+Seguridad
+Controles de sesión, permisos, CSRF y pasiva.
+Pruebas sin credenciales expuestas.
+Regresión y cierre
+Reejecución completa tras corregir y desplegar.
+Matriz antes/después.
+ESTADO
+CRITERIO
+APROBADA
+Ejecución y evidencia verifican criterio esperado.
+PARCIAL
+Cumple parte, faltan criterios.
+FALLIDA
+Resultado contradice el esperado.
+PENDIENTE
+Prueba aún no ejecutada o evidencia insuficiente.
+BLOQUEADA
+No ejecutable por entorno, dependencias o permisos.
+OBSERVACIÓN
+Hallazgo informativo sin aprobación funcional.
+3. Resultados verificables a la fecha
+En la sesión actual no se ha ejecutado una batería transaccional contra HardWareHouse. Los resultados consisten en observaciones de navegación recuperada, revisión de código y autoprueba del instrumento de humo.
+ID
+Evidencia concreta
+Resultado
+EV-01
+Consulta web de https://hardwarehouse.cl/ mostró Inicio, Tienda, Armado, Sobre nosotros, Contacto, Login/Registro y carrusel.
+OBSERVACIÓN; funcionalidad validada.
+EV-02
+Consulta web de /contacto/ mostró Nombre, Correo, Teléfono prefijo + campo, Asunto y Mensaje.
+OBSERVACIÓN; envío realizado.
+EV-03
+Acceso externo a URL Railway.
+APROBADA; tiempo de uptime constante.
+EV-04
+En settings.py se observó DEBUG por variable, middleware CSRF, HTTPS condicional y hosts permitidos.
+REVISIÓN ESTÁTICA; producción  verificada.
+EV-05
+En inventario.py/payments.py se observaron transacciones atómicas y bloqueos; en views.py select_related.
+REVISIÓN ESTÁTICA; sin medir queries ni concurrencia.
+EV-06
+El script de humo pasó 8/8 simulaciones contra un servidor HTTP local creado para probar el propio instrumento.
+APROBADA únicamente la autoprueba del script; NO el sistema.
+4. Revisión estática preliminar
+MVT y PostgreSQL
+El repositorio contiene settings Django, core/models.py, core/views.py, core/urls.py, core/inventario.py y core/payments.py. La conexión de PostgreSQL se configura en settings; verificar variables reales sólo en entorno autorizado.
+Controles de negocio
+Se hallan transacciones y select_for_update en inventario y pagos. Se deben reproducir pagos duplicados, última unidad y rollback en PostgreSQL real de pruebas; la presencia de estas instrucciones no acredita idempotencia.
+Límite del historial
+El encabezado del módulo inventario advierte que QuerySet.update(), sincronización demo y save() fuera de servicios centrales pueden omitir el historial. Registrar como riesgo de cobertura de auditoría y revisar llamadas concretas antes de clasificar como defecto.
+ORM
+Se observaron select_related en consultas de catálogo y favoritos. Falta medir el número real de consultas, revisar context_processors y planes EXPLAIN. No se emite diagnóstico de N+1 sin ejecución.
+Seguridad
+Se identificó el middleware CSRF y configuración SSL/hosts en settings. Faltan verificar cabeceras HTTP efectivas, niveles de permisos, protección de pedidos y secret handling; una lectura estática no constituye pentest.
+5. Matriz consolidada por tipo
+Tipo
+Casos definidos
+Ejecución validada sobre HWH
+Caja negra / interfaces y formularios
+10
+0 · Pendiente/bloqueada
+Humo / módulos
+8
+0 · Pendiente/bloqueada
+Unitarias / reglas de negocio
+12
+0 · Pendiente/bloqueada
+Auditoría ORM / PostgreSQL
+8
+0 · Pendiente/bloqueada
+Accesibilidad / usabilidad / responsive
+8
+0 · Pendiente/bloqueada
+Rendimiento / estrés
+6
+0 · Pendiente/bloqueada
+Funcionales / integración
+10
+0 · Pendiente/bloqueada
+Regresión
+6
+0 · Pendiente/bloqueada
+Seguridad
+10
+0 · Pendiente/bloqueada
+TOTAL DE CASOS  78 casos definidos. El documento anexo detalla pasos, expectativa, método recomendado y riesgo; todos permanecen PENDIENTES de una ejecución reproducible.
+6. Incidencias y riesgos para triage
+ID / prioridad
+Hallazgo / tratamiento
+Estado
+QA-02-01 / P1
+La URL Railway no fue accesible desde las herramientas utilizadas. Repetir prueba desde Cursor/red externa; contrastar logs DNS, HTTP y Deployment ID antes de atribuir falla.
+BLOQUEADO / NO DIAGNOSTICADO
+QA-02-02 / P2
+Usuario reporta problemas del dominio propio relacionados con conexiones/IP. Comparar DNS, Cloudflare proxy/SSL, ALLOWED_HOSTS y CSRF; recolectar respuesta exacta.
+REPORTADO / SIN REPRODUCIR
+QA-02-03 / P2
+Posible ausencia de historial para escrituras fuera del servicio central de stock, reconocida en inventario.py. Auditar orígenes.
+RIESGO ESTÁTICO
+QA-02-04 / P2
+Falta línea base de consultas ORM y latencia; potencial degradación del catálogo y alertas con escala.
+PENDIENTE DE MEDICIÓN
+QA-02-05 / P1
+Priorizar IDOR en pedidos, CSRF, repetición de pago y carreras de stock, usando datos de prueba.
+PENDIENTE DE VALIDACIÓN
+7. Pruebas prioritarias en Cursor / ambiente aislado
+1. Ejecutar python manage.py check --deploy bajo parámetros seguros y registrar advertencias explicadas (NO contra settings con secretos publicados).
+2. Ejecutar python manage.py test --verbosity 2 con BD TEST PostgreSQL aislada y mocks de PayPal, EmailJS y Ollama.
+3. Revisar descubrimiento de tests existentes (core/tests.py, core/test_correo_emailjs.py, core/test_contacto_estatico.py y módulos adicionales); añadir casos faltantes.
+4. Medir CaptureQueriesContext y assertNumQueries en listados, historial, carrito, stock y context processor; usar EXPLAIN (ANALYZE, BUFFERS) SOLO sobre BD de pruebas.
+5. Usar Playwright con viewport 320, 375, 768, 1366 y navegación por teclado; complementar con axe/Lighthouse.
+6. Validar autorización de pedidos y URLs administrativas con usuario cliente y staff sin permisos; ejecutar POST de CSRF en test client protegido.
+7. Ejecutar Locust únicamente en staging, empezando 1 usuario por 60 s; escalar con monitoreo y rollback preparados.
+8. Criterios de salida del ciclo QA
+• Cero incidencias P0/P1 abiertas en autenticación, inventario, pago, datos personales y privacidad.
+• Casos funcionales críticos ejecutados y aprobados con captura/log trazable al SHA y Deployment ID.
+• Errores de carga y p95 medidos en staging; objetivos acordados antes del ensayo, no inventar resultados.
+• Sin regresiones tras desplegar; inventario y pedido sin doble procesamiento.
+• Registro de excepciones justificado y aprobación de quien coordina el proyecto antes del despliegue.
+9. Fuentes y trazabilidad
+• Código observado en repositorio vinculado: Proyecto-HardWareHouse, rama main (SHA del despliegue desconocido).
+• URLs: https://proyecto-hardwarehouse-production.up.railway.app/ y https://hardwarehouse.cl/.
+• Django Tests: https://docs.djangoproject.com/en/5.2/topics/testing/ ; Locust: https://docs.locust.io/ ; WCAG 2.2: https://www.w3.org/TR/WCAG22/ ; OWASP ASVS: https://asvs.owasp.org/.
+• Los scripts de QA y la matriz del Ciclo 02 acompañan este reporte. No incluyen contraseñas, tokens ni datos personales.
+
+---TABLE---
+CONTROL DEL DOCUMENTO | DETALLE
+Proyecto | HardWareHouse (HWH)
+Ciclo | 02 · Auditoría integral
+Elaboración | 2 8 -1 0 -2026
+Ambiente preferido | https://proyecto-hardwarehouse-production.up.railway.app/
+Ambiente alternativo | https://hardwarehouse.cl/ (comparación pendiente)
+Código examinado | Repositorio GitHub main accesible; versión desplegada NO identificada
+Responsable de cierre | Equipo de desarrollo
+Estado global | NO CERTIFICADO: ejecución integral pendiente
+---TABLE---
+Elemento | Observación documentada | Límite
+Dominio Railway | Consulta externa desde este entorno: error de recuperación (cache miss / DNS del contenedor). | No equivale a indisponibilidad real; comprobar con cliente HTTP desde red autorizada.
+Dominio propio | Se recuperó HTML de Inicio y Contacto desde la herramienta web; aparecen menús, secciones públicas y campos del contacto. | No prueba envío del formulario, JS, responsividad ni tiempos HTTP en vivo.
+Repositorio | Se inspeccionaron archivos de Django en la rama principal vía conexión GitHub. | La coincidencia con el SHA desplegado no está acreditada.
+Carga y seguridad activa | NO ejecutadas contra producción. | Requieren staging y autorización de ventana/volumen.
+---TABLE---
+FASE | ACCIÓN | EVIDENCIA
+Preparación | Confirmar commit, Deployment ID, DEBUG, URL, fixtures y ventana. | Hoja de ambiente / SHA.
+Humo | GET de rutas públicas y comprobación de rutas protegidas. | JSON/CSV, capturas, status.
+Unidad e integración | Django TestCase; mocks externos; test PostgreSQL. | Salida de manage.py test, fallos.
+ORM | Captura de queries, EXPLAIN y N+1. | SQL sanitizado, conteos, tiempos.
+UX, accesibilidad | Viewport y teclado, Lighthouse/axe + revisión manual. | Capturas, incidencias WCAG.
+Rendimiento | Locust progresivo SOLO staging. | CSV p50/p95/RPS/error, CPU/RAM.
+Seguridad | Controles de sesión, permisos, CSRF y pasiva. | Pruebas sin credenciales expuestas.
+Regresión y cierre | Reejecución completa tras corregir y desplegar. | Matriz antes/después.
+---TABLE---
+ESTADO | CRITERIO
+APROBADA | Ejecución y evidencia verifican criterio esperado.
+PARCIAL | Cumple parte, faltan criterios.
+FALLIDA | Resultado contradice el esperado.
+PENDIENTE | Prueba aún no ejecutada o evidencia insuficiente.
+BLOQUEADA | No ejecutable por entorno, dependencias o permisos.
+OBSERVACIÓN | Hallazgo informativo sin aprobación funcional.
+---TABLE---
+ID | Evidencia concreta | Resultado
+EV-01 | Consulta web de https://hardwarehouse.cl/ mostró Inicio, Tienda, Armado, Sobre nosotros, Contacto, Login/Registro y carrusel. | OBSERVACIÓN; funcionalidad validada.
+EV-02 | Consulta web de /contacto/ mostró Nombre, Correo, Teléfono prefijo + campo, Asunto y Mensaje. | OBSERVACIÓN; envío realizado.
+EV-03 | Acceso externo a URL Railway . | APROBADA ;  tiempo de  uptime  constante .
+EV-04 | En settings.py se observó DEBUG por variable, middleware CSRF, HTTPS condicional y hosts permitidos. | REVISIÓN ESTÁTICA;  producción  verifica da .
+EV-05 | En inventario.py/payments.py se observaron transacciones atómicas y bloqueos; en views.py select_related. | REVISIÓN ESTÁTICA; sin medir queries ni concurrencia.
+EV-06 | El script de humo pasó 8/8 simulaciones contra un servidor HTTP local creado para probar el propio instrumento. | APROBADA únicamente la autoprueba del script; NO el sistema.
+---TABLE---
+Tipo | Casos definidos | Ejecución validada sobre HWH
+Caja negra / interfaces y formularios | 10 | 0 · Pendiente/bloqueada
+Humo / módulos | 8 | 0 · Pendiente/bloqueada
+Unitarias / reglas de negocio | 12 | 0 · Pendiente/bloqueada
+Auditoría ORM / PostgreSQL | 8 | 0 · Pendiente/bloqueada
+Accesibilidad / usabilidad / responsive | 8 | 0 · Pendiente/bloqueada
+Rendimiento / estrés | 6 | 0 · Pendiente/bloqueada
+Funcionales / integración | 10 | 0 · Pendiente/bloqueada
+Regresión | 6 | 0 · Pendiente/bloqueada
+Seguridad | 10 | 0 · Pendiente/bloqueada
+---TABLE---
+ID / prioridad | Hallazgo / tratamiento | Estado
+QA-02-01 / P1 | La URL Railway no fue accesible desde las herramientas utilizadas. Repetir prueba desde Cursor/red externa; contrastar logs DNS, HTTP y Deployment ID antes de atribuir falla. | BLOQUEADO / NO DIAGNOSTICADO
+QA-02-02 / P2 | Usuario reporta problemas del dominio propio relacionados con conexiones/IP. Comparar DNS, Cloudflare proxy/SSL, ALLOWED_HOSTS y CSRF; recolectar respuesta exacta. | REPORTADO / SIN REPRODUCIR
+QA-02-03 / P2 | Posible ausencia de historial para escrituras fuera del servicio central de stock, reconocida en inventario.py. Auditar orígenes. | RIESGO ESTÁTICO
+QA-02-04 / P2 | Falta línea base de consultas ORM y latencia; potencial degradación del catálogo y alertas con escala. | PENDIENTE DE MEDICIÓN
+QA-02-05 / P1 | Priorizar IDOR en pedidos, CSRF, repetición de pago y carreras de stock, usando datos de prueba. | PENDIENTE DE VALIDACIÓN
