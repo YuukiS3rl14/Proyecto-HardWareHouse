@@ -1473,3 +1473,72 @@ iframe {
     .hw-phone { grid-template-columns: 1fr; }
     .hw-star { width: 2.5rem; height: 2.75rem; }
 }
+
+/* Aviso académico. El bloqueo inicial también está en la plantilla base. */
+html.hw-aviso-pendiente,
+html.hw-aviso-pendiente body {
+    overflow: hidden;
+}
+html.hw-aviso-pendiente::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.55);
+    z-index: 2000;
+}
+html.hw-aviso-pendiente body > :not(#avisoAcademico) {
+    pointer-events: none !important;
+}
+#avisoAcademico {
+    z-index: 2100;
+}
+#avisoAcademico .modal-dialog {
+    max-width: 36rem;
+}
+#avisoAcademico .modal-content {
+    border: 0;
+    border-radius: 1rem;
+    box-shadow: var(--hw-shadow-lg);
+}
+#avisoAcademico .modal-body {
+    padding: 1.75rem 1.5rem 1.5rem;
+}
+.hw-aviso-icono {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--hw-green-soft);
+    color: var(--hw-green);
+    font-size: 1.25rem;
+}
+#avisoAcademico .hw-aviso-titulo {
+    color: var(--hw-ink);
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+#avisoAcademico .hw-aviso-subtitulo {
+    color: var(--hw-green-dark);
+    font-weight: 600;
+}
+#avisoAcademico .hw-aviso-texto {
+    color: var(--hw-text);
+    line-height: 1.55;
+}
+#avisoAcademico .hw-aviso-aceptar {
+    min-height: 2.75rem;
+    font-weight: 600;
+}
+@media (max-width: 575.98px) {
+    #avisoAcademico .modal-dialog {
+        margin: 0.75rem;
+    }
+    #avisoAcademico .modal-body {
+        padding: 1.25rem 1rem 1rem;
+    }
+    #avisoAcademico .hw-aviso-aceptar {
+        width: 100%;
+    }
+}
