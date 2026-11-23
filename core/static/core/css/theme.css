@@ -1501,13 +1501,15 @@ html.hw-aviso-pendiente body > :not(#avisoAcademico) {
     box-shadow: var(--hw-shadow-lg);
 }
 #avisoAcademico .modal-body {
-    padding: 1.75rem 1.5rem 1.5rem;
+    padding: 2rem 1.75rem 1.75rem;
+    text-align: center;
 }
 .hw-aviso-icono {
     width: 3rem;
     height: 3rem;
+    margin: 0 auto 1.25rem;
     border-radius: 999px;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     background: var(--hw-green-soft);
@@ -1515,20 +1517,39 @@ html.hw-aviso-pendiente body > :not(#avisoAcademico) {
     font-size: 1.25rem;
 }
 #avisoAcademico .hw-aviso-titulo {
+    margin: 0 0 0.45rem;
     color: var(--hw-ink);
     font-size: 1.35rem;
     font-weight: 700;
+    text-align: center;
 }
 #avisoAcademico .hw-aviso-subtitulo {
+    margin: 0 0 1.35rem;
     color: var(--hw-green-dark);
     font-weight: 600;
+    text-align: center;
+}
+#avisoAcademico .hw-aviso-cuerpo {
+    text-align: left;
 }
 #avisoAcademico .hw-aviso-texto {
+    margin: 0 0 0.9rem;
     color: var(--hw-text);
-    line-height: 1.55;
+    line-height: 1.6;
+}
+#avisoAcademico .hw-aviso-texto:last-child {
+    margin-bottom: 0;
+}
+#avisoAcademico .hw-aviso-accion {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.6rem;
 }
 #avisoAcademico .hw-aviso-aceptar {
+    min-width: 16rem;
     min-height: 2.75rem;
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
     font-weight: 600;
 }
 @media (max-width: 575.98px) {
@@ -1536,9 +1557,19 @@ html.hw-aviso-pendiente body > :not(#avisoAcademico) {
         margin: 0.75rem;
     }
     #avisoAcademico .modal-body {
-        padding: 1.25rem 1rem 1rem;
+        padding: 1.5rem 1.1rem 1.15rem;
+    }
+    #avisoAcademico .hw-aviso-icono {
+        margin-bottom: 1rem;
+    }
+    #avisoAcademico .hw-aviso-subtitulo {
+        margin-bottom: 1.1rem;
+    }
+    #avisoAcademico .hw-aviso-accion {
+        margin-top: 1.25rem;
     }
     #avisoAcademico .hw-aviso-aceptar {
         width: 100%;
+        min-width: 0;
     }
 }
