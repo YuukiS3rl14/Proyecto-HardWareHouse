@@ -18,6 +18,8 @@ import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
+from core.sitio import sitio_publico
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -39,26 +41,28 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env_bool('DEBUG', default=False)
 
-# Reemplaza 'url-ejemplo' por el dominio o la IP pública que te entregue AWS, sin 'https://'.
-# Ejemplo: 'ec2-3-90-12-34.compute-1.amazonaws.com' o 'www.hardwarehouse.cl'
+# hardwarehouse.cl es el sitio público. www solo se admite para redirigir el
+# navegador al vértice. railway.app se conserva para el IPN que ya esté en vuelo
+# y para diagnóstico. Las cookies no se comparten entre esos hosts.
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '8w96bzrx-8000.brs.devtunnels.ms',
     'proyecto-hardwarehouse-production.up.railway.app',
     'hardwarehouse.cl',
-    'www.hardwarehouse.cl'
+    'www.hardwarehouse.cl',
 ]
 
-# Mismo dominio que en ALLOWED_HOSTS, pero aquí con el esquema 'https://'.
+# Orígenes desde los que un formulario puede hacer POST. www no es uno de ellos:
+# el navegador llega al vértice antes de enviar el formulario.
 CSRF_TRUSTED_ORIGINS = [
     'https://8w96bzrx-8000.brs.devtunnels.ms',
     'https://proyecto-hardwarehouse-production.up.railway.app',
     'https://hardwarehouse.cl',
-    'https://www.hardwarehouse.cl'
 ]
 
 railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+RAILWAY_PUBLIC_DOMAIN = (railway_domain or '').strip()
 if railway_domain:
     ALLOWED_HOSTS = list(set(ALLOWED_HOSTS + [railway_domain]))
     CSRF_TRUSTED_ORIGINS = list(
@@ -76,6 +80,12 @@ if USE_HTTPS and not _EJECUTA_PRUEBAS:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+# SameSite=Lax deja pasar la cookie en el GET con el que PayPal devuelve al
+# navegador. No se define SESSION_COOKIE_DOMAIN ni CSRF_COOKIE_DOMAIN: cada
+# host guarda su propia sesión.
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 
 # Application definition
@@ -109,6 +119,7 @@ def middleware_estaticos(middleware, usar_r2):
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.DominioCanonicoMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -437,8 +448,9 @@ CONTACTO_CORREO_VENTANA = int(os.environ.get('CONTACTO_CORREO_VENTANA', '600'))
 # Tasa de cambio de ejemplo (CLP a USD). En un proyecto real, esto debería obtenerse de una API.
 CLP_TO_USD_RATE = 950 
 
-# URL base pública del sitio, sin '/' final. PayPal la usa para el IPN y las redirecciones.
-SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
+# URL pública canónica, sin ruta ni barra final. PayPal arma return, cancel_return
+# y notify_url desde aquí. En Railway debe ser https://hardwarehouse.cl.
+SITE_URL = sitio_publico(os.environ.get('SITE_URL', 'http://127.0.0.1:8000'))
 
 # ----------------------------------------------------
 # ASISTENTE VIRTUAL (chatbot HardWareHouse)

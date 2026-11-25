@@ -11,6 +11,7 @@ from paypal.standard.forms import PayPalPaymentsForm
 from paypal.standard.models import ST_PP_COMPLETED
 
 from .models import Carrito, ItemPedido, PagoBoleta, Pedido
+from .sitio import sitio_publico
 
 SESION_VERIFICANDO = 'paypal_verificando'
 
@@ -148,15 +149,16 @@ def retirar_carrito_si_coincide(pedido):
 
 def formulario_paypal(pedido):
     total_usd = clp_a_usd(pedido.total_monto)
-    regreso = settings.SITE_URL + reverse('core:payment_success') + f'?pedido={pedido.id}'
-    cancelacion = settings.SITE_URL + reverse('core:payment_failed') + f'?pedido={pedido.id}'
+    base = sitio_publico(settings.SITE_URL)
+    regreso = base + reverse('core:payment_success') + f'?pedido={pedido.id}'
+    cancelacion = base + reverse('core:payment_failed') + f'?pedido={pedido.id}'
     datos = {
         'business': settings.PAYPAL_RECEIVER_EMAIL,
         'amount': f'{total_usd:.2f}',
         'item_name': f'Pedido #{pedido.id} - HardWareHouse',
         'invoice': str(pedido.paypal_invoice),
         'currency_code': 'USD',
-        'notify_url': settings.SITE_URL + reverse('paypal-ipn'),
+        'notify_url': base + reverse('paypal-ipn'),
         'return': regreso,
         'cancel_return': cancelacion,
     }

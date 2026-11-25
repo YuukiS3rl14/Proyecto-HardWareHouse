@@ -1894,3 +1894,121 @@ WARNING 2026-11-20 17:09:14,113 payments 22396 17192 El pedido #152 ya no está p
 WARNING 2026-11-20 17:09:14,174 signals 22396 17192 IPN rechazada por PayPal. id=47 txn=TXN-MALO invoice=dcd22d56-640a-447a-9ecf-0d3276b2f42b codigo=sin codigo.
 INFO 2026-11-20 17:09:18,790 payments 22396 17192 Checkout crea el pedido pendiente #168 del usuario 171 (1 líneas).
 INFO 2026-11-20 17:09:18,840 payments 22396 17192 Checkout crea el pedido pendiente #169 del usuario 171 (1 líneas).
+INFO 2026-11-25 18:55:23,516 payments 26080 24836 Checkout crea el pedido pendiente #1 del usuario 2 (1 líneas).
+INFO 2026-11-25 18:55:23,660 views 26080 24836 Regreso del navegador a payment_success. Pedido 1 del usuario 2 sigue sin confirmarse por IPN.
+INFO 2026-11-25 18:55:23,688 views 26080 24836 Regreso del navegador a payment_failed. Pedido 1 del usuario 2 no se marca como pagado.
+INFO 2026-11-25 18:55:23,906 payments 26080 24836 Checkout crea el pedido pendiente #2 del usuario 2 (1 líneas).
+INFO 2026-11-25 18:55:24,030 payments 26080 24836 Checkout crea el pedido pendiente #3 del usuario 2 (1 líneas).
+INFO 2026-11-25 18:55:24,343 payments 26080 24836 IPN recibida. Transacción: TXN-LEGADO. Estado: Completed. Invoice: 9001.
+INFO 2026-11-25 18:55:24,345 payments 26080 24836 IPN con invoice legado 9001 asociado al pedido #6 por el invoice guardado.
+INFO 2026-11-25 18:55:24,395 payments 26080 24836 Pedido #6 pagado con la transacción TXN-LEGADO.
+WARNING 2026-11-25 18:55:26,902 signals 26080 24836 IPN rechazada por PayPal. id=3 txn=TXN-LEGADO invoice=9001 codigo=sin codigo.
+INFO 2026-11-25 18:55:27,241 views 26080 24836 Regreso del navegador a payment_success. Pedido desconocido del usuario 2 sigue sin confirmarse por IPN.
+INFO 2026-11-25 18:55:27,259 views 26080 24836 Regreso del navegador a payment_failed. Pedido desconocido del usuario 2 no se marca como pagado.
+INFO 2026-11-25 18:55:27,404 payments 26080 24836 Checkout crea el pedido pendiente #10 del usuario 2 (1 líneas).
+INFO 2026-11-25 18:55:27,430 views 26080 24836 Regreso del navegador a payment_success. Pedido 10 del usuario 2 sigue sin confirmarse por IPN.
+INFO 2026-11-25 18:55:27,485 payments 26080 24836 IPN recibida. Transacción: TXN-TARDE. Estado: Completed. Invoice: cdc3cf75-9c4d-4b57-b04f-2c39ab0aa85d.
+INFO 2026-11-25 18:55:27,506 payments 26080 24836 Pedido #10 pagado con la transacción TXN-TARDE.
+INFO 2026-11-25 18:55:27,516 payments 26080 24836 Carrito del usuario 2 vaciado al confirmar el pedido #10.
+WARNING 2026-11-25 18:55:29,630 signals 26080 24836 IPN rechazada por PayPal. id=6 txn=TXN-TARDE invoice=cdc3cf75-9c4d-4b57-b04f-2c39ab0aa85d codigo=sin codigo.
+INFO 2026-11-25 18:55:29,782 views 26080 24836 Regreso del navegador a payment_success. Pedido 11 del usuario 2 sigue sin confirmarse por IPN.
+INFO 2026-11-25 18:55:29,800 views 26080 24836 Regreso del navegador a payment_failed. Pedido 11 del usuario 2 no se marca como pagado.
+WARNING 2026-11-25 18:55:30,153 0012_pedido_paypal_invoice 26080 24836 Pedido #16 pendiente conserva el invoice legado 16. Un IPN con ese número solo se acepta si sigue guardado en este pedido. Si ese cobro se hizo en otra base o después de un reinicio, requiere conciliación manual.
+WARNING 2026-11-25 18:55:30,153 0012_pedido_paypal_invoice 26080 24836 Pedido #17 pendiente conserva el invoice legado 17. Un IPN con ese número solo se acepta si sigue guardado en este pedido. Si ese cobro se hizo en otra base o después de un reinicio, requiere conciliación manual.
+INFO 2026-11-25 18:55:30,225 payments 26080 24836 IPN recibida. Transacción: TXN-UNICA. Estado: Completed. Invoice: f6cc71b9-2744-4d6b-a296-c489754b67ad.
+INFO 2026-11-25 18:55:30,242 payments 26080 24836 Pedido #18 pagado con la transacción TXN-UNICA.
+WARNING 2026-11-25 18:55:32,646 signals 26080 24836 IPN rechazada por PayPal. id=8 txn=TXN-UNICA invoice=97f4ff92-374a-4d88-a6c9-8d053f22e303 codigo=sin codigo.
+INFO 2026-11-25 18:55:32,822 payments 26080 24836 IPN recibida. Transacción: TXN-FALLO-0. Estado: Failed. Invoice: fe7bf378-c504-4b1b-8eec-8b2b6e7b3d08.
+WARNING 2026-11-25 18:55:32,823 payments 26080 24836 Pago no confirmado (Failed) para la transacción TXN-FALLO-0. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 18:55:32,847 payments 26080 24836 IPN recibida. Transacción: TXN-FALLO-1. Estado: Denied. Invoice: fe7bf378-c504-4b1b-8eec-8b2b6e7b3d08.
+WARNING 2026-11-25 18:55:32,847 payments 26080 24836 Pago no confirmado (Denied) para la transacción TXN-FALLO-1. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 18:55:32,906 payments 26080 24836 IPN recibida. Transacción: TXN-FALLO-2. Estado: Voided. Invoice: fe7bf378-c504-4b1b-8eec-8b2b6e7b3d08.
+WARNING 2026-11-25 18:55:32,907 payments 26080 24836 Pago no confirmado (Voided) para la transacción TXN-FALLO-2. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 18:55:32,953 payments 26080 24836 IPN recibida. Transacción: TXN-FALLO-3. Estado: Refunded. Invoice: fe7bf378-c504-4b1b-8eec-8b2b6e7b3d08.
+WARNING 2026-11-25 18:55:32,953 payments 26080 24836 Pago no confirmado (Refunded) para la transacción TXN-FALLO-3. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 18:55:32,995 payments 26080 24836 IPN recibida. Transacción: TXN-FALLO-4. Estado: Reversed. Invoice: fe7bf378-c504-4b1b-8eec-8b2b6e7b3d08.
+WARNING 2026-11-25 18:55:32,996 payments 26080 24836 Pago no confirmado (Reversed) para la transacción TXN-FALLO-4. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 18:55:33,150 payments 26080 24836 IPN recibida. Transacción: TXN-MONTO. Estado: Completed. Invoice: 9e0a118e-bd1a-4fec-a1e3-fd43bcb2a44c.
+WARNING 2026-11-25 18:55:33,154 payments 26080 24836 El monto de la transacción TXN-MONTO (1.00 USD) no coincide con el pedido #21.
+ERROR 2026-11-25 18:55:33,160 payments 26080 24836 Pago no aplicado (monto) para la transacción TXN-MONTO.
+INFO 2026-11-25 18:55:33,179 payments 26080 24836 IPN recibida. Transacción: TXN-MONEDA. Estado: Completed. Invoice: 9e0a118e-bd1a-4fec-a1e3-fd43bcb2a44c.
+WARNING 2026-11-25 18:55:33,179 payments 26080 24836 Moneda inesperada: EUR.
+INFO 2026-11-25 18:55:33,206 payments 26080 24836 IPN recibida. Transacción: TXN-OTRO. Estado: Completed. Invoice: 9e0a118e-bd1a-4fec-a1e3-fd43bcb2a44c.
+WARNING 2026-11-25 18:55:33,206 payments 26080 24836 El receptor del pago no es la cuenta configurada. Transacción TXN-OTRO. Invoice: 9e0a118e-bd1a-4fec-a1e3-fd43bcb2a44c.
+INFO 2026-11-25 18:55:33,247 payments 26080 24836 IPN recibida. Transacción: TXN-INV. Estado: Completed. Invoice: no-es-un-pedido.
+ERROR 2026-11-25 18:55:33,249 payments 26080 24836 Invoice desconocido: no-es-un-pedido. No se confirma ningún pedido.
+INFO 2026-11-25 18:55:33,296 payments 26080 24836 IPN recibida. Transacción: TXN-AUSENTE. Estado: Completed. Invoice: 99999999.
+ERROR 2026-11-25 18:55:33,299 payments 26080 24836 Invoice legado numérico 99999999 rechazado. No coincide con un invoice guardado y no se usa el número de pedido. Si PayPal cobró ese invoice, requiere conciliación manual.
+INFO 2026-11-25 18:55:34,932 payments 26080 24836 Checkout crea el pedido pendiente #24 del usuario 2 (1 líneas).
+INFO 2026-11-25 18:55:35,161 payments 26080 24836 IPN recibida. Transacción: TXN-ORIGINAL. Estado: Completed. Invoice: 0d25a6be-fb1c-4f8e-8387-7e3e4a1b5d90.
+INFO 2026-11-25 18:55:35,181 payments 26080 24836 Pedido #25 pagado con la transacción TXN-ORIGINAL.
+INFO 2026-11-25 18:55:38,380 payments 26080 24836 IPN recibida. Transacción: TXN-ATOMIC. Estado: Completed. Invoice: c53f4084-db89-4dbd-8c82-f43407a412af.
+ERROR 2026-11-25 18:55:38,399 payments 26080 24836 No se pudo guardar la transacción TXN-ATOMIC sin duplicarla.
+INFO 2026-11-25 18:55:38,502 payments 26080 24836 IPN recibida. Transacción: TXN-STOCK. Estado: Completed. Invoice: 5408fbb6-8b69-4fc3-8551-cd8e410cbf08.
+ERROR 2026-11-25 18:55:38,525 payments 26080 24836 Stock insuficiente de CPU secundaria (hay 0, se piden 1). El pedido #29 sigue pendiente.
+ERROR 2026-11-25 18:55:38,526 payments 26080 24836 Pago no aplicado (stock) para la transacción TXN-STOCK.
+INFO 2026-11-25 18:55:38,559 payments 26080 24836 IPN recibida. Transacción: TXN-HUERFANO. Estado: Completed. Invoice: 5cba31b4-50f6-4db9-b584-3e05f350d75e.
+ERROR 2026-11-25 18:55:38,565 payments 26080 24836 El ítem 32 del pedido #30 no apunta a un producto con stock.
+ERROR 2026-11-25 18:55:38,566 payments 26080 24836 Pago no aplicado (producto) para la transacción TXN-HUERFANO.
+INFO 2026-11-25 18:55:38,671 payments 26080 24836 IPN recibida. Transacción: TXN-DOS. Estado: Completed. Invoice: 8f57eb39-012a-4f3b-a7aa-59a64e5b12a3.
+INFO 2026-11-25 18:55:38,692 payments 26080 24836 Pedido #32 pagado con la transacción TXN-DOS.
+INFO 2026-11-25 18:55:40,714 payments 26080 24836 IPN recibida. Transacción: TXN-DOS. Estado: Completed. Invoice: 8f57eb39-012a-4f3b-a7aa-59a64e5b12a3.
+WARNING 2026-11-25 18:55:40,717 payments 26080 24836 El pedido #32 ya no está pendiente (PAGADO, transacción TXN-DOS). No se vuelve a descontar stock.
+WARNING 2026-11-25 18:55:40,782 signals 26080 24836 IPN rechazada por PayPal. id=27 txn=TXN-DOS invoice=8f57eb39-012a-4f3b-a7aa-59a64e5b12a3 codigo=sin codigo.
+INFO 2026-11-25 18:55:40,897 payments 26080 24836 Checkout crea el pedido pendiente #33 del usuario 2 (1 líneas).
+INFO 2026-11-25 18:55:40,943 payments 26080 24836 Checkout crea el pedido pendiente #34 del usuario 2 (1 líneas).
+INFO 2026-11-25 18:55:40,996 payments 26080 24836 Checkout crea el pedido pendiente #35 del usuario 2 (1 líneas).
+INFO 2026-11-25 18:55:41,115 payments 26080 24836 IPN recibida. Transacción: sin id. Estado: Completed. Invoice: 664a09b2-a558-4d3b-83e7-524c7a425941.
+ERROR 2026-11-25 18:55:41,115 payments 26080 24836 IPN Completed sin txn_id. No se confirma el pedido.
+INFO 2026-11-25 18:55:41,192 payments 26080 24836 IPN recibida. Transacción: TXN-SANDBOX. Estado: Completed. Invoice: 6de84db8-3854-42ba-88d9-8a002d1fa939.
+WARNING 2026-11-25 18:55:41,192 payments 26080 24836 IPN de otro entorno (test_ipn=True, PAYPAL_TEST=False). No se confirma el pedido.
+INFO 2026-11-25 18:55:41,260 payments 26080 24836 IPN recibida. Transacción: TXN-YA. Estado: Completed. Invoice: 77b21366-671b-42e7-9a68-e0698ed5b318.
+INFO 2026-11-25 18:55:41,286 payments 26080 24836 Pedido #38 pagado con la transacción TXN-YA.
+INFO 2026-11-25 18:55:43,157 payments 26080 24836 IPN recibida. Transacción: TXN-TARDE-LEGADO. Estado: Completed. Invoice: 9002.
+INFO 2026-11-25 18:55:43,160 payments 26080 24836 IPN con invoice legado 9002 asociado al pedido #38 por el invoice guardado.
+WARNING 2026-11-25 18:55:43,160 payments 26080 24836 El pedido #38 ya no está pendiente (PAGADO, transacción TXN-YA). No se vuelve a descontar stock.
+INFO 2026-11-25 18:55:43,235 payments 26080 24836 IPN recibida. Transacción: TXN-REAL. Estado: Completed. Invoice: 34543e3d-b4b2-43dc-af03-19ad76a01ef7.
+WARNING 2026-11-25 18:55:43,236 payments 26080 24836 IPN de otro entorno (test_ipn=False, PAYPAL_TEST=True). No se confirma el pedido.
+INFO 2026-11-25 18:55:43,321 payments 26080 24836 Checkout crea el pedido pendiente #40 del usuario 2 (1 líneas).
+INFO 2026-11-25 18:55:43,353 payments 26080 24836 IPN recibida. Transacción: TXN-CARRITO. Estado: Completed. Invoice: cbcd67c3-5676-43f7-8906-596e099f5a78.
+INFO 2026-11-25 18:55:43,373 payments 26080 24836 Pedido #40 pagado con la transacción TXN-CARRITO.
+INFO 2026-11-25 18:55:43,380 payments 26080 24836 El carrito del usuario 2 no coincide con el pedido #40. Se conserva.
+INFO 2026-11-25 18:55:45,276 payments 26080 24836 IPN recibida. Transacción: TXN-PAGADO. Estado: Completed. Invoice: ba554ac1-3283-4987-b775-cb4b03c6908a.
+INFO 2026-11-25 18:55:45,290 payments 26080 24836 Pedido #41 pagado con la transacción TXN-PAGADO.
+INFO 2026-11-25 18:55:47,169 payments 26080 24836 IPN recibida. Transacción: TXN-PEND. Estado: Pending. Invoice: 80969742-29d2-40fe-8738-3a33ac204a64.
+WARNING 2026-11-25 18:55:47,169 payments 26080 24836 Pago no confirmado (Pending) para la transacción TXN-PEND. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 18:55:47,185 payments 26080 24836 IPN recibida. Transacción: TXN-PEND. Estado: Completed. Invoice: 80969742-29d2-40fe-8738-3a33ac204a64.
+INFO 2026-11-25 18:55:47,203 payments 26080 24836 Pedido #42 pagado con la transacción TXN-PEND.
+INFO 2026-11-25 18:55:49,006 payments 26080 24836 IPN recibida. Transacción: TXN-CANCEL. Estado: Completed. Invoice: 32d6bb3f-3fd2-4ded-8874-76485cf6288d.
+WARNING 2026-11-25 18:55:49,008 payments 26080 24836 El pedido #43 ya no está pendiente (CANCELADO, transacción None). No se vuelve a descontar stock.
+WARNING 2026-11-25 18:55:49,061 signals 26080 24836 IPN rechazada por PayPal. id=38 txn=TXN-MALO invoice=428ca202-798d-4f1a-843d-4cf9b6177de1 codigo=sin codigo.
+INFO 2026-11-25 18:55:49,585 payments 26080 24836 IPN recibida. Transacción: TXN-SIN-SMTP. Estado: Completed. Invoice: 7cd5fd17-66ae-4217-b027-69d784df4200.
+INFO 2026-11-25 18:55:49,628 payments 26080 24836 Pedido #45 pagado con la transacción TXN-SIN-SMTP.
+INFO 2026-11-25 18:55:51,037 payments 26080 24836 IPN recibida. Transacción: TXN-MAIL. Estado: Completed. Invoice: 3bab2516-2a31-49a0-ab1c-6c3c34a2a31b.
+INFO 2026-11-25 18:55:51,051 payments 26080 24836 Pedido #46 pagado con la transacción TXN-MAIL.
+INFO 2026-11-25 18:55:51,066 payments 26080 24836 IPN recibida. Transacción: TXN-MAIL. Estado: Completed. Invoice: 3bab2516-2a31-49a0-ab1c-6c3c34a2a31b.
+WARNING 2026-11-25 18:55:51,068 payments 26080 24836 El pedido #46 ya no está pendiente (PAGADO, transacción TXN-MAIL). No se vuelve a descontar stock.
+INFO 2026-11-25 18:55:51,476 payments 26080 24836 IPN recibida. Transacción: TXN-REINTENTO. Estado: Completed. Invoice: 534dc72a-218c-4397-ac53-bd0d8da760ac.
+INFO 2026-11-25 18:55:51,487 payments 26080 24836 Pedido #47 pagado con la transacción TXN-REINTENTO.
+INFO 2026-11-25 18:55:51,508 payments 26080 24836 IPN recibida. Transacción: TXN-REINTENTO. Estado: Completed. Invoice: 534dc72a-218c-4397-ac53-bd0d8da760ac.
+WARNING 2026-11-25 18:55:51,510 payments 26080 24836 El pedido #47 ya no está pendiente (PAGADO, transacción TXN-REINTENTO). No se vuelve a descontar stock.
+INFO 2026-11-25 18:55:51,933 payments 26080 24836 IPN recibida. Transacción: TXN-FALLBACK. Estado: Completed. Invoice: a2120dfc-bf84-4635-ad29-6b737367953f.
+INFO 2026-11-25 18:55:51,947 payments 26080 24836 Pedido #48 pagado con la transacción TXN-FALLBACK.
+INFO 2026-11-25 18:55:52,791 payments 26080 24836 IPN recibida. Transacción: TXN-PENDIENTE. Estado: Pending. Invoice: 75caf843-92d9-4b5f-a933-6540d4ab7983.
+WARNING 2026-11-25 18:55:52,791 payments 26080 24836 Pago no confirmado (Pending) para la transacción TXN-PENDIENTE. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 18:55:52,795 payments 26080 24836 IPN recibida. Transacción: TXN-CAE. Estado: Completed. Invoice: 75caf843-92d9-4b5f-a933-6540d4ab7983.
+INFO 2026-11-25 18:55:52,805 payments 26080 24836 Pedido #49 pagado con la transacción TXN-CAE.
+ERROR 2026-11-25 18:55:52,806 payments 26080 24836 El pedido #49 quedó registrado y el aviso por correo no cambió el pago.
+Traceback (most recent call last):
+  File "C:\Users\Manuel\Desktop\A.I\Inacap\Proyecto - HardWareHouse\core\payments.py", line 351, in _avisar_compra
+    notificar_pedido_pagado(pedido_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1228, in _execute_mock_call
+    raise effect
+RuntimeError: correo caído

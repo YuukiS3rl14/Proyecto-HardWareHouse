@@ -13,6 +13,7 @@ from core.piezas_demo import sin_demo
 from core.demo_catalog import nombre_comercial
 
 from .excel_armado import especificaciones_de
+from .sitio import sitio_publico
 
 CSV_COLUMNS = (
     'id',
@@ -47,7 +48,7 @@ def _precio_entero(precio) -> int:
 
 
 def _url_detalle(model_name: str, pk: int) -> str:
-    base = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
+    base = sitio_publico(getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000'))
     path = reverse('core:detalle', kwargs={'model_name': model_name, 'pk': pk})
     return f'{base}{path}'
 

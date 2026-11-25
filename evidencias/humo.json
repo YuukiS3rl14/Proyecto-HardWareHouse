@@ -1,0 +1,143 @@
+{
+  "fecha_utc": "2026-11-25T20:51:33.154352+00:00",
+  "base_url": "https://proyecto-hardwarehouse-production.up.railway.app",
+  "ambito": "HTTP GET, sin autenticación, sin cambios en la aplicación",
+  "resultados": [
+    {
+      "id": "HW-SM-01",
+      "titulo": "Inicio",
+      "path": "/",
+      "status_http": 200,
+      "tiempo_ms": 684.6,
+      "bytes_leidos": 33309,
+      "url_final": "",
+      "esperado": "200 o redirección esperada (sin 5xx)",
+      "estado": "OBSERVADA",
+      "error": "",
+      "cabeceras": {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      }
+    },
+    {
+      "id": "HW-SM-02",
+      "titulo": "Tienda",
+      "path": "/tienda/",
+      "status_http": 200,
+      "tiempo_ms": 652.8,
+      "bytes_leidos": 212129,
+      "url_final": "",
+      "esperado": "200 o redirección esperada (sin 5xx)",
+      "estado": "OBSERVADA",
+      "error": "",
+      "cabeceras": {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      }
+    },
+    {
+      "id": "HW-SM-03",
+      "titulo": "Armado de PC",
+      "path": "/armado/",
+      "status_http": 200,
+      "tiempo_ms": 593.4,
+      "bytes_leidos": 262144,
+      "url_final": "",
+      "esperado": "200 o redirección esperada (sin 5xx)",
+      "estado": "OBSERVADA",
+      "error": "",
+      "cabeceras": {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      }
+    },
+    {
+      "id": "HW-SM-04",
+      "titulo": "Sobre nosotros",
+      "path": "/sobre-nosotros/",
+      "status_http": 200,
+      "tiempo_ms": 378.1,
+      "bytes_leidos": 29340,
+      "url_final": "",
+      "esperado": "200 o redirección esperada (sin 5xx)",
+      "estado": "OBSERVADA",
+      "error": "",
+      "cabeceras": {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      }
+    },
+    {
+      "id": "HW-SM-05",
+      "titulo": "Contacto",
+      "path": "/contacto/",
+      "status_http": 200,
+      "tiempo_ms": 359.3,
+      "bytes_leidos": 25397,
+      "url_final": "",
+      "esperado": "200 o redirección esperada (sin 5xx)",
+      "estado": "OBSERVADA",
+      "error": "",
+      "cabeceras": {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      }
+    },
+    {
+      "id": "HW-SM-06",
+      "titulo": "Registro",
+      "path": "/registro/",
+      "status_http": 200,
+      "tiempo_ms": 374.0,
+      "bytes_leidos": 17695,
+      "url_final": "",
+      "esperado": "200 o redirección esperada (sin 5xx)",
+      "estado": "OBSERVADA",
+      "error": "",
+      "cabeceras": {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      }
+    },
+    {
+      "id": "HW-SM-07",
+      "titulo": "Login",
+      "path": "/login/",
+      "status_http": 200,
+      "tiempo_ms": 305.2,
+      "bytes_leidos": 15987,
+      "url_final": "",
+      "esperado": "200 o redirección esperada (sin 5xx)",
+      "estado": "OBSERVADA",
+      "error": "",
+      "cabeceras": {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      }
+    },
+    {
+      "id": "HW-SM-08",
+      "titulo": "404 de producto inexistente",
+      "path": "/detalle/procesador/999999999/",
+      "status_http": 404,
+      "tiempo_ms": 715.4,
+      "bytes_leidos": 2973,
+      "url_final": "",
+      "esperado": "404",
+      "estado": "OBSERVADA",
+      "error": "",
+      "cabeceras": {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      }
+    }
+  ]
+}

@@ -11,10 +11,14 @@ from django.utils.http import urlencode
 from paypal.standard.ipn.models import PayPalIPN
 
 from core.models import Carrito, ItemCarrito, ItemPedido, MovimientoStock, PagoBoleta, Pedido, Procesador, Proveedor
-from core.payments import clp_a_usd, confirmar_pago_paypal
+from django.test import Client, RequestFactory
+
+from core.middleware import DominioCanonicoMiddleware
+from core.payments import clp_a_usd, confirmar_pago_paypal, formulario_paypal
+from core.sitio import sitio_publico
 
 RECEPTOR = 'sb-merchant@business.example.com'
-SITIO = 'https://proyecto-hardwarehouse-production.up.railway.app'
+SITIO = 'https://hardwarehouse.cl'
 
 
 @override_settings(PAYPAL_TEST=True, PAYPAL_RECEIVER_EMAIL=RECEPTOR, CLP_TO_USD_RATE=950)
@@ -341,8 +345,11 @@ class PayPalSandboxTests(TestCase):
         self.assertContains(response, SITIO + reverse('paypal-ipn'))
         self.assertContains(response, SITIO + reverse('core:payment_success'))
         self.assertContains(response, SITIO + reverse('core:payment_failed'))
+        self.assertContains(response, f'?pedido=')
         self.assertNotContains(response, '127.0.0.1')
         self.assertNotContains(response, 'localhost')
+        self.assertNotContains(response, 'proyecto-hardwarehouse-production.up.railway.app')
+        self.assertNotContains(response, 'www.hardwarehouse.cl')
 
     @override_settings(SITE_URL=SITIO)
     def test_reintentar_el_pago_usa_las_mismas_urls(self):
@@ -771,3 +778,125 @@ class PayPalSandboxTests(TestCase):
         self.assertEqual(segundo.paypal_invoice_legado, str(segundo.id))
         self.assertNotEqual(str(primero.paypal_invoice), primero.paypal_invoice_legado)
         self.assertEqual(Pedido.objects.count(), 2)
+
+    @override_settings(SITE_URL='https://hardwarehouse.cl/tienda/')
+    def test_el_formulario_no_mezcla_ruta_ni_el_host_de_railway(self):
+        pedido = self.pedido(cantidad=1, stock=5)
+
+        formulario, _total = formulario_paypal(pedido)
+        html = formulario.render()
+
+        self.assertIn(f'https://hardwarehouse.cl/payment/success/?pedido={pedido.id}', html)
+        self.assertIn(f'https://hardwarehouse.cl/payment/failed/?pedido={pedido.id}', html)
+        self.assertIn('https://hardwarehouse.cl/paypal/', html)
+        self.assertNotIn('/tienda/', html)
+        self.assertNotIn('railway.app', html)
+        self.assertNotIn('www.hardwarehouse.cl', html)
+        self.assertEqual(reverse('core:payment_success'), '/payment/success/')
+        self.assertEqual(reverse('core:payment_failed'), '/payment/failed/')
+        self.assertEqual(reverse('paypal-ipn'), '/paypal/')
+
+
+HOSTS = [
+    'testserver',
+    'hardwarehouse.cl',
+    'www.hardwarehouse.cl',
+    'proyecto-hardwarehouse-production.up.railway.app',
+]
+
+
+@override_settings(
+    SITE_URL='https://hardwarehouse.cl',
+    ALLOWED_HOSTS=HOSTS,
+    SECURE_SSL_REDIRECT=False,
+)
+class DominioCanonicoTests(TestCase):
+    def setUp(self):
+        self.fabrica = RequestFactory()
+
+    def test_site_url_queda_normalizada(self):
+        self.assertEqual(sitio_publico('https://hardwarehouse.cl/'), 'https://hardwarehouse.cl')
+        self.assertEqual(sitio_publico('https://hardwarehouse.cl/paypal/'), 'https://hardwarehouse.cl')
+        self.assertEqual(sitio_publico('hardwarehouse.cl'), 'https://hardwarehouse.cl')
+        self.assertEqual(sitio_publico('http://hardwarehouse.cl'), 'https://hardwarehouse.cl')
+        self.assertEqual(sitio_publico('http://127.0.0.1:8000/'), 'http://127.0.0.1:8000')
+        self.assertFalse(sitio_publico('https://hardwarehouse.cl/').endswith('/'))
+
+    def test_el_navegador_en_railway_o_www_pasa_al_apex(self):
+        def pasar(_request):
+            from django.http import HttpResponse
+            return HttpResponse('ok')
+
+        middleware = DominioCanonicoMiddleware(pasar)
+        railway = self.fabrica.get(
+            '/tienda/?categoria=CPU',
+            HTTP_HOST='proyecto-hardwarehouse-production.up.railway.app',
+        )
+        www = self.fabrica.get('/payment/success/?pedido=8', HTTP_HOST='www.hardwarehouse.cl')
+        apex = self.fabrica.get('/tienda/', HTTP_HOST='hardwarehouse.cl')
+
+        ida = middleware(railway)
+        self.assertEqual(ida.status_code, 301)
+        self.assertEqual(ida['Location'], 'https://hardwarehouse.cl/tienda/?categoria=CPU')
+        self.assertEqual(
+            middleware(www)['Location'],
+            'https://hardwarehouse.cl/payment/success/?pedido=8',
+        )
+        self.assertEqual(middleware(apex).status_code, 200)
+
+    def test_el_post_del_ipn_no_se_redirige(self):
+        def pasar(request):
+            from django.http import HttpResponse
+            return HttpResponse(request.method)
+
+        middleware = DominioCanonicoMiddleware(pasar)
+        aviso = self.fabrica.post(
+            '/paypal/',
+            {'payment_status': 'Completed'},
+            HTTP_HOST='proyecto-hardwarehouse-production.up.railway.app',
+        )
+
+        respuesta = middleware(aviso)
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.content, b'POST')
+        self.assertFalse(respuesta.has_header('Location'))
+
+    def test_la_sesion_no_declara_un_dominio_compartido(self):
+        from django.conf import settings
+        from django.contrib.auth.models import User
+
+        usuario = User.objects.create_user('sesion', 'sesion@example.com', 'clave-sesion-123')
+        self.client.force_login(usuario)
+        self.client.get('/', HTTP_HOST='hardwarehouse.cl')
+
+        self.assertFalse(settings.SESSION_COOKIE_DOMAIN)
+        self.assertFalse(settings.CSRF_COOKIE_DOMAIN)
+        self.assertEqual(settings.SESSION_COOKIE_SAMESITE, 'Lax')
+        self.assertFalse(self.client.cookies['sessionid']['domain'])
+        self.assertIn('hardwarehouse.cl', settings.ALLOWED_HOSTS)
+        self.assertIn('https://hardwarehouse.cl', settings.CSRF_TRUSTED_ORIGINS)
+        self.assertNotIn('https://www.hardwarehouse.cl', settings.CSRF_TRUSTED_ORIGINS)
+
+    def test_el_origen_del_apex_pasa_csrf_y_otro_origen_no(self):
+        cliente = Client(enforce_csrf_checks=True)
+        pagina = cliente.get(reverse('core:contacto'), HTTP_HOST='hardwarehouse.cl')
+        self.assertEqual(pagina.status_code, 200)
+        token = cliente.cookies['csrftoken'].value
+        datos = {'csrfmiddlewaretoken': token, 'nombre': '', 'email': ''}
+
+        propio = cliente.post(
+            reverse('core:contacto'),
+            datos,
+            HTTP_HOST='hardwarehouse.cl',
+            HTTP_ORIGIN='https://hardwarehouse.cl',
+        )
+        ajeno = cliente.post(
+            reverse('core:contacto'),
+            datos,
+            HTTP_HOST='hardwarehouse.cl',
+            HTTP_ORIGIN='https://evil.example',
+        )
+
+        self.assertEqual(propio.status_code, 200)
+        self.assertEqual(ajeno.status_code, 403)

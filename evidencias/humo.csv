@@ -1,0 +1,9 @@
+﻿id,titulo,path,status_http,tiempo_ms,bytes_leidos,esperado,estado,error
+HW-SM-01,Inicio,/,200,684.6,33309,200 o redirección esperada (sin 5xx),OBSERVADA,
+HW-SM-02,Tienda,/tienda/,200,652.8,212129,200 o redirección esperada (sin 5xx),OBSERVADA,
+HW-SM-03,Armado de PC,/armado/,200,593.4,262144,200 o redirección esperada (sin 5xx),OBSERVADA,
+HW-SM-04,Sobre nosotros,/sobre-nosotros/,200,378.1,29340,200 o redirección esperada (sin 5xx),OBSERVADA,
+HW-SM-05,Contacto,/contacto/,200,359.3,25397,200 o redirección esperada (sin 5xx),OBSERVADA,
+HW-SM-06,Registro,/registro/,200,374.0,17695,200 o redirección esperada (sin 5xx),OBSERVADA,
+HW-SM-07,Login,/login/,200,305.2,15987,200 o redirección esperada (sin 5xx),OBSERVADA,
+HW-SM-08,404 de producto inexistente,/detalle/procesador/999999999/,404,715.4,2973,404,OBSERVADA,
