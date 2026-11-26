@@ -1,0 +1,1 @@
+Se validaron cantidades cero, negativas, no numéricas, decimales, superiores al stock, iguales al stock, válidas y de un producto agotado. Las entradas inválidas no modificaron el carrito y no se registraron fallos.

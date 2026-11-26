@@ -2012,3 +2012,72 @@ Traceback (most recent call last):
   File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1228, in _execute_mock_call
     raise effect
 RuntimeError: correo caído
+INFO 2026-11-25 22:36:29,179 payments 11228 8480 IPN recibida. Transacción: TXN-MOV. Estado: Completed. Invoice: b062e57b-443c-4e72-90f4-51650cc7dd1d.
+INFO 2026-11-25 22:36:29,224 payments 11228 8480 Pedido #2 pagado con la transacción TXN-MOV.
+INFO 2026-11-25 22:36:29,259 payments 11228 8480 IPN recibida. Transacción: TXN-MOV. Estado: Completed. Invoice: b062e57b-443c-4e72-90f4-51650cc7dd1d.
+WARNING 2026-11-25 22:36:29,262 payments 11228 8480 El pedido #2 ya no está pendiente (PAGADO, transacción TXN-MOV). No se vuelve a descontar stock.
+INFO 2026-11-25 22:36:31,336 payments 11228 8480 IPN recibida. Transacción: TXN-CORTO. Estado: Completed. Invoice: a04e3f99-a4a8-4236-b5c3-c40725160981.
+ERROR 2026-11-25 22:36:31,347 payments 11228 8480 Stock insuficiente de CPU corto (hay 1, se piden 2). El pedido #3 sigue pendiente.
+ERROR 2026-11-25 22:36:31,349 payments 11228 8480 Pago no aplicado (stock) para la transacción TXN-CORTO.
+INFO 2026-11-25 22:36:51,664 payments 7684 21448 IPN recibida. Transacción: TXN-PAGADO. Estado: Completed. Invoice: 33f93d98-acf3-485f-8b88-38f88a059a65.
+INFO 2026-11-25 22:36:51,730 payments 7684 21448 Pedido #1 pagado con la transacción TXN-PAGADO.
+INFO 2026-11-25 22:36:54,436 payments 7684 21448 IPN recibida. Transacción: TXN-DOS. Estado: Completed. Invoice: d3b2812d-1428-4f5f-86b2-4dbbb17e7b84.
+INFO 2026-11-25 22:36:54,463 payments 7684 21448 Pedido #2 pagado con la transacción TXN-DOS.
+INFO 2026-11-25 22:36:56,947 payments 7684 21448 IPN recibida. Transacción: TXN-DOS. Estado: Completed. Invoice: d3b2812d-1428-4f5f-86b2-4dbbb17e7b84.
+WARNING 2026-11-25 22:36:56,951 payments 7684 21448 El pedido #2 ya no está pendiente (PAGADO, transacción TXN-DOS). No se vuelve a descontar stock.
+WARNING 2026-11-25 22:36:57,073 signals 7684 21448 IPN rechazada por PayPal. id=3 txn=TXN-DOS invoice=d3b2812d-1428-4f5f-86b2-4dbbb17e7b84 codigo=sin codigo.
+INFO 2026-11-25 22:36:57,202 payments 7684 21448 IPN recibida. Transacción: sin id. Estado: Completed. Invoice: 73cce320-565e-440e-812c-2fbb764dcf55.
+ERROR 2026-11-25 22:36:57,203 payments 7684 21448 IPN Completed sin txn_id. No se confirma el pedido.
+INFO 2026-11-25 22:36:57,362 payments 7684 21448 IPN recibida. Transacción: TXN-MONTO. Estado: Completed. Invoice: 7872db34-f62b-49ca-8758-926a7bbbc55f.
+WARNING 2026-11-25 22:36:57,373 payments 7684 21448 El monto de la transacción TXN-MONTO (1.00 USD) no coincide con el pedido #4.
+ERROR 2026-11-25 22:36:57,377 payments 7684 21448 Pago no aplicado (monto) para la transacción TXN-MONTO.
+INFO 2026-11-25 22:36:57,425 payments 7684 21448 IPN recibida. Transacción: TXN-MONEDA. Estado: Completed. Invoice: 7872db34-f62b-49ca-8758-926a7bbbc55f.
+WARNING 2026-11-25 22:36:57,425 payments 7684 21448 Moneda inesperada: EUR.
+INFO 2026-11-25 22:36:57,465 payments 7684 21448 IPN recibida. Transacción: TXN-OTRO. Estado: Completed. Invoice: 7872db34-f62b-49ca-8758-926a7bbbc55f.
+WARNING 2026-11-25 22:36:57,465 payments 7684 21448 El receptor del pago no es la cuenta configurada. Transacción TXN-OTRO. Invoice: 7872db34-f62b-49ca-8758-926a7bbbc55f.
+INFO 2026-11-25 22:36:57,497 payments 7684 21448 IPN recibida. Transacción: TXN-INV. Estado: Completed. Invoice: no-es-un-pedido.
+ERROR 2026-11-25 22:36:57,498 payments 7684 21448 Invoice desconocido: no-es-un-pedido. No se confirma ningún pedido.
+INFO 2026-11-25 22:36:57,522 payments 7684 21448 IPN recibida. Transacción: TXN-AUSENTE. Estado: Completed. Invoice: 99999999.
+ERROR 2026-11-25 22:36:57,526 payments 7684 21448 Invoice legado numérico 99999999 rechazado. No coincide con un invoice guardado y no se usa el número de pedido. Si PayPal cobró ese invoice, requiere conciliación manual.
+INFO 2026-11-25 22:36:57,658 payments 7684 21448 IPN recibida. Transacción: TXN-FALLO-0. Estado: Failed. Invoice: f590198d-6855-4333-b106-0929dfb16823.
+WARNING 2026-11-25 22:36:57,659 payments 7684 21448 Pago no confirmado (Failed) para la transacción TXN-FALLO-0. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 22:36:57,681 payments 7684 21448 IPN recibida. Transacción: TXN-FALLO-1. Estado: Denied. Invoice: f590198d-6855-4333-b106-0929dfb16823.
+WARNING 2026-11-25 22:36:57,682 payments 7684 21448 Pago no confirmado (Denied) para la transacción TXN-FALLO-1. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 22:36:57,705 payments 7684 21448 IPN recibida. Transacción: TXN-FALLO-2. Estado: Voided. Invoice: f590198d-6855-4333-b106-0929dfb16823.
+WARNING 2026-11-25 22:36:57,706 payments 7684 21448 Pago no confirmado (Voided) para la transacción TXN-FALLO-2. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 22:36:57,734 payments 7684 21448 IPN recibida. Transacción: TXN-FALLO-3. Estado: Refunded. Invoice: f590198d-6855-4333-b106-0929dfb16823.
+WARNING 2026-11-25 22:36:57,734 payments 7684 21448 Pago no confirmado (Refunded) para la transacción TXN-FALLO-3. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 22:36:57,756 payments 7684 21448 IPN recibida. Transacción: TXN-FALLO-4. Estado: Reversed. Invoice: f590198d-6855-4333-b106-0929dfb16823.
+WARNING 2026-11-25 22:36:57,757 payments 7684 21448 Pago no confirmado (Reversed) para la transacción TXN-FALLO-4. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 22:38:25,014 payments 21600 22076 IPN recibida. Transacción: TXN-SIN-SMTP. Estado: Completed. Invoice: d732e1d0-82c0-4dd7-9c2b-fac53708d27e.
+INFO 2026-11-25 22:38:25,079 payments 21600 22076 Pedido #1 pagado con la transacción TXN-SIN-SMTP.
+INFO 2026-11-25 22:38:28,461 payments 21600 22076 IPN recibida. Transacción: TXN-MAIL. Estado: Completed. Invoice: f677534d-5f30-4d82-b3d7-40cadd7f0723.
+INFO 2026-11-25 22:38:28,486 payments 21600 22076 Pedido #2 pagado con la transacción TXN-MAIL.
+INFO 2026-11-25 22:38:28,511 payments 21600 22076 IPN recibida. Transacción: TXN-MAIL. Estado: Completed. Invoice: f677534d-5f30-4d82-b3d7-40cadd7f0723.
+WARNING 2026-11-25 22:38:28,515 payments 21600 22076 El pedido #2 ya no está pendiente (PAGADO, transacción TXN-MAIL). No se vuelve a descontar stock.
+INFO 2026-11-25 22:38:29,562 payments 21600 22076 IPN recibida. Transacción: TXN-REINTENTO. Estado: Completed. Invoice: 8b741199-93ce-4262-9f9d-6b0c638a8571.
+INFO 2026-11-25 22:38:29,588 payments 21600 22076 Pedido #3 pagado con la transacción TXN-REINTENTO.
+INFO 2026-11-25 22:38:29,633 payments 21600 22076 IPN recibida. Transacción: TXN-REINTENTO. Estado: Completed. Invoice: 8b741199-93ce-4262-9f9d-6b0c638a8571.
+WARNING 2026-11-25 22:38:29,636 payments 21600 22076 El pedido #3 ya no está pendiente (PAGADO, transacción TXN-REINTENTO). No se vuelve a descontar stock.
+INFO 2026-11-25 22:38:30,711 payments 21600 22076 IPN recibida. Transacción: TXN-FALLBACK. Estado: Completed. Invoice: 2a7f6a80-f359-4df9-9f7c-8eb7dfa35a00.
+INFO 2026-11-25 22:38:30,738 payments 21600 22076 Pedido #4 pagado con la transacción TXN-FALLBACK.
+INFO 2026-11-25 22:38:32,944 payments 21600 22076 IPN recibida. Transacción: TXN-PENDIENTE. Estado: Pending. Invoice: 1fe21728-e881-4ad4-92f9-d35a122d7266.
+WARNING 2026-11-25 22:38:32,944 payments 21600 22076 Pago no confirmado (Pending) para la transacción TXN-PENDIENTE. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 22:38:32,951 payments 21600 22076 IPN recibida. Transacción: TXN-CAE. Estado: Completed. Invoice: 1fe21728-e881-4ad4-92f9-d35a122d7266.
+INFO 2026-11-25 22:38:32,980 payments 21600 22076 Pedido #5 pagado con la transacción TXN-CAE.
+ERROR 2026-11-25 22:38:32,982 payments 21600 22076 El pedido #5 quedó registrado y el aviso por correo no cambió el pago.
+Traceback (most recent call last):
+  File "C:\Users\Manuel\Desktop\A.I\Inacap\Proyecto - HardWareHouse\core\payments.py", line 351, in _avisar_compra
+    notificar_pedido_pagado(pedido_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1228, in _execute_mock_call
+    raise effect
+RuntimeError: correo caído
+INFO 2026-11-25 22:38:34,156 payments 21600 22076 IPN recibida. Transacción: TXN-TIMEOUT. Estado: Completed. Invoice: dac17273-1db3-4a4e-a3c8-e8c9f1dde36d.
+INFO 2026-11-25 22:38:34,181 payments 21600 22076 Pedido #6 pagado con la transacción TXN-TIMEOUT.

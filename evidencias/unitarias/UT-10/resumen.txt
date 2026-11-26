@@ -1,0 +1,1 @@
+Se comprobó que el registro público asigna el grupo Cliente sin privilegios de personal y que una cuenta de trabajador no recibe ese grupo. El acceso del cliente al inventario respondió 403 y no se registraron fallos.

@@ -1,0 +1,26 @@
+UT-01 — Compatibilidad CPU/placa
+Fecha: 2026-11-25 21:56:39 -03:00
+Commit SHA: 065f57c0d97ba8beeb383e2cbf6a75308aa03408
+Nota de versión: los dos tests aislados están en core/tests.py, sin commit. La lógica de core/compatibilidad.py no se modificó.
+Entorno: Django SimpleTestCase. El runner informó "Skipping setup of unused database(s): default". No se usó la base de producción ni la base local de desarrollo.
+Comando:
+.\venv\Scripts\python.exe manage.py test core.tests.CompatibilidadTests.test_ut01_socket_am5_con_placa_am5_es_compatible core.tests.CompatibilidadTests.test_ut01_socket_am5_con_placa_lga1700_se_bloquea core.tests.CompatibilidadTests.test_combinacion_compatible_normaliza_espacios_y_mayusculas core.tests.CompatibilidadTests.test_socket_ddr_formato_y_cooler_incompatibles core.tests.CompatibilidadTests.test_socket_otro_no_se_declara_compatible --verbosity 2
+Variables de entorno de la corrida: DATABASE_URL vacío, USE_SQLITE=False, OLLAMA_BASE_URL vacío, HARDWAREHOUSE_CHAT_INTENT_LLM=False.
+Cantidad de tests: 5
+Resultado: OK (5 aprobados, 0 fallidos, 0.001 s). Código de salida 0.
+
+Salida de Django
+----------------
+Found 5 test(s).
+Skipping setup of unused database(s): default.
+System check identified no issues (0 silenced).
+test_ut01_socket_am5_con_placa_am5_es_compatible (core.tests.CompatibilidadTests.test_ut01_socket_am5_con_placa_am5_es_compatible) ... ok
+test_ut01_socket_am5_con_placa_lga1700_se_bloquea (core.tests.CompatibilidadTests.test_ut01_socket_am5_con_placa_lga1700_se_bloquea) ... ok
+test_combinacion_compatible_normaliza_espacios_y_mayusculas (core.tests.CompatibilidadTests.test_combinacion_compatible_normaliza_espacios_y_mayusculas) ... ok
+test_socket_ddr_formato_y_cooler_incompatibles (core.tests.CompatibilidadTests.test_socket_ddr_formato_y_cooler_incompatibles) ... ok
+test_socket_otro_no_se_declara_compatible (core.tests.CompatibilidadTests.test_socket_otro_no_se_declara_compatible) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK

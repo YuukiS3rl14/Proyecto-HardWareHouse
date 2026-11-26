@@ -1,0 +1,17 @@
+UT-11 — Media estrella y promedio
+Fecha: 2026-11-25 22:37:51 -03:00
+Commit SHA: 065f57c0d97ba8beeb383e2cbf6a75308aa03408
+Entorno: Django TestCase sobre PostgreSQL de pruebas test_bd_hardwarehouse, creada y destruida por el runner. No se usó la base de producción.
+Variables: DATABASE_URL vacío, USE_SQLITE=False, OLLAMA_BASE_URL vacío, HARDWAREHOUSE_CHAT_INTENT_LLM=False, USE_HTTPS=False.
+Comando:
+.\venv\Scripts\python.exe manage.py test core.test_formularios_errores.CalificacionTests.test_acepta_medios_puntos_y_el_promedio_los_conserva core.test_formularios_errores.CalificacionTests.test_rechaza_fuera_de_rango_y_pasos_invalidos --verbosity 2
+Archivo y clase: core/test_formularios_errores.py, CalificacionTests
+Lógica: core/calificaciones.py, validar_media_estrella, y el promedio Avg de Comentario
+Tests ejecutados: 2
+Aprobados: 2
+Fallidos: 0
+Errores: 0
+Omitidos: 0
+Evidencia: evidencias/unitarias/UT-11/resultado.txt
+Captura sugerida: «Ran 2 tests in 3.635s» y «OK». No se generó captura.png.
+Se aceptaron los diez pasos de 0,5 a 5,0. Se rechazaron 0, 5,5 y 3,7. El promedio de 4,5 y 4,0 fue 4,25. Un producto sin reseñas respondió 200 y mostró 0 reseñas.

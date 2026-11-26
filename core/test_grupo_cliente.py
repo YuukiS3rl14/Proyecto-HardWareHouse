@@ -33,6 +33,8 @@ class GrupoClienteTests(TestCase):
         self.assertFalse(usuario.is_staff)
         self.assertFalse(usuario.is_superuser)
         self.assertTrue(self.client.login(username='cliente-nuevo', password=CLAVE))
+        inventario = self.client.get(reverse('core:alertas_stock'))
+        self.assertEqual(inventario.status_code, 403)
 
     def test_reutiliza_el_grupo_y_no_duplica_la_membresia(self):
         grupo = Group.objects.create(name='Cliente')

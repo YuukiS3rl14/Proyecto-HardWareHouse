@@ -1,0 +1,6 @@
+UT-02 — Compatibilidad RAM/placa madre
+Estado propuesto: APROBADA
+Pruebas: 6 aprobadas, 0 fallidas.
+Incidencias: ninguna. Las cuatro reglas ya estaban implementadas y no se modificó la lógica de negocio.
+
+Se verificaron las reglas de compatibilidad entre memoria RAM y placa madre para el tipo DDR, el formato físico, la capacidad máxima y la cantidad de módulos. Los seis escenarios ejecutados cumplieron los resultados esperados y no se registraron fallos ni incidencias.

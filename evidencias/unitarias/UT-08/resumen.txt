@@ -1,0 +1,1 @@
+Se comprobó una confirmación PayPal válida y sus repeticiones, además de avisos sin transacción, con monto o receptor incorrectos, en estado distinto de Completed y sobre un pedido ya pagado. Hubo un solo descuento de stock y no se registraron fallos.

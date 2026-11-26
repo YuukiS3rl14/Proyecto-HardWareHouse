@@ -1,0 +1,14 @@
+Found 6 test(s).
+Skipping setup of unused database(s): default.
+System check identified no issues (0 silenced).
+test_ut03_a_placa_atx_cabe_en_gabinete_atx (core.test_largo.Ut03GabineteGpuTests.test_ut03_a_placa_atx_cabe_en_gabinete_atx) ... ok
+test_ut03_b_placa_atx_no_cabe_en_mini_itx (core.test_largo.Ut03GabineteGpuTests.test_ut03_b_placa_atx_no_cabe_en_mini_itx) ... ok
+test_ut03_c_gpu_de_300_cabe_en_400 (core.test_largo.Ut03GabineteGpuTests.test_ut03_c_gpu_de_300_cabe_en_400) ... ok
+test_ut03_d_gpu_de_350_no_cabe_en_300 (core.test_largo.Ut03GabineteGpuTests.test_ut03_d_gpu_de_350_no_cabe_en_300) ... ok
+test_ut03_e_el_largo_exacto_cabe (core.test_largo.Ut03GabineteGpuTests.test_ut03_e_el_largo_exacto_cabe) ... ok
+test_ut03_f_dato_desconocido_o_incompleto_no_se_declara_compatible (core.test_largo.Ut03GabineteGpuTests.test_ut03_f_dato_desconocido_o_incompleto_no_se_declara_compatible) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.002s
+
+OK

@@ -1,0 +1,1 @@
+Se clasificó el stock en agotado, crítico, advertencia y normal, con umbrales de 3 y 5 y con umbrales propios. Los contadores coincidieron con los productos afectados, sin duplicados, y no se registraron fallos.

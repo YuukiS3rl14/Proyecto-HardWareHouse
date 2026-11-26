@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+import requests
 from pathlib import Path
 from unittest.mock import patch
 
@@ -159,6 +160,26 @@ class CorreoEmailJsTests(TestCase):
             bloqueado = self.client.post(reverse('core:contacto'), _contacto(mensaje='Tercer aviso.'))
         self.assertEqual(envio.call_count, 1)
         self.assertContains(bloqueado, 'Demasiados mensajes')
+
+    def test_ut12_un_timeout_no_confirma_el_contacto_ni_el_descuento(self):
+        cache.clear()
+        with patch('core.correo.requests.post', side_effect=requests.Timeout('tiempo')) as envio:
+            contacto = self.client.post(
+                reverse('core:contacto'),
+                _contacto(mensaje='Aviso con tiempo agotado.'),
+            )
+        self.assertEqual(contacto.status_code, 200)
+        self.assertContains(contacto, 'No pudimos enviar el mensaje')
+        self.assertEqual(envio.call_count, 1)
+
+        pedido = self.pedido()
+        with patch('core.correo.requests.post', side_effect=requests.Timeout('tiempo')):
+            self.assertEqual(confirmar_pago_paypal(self.ipn(pedido, txn_id='TXN-TIMEOUT')), 'pagado')
+        pedido.refresh_from_db()
+        self.cpu.refresh_from_db()
+        self.assertEqual(pedido.estado, 'PAGADO')
+        self.assertEqual(self.cpu.stock, 4)
+        self.assertIsNone(pedido.aviso_correo.enviado_en)
 
     def test_el_pedido_pagado_avisa_una_vez_con_los_datos_guardados(self):
         pedido = self.pedido()

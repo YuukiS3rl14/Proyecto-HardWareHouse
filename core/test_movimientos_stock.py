@@ -89,6 +89,13 @@ class MovimientosStockTests(TestCase):
         self.assertEqual(pieza.stock, 15)
         self.assertEqual(ajuste.cantidad_visible(), '−1')
         self.assertEqual(reposicion.cantidad_visible(), '+10')
+        positivo = ajustar_stock(pieza, 18, usuario=self.staff, motivo='Conteo')
+        pieza.refresh_from_db()
+        self.assertEqual(positivo.tipo, MovimientoStock.AJUSTE)
+        self.assertEqual(positivo.cantidad, 3)
+        self.assertEqual(positivo.stock_anterior, 15)
+        self.assertEqual(positivo.stock_posterior, 18)
+        self.assertEqual(pieza.stock, 18)
 
     def test_una_operacion_fallida_no_deja_movimiento(self):
         pieza = cpu(self.marca, 'CPU falla', 4)
@@ -381,3 +388,95 @@ class ConcurrenciaStockTests(TransactionTestCase):
         self.assertEqual(movimientos[1].stock_anterior, 4)
         self.assertEqual(movimientos[1].stock_posterior, 3)
         self.assertEqual(sum(movimiento.cantidad for movimiento in movimientos), -2)
+
+    def test_ut09_la_ultima_unidad_no_se_vende_dos_veces(self):
+        if connection.vendor != 'postgresql':
+            self.skipTest('El bloqueo de fila se comprueba en PostgreSQL.')
+        marca = Proveedor.objects.create(nombre='Marca Ultima')
+        pieza = cpu(marca, 'CPU ultima', 1)
+        staff = User.objects.create_user('trabajador-ultima', 'ultima@example.com', 'clave-ultima-123', is_staff=True)
+        barrera = threading.Barrier(2)
+        resultados = []
+
+        def bajar():
+            connection.close()
+            try:
+                barrera.wait(timeout=5)
+                aplicar_delta(
+                    pieza, -1, tipo=MovimientoStock.AJUSTE, usuario=staff, origen='servicio', motivo='ultima',
+                )
+                resultados.append('ok')
+            except StockInsuficiente:
+                resultados.append('insuficiente')
+            except Exception as exc:
+                resultados.append(repr(exc))
+            finally:
+                connection.close()
+
+        hilos = [threading.Thread(target=bajar), threading.Thread(target=bajar)]
+        for hilo in hilos:
+            hilo.start()
+        for hilo in hilos:
+            hilo.join(timeout=15)
+
+        pieza.refresh_from_db()
+        movimientos = list(MovimientoStock.objects.filter(producto_pk=pieza.pk, nombre_producto='CPU ultima'))
+        self.assertCountEqual(resultados, ['ok', 'insuficiente'])
+        self.assertEqual(pieza.stock, 0)
+        self.assertGreaterEqual(pieza.stock, 0)
+        self.assertEqual(len(movimientos), 1)
+        self.assertEqual(movimientos[0].stock_anterior, 1)
+        self.assertEqual(movimientos[0].stock_posterior, 0)
+        self.assertEqual(movimientos[0].cantidad, -1)
+
+    def test_ut09_un_hilo_fallido_revierte_su_descuento(self):
+        if connection.vendor != 'postgresql':
+            self.skipTest('El bloqueo de fila se comprueba en PostgreSQL.')
+        marca = Proveedor.objects.create(nombre='Marca Corte')
+        pieza = cpu(marca, 'CPU corte', 4)
+        staff = User.objects.create_user('trabajador-corte', 'corte@example.com', 'clave-corte-123', is_staff=True)
+        barrera = threading.Barrier(2)
+        resultados = []
+
+        def fallar():
+            connection.close()
+            try:
+                barrera.wait(timeout=5)
+                with transaction.atomic():
+                    aplicar_delta(
+                        pieza, -1, tipo=MovimientoStock.AJUSTE, usuario=staff, origen='servicio', motivo='corte',
+                    )
+                    raise RuntimeError('corte')
+            except RuntimeError:
+                resultados.append('rollback')
+            except Exception as exc:
+                resultados.append(repr(exc))
+            finally:
+                connection.close()
+
+        def bajar():
+            connection.close()
+            try:
+                barrera.wait(timeout=5)
+                aplicar_delta(
+                    pieza, -1, tipo=MovimientoStock.AJUSTE, usuario=staff, origen='servicio', motivo='firme',
+                )
+                resultados.append('ok')
+            except Exception as exc:
+                resultados.append(repr(exc))
+            finally:
+                connection.close()
+
+        hilos = [threading.Thread(target=fallar), threading.Thread(target=bajar)]
+        for hilo in hilos:
+            hilo.start()
+        for hilo in hilos:
+            hilo.join(timeout=15)
+
+        pieza.refresh_from_db()
+        movimientos = list(MovimientoStock.objects.filter(nombre_producto='CPU corte'))
+        self.assertCountEqual(resultados, ['rollback', 'ok'])
+        self.assertEqual(pieza.stock, 3)
+        self.assertEqual(len(movimientos), 1)
+        self.assertEqual(movimientos[0].motivo, 'firme')
+        self.assertEqual(movimientos[0].stock_posterior, 3)

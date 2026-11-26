@@ -1,0 +1,1 @@
+Se validaron calificaciones de 0,5 a 5 en medios puntos, los valores fuera de rango y el promedio de 4,25 a partir de 4,5 y 4,0. Un producto sin reseñas mostró cero reseñas y no se registraron fallos.

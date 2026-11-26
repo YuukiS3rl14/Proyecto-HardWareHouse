@@ -3,7 +3,7 @@ from decimal import Decimal
 from io import BytesIO
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from openpyxl import load_workbook
 
@@ -58,6 +58,128 @@ def armar(**extra):
     )
     datos.update(extra)
     return validar_armado(**datos)
+
+
+REGLAS_RAM = ('ddr', 'formato_ram', 'ranuras_ram', 'capacidad_ram')
+
+
+def hallazgos_ram(resultado, regla):
+    return [hallazgo for hallazgo in resultado.hallazgos if hallazgo.regla == regla]
+
+
+class Ut02RamPlacaTests(SimpleTestCase):
+    """UT-02. El resto del armado queda en AM5, ATX y GPU de 300 mm."""
+
+    def _otras_reglas_no_rechazan(self, resultado, regla):
+        otras = [
+            hallazgo for hallazgo in resultado.hallazgos
+            if hallazgo.regla in REGLAS_RAM and hallazgo.regla != regla
+            and hallazgo.estado in ('incompatible', 'datos_insuficientes')
+        ]
+        self.assertEqual(otras, [])
+
+    def test_ut02_a_ddr5_con_placa_ddr5_es_compatible(self):
+        resultado = armar(
+            placa_madre=placa(tipo_ram_soportado='DDR5'),
+            memorias_ram=[LineaRam(ram(tipo_ddr='DDR5'), 1)],
+        )
+
+        self.assertEqual(hallazgos_ram(resultado, 'ddr'), [])
+        self.assertEqual(resultado.estado, 'compatible')
+        self.assertTrue(resultado.es_compatible)
+        self.assertEqual(resultado.motivos_de_rechazo, [])
+
+    def test_ut02_b_ddr5_con_placa_ddr4_se_bloquea(self):
+        resultado = armar(
+            placa_madre=placa(tipo_ram_soportado='DDR4'),
+            memorias_ram=[LineaRam(ram(tipo_ddr='DDR5'), 1)],
+        )
+        ddr = hallazgos_ram(resultado, 'ddr')
+
+        self.assertEqual(len(ddr), 1)
+        self.assertEqual(ddr[0].estado, 'incompatible')
+        self.assertEqual(
+            ddr[0].mensaje,
+            'El tipo de RAM (DDR5) no coincide con el que admite la placa madre (DDR4).',
+        )
+        self._otras_reglas_no_rechazan(resultado, 'ddr')
+        self.assertEqual(resultado.estado, 'incompatible')
+        self.assertTrue(resultado.bloquea_agregar)
+        self.assertIn(ddr[0].mensaje, resultado.motivos_de_rechazo)
+
+    def test_ut02_c_sodimm_con_placa_dimm_se_bloquea(self):
+        resultado = armar(
+            placa_madre=placa(formato_ram_soportado='DIMM'),
+            memorias_ram=[LineaRam(ram(formato_ram='SO-DIMM'), 1)],
+        )
+        formato = hallazgos_ram(resultado, 'formato_ram')
+
+        self.assertEqual(len(formato), 1)
+        self.assertEqual(formato[0].estado, 'incompatible')
+        self.assertEqual(
+            formato[0].mensaje,
+            'El formato de la RAM (SO-DIMM) no coincide con el que admite la placa (DIMM).',
+        )
+        self._otras_reglas_no_rechazan(resultado, 'formato_ram')
+        self.assertEqual(resultado.estado, 'incompatible')
+        self.assertTrue(resultado.bloquea_agregar)
+
+    def test_ut02_d_96gb_supera_el_maximo_de_64gb(self):
+        memoria = ram(capacidad_gb=96, modulos_por_producto=1, capacidad_modulo_gb=96)
+        resultado = armar(
+            placa_madre=placa(capacidad_maxima_ram_gb=64, ranuras_ram=4),
+            memorias_ram=[LineaRam(memoria, 1)],
+        )
+        capacidad = hallazgos_ram(resultado, 'capacidad_ram')
+
+        self.assertEqual(len(capacidad), 1)
+        self.assertEqual(capacidad[0].estado, 'incompatible')
+        self.assertEqual(
+            capacidad[0].mensaje,
+            'La RAM suma 96 GB y la placa admite hasta 64 GB. '
+            'El total usa la capacidad de cada producto, sin multiplicarla por los módulos.',
+        )
+        self._otras_reglas_no_rechazan(resultado, 'capacidad_ram')
+        self.assertEqual(resultado.estado, 'incompatible')
+        self.assertTrue(resultado.bloquea_agregar)
+
+    def test_ut02_e_cuatro_modulos_superan_dos_ranuras(self):
+        kit = ram(capacidad_gb=32, modulos_por_producto=4, capacidad_modulo_gb=8)
+        resultado = armar(
+            placa_madre=placa(ranuras_ram=2, capacidad_maxima_ram_gb=128),
+            memorias_ram=[LineaRam(kit, 1)],
+        )
+        ranuras = hallazgos_ram(resultado, 'ranuras_ram')
+
+        self.assertEqual(len(ranuras), 1)
+        self.assertEqual(ranuras[0].estado, 'incompatible')
+        self.assertEqual(
+            ranuras[0].mensaje,
+            'Las RAM ocupan 4 ranuras y la placa tiene 2.',
+        )
+        self._otras_reglas_no_rechazan(resultado, 'ranuras_ram')
+        self.assertEqual(resultado.estado, 'incompatible')
+        self.assertTrue(resultado.bloquea_agregar)
+
+    def test_ut02_f_ddr5_dimm_32gb_en_cuatro_ranuras_es_compatible(self):
+        kit = ram(
+            tipo_ddr='DDR5', formato_ram='DIMM', capacidad_gb=32,
+            modulos_por_producto=2, capacidad_modulo_gb=16,
+        )
+        resultado = armar(
+            placa_madre=placa(
+                tipo_ram_soportado='DDR5', formato_ram_soportado='DIMM',
+                ranuras_ram=4, capacidad_maxima_ram_gb=128,
+            ),
+            memorias_ram=[LineaRam(kit, 1)],
+        )
+
+        for regla in REGLAS_RAM:
+            self.assertEqual(hallazgos_ram(resultado, regla), [])
+        self.assertEqual(resultado.estado, 'compatible')
+        self.assertTrue(resultado.es_compatible)
+        self.assertFalse(resultado.bloquea_agregar)
+        self.assertEqual(resultado.motivos_de_rechazo, [])
 
 
 class ReglasRamTests(TestCase):

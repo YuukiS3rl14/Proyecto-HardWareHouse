@@ -1,0 +1,17 @@
+UT-03 — Compatibilidad gabinete/GPU
+Fecha: 2026-11-25 22:40:47 -03:00
+Commit SHA: 065f57c0d97ba8beeb383e2cbf6a75308aa03408
+Entorno: Django SimpleTestCase. No se creó base de datos. No se usó PostgreSQL de producción.
+Variables: DATABASE_URL vacío, USE_SQLITE=False, OLLAMA_BASE_URL vacío, HARDWAREHOUSE_CHAT_INTENT_LLM=False.
+Comando:
+.\venv\Scripts\python.exe manage.py test core.test_largo.Ut03GabineteGpuTests --verbosity 2
+Archivo y clase: core/test_largo.py, Ut03GabineteGpuTests
+Lógica: core/compatibilidad.py, _evaluar_formato y _evaluar_largo
+Tests ejecutados: 6
+Aprobados: 6
+Fallidos: 0
+Errores: 0
+Omitidos: 0
+Evidencia: evidencias/unitarias/UT-03/resultado.txt
+Captura sugerida: el bloque final «Ran 6 tests in 0.002s» y «OK». No se generó captura.png.
+Limitación comprobada: solo se compara el largo. Grosor, altura y radiadores no se evalúan. E-ATX queda como dato desconocido y bloquea. Si falta la GPU o el gabinete, el estado es incompleto: no se declara compatible y bloquea_agregar permanece en falso.

@@ -48,6 +48,44 @@ class CompatibilidadTests(SimpleTestCase):
         seleccion.update(cambios)
         return validar_armado(**seleccion)
 
+    def _placa_compatible(self, socket_cpu):
+        return pieza(
+            socket_cpu=socket_cpu, tipo_ram_soportado='DDR5', formato='ATX',
+            ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        )
+
+    def test_ut01_socket_am5_con_placa_am5_es_compatible(self):
+        resultado = self.armado_base(
+            procesador=pieza(socket='AM5'),
+            placa_madre=self._placa_compatible('AM5'),
+        )
+        sockets = [hallazgo for hallazgo in resultado.hallazgos if hallazgo.regla == 'socket']
+
+        self.assertEqual(sockets, [])
+        self.assertEqual(resultado.estado, 'compatible')
+        self.assertTrue(resultado.es_compatible)
+        self.assertFalse(resultado.bloquea_agregar)
+        self.assertEqual(resultado.motivos_de_rechazo, [])
+
+    def test_ut01_socket_am5_con_placa_lga1700_se_bloquea(self):
+        resultado = self.armado_base(
+            procesador=pieza(socket='AM5'),
+            placa_madre=self._placa_compatible('LGA1700'),
+        )
+        sockets = [hallazgo for hallazgo in resultado.hallazgos if hallazgo.regla == 'socket']
+        otras = [hallazgo for hallazgo in resultado.hallazgos if hallazgo.regla != 'socket']
+
+        self.assertEqual(len(sockets), 1)
+        self.assertEqual(sockets[0].estado, 'incompatible')
+        self.assertIn('AM5', sockets[0].mensaje)
+        self.assertIn('LGA1700', sockets[0].mensaje)
+        self.assertFalse(any(
+            hallazgo.estado in ('incompatible', 'datos_insuficientes') for hallazgo in otras
+        ))
+        self.assertEqual(resultado.estado, 'incompatible')
+        self.assertFalse(resultado.es_compatible)
+        self.assertTrue(resultado.bloquea_agregar)
+
     def test_combinacion_compatible_normaliza_espacios_y_mayusculas(self):
         resultado = validar_armado(
             procesador=pieza(socket=' am5 '),

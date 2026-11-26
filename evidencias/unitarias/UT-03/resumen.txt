@@ -1,0 +1,1 @@
+Se comprobaron las reglas de formato de placa y gabinete y el largo de la GPU, incluidos el límite exacto y los datos desconocidos o incompletos. Los seis escenarios cumplieron los resultados esperados; una selección incompleta no se declara compatible y no se registraron fallos.

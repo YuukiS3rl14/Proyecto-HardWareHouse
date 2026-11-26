@@ -1,0 +1,83 @@
+Creating test database for alias 'default' ('test_bd_hardwarehouse')...
+Found 11 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: bootstrap5, humanize, jazzmin, messages, staticfiles, storages
+  Apply all migrations: admin, auth, contenttypes, core, ipn, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying core.0001_initial... OK
+  Applying core.0002_favorito_favorito_unique_fav_procesador_and_more... OK
+  Applying core.0003_placamadre_tipo_ram_soportado... OK
+  Applying core.0004_alter_almacenamientohdd_descripcion_and_more... OK
+  Applying core.0005_pedido_paypal_transaccion_id... OK
+  Applying core.0006_potencia_referencia_cpu_gpu... OK
+  Applying core.0007_largo_gpu_gabinete... OK
+  Applying core.0008_ram_modulos_formato_capacidad... OK
+  Applying core.0009_itempedido_producto... OK
+  Applying core.0010_analytics_powerbi... OK
+  Applying core.0011_alter_itemcarrito_options_alter_pagoboleta_options_and_more... OK
+  Applying core.0012_pedido_paypal_invoice... OK
+  Applying core.0013_refrigeracion_referencia... OK
+  Applying core.0014_almacenamiento_placa... OK
+  Applying core.0015_video_integrado... OK
+  Applying core.0016_producto_fechas_oferta... OK
+  Applying core.0017_aviso_correo_pedido... OK
+  Applying core.0018_producto_umbrales_stock... OK
+  Applying core.0019_movimiento_stock... OK
+  Applying core.0020_comentario_media_estrella... OK
+  Applying ipn.0001_initial... OK
+  Applying ipn.0002_paypalipn_mp_id... OK
+  Applying ipn.0003_auto_20141117_1647... OK
+  Applying ipn.0004_auto_20150612_1826... OK
+  Applying ipn.0005_auto_20151217_0948... OK
+  Applying ipn.0006_auto_20160108_1112... OK
+  Applying ipn.0007_auto_20160219_1135... OK
+  Applying ipn.0008_auto_20181128_1032... OK
+  Applying ipn.0009_alter_paypalipn_id... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+test_cancelar_no_escribe_y_el_nombre_largo_no_rompe_el_cierre (core.test_movimientos_stock.MovimientosStockTests.test_cancelar_no_escribe_y_el_nombre_largo_no_rompe_el_cierre) ... ok
+test_dos_familias_con_el_mismo_numero_no_se_mezclan (core.test_movimientos_stock.MovimientosStockTests.test_dos_familias_con_el_mismo_numero_no_se_mezclan) ... ok
+test_editar_umbrales_valida_permisos_y_no_toca_el_stock (core.test_movimientos_stock.MovimientosStockTests.test_editar_umbrales_valida_permisos_y_no_toca_el_stock) ... ok
+test_el_admin_registra_el_ajuste_y_rechaza_el_negativo (core.test_movimientos_stock.MovimientosStockTests.test_el_admin_registra_el_ajuste_y_rechaza_el_negativo) ... ok
+test_el_historial_exige_personal_activo (core.test_movimientos_stock.MovimientosStockTests.test_el_historial_exige_personal_activo) ... ok
+test_el_historial_ordena_filtra_y_pagina (core.test_movimientos_stock.MovimientosStockTests.test_el_historial_ordena_filtra_y_pagina) ... ok
+test_la_venta_repetida_del_mismo_item_no_descuenta_dos_veces (core.test_movimientos_stock.MovimientosStockTests.test_la_venta_repetida_del_mismo_item_no_descuenta_dos_veces) ... ok
+test_paypal_registra_una_venta_y_la_repeticion_no_la_duplica (core.test_movimientos_stock.MovimientosStockTests.test_paypal_registra_una_venta_y_la_repeticion_no_la_duplica) ... INFO 2026-11-25 22:36:29,179 payments 11228 8480 IPN recibida. Transacción: TXN-MOV. Estado: Completed. Invoice: b062e57b-443c-4e72-90f4-51650cc7dd1d.
+INFO 2026-11-25 22:36:29,224 payments 11228 8480 Pedido #2 pagado con la transacción TXN-MOV.
+EmailJS no está configurado. No se envió el correo.
+INFO 2026-11-25 22:36:29,259 payments 11228 8480 IPN recibida. Transacción: TXN-MOV. Estado: Completed. Invoice: b062e57b-443c-4e72-90f4-51650cc7dd1d.
+WARNING 2026-11-25 22:36:29,262 payments 11228 8480 El pedido #2 ya no está pendiente (PAGADO, transacción TXN-MOV). No se vuelve a descontar stock.
+EmailJS no está configurado. No se envió el correo.
+ok
+test_un_pago_sin_stock_no_deja_movimiento_ni_cambia_el_pedido (core.test_movimientos_stock.MovimientosStockTests.test_un_pago_sin_stock_no_deja_movimiento_ni_cambia_el_pedido) ... INFO 2026-11-25 22:36:31,336 payments 11228 8480 IPN recibida. Transacción: TXN-CORTO. Estado: Completed. Invoice: a04e3f99-a4a8-4236-b5c3-c40725160981.
+ERROR 2026-11-25 22:36:31,347 payments 11228 8480 Stock insuficiente de CPU corto (hay 1, se piden 2). El pedido #3 sigue pendiente.
+ERROR 2026-11-25 22:36:31,349 payments 11228 8480 Pago no aplicado (stock) para la transacción TXN-CORTO.
+ok
+test_una_operacion_fallida_no_deja_movimiento (core.test_movimientos_stock.MovimientosStockTests.test_una_operacion_fallida_no_deja_movimiento) ... ok
+test_venta_reposicion_y_ajuste_dejan_saldos_coherentes (core.test_movimientos_stock.MovimientosStockTests.test_venta_reposicion_y_ajuste_dejan_saldos_coherentes) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 24.624s
+
+OK
+Destroying test database for alias 'default' ('test_bd_hardwarehouse')...

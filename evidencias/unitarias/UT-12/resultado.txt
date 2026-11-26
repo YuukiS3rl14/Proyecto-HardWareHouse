@@ -1,0 +1,141 @@
+Creating test database for alias 'default' ('test_bd_hardwarehouse')...
+Found 9 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: bootstrap5, humanize, jazzmin, messages, staticfiles, storages
+  Apply all migrations: admin, auth, contenttypes, core, ipn, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying core.0001_initial... OK
+  Applying core.0002_favorito_favorito_unique_fav_procesador_and_more... OK
+  Applying core.0003_placamadre_tipo_ram_soportado... OK
+  Applying core.0004_alter_almacenamientohdd_descripcion_and_more... OK
+  Applying core.0005_pedido_paypal_transaccion_id... OK
+  Applying core.0006_potencia_referencia_cpu_gpu... OK
+  Applying core.0007_largo_gpu_gabinete... OK
+  Applying core.0008_ram_modulos_formato_capacidad... OK
+  Applying core.0009_itempedido_producto... OK
+  Applying core.0010_analytics_powerbi... OK
+  Applying core.0011_alter_itemcarrito_options_alter_pagoboleta_options_and_more... OK
+  Applying core.0012_pedido_paypal_invoice... OK
+  Applying core.0013_refrigeracion_referencia... OK
+  Applying core.0014_almacenamiento_placa... OK
+  Applying core.0015_video_integrado... OK
+  Applying core.0016_producto_fechas_oferta... OK
+  Applying core.0017_aviso_correo_pedido... OK
+  Applying core.0018_producto_umbrales_stock... OK
+  Applying core.0019_movimiento_stock... OK
+  Applying core.0020_comentario_media_estrella... OK
+  Applying ipn.0001_initial... OK
+  Applying ipn.0002_paypalipn_mp_id... OK
+  Applying ipn.0003_auto_20141117_1647... OK
+  Applying ipn.0004_auto_20150612_1826... OK
+  Applying ipn.0005_auto_20151217_0948... OK
+  Applying ipn.0006_auto_20160108_1112... OK
+  Applying ipn.0007_auto_20160219_1135... OK
+  Applying ipn.0008_auto_20181128_1032... OK
+  Applying ipn.0009_alter_paypalipn_id... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+test_contacto_y_compra_no_llaman_a_smtp (core.test_correo_emailjs.CorreoEmailJsTests.test_contacto_y_compra_no_llaman_a_smtp) ... INFO 2026-11-25 22:38:25,014 payments 21600 22076 IPN recibida. Transacción: TXN-SIN-SMTP. Estado: Completed. Invoice: d732e1d0-82c0-4dd7-9c2b-fac53708d27e.
+INFO 2026-11-25 22:38:25,079 payments 21600 22076 Pedido #1 pagado con la transacción TXN-SIN-SMTP.
+ok
+test_el_contacto_invalido_o_sin_servicio_no_llama_a_emailjs (core.test_correo_emailjs.CorreoEmailJsTests.test_el_contacto_invalido_o_sin_servicio_no_llama_a_emailjs) ... EmailJS no está configurado. No se envió el correo.
+ok
+test_el_contacto_valido_usa_la_plantilla_y_no_expone_la_clave (core.test_correo_emailjs.CorreoEmailJsTests.test_el_contacto_valido_usa_la_plantilla_y_no_expone_la_clave) ... ok
+test_el_pedido_pagado_avisa_una_vez_con_los_datos_guardados (core.test_correo_emailjs.CorreoEmailJsTests.test_el_pedido_pagado_avisa_una_vez_con_los_datos_guardados) ... INFO 2026-11-25 22:38:28,461 payments 21600 22076 IPN recibida. Transacción: TXN-MAIL. Estado: Completed. Invoice: f677534d-5f30-4d82-b3d7-40cadd7f0723.
+INFO 2026-11-25 22:38:28,486 payments 21600 22076 Pedido #2 pagado con la transacción TXN-MAIL.
+INFO 2026-11-25 22:38:28,511 payments 21600 22076 IPN recibida. Transacción: TXN-MAIL. Estado: Completed. Invoice: f677534d-5f30-4d82-b3d7-40cadd7f0723.
+WARNING 2026-11-25 22:38:28,515 payments 21600 22076 El pedido #2 ya no está pendiente (PAGADO, transacción TXN-MAIL). No se vuelve a descontar stock.
+ok
+test_si_el_correo_falla_el_pago_queda_y_un_reintento_no_lo_duplica (core.test_correo_emailjs.CorreoEmailJsTests.test_si_el_correo_falla_el_pago_queda_y_un_reintento_no_lo_duplica) ... INFO 2026-11-25 22:38:29,562 payments 21600 22076 IPN recibida. Transacción: TXN-REINTENTO. Estado: Completed. Invoice: 8b741199-93ce-4262-9f9d-6b0c638a8571.
+INFO 2026-11-25 22:38:29,588 payments 21600 22076 Pedido #3 pagado con la transacción TXN-REINTENTO.
+EmailJS respondió HTTP 503.
+INFO 2026-11-25 22:38:29,633 payments 21600 22076 IPN recibida. Transacción: TXN-REINTENTO. Estado: Completed. Invoice: 8b741199-93ce-4262-9f9d-6b0c638a8571.
+WARNING 2026-11-25 22:38:29,636 payments 21600 22076 El pedido #3 ya no está pendiente (PAGADO, transacción TXN-REINTENTO). No se vuelve a descontar stock.
+ok
+test_sin_correo_de_cuenta_el_aviso_usa_el_pagador_verificado (core.test_correo_emailjs.CorreoEmailJsTests.test_sin_correo_de_cuenta_el_aviso_usa_el_pagador_verificado) ... INFO 2026-11-25 22:38:30,711 payments 21600 22076 IPN recibida. Transacción: TXN-FALLBACK. Estado: Completed. Invoice: 2a7f6a80-f359-4df9-9f7c-8eb7dfa35a00.
+INFO 2026-11-25 22:38:30,738 payments 21600 22076 Pedido #4 pagado con la transacción TXN-FALLBACK.
+ok
+test_un_error_de_emailjs_no_confirma_el_envio_y_el_limite_corta_las_llamadas (core.test_correo_emailjs.CorreoEmailJsTests.test_un_error_de_emailjs_no_confirma_el_envio_y_el_limite_corta_las_llamadas) ... EmailJS respondió HTTP 500.
+ok
+test_un_pago_no_confirmado_no_envia_correo_aunque_emailjs_explote (core.test_correo_emailjs.CorreoEmailJsTests.test_un_pago_no_confirmado_no_envia_correo_aunque_emailjs_explote) ... INFO 2026-11-25 22:38:32,944 payments 21600 22076 IPN recibida. Transacción: TXN-PENDIENTE. Estado: Pending. Invoice: 1fe21728-e881-4ad4-92f9-d35a122d7266.
+WARNING 2026-11-25 22:38:32,944 payments 21600 22076 Pago no confirmado (Pending) para la transacción TXN-PENDIENTE. El pedido sigue pendiente y el stock no cambia.
+INFO 2026-11-25 22:38:32,951 payments 21600 22076 IPN recibida. Transacción: TXN-CAE. Estado: Completed. Invoice: 1fe21728-e881-4ad4-92f9-d35a122d7266.
+INFO 2026-11-25 22:38:32,980 payments 21600 22076 Pedido #5 pagado con la transacción TXN-CAE.
+ERROR 2026-11-25 22:38:32,982 payments 21600 22076 El pedido #5 quedó registrado y el aviso por correo no cambió el pago.
+Traceback (most recent call last):
+  File "C:\Users\Manuel\Desktop\A.I\Inacap\Proyecto - HardWareHouse\core\payments.py", line 351, in _avisar_compra
+    notificar_pedido_pagado(pedido_id)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1228, in _execute_mock_call
+    raise effect
+RuntimeError: correo caído
+ok
+test_ut12_un_timeout_no_confirma_el_contacto_ni_el_descuento (core.test_correo_emailjs.CorreoEmailJsTests.test_ut12_un_timeout_no_confirma_el_contacto_ni_el_descuento) ... EmailJS no respondió.
+Traceback (most recent call last):
+  File "C:\Users\Manuel\Desktop\A.I\Inacap\Proyecto - HardWareHouse\core\correo.py", line 211, in _enviar
+    respuesta = requests.post(
+        EMAILJS_URL,
+        json=cuerpo,
+        timeout=int(getattr(settings, 'EMAILJS_TIMEOUT', 10)),
+    )
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1228, in _execute_mock_call
+    raise effect
+requests.exceptions.Timeout: tiempo
+INFO 2026-11-25 22:38:34,156 payments 21600 22076 IPN recibida. Transacción: TXN-TIMEOUT. Estado: Completed. Invoice: dac17273-1db3-4a4e-a3c8-e8c9f1dde36d.
+INFO 2026-11-25 22:38:34,181 payments 21600 22076 Pedido #6 pagado con la transacción TXN-TIMEOUT.
+EmailJS no respondió.
+Traceback (most recent call last):
+  File "C:\Users\Manuel\Desktop\A.I\Inacap\Proyecto - HardWareHouse\core\correo.py", line 211, in _enviar
+    respuesta = requests.post(
+        EMAILJS_URL,
+        json=cuerpo,
+        timeout=int(getattr(settings, 'EMAILJS_TIMEOUT', 10)),
+    )
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\unittest\mock.py", line 1228, in _execute_mock_call
+    raise effect
+requests.exceptions.Timeout: tiempo
+ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 10.409s
+
+OK
+Destroying test database for alias 'default' ('test_bd_hardwarehouse')...

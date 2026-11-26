@@ -1,0 +1,19 @@
+UT-03. Se comprobaron las reglas de formato de placa y gabinete y el largo de la GPU, incluidos el límite exacto y los datos desconocidos o incompletos. Los seis escenarios cumplieron los resultados esperados; una selección incompleta no se declara compatible y no se registraron fallos.
+
+UT-04. Se comprobaron los totales del carrito con cantidades distintas, precio de oferta, decimales y un cambio de cantidad. Los resultados esperados se cumplieron: el descuento no se aplicó dos veces y no se registraron fallos.
+
+UT-05. Se validaron cantidades cero, negativas, no numéricas, decimales, superiores al stock, iguales al stock, válidas y de un producto agotado. Las entradas inválidas no modificaron el carrito y no se registraron fallos.
+
+UT-06. Se clasificó el stock en agotado, crítico, advertencia y normal, con umbrales de 3 y 5 y con umbrales propios. Los contadores coincidieron con los productos afectados, sin duplicados, y no se registraron fallos.
+
+UT-07. Se comprobaron reposición, ajustes positivo y negativo, venta, rechazo de stock negativo, rollback y la venta repetida del mismo ítem. El inventario y los movimientos quedaron consistentes y no se registraron fallos.
+
+UT-08. Se comprobó una confirmación PayPal válida y sus repeticiones, además de avisos sin transacción, con monto o receptor incorrectos, en estado distinto de Completed y sobre un pedido ya pagado. Hubo un solo descuento de stock y no se registraron fallos.
+
+UT-09. Se ejecutaron descuentos simultáneos sobre PostgreSQL de pruebas, incluida la última unidad y una transacción que falló a mitad de camino. No hubo sobreventa ni stock negativo y no se registraron fallos.
+
+UT-10. Se comprobó que el registro público asigna el grupo Cliente sin privilegios de personal y que una cuenta de trabajador no recibe ese grupo. El acceso del cliente al inventario respondió 403 y no se registraron fallos.
+
+UT-11. Se validaron calificaciones de 0,5 a 5 en medios puntos, los valores fuera de rango y el promedio de 4,25 a partir de 4,5 y 4,0. Un producto sin reseñas mostró cero reseñas y no se registraron fallos.
+
+UT-12. Se comprobaron, con mocks, el contacto y la confirmación de compra ante éxito, error HTTP, timeout y reintento. El pedido permaneció pagado cuando el correo falló, el stock no se descontó de nuevo y no se registraron fallos.

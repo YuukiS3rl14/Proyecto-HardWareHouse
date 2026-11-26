@@ -3,7 +3,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from core.admin import GabineteAdmin, TarjetaGraficaAdmin
@@ -38,6 +38,121 @@ def armado_largo(largo_gpu, largo_maximo):
         gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=largo_maximo),
         tarjeta_grafica=pieza(largo_mm=largo_gpu),
     )
+
+
+def armado_ut03(**cambios):
+    datos = dict(
+        procesador=pieza(socket='AM5'),
+        placa_madre=pieza(
+            socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='ATX',
+            ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+        ),
+        memoria_ram=pieza(
+            tipo_ddr='DDR5', capacidad_gb=16, modulos_por_producto=1,
+            capacidad_modulo_gb=16, formato_ram='DIMM',
+        ),
+        gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
+        tarjeta_grafica=pieza(largo_mm=300),
+    )
+    datos.update(cambios)
+    return validar_armado(**datos)
+
+
+def hallazgos(resultado, regla):
+    return [hallazgo for hallazgo in resultado.hallazgos if hallazgo.regla == regla]
+
+
+class Ut03GabineteGpuTests(SimpleTestCase):
+    """UT-03. Socket, RAM y el otro eje físico se mantienen compatibles."""
+
+    def test_ut03_a_placa_atx_cabe_en_gabinete_atx(self):
+        resultado = armado_ut03()
+
+        self.assertEqual(hallazgos(resultado, 'formato'), [])
+        self.assertEqual(resultado.estado, 'compatible')
+        self.assertTrue(resultado.es_compatible)
+        self.assertFalse(resultado.bloquea_agregar)
+
+    def test_ut03_b_placa_atx_no_cabe_en_mini_itx(self):
+        resultado = armado_ut03(
+            gabinete=pieza(formato_soporte='Mini-ITX', largo_max_gpu_mm=400),
+        )
+        formato = hallazgos(resultado, 'formato')
+
+        self.assertEqual(len(formato), 1)
+        self.assertEqual(formato[0].estado, 'incompatible')
+        self.assertEqual(
+            formato[0].mensaje,
+            'El gabinete (MINI-ITX) no admite el formato de la placa madre (ATX).',
+        )
+        self.assertEqual(hallazgos(resultado, 'largo'), [])
+        self.assertEqual(resultado.estado, 'incompatible')
+        self.assertTrue(resultado.bloquea_agregar)
+
+    def test_ut03_c_gpu_de_300_cabe_en_400(self):
+        resultado = armado_ut03(
+            tarjeta_grafica=pieza(largo_mm=300),
+            gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
+        )
+
+        self.assertEqual(hallazgos(resultado, 'largo'), [])
+        self.assertEqual(resultado.estado, 'compatible')
+        self.assertFalse(resultado.bloquea_agregar)
+
+    def test_ut03_d_gpu_de_350_no_cabe_en_300(self):
+        resultado = armado_ut03(
+            tarjeta_grafica=pieza(largo_mm=350),
+            gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=300),
+        )
+        largo = hallazgos(resultado, 'largo')
+
+        self.assertEqual(len(largo), 1)
+        self.assertEqual(largo[0].estado, 'incompatible')
+        self.assertIn('350 mm', largo[0].mensaje)
+        self.assertIn('300 mm', largo[0].mensaje)
+        self.assertIn('no el grosor', largo[0].mensaje)
+        self.assertEqual(hallazgos(resultado, 'formato'), [])
+        self.assertEqual(resultado.estado, 'incompatible')
+        self.assertTrue(resultado.bloquea_agregar)
+
+    def test_ut03_e_el_largo_exacto_cabe(self):
+        resultado = armado_ut03(
+            tarjeta_grafica=pieza(largo_mm=400),
+            gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=400),
+        )
+
+        self.assertEqual(hallazgos(resultado, 'largo'), [])
+        self.assertEqual(resultado.estado, 'compatible')
+        self.assertFalse(resultado.bloquea_agregar)
+
+    def test_ut03_f_dato_desconocido_o_incompleto_no_se_declara_compatible(self):
+        formato_raro = armado_ut03(
+            placa_madre=pieza(
+                socket_cpu='AM5', tipo_ram_soportado='DDR5', formato='E-ATX',
+                ranuras_ram=4, formato_ram_soportado='DIMM', capacidad_maxima_ram_gb=128,
+            ),
+        )
+        sin_largo = armado_ut03(tarjeta_grafica=pieza(largo_mm=None))
+        largo_cero = armado_ut03(gabinete=pieza(formato_soporte='ATX', largo_max_gpu_mm=0))
+        sin_gpu = armado_ut03(tarjeta_grafica=None)
+        sin_gabinete = validar_armado(
+            placa_madre=pieza(formato='ATX', socket_cpu='AM5', tipo_ram_soportado='DDR5'),
+        )
+
+        self.assertEqual(formato_raro.estado, 'datos_insuficientes')
+        self.assertFalse(formato_raro.es_compatible)
+        self.assertTrue(formato_raro.bloquea_agregar)
+        self.assertIn('desconocido', hallazgos(formato_raro, 'formato')[0].mensaje)
+        self.assertEqual(sin_largo.estado, 'datos_insuficientes')
+        self.assertTrue(sin_largo.bloquea_agregar)
+        self.assertIn('largo de la GPU', hallazgos(sin_largo, 'largo')[0].mensaje)
+        self.assertEqual(largo_cero.estado, 'datos_insuficientes')
+        self.assertIn('no se toma como medida conocida', hallazgos(largo_cero, 'largo')[0].mensaje)
+        self.assertEqual(sin_gpu.estado, 'incompleto')
+        self.assertFalse(sin_gpu.es_compatible)
+        self.assertFalse(sin_gpu.bloquea_agregar)
+        self.assertEqual(sin_gabinete.estado, 'incompleto')
+        self.assertFalse(sin_gabinete.es_compatible)
 
 
 class LargoGpuTests(TestCase):

@@ -1,0 +1,17 @@
+UT-06 — Estados del inventario
+Fecha: 2026-11-25 22:35:40 -03:00
+Commit SHA: 065f57c0d97ba8beeb383e2cbf6a75308aa03408
+Entorno: Django TestCase sobre PostgreSQL de pruebas test_bd_hardwarehouse, creada y destruida por el runner. No se usó la base de producción.
+Variables: DATABASE_URL vacío, USE_SQLITE=False, OLLAMA_BASE_URL vacío, HARDWAREHOUSE_CHAT_INTENT_LLM=False, USE_HTTPS=False.
+Comando:
+.\venv\Scripts\python.exe manage.py test core.test_qa_ciclo02.Ut06EstadosTests --verbosity 2
+Archivo y clase: core/test_qa_ciclo02.py, Ut06EstadosTests
+Lógica: core/alertas_stock.py, estado_stock, _filas y resumen
+Tests ejecutados: 1
+Aprobados: 1
+Fallidos: 0
+Errores: 0
+Omitidos: 0
+Evidencia: evidencias/unitarias/UT-06/resultado.txt
+Captura sugerida: «Ran 1 test in 1.146s» y «OK». No se generó captura.png.
+Umbrales iniciales: mínimo 3 y advertencia 5. El stock 6 quedó normal y fuera del conteo de afectados. Cada producto apareció en un solo estado.

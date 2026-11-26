@@ -1,0 +1,1 @@
+Se comprobaron, con mocks, el contacto y la confirmación de compra ante éxito, error HTTP, timeout y reintento. El pedido permaneció pagado cuando el correo falló, el stock no se descontó de nuevo y no se registraron fallos.

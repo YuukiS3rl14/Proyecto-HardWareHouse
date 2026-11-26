@@ -60,6 +60,11 @@ class CalificacionTests(TestCase):
         self.assertEqual(promedio, Decimal('4.25'))
         ficha = self.client.get(reverse('core:detalle', args=['procesador', self.producto.pk]))
         self.assertContains(ficha, '4,25 de 5 estrellas')
+        vacio = cpu(self.marca, 'CPU sin reseñas')
+        ficha_vacia = self.client.get(reverse('core:detalle', args=['procesador', vacio.pk]))
+        self.assertEqual(ficha_vacia.status_code, 200)
+        self.assertContains(ficha_vacia, '0 reseñas')
+        self.assertEqual(Comentario.objects.filter(procesador=vacio).count(), 0)
         self.assertContains(ficha, 'hw-star-read is-half')
 
     def test_rechaza_fuera_de_rango_y_pasos_invalidos(self):

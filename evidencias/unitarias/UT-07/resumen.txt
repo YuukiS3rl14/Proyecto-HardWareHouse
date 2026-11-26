@@ -1,0 +1,1 @@
+Se comprobaron reposición, ajustes positivo y negativo, venta, rechazo de stock negativo, rollback y la venta repetida del mismo ítem. El inventario y los movimientos quedaron consistentes y no se registraron fallos.

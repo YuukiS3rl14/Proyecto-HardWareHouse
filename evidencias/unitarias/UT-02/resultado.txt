@@ -1,0 +1,14 @@
+Found 6 test(s).
+Skipping setup of unused database(s): default.
+System check identified no issues (0 silenced).
+test_ut02_a_ddr5_con_placa_ddr5_es_compatible (core.test_ram.Ut02RamPlacaTests.test_ut02_a_ddr5_con_placa_ddr5_es_compatible) ... ok
+test_ut02_b_ddr5_con_placa_ddr4_se_bloquea (core.test_ram.Ut02RamPlacaTests.test_ut02_b_ddr5_con_placa_ddr4_se_bloquea) ... ok
+test_ut02_c_sodimm_con_placa_dimm_se_bloquea (core.test_ram.Ut02RamPlacaTests.test_ut02_c_sodimm_con_placa_dimm_se_bloquea) ... ok
+test_ut02_d_96gb_supera_el_maximo_de_64gb (core.test_ram.Ut02RamPlacaTests.test_ut02_d_96gb_supera_el_maximo_de_64gb) ... ok
+test_ut02_e_cuatro_modulos_superan_dos_ranuras (core.test_ram.Ut02RamPlacaTests.test_ut02_e_cuatro_modulos_superan_dos_ranuras) ... ok
+test_ut02_f_ddr5_dimm_32gb_en_cuatro_ranuras_es_compatible (core.test_ram.Ut02RamPlacaTests.test_ut02_f_ddr5_dimm_32gb_en_cuatro_ranuras_es_compatible) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.001s
+
+OK

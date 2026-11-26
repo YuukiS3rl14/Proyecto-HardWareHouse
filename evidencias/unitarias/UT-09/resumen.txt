@@ -1,0 +1,1 @@
+Se ejecutaron descuentos simultáneos sobre PostgreSQL de pruebas, incluida la última unidad y una transacción que falló a mitad de camino. No hubo sobreventa ni stock negativo y no se registraron fallos.

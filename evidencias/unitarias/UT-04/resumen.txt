@@ -1,0 +1,1 @@
+Se comprobaron los totales del carrito con cantidades distintas, precio de oferta, decimales y un cambio de cantidad. Los resultados esperados se cumplieron: el descuento no se aplicó dos veces y no se registraron fallos.

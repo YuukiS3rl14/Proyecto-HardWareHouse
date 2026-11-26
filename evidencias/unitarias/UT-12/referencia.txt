@@ -1,0 +1,17 @@
+UT-12 — Envíos EmailJS mediante mocks
+Fecha: 2026-11-25 22:38:09 -03:00
+Commit SHA: 065f57c0d97ba8beeb383e2cbf6a75308aa03408
+Entorno: Django TestCase sobre PostgreSQL de pruebas test_bd_hardwarehouse. requests.post se reemplazó por mocks, incluido requests.Timeout. No se envió correo real ni se usó la base de producción.
+Variables: DATABASE_URL vacío, USE_SQLITE=False, OLLAMA_BASE_URL vacío, HARDWAREHOUSE_CHAT_INTENT_LLM=False, USE_HTTPS=False.
+Comando:
+.\venv\Scripts\python.exe manage.py test core.test_correo_emailjs.CorreoEmailJsTests --verbosity 2
+Archivo y clase: core/test_correo_emailjs.py, CorreoEmailJsTests
+Lógica: core/correo.py, enviar_contacto y notificar_pedido_pagado
+Tests ejecutados: 9
+Aprobados: 9
+Fallidos: 0
+Errores: 0
+Omitidos: 0
+Evidencia: evidencias/unitarias/UT-12/resultado.txt
+Captura sugerida: «Ran 9 tests in 10.409s» y «OK». No se generó captura.png.
+La salida incluye tracebacks de EmailJS porque el mock lanza Timeout y RuntimeError y el código los registra. Esos tests terminaron en ok: el contacto no se dio por enviado, el pedido permaneció PAGADO y el stock no se descontó otra vez.
