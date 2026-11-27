@@ -1,0 +1,2 @@
+No se midió la tienda con filtros. Las URL reales quedaron preparadas y no se solicitó ninguna, así que no hay p50, p95 ni RPS por escenario.
+El criterio de latencia estable entre filtros y volúmenes no se comprobó. La prueba permanece bloqueada.

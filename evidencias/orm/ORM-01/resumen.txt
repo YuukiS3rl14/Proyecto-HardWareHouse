@@ -1,0 +1,1 @@
+Se registraron 31, 31 y 31 consultas para 10, 50 y 100 productos, con respuestas de 68.381, 73.087 y 87.07 ms. La página de 100 renderizó 50 de 100 y el patrón fue: sin crecimiento proporcional al tamaño.

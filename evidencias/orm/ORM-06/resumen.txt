@@ -1,0 +1,1 @@
+Se ejecutaron 7 EXPLAIN ANALYZE sobre test_bd_hardwarehouse. 5 contienen Seq Scan. No se crearon índices. La muestra es pequeña y no alcanza para declarar una consulta costosa en producción.

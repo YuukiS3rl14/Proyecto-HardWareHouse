@@ -1,0 +1,8 @@
+Fecha y hora: 2026-11-26 20:59:41 -0300
+Commit: 67221998e9053947ff003b7b37eb5bfd3ff7299a
+Entorno: Django TestCase, PostgreSQL local.
+Base: motor=postgresql host=127.0.0.1 puerto=5432 nombre=test_bd_hardwarehouse usuario=postgres
+La contraseña no se registra.
+Comando: python manage.py test core.test_auditoria_orm.AuditoriaOrm --verbosity 1
+Escenarios: A agotado, B crítico, C advertencia, D total, E categoría, F página, G volúmenes 20 y 80
+Resultado de calidad: PARCIAL

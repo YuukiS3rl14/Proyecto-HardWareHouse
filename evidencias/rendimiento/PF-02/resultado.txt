@@ -1,0 +1,10 @@
+La comprobación común terminó con código 2 el 2026-11-26 21:40:40 -0300.
+HWH_STAGING_URL no está definida. Locust no está instalado. No hubo salida de Locust ni errores HTTP.
+
+Etapas preparadas y no ejecutadas, 45 s cada una, espera de 6 a 10 s:
+- 1 usuario sobre GET /, /tienda/, /armado/ y /contacto/.
+- 5 usuarios sobre la misma mezcla.
+- 10 usuarios sobre la misma mezcla.
+
+Tabla comparativa: sin filas medidas. p50, p95, RPS, promedio, errores, CPU y RAM no tienen valor.
+CPU y RAM, cuando exista staging, deben exportarse desde Railway en la misma ventana: métricas de CPU y memoria del servicio, no de la máquina local.

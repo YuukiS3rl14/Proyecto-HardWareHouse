@@ -1,0 +1,1 @@
+Severidad media. El inicio del personal ejecutó 16 consultas frente a 1 del anónimo y 6 del cliente. El context processor recalcula las alertas de stock en cada página del personal. SQL idéntico repetido: 0.

@@ -1,0 +1,2 @@
+Después de retirar la carga, una medición ligera debe mostrar p50, p95, errores y recursos comparables con la línea base de PF-01.
+No deben permanecer errores ni un consumo de recursos distinto del nivel inicial.

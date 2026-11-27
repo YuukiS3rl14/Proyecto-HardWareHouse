@@ -1,0 +1,1 @@
+Sin incidencia de ejecución. La conclusión sobre índices de producción queda NO CONCLUYENTE: la muestra cabe en memoria y 5 de 7 planes contienen Seq Scan.

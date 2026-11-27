@@ -1,0 +1,15 @@
+PF-05 no envió solicitudes. Fecha real: 2026-11-26 21:40:40 -0300. Código de la comprobación: 2.
+
+Las rutas usan los parámetros que ya acepta la tienda: q, categoria, proveedor, precio, orden y page.
+Quedaron preparadas, y no solicitadas, estas URL:
+- /tienda/
+- /tienda/?q=procesador
+- /tienda/?categoria=CPU
+- /tienda/?proveedor=<HWH_PF_PROVEEDOR_ID>
+- /tienda/?categoria=CPU&precio=50-100&orden=precio_asc
+- /tienda/?page=1
+- /tienda/?page=2
+
+El id de proveedor no se inventó. Sin un entero de staging, esa URL no entra en el escenario.
+El volumen creciente de productos no se creó: exigiría escribir en una base y no hay staging aislado.
+La auditoría ORM-01 del mismo commit midió, en la base temporal de pruebas, 31 consultas y respuestas de 68.381, 73.087 y 87.07 ms para 10, 50 y 100 productos. Esa medición no es una prueba de carga y no se copia como resultado de PF-05.

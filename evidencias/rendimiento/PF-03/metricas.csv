@@ -1,0 +1,2 @@
+caso,endpoint,usuarios_concurrentes,solicitudes,solicitudes_por_segundo,tiempo_promedio_ms,p50_ms,p95_ms,tasa_error,cpu,memoria,fecha_real,version,estado
+PF-03,GET / ; GET /tienda/ ; GET /armado/ ; GET /contacto/,no autorizado,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA

@@ -1,0 +1,8 @@
+caso,escenario,tamano_muestra,consultas_sql,consultas_select,tiempo_respuesta_ms,tiempo_sql_ms,tiempo_respuesta_min_ms,tiempo_respuesta_max_ms,filas_consultadas,filas_renderizadas,repeticiones,unidad_consultas,unidad_tiempo,unidad_filas
+ORM-06,A listado,50.0,1,1,0.036,0.036,0.036,0.036,50.0,50.0,1,cantidad,ms,filas
+ORM-06,B nombre,60.0,1,1,0.106,0.106,0.106,0.106,60.0,60.0,1,cantidad,ms,filas
+ORM-06,C categoria,70.0,1,1,0.043,0.043,0.043,0.043,70.0,70.0,1,cantidad,ms,filas
+ORM-06,D proveedor,60.0,1,1,0.064,0.064,0.064,0.064,60.0,60.0,1,cantidad,ms,filas
+ORM-06,E stock critico,60.0,1,1,0.041,0.041,0.041,0.041,60.0,60.0,1,cantidad,ms,filas
+ORM-06,F historial,1.0,1,1,0.058,0.058,0.058,0.058,1.0,1.0,1,cantidad,ms,filas
+ORM-06,G pedidos usuario,1.0,1,1,0.022,0.022,0.022,0.022,1.0,1.0,1,cantidad,ms,filas

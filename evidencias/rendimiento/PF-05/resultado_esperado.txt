@@ -1,0 +1,2 @@
+Cada búsqueda, filtro y página de la tienda debe medirse con carga ligera y compararse por latencia, sin una degradación desproporcionada al crecer el catálogo.
+Las URL deben ser las del filtro real y los productos deben ser ficticios y reproducibles.

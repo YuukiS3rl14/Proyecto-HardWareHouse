@@ -1,0 +1,9 @@
+URL preparadas con los parámetros de core/tienda_filtros.py. Ninguna fue solicitada.
+A. /tienda/
+B. /tienda/?q=procesador
+C. /tienda/?categoria=CPU
+D. /tienda/?proveedor=<id numérico de staging>. Hoy no hay id. No se usó un número inventado.
+E. /tienda/?categoria=CPU&precio=50-100&orden=precio_asc
+F. /tienda/?page=1
+G. /tienda/?page=2
+H. Volúmenes crecientes: no preparados en datos. Requieren productos ficticios en el staging.

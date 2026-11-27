@@ -1,0 +1,53 @@
+﻿caso,escenario,tamano_muestra,consultas_sql,consultas_select,tiempo_respuesta_ms,tiempo_sql_ms,tiempo_respuesta_min_ms,tiempo_respuesta_max_ms,filas_consultadas,filas_renderizadas,repeticiones,unidad_consultas,unidad_tiempo,unidad_filas
+ORM-06,A listado,50.0,1,1,0.036,0.036,0.036,0.036,50.0,50.0,1,cantidad,ms,filas
+ORM-06,B nombre,60.0,1,1,0.106,0.106,0.106,0.106,60.0,60.0,1,cantidad,ms,filas
+ORM-06,C categoria,70.0,1,1,0.043,0.043,0.043,0.043,70.0,70.0,1,cantidad,ms,filas
+ORM-06,D proveedor,60.0,1,1,0.064,0.064,0.064,0.064,60.0,60.0,1,cantidad,ms,filas
+ORM-06,E stock critico,60.0,1,1,0.041,0.041,0.041,0.041,60.0,60.0,1,cantidad,ms,filas
+ORM-06,F historial,1.0,1,1,0.058,0.058,0.058,0.058,1.0,1.0,1,cantidad,ms,filas
+ORM-06,G pedidos usuario,1.0,1,1,0.022,0.022,0.022,0.022,1.0,1.0,1,cantidad,ms,filas
+ORM-05,primera,45,19,19,39.127,16.0,37.322,43.08,45,20,5,cantidad,ms,filas
+ORM-05,intermedia,45,19,19,38.603,15.0,38.228,39.768,45,20,5,cantidad,ms,filas
+ORM-05,ultima,45,19,19,33.629,16.0,33.158,34.73,45,5,5,cantidad,ms,filas
+ORM-05,producto,15,19,19,37.8,16.0,35.336,39.741,15,15,5,cantidad,ms,filas
+ORM-05,usuario,45,19,19,37.133,15.0,35.326,41.936,45,20,5,cantidad,ms,filas
+ORM-05,tipo,45,19,19,41.404,17.0,37.91,41.81,45,20,5,cantidad,ms,filas
+ORM-08,anonimo inicio,,1,1,5.657,1.0,5.539,5.829,,,5,cantidad,ms,filas
+ORM-08,anonimo tienda,,31,31,59.235,30.0,57.825,68.283,6,6,5,cantidad,ms,filas
+ORM-08,anonimo nosotros,,0,0,4.704,0,4.591,5.34,,,5,cantidad,ms,filas
+ORM-08,cliente inicio,,6,6,10.961,3.0,10.195,11.846,,,5,cantidad,ms,filas
+ORM-08,cliente tienda,,37,37,67.373,26.0,66.032,70.256,6,6,5,cantidad,ms,filas
+ORM-08,cliente nosotros,,5,5,10.398,4.0,9.855,12.042,,,5,cantidad,ms,filas
+ORM-08,staff inicio,,16,16,30.165,14.0,28.955,30.834,,,5,cantidad,ms,filas
+ORM-08,staff tienda,,47,47,80.77,37.0,78.644,81.964,6,6,5,cantidad,ms,filas
+ORM-08,staff nosotros,,15,15,31.642,13.0,26.982,32.44,,,5,cantidad,ms,filas
+ORM-07,descuento,1,no medida,no medida,21.88,21.88,21.88,21.88,1,1,1,cantidad,ms,filas
+ORM-07,insuficiente,1,no medida,no medida,2.727,2.727,2.727,2.727,1,0,1,cantidad,ms,filas
+ORM-07,pago,1,no medida,no medida,133.073,133.073,133.073,133.073,1,1,1,cantidad,ms,filas
+ORM-07,repetido,1,no medida,no medida,7.992,7.992,7.992,7.992,1,1,1,cantidad,ms,filas
+ORM-07,rollback,1,no medida,no medida,5.672,5.672,5.672,5.672,1,6,1,cantidad,ms,filas
+ORM-07,concurrencia,2,no medida,no medida,81.875,81.875,81.875,81.875,1,0,1,cantidad,ms,filas
+ORM-07,espera bloqueo,2,no medida,no medida,304.65,304.65,304.65,304.65,1,1,1,cantidad,ms,filas
+ORM-02,detalle individual,1,3,3,10.766,3.0,9.942,11.459,None,None,5,cantidad,ms,filas
+ORM-02,sin select_related,10,11,11,12.231,4.0,11.872,15.2,10,,5,cantidad,ms,filas
+ORM-02,con select_related,10,1,1,2.256,1.0,2.133,2.583,10,,5,cantidad,ms,filas
+ORM-01,listado 10,10,31,31,68.381,28.0,58.801,69.871,10,10,5,cantidad,ms,filas
+ORM-01,listado 50,50,31,31,73.087,28.0,65.866,76.84,50,50,5,cantidad,ms,filas
+ORM-01,listado 100,100,31,31,87.07,31.0,76.997,93.677,100,50,5,cantidad,ms,filas
+ORM-01,pagina 2 de 100,100,31,31,93.262,32.0,85.5,94.057,100,50,5,cantidad,ms,filas
+ORM-01,pagina 3 de 100,100,31,31,74.759,30.0,73.399,89.43,100,50,5,cantidad,ms,filas
+ORM-01,tienda autenticada,100,37,37,88.798,33.0,84.054,97.771,100,50,5,cantidad,ms,filas
+ORM-04,agotados,8,17,17,33.619,15.0,30.952,36.488,8,8,5,cantidad,ms,filas
+ORM-04,criticos,8,17,17,35.803,16.0,34.464,41.81,8,8,5,cantidad,ms,filas
+ORM-04,advertencia,8,17,17,47.352,18.0,33.944,54.512,8,8,5,cantidad,ms,filas
+ORM-04,todos,24,17,17,39.159,15.0,37.854,40.586,24,20,5,cantidad,ms,filas
+ORM-04,categoria CPU,24,17,17,37.12,16.0,36.823,39.04,24,20,5,cantidad,ms,filas
+ORM-04,pagina 2,24,17,17,32.407,14.0,29.998,37.192,24,4,5,cantidad,ms,filas
+ORM-04,volumen 20,20,17,17,33.532,14.0,31.895,34.833,20,20,5,cantidad,ms,filas
+ORM-04,volumen 80,80,17,17,35.815,14.0,34.761,37.241,80,20,5,cantidad,ms,filas
+ORM-03,carrito 1,1,9,9,14.962,4.0,14.682,15.581,1,1,5,cantidad,ms,filas
+ORM-03,favoritos 1,1,7,7,14.635,6.0,14.0,14.931,1,1,5,cantidad,ms,filas
+ORM-03,carrito 5,5,13,13,24.972,9.0,23.182,26.306,5,5,5,cantidad,ms,filas
+ORM-03,favoritos 5,5,11,11,16.762,4.0,16.222,21.705,5,5,5,cantidad,ms,filas
+ORM-03,carrito 20,20,28,28,45.013,13.0,43.598,139.977,20,20,5,cantidad,ms,filas
+ORM-03,favoritos 20,20,26,26,37.623,7.0,36.158,50.885,20,20,5,cantidad,ms,filas

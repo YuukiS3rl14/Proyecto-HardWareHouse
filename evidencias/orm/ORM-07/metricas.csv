@@ -1,0 +1,8 @@
+caso,escenario,tamano_muestra,consultas_sql,consultas_select,tiempo_respuesta_ms,tiempo_sql_ms,tiempo_respuesta_min_ms,tiempo_respuesta_max_ms,filas_consultadas,filas_renderizadas,repeticiones,unidad_consultas,unidad_tiempo,unidad_filas
+ORM-07,descuento,1,no medida,no medida,21.88,21.88,21.88,21.88,1,1,1,cantidad,ms,filas
+ORM-07,insuficiente,1,no medida,no medida,2.727,2.727,2.727,2.727,1,0,1,cantidad,ms,filas
+ORM-07,pago,1,no medida,no medida,133.073,133.073,133.073,133.073,1,1,1,cantidad,ms,filas
+ORM-07,repetido,1,no medida,no medida,7.992,7.992,7.992,7.992,1,1,1,cantidad,ms,filas
+ORM-07,rollback,1,no medida,no medida,5.672,5.672,5.672,5.672,1,6,1,cantidad,ms,filas
+ORM-07,concurrencia,2,no medida,no medida,81.875,81.875,81.875,81.875,1,0,1,cantidad,ms,filas
+ORM-07,espera bloqueo,2,no medida,no medida,304.65,304.65,304.65,304.65,1,1,1,cantidad,ms,filas

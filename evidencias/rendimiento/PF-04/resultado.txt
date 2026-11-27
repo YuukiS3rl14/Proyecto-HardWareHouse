@@ -1,0 +1,8 @@
+PF-04 no pudo comprobar recuperación. Fecha real: 2026-11-26 21:40:40 -0300.
+
+PF-03 no generó carga, así que no había usuarios virtuales que retirar ni solicitudes activas que esperar.
+PF-01 no tiene p50, p95 ni tasa de error. La comparación antes/después no tiene columnas con números.
+El script exige un CSV locust_*_stats.csv dentro de evidencias/rendimiento/PF-03 y hoy esa carpeta no contiene uno.
+
+Parte comprobable en esta corrida: ninguna.
+Parte bloqueada: la repetición ligera, la comparación con la línea base y la revisión de errores o recursos persistentes.

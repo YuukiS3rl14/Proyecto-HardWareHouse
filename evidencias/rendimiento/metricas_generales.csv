@@ -1,0 +1,20 @@
+caso,endpoint,usuarios_concurrentes,solicitudes,solicitudes_por_segundo,tiempo_promedio_ms,p50_ms,p95_ms,tasa_error,cpu,memoria,fecha_real,version,estado
+PF-01,GET /,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-01,GET /tienda/,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-01,GET /armado/,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-01,GET /contacto/,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-02,GET / ; GET /tienda/ ; GET /armado/ ; GET /contacto/,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-02,GET / ; GET /tienda/ ; GET /armado/ ; GET /contacto/,5,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-02,GET / ; GET /tienda/ ; GET /armado/ ; GET /contacto/,10,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-03,GET / ; GET /tienda/ ; GET /armado/ ; GET /contacto/,no autorizado,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-04,antes de la carga,0,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-04,despues de retirar la carga,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-05,GET /tienda/,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-05,GET /tienda/?q=procesador,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-05,GET /tienda/?categoria=CPU,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-05,GET /tienda/?proveedor=PENDIENTE,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-05,GET /tienda/?categoria=CPU&precio=50-100&orden=precio_asc,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-05,GET /tienda/?page=1,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-05,GET /tienda/?page=2,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-06,protocolo de PF-01,1,,,,,,,,,2026-11-26 21:40:40 -0300,67221998e9053947ff003b7b37eb5bfd3ff7299a,BLOQUEADA
+PF-06,protocolo de PF-01,1,,,,,,,,,,sin medicion anterior,BLOQUEADA

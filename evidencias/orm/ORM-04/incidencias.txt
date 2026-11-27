@@ -1,0 +1,1 @@
+Severidad media. El listado pagina en memoria después de leer las familias con stock en alerta. Con 80 críticos se renderizaron 20 de 80. Patrón: sin crecimiento proporcional al tamaño.

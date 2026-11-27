@@ -1,0 +1,2 @@
+La concurrencia ligera debe comparar 1, 5 y 10 usuarios con p50, p95, RPS, promedio, tasa de error, CPU y RAM de cada etapa.
+Las tres etapas deben durar lo mismo y medirse después de arrancar, sin escrituras.

@@ -1,0 +1,1 @@
+El listado debe mantener un número estable de consultas al pasar de 10 a 100 productos y la paginación debe limitar las filas leídas y renderizadas.

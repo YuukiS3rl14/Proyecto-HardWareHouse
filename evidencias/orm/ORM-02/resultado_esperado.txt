@@ -1,0 +1,1 @@
+El detalle y una lectura de diez productos con proveedores distintos deben resolver la marca sin un SELECT adicional por cada proveedor.

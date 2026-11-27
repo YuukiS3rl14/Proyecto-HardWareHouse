@@ -1,0 +1,12 @@
+Identificador: PF-03
+Fecha planificada del Ciclo 02: 02/11/2026
+Fecha y hora reales de la comprobación: 2026-11-26 21:40:40 -0300
+Commit: 67221998e9053947ff003b7b37eb5bfd3ff7299a
+Entorno: staging no configurado. Límite de usuarios no autorizado.
+Configuración prevista: incrementos de 5 usuarios, máximo 25, 45 s por etapa, parada al 5 % de errores.
+Duración real de carga: 0 s.
+Endpoints: GET /, GET /tienda/, GET /armado/, GET /contacto/.
+Comando: python scripts/pf_carga_hwh.py --ejecutar PF-03
+Ese comando también se niega a arrancar mientras falte el límite. No se invocó contra un host.
+Herramientas: Python 3.13.7. Locust no instalado.
+Resultado final: BLOQUEADA

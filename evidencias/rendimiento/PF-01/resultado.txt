@@ -1,0 +1,16 @@
+Comprobación PF sin tráfico HTTP.
+HWH_STAGING_URL no está definida.
+Locust instalado: no.
+Comando: python scripts/pf_carga_hwh.py
+Código de salida: 2
+Fecha real: 2026-11-26 21:40:40 -0300
+
+No hubo salida de Locust. No se registraron errores HTTP porque no se enviaron solicitudes.
+Hosts excluidos de forma explícita: hardwarehouse.cl, www.hardwarehouse.cl y proyecto-hardwarehouse-production.up.railway.app.
+Railway CLI está instalado y la sesión respondió Unauthorized. No se listaron entornos ni límites de CPU o RAM.
+
+Plan que quedó preparado para un usuario y 45 segundos por endpoint, con espera de 6 a 10 segundos. No se ejecutó:
+HWH_PF_MODO=base HWH_PF_RUTA=/ locust -f scripts/locustfile_hwh.py --headless --users 1 --spawn-rate 1 --run-time 45s
+HWH_PF_MODO=base HWH_PF_RUTA=/tienda/ locust -f scripts/locustfile_hwh.py --headless --users 1 --spawn-rate 1 --run-time 45s
+HWH_PF_MODO=base HWH_PF_RUTA=/armado/ locust -f scripts/locustfile_hwh.py --headless --users 1 --spawn-rate 1 --run-time 45s
+HWH_PF_MODO=base HWH_PF_RUTA=/contacto/ locust -f scripts/locustfile_hwh.py --headless --users 1 --spawn-rate 1 --run-time 45s

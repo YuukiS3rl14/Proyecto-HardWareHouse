@@ -1,0 +1,1 @@
+El carrito ejecutó 9, 13 y 28 consultas en 14.962, 24.972 y 45.013 ms. Favoritos ejecutó 7, 11 y 26 consultas. Patrones: carrito N+1 (1.00 consultas extra por elemento); favoritos N+1 (1.00 consultas extra por elemento).

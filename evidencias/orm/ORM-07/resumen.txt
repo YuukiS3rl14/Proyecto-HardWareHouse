@@ -1,0 +1,2 @@
+El descuento normal dejó stock 4 en 21.9 ms y el rollback conservó stock 6. La concurrencia devolvió un descuento y un rechazo, con stock final 0.
+El segundo bloqueo esperó 304.7 ms y el acceso siguiente tardó 2.5 ms. Durante el aviso el pedido ya estaba PAGADO y la fila pudo tomarse en 64.3 ms.

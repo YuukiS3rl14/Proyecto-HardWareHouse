@@ -1,0 +1,2 @@
+La comparación debe contrastar p50, p95, RPS, errores y recursos de dos releases con la misma carga, la misma duración y datos equivalentes.
+Una diferencia solo puede declararse si supera la variabilidad observada entre repeticiones.

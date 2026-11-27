@@ -1,0 +1,12 @@
+Identificador: PF-04
+Fecha planificada del Ciclo 02: 02/11/2026
+Fecha y hora reales de la comprobación: 2026-11-26 21:40:40 -0300
+Commit: 67221998e9053947ff003b7b37eb5bfd3ff7299a
+Entorno: staging no configurado. Sin CSV de PF-03 ni línea base de PF-01.
+Configuración prevista: 1 usuario durante 45 s, después de detener el estrés.
+Duración real de carga: 0 s.
+Endpoints: GET /, GET /tienda/, GET /armado/, GET /contacto/.
+Comando: python scripts/pf_carga_hwh.py --ejecutar PF-04
+No se lanzó: el runner sale con código 2 si falta el CSV de PF-03.
+Herramientas: Python 3.13.7. Locust no instalado.
+Resultado final: BLOQUEADA

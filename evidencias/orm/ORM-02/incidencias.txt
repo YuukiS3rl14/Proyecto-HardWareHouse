@@ -1,0 +1,1 @@
+La vista ya resuelve el proveedor con JOIN. El queryset sin select_related sirve como contraste y no es el camino de la tienda.

@@ -1,0 +1,2 @@
+El estrés debe avanzar por niveles autorizados y detenerse ante errores elevados, saturación sostenida o el máximo escrito, sin buscar la caída del servicio.
+Debe quedar el último nivel estable o la constancia de que la saturación no apareció dentro de ese límite.

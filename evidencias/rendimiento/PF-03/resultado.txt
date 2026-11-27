@@ -1,0 +1,11 @@
+PF-03 no se inició. Fecha real: 2026-11-26 21:40:40 -0300. Código de la comprobación: 2.
+
+Condiciones de parada que quedaron escritas en scripts/pf_carga_hwh.py y no llegaron a actuar:
+- HWH_PF_LIMITE_AUTORIZADO debe ser SI.
+- HWH_PF_USUARIOS_MAX debe ser un entero de 1 a 25.
+- Cada etapa dura 45 s y se detiene al cumplirse ese tiempo.
+- Si el CSV de la etapa supera 5 % de fallos, no hay etapa siguiente.
+- Si existe evidencias/rendimiento/DETENER, el runner devuelve código 3 y no lanza Locust.
+
+Ninguna de esas etapas envió tráfico. No hay último nivel estable ni señal de degradación.
+El punto de saturación no se identificó y no se inventó.

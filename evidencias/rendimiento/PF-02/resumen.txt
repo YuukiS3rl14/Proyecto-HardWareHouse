@@ -1,0 +1,2 @@
+No se ejecutaron las etapas de 1, 5 y 10 usuarios. No quedaron p50, p95, RPS ni tasa de error.
+Railway no entregó CPU ni memoria. El criterio de comparación entre niveles de concurrencia no se cumplió.

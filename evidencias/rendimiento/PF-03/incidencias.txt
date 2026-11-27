@@ -1,0 +1,3 @@
+BLOQUEADA. Dos condiciones independientes: no hay staging aislado y no hay límite de carga autorizado.
+No se generaron los gráficos de usuarios frente a latencia ni frente a RPS. No hay reporte.html, captura.png ni series de CPU y RAM.
+La parada inmediata prevista es el archivo evidencias/rendimiento/DETENER. No se creó, porque no había un proceso de carga que detener.

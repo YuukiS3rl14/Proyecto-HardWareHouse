@@ -1,0 +1,1 @@
+Los planes deben identificar el tipo de acceso, filas, costo, tiempo y buffers, y solo entonces proponer un índice.

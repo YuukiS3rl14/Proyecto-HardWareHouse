@@ -1,0 +1,1 @@
+Las tres páginas ejecutaron 19, 19 y 19 consultas, con 20, 20 y 5 filas renderizadas. Los filtros quedaron en 19, 19 y 19 consultas. JOIN de la consulta principal: sí.

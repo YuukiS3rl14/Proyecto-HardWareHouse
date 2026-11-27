@@ -1,0 +1,2 @@
+La línea base debe registrar p50, p95, promedio, solicitudes por segundo y tasa de error de los cuatro GET, con una sola sesión virtual y sin escrituras.
+Esas cifras deben quedar separadas por endpoint y servir de referencia a las pruebas siguientes.

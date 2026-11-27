@@ -1,0 +1,13 @@
+Identificador: PF-06
+Fecha planificada del Ciclo 02: 02/11/2026
+Fecha y hora reales de la comprobación: 2026-11-26 21:40:40 -0300
+Commit inspeccionado: 67221998e9053947ff003b7b37eb5bfd3ff7299a
+Commit de referencia anterior: no disponible con métricas de carga.
+Entorno: no hay dos ejecuciones equivalentes.
+Configuración prevista: mismos usuarios, misma duración y mismos datos en ambos SHA.
+Duración real de carga: 0 s.
+Endpoints: los de PF-01, cuando existan ambas mediciones.
+Comando: python scripts/pf_carga_hwh.py --ejecutar PF-06
+Ese comando sale con código 2 y no envía tráfico.
+Herramientas: Python 3.13.7. Locust no instalado.
+Resultado final: BLOQUEADA

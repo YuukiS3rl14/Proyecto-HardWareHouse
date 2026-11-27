@@ -1,0 +1,4 @@
+BLOQUEADA. Severidad de entorno: alta para continuar la serie, porque el resto de las PF depende de esta línea base.
+No existe HWH_STAGING_URL. Locust no está instalado. Railway CLI respondió Unauthorized, así que no hay CPU, RAM ni límite de recursos.
+No se generó reporte.html ni captura.png: no hubo gráficos de Locust que fotografiar.
+No se hallaron mediciones auténticas del 02/11/2026.

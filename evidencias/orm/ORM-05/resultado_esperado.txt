@@ -1,0 +1,1 @@
+El historial debe paginar de a 20 y traer usuario y pedido en la misma consulta, sin un SELECT por fila.

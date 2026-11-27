@@ -1,0 +1,1 @@
+Las transacciones de stock y pago deben confirmar o revertir completas, bloquear la fila solo durante la escritura y liberarla antes del aviso HTTP.

@@ -2081,3 +2081,7 @@ Traceback (most recent call last):
 RuntimeError: correo caído
 INFO 2026-11-25 22:38:34,156 payments 21600 22076 IPN recibida. Transacción: TXN-TIMEOUT. Estado: Completed. Invoice: dac17273-1db3-4a4e-a3c8-e8c9f1dde36d.
 INFO 2026-11-25 22:38:34,181 payments 21600 22076 Pedido #6 pagado con la transacción TXN-TIMEOUT.
+INFO 2026-11-26 20:59:49,339 payments 11484 13152 IPN recibida. Transacción: TXN-ORM07. Estado: Completed. Invoice: 928478d5-e907-4de9-b782-2c462c2791c4.
+INFO 2026-11-26 20:59:49,375 payments 11484 13152 Pedido #3 pagado con la transacción TXN-ORM07.
+INFO 2026-11-26 20:59:49,471 payments 11484 13152 IPN recibida. Transacción: TXN-ORM07. Estado: Completed. Invoice: 928478d5-e907-4de9-b782-2c462c2791c4.
+WARNING 2026-11-26 20:59:49,473 payments 11484 13152 El pedido #3 ya no está pendiente (PAGADO, transacción TXN-ORM07). No se vuelve a descontar stock.

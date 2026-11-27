@@ -1,0 +1,2 @@
+No se observó un SELECT adicional por usuario o pedido. La página trae usuario y pedido con LEFT OUTER JOIN y LIMIT 20.
+Observación menor: el listado de categorías del historial no trae LIMIT, y el personal también ejecuta el barrido de alertas de las diez familias.

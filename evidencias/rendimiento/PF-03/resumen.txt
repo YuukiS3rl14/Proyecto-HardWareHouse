@@ -1,0 +1,2 @@
+No se aplicó estrés. Faltaban staging, Locust y un máximo de usuarios autorizado, así que no hubo p95, RPS ni tasa de error por etapa.
+No se identificó un punto de saturación y no se fabricó uno. El criterio de límite operativo quedó sin evidencia.

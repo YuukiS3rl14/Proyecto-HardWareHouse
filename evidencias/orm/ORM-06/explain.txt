@@ -1,0 +1,30 @@
+EXPLAIN (ANALYZE, BUFFERS) sobre test_bd_hardwarehouse en 127.0.0.1. Solo SELECT.
+A listado: nodo=Limit costo=6.75 filas_estimadas=50 filas_reales=50.0 tiempo_ms=0.036 shared_hit=8 shared_read=0 orden=-.
+B nombre: nodo=Seq Scan costo=11.2 filas_estimadas=3 filas_reales=60.0 tiempo_ms=0.106 shared_hit=8 shared_read=0 orden=-.
+C categoria: nodo=Seq Scan costo=11.0 filas_estimadas=1 filas_reales=70.0 tiempo_ms=0.043 shared_hit=8 shared_read=0 orden=-.
+D proveedor: nodo=Index Scan costo=8.16 filas_estimadas=1 filas_reales=60.0 tiempo_ms=0.064 shared_hit=3 shared_read=0 orden=core_procesador_proveedor_id_59c7fb85.
+E stock critico: nodo=Seq Scan costo=11.0 filas_estimadas=27 filas_reales=60.0 tiempo_ms=0.041 shared_hit=8 shared_read=0 orden=-.
+F historial: nodo=Limit costo=35.15 filas_estimadas=20 filas_reales=1.0 tiempo_ms=0.058 shared_hit=3 shared_read=0 orden=-.
+G pedidos usuario: nodo=Sort costo=8.18 filas_estimadas=1 filas_reales=1.0 tiempo_ms=0.022 shared_hit=2 shared_read=0 orden=['fecha_pedido DESC'].
+Índices presentes:
+- core_movimientostock.core_movimientostock_content_type_id_a546a466: CREATE INDEX core_movimientostock_content_type_id_a546a466 ON public.core_movimientostock USING btree (content_type_id)
+- core_movimientostock.core_movimientostock_item_pedido_id_20984a4d: CREATE INDEX core_movimientostock_item_pedido_id_20984a4d ON public.core_movimientostock USING btree (item_pedido_id)
+- core_movimientostock.core_movimientostock_pedido_id_7029193c: CREATE INDEX core_movimientostock_pedido_id_7029193c ON public.core_movimientostock USING btree (pedido_id)
+- core_movimientostock.core_movimientostock_pkey: CREATE UNIQUE INDEX core_movimientostock_pkey ON public.core_movimientostock USING btree (id)
+- core_movimientostock.core_movimientostock_usuario_id_292b75aa: CREATE INDEX core_movimientostock_usuario_id_292b75aa ON public.core_movimientostock USING btree (usuario_id)
+- core_movimientostock.mov_fecha_idx: CREATE INDEX mov_fecha_idx ON public.core_movimientostock USING btree (creado_en DESC)
+- core_movimientostock.mov_producto_fecha_idx: CREATE INDEX mov_producto_fecha_idx ON public.core_movimientostock USING btree (producto_modelo, producto_pk, creado_en DESC)
+- core_movimientostock.mov_tipo_fecha_idx: CREATE INDEX mov_tipo_fecha_idx ON public.core_movimientostock USING btree (tipo, creado_en DESC)
+- core_movimientostock.movimiento_venta_item_unico: CREATE UNIQUE INDEX movimiento_venta_item_unico ON public.core_movimientostock USING btree (item_pedido_id) WHERE ((item_pedido_id IS NOT NULL) AND ((tipo)::text = 'VENTA'::text))
+- core_pedido.core_pedido_comuna_envio_id_320f02ac: CREATE INDEX core_pedido_comuna_envio_id_320f02ac ON public.core_pedido USING btree (comuna_envio_id)
+- core_pedido.core_pedido_paypal_invoice_2da611fc_uniq: CREATE UNIQUE INDEX core_pedido_paypal_invoice_2da611fc_uniq ON public.core_pedido USING btree (paypal_invoice)
+- core_pedido.core_pedido_paypal_invoice_legado_62289f47_like: CREATE INDEX core_pedido_paypal_invoice_legado_62289f47_like ON public.core_pedido USING btree (paypal_invoice_legado varchar_pattern_ops)
+- core_pedido.core_pedido_paypal_invoice_legado_62289f47_uniq: CREATE UNIQUE INDEX core_pedido_paypal_invoice_legado_62289f47_uniq ON public.core_pedido USING btree (paypal_invoice_legado)
+- core_pedido.core_pedido_pkey: CREATE UNIQUE INDEX core_pedido_pkey ON public.core_pedido USING btree (id)
+- core_pedido.core_pedido_usuario_id_2aebb526: CREATE INDEX core_pedido_usuario_id_2aebb526 ON public.core_pedido USING btree (usuario_id)
+- core_pedido.pedido_estado_fecha_idx: CREATE INDEX pedido_estado_fecha_idx ON public.core_pedido USING btree (estado, fecha_pedido)
+- core_procesador.core_procesador_pkey: CREATE UNIQUE INDEX core_procesador_pkey ON public.core_procesador USING btree (id)
+- core_procesador.core_procesador_proveedor_id_59c7fb85: CREATE INDEX core_procesador_proveedor_id_59c7fb85 ON public.core_procesador USING btree (proveedor_id)
+- core_proveedor.core_proveedor_nombre_739752b9_like: CREATE INDEX core_proveedor_nombre_739752b9_like ON public.core_proveedor USING btree (nombre varchar_pattern_ops)
+- core_proveedor.core_proveedor_nombre_key: CREATE UNIQUE INDEX core_proveedor_nombre_key ON public.core_proveedor USING btree (nombre)
+- core_proveedor.core_proveedor_pkey: CREATE UNIQUE INDEX core_proveedor_pkey ON public.core_proveedor USING btree (id)

@@ -1,0 +1,7 @@
+caso,escenario,tamano_muestra,consultas_sql,consultas_select,tiempo_respuesta_ms,tiempo_sql_ms,tiempo_respuesta_min_ms,tiempo_respuesta_max_ms,filas_consultadas,filas_renderizadas,repeticiones,unidad_consultas,unidad_tiempo,unidad_filas
+ORM-03,carrito 1,1,9,9,14.962,4.0,14.682,15.581,1,1,5,cantidad,ms,filas
+ORM-03,favoritos 1,1,7,7,14.635,6.0,14.0,14.931,1,1,5,cantidad,ms,filas
+ORM-03,carrito 5,5,13,13,24.972,9.0,23.182,26.306,5,5,5,cantidad,ms,filas
+ORM-03,favoritos 5,5,11,11,16.762,4.0,16.222,21.705,5,5,5,cantidad,ms,filas
+ORM-03,carrito 20,20,28,28,45.013,13.0,43.598,139.977,20,20,5,cantidad,ms,filas
+ORM-03,favoritos 20,20,26,26,37.623,7.0,36.158,50.885,20,20,5,cantidad,ms,filas

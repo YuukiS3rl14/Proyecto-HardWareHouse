@@ -1,0 +1,2 @@
+No se compararon dos versiones. Solo se registró el SHA 67221998e9053947ff003b7b37eb5bfd3ff7299a y no tiene p50, p95 ni RPS.
+No se calculó variación porcentual ni significancia. El criterio de regresión quedó bloqueado.

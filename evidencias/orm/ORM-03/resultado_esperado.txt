@@ -1,0 +1,1 @@
+Carrito y favoritos deben mostrar 1, 5 y 20 elementos sin agregar una consulta SQL por cada producto, imagen o proveedor.

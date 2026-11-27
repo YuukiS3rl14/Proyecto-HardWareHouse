@@ -1,0 +1,1 @@
+Sin cambios parciales en los escenarios ejecutados. El aviso se invocó con el pedido ya pagado y el otro hilo tomó la fila del producto en 64.30310000723694 ms. La espera forzada del bloqueo fue 304.65029999322724 ms y el acceso siguiente tardó 2.507 ms.

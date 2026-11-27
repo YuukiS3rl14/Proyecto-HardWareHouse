@@ -1,0 +1,1 @@
+El inicio ejecutó 1 consultas anónimo, 6 cliente y 16 personal, en 5.657, 10.961 y 30.165 ms. El personal sumó 15 consultas respecto del anónimo.

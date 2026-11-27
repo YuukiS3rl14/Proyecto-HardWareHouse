@@ -1,0 +1,5 @@
+No hay diferencias calculables.
+Release A: sin CSV.
+Release B: 67221998e9053947ff003b7b37eb5bfd3ff7299a, sin CSV.
+Variación de p50, p95, RPS y errores: no aplica.
+Significancia: no afirmada.

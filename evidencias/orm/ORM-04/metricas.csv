@@ -1,0 +1,9 @@
+caso,escenario,tamano_muestra,consultas_sql,consultas_select,tiempo_respuesta_ms,tiempo_sql_ms,tiempo_respuesta_min_ms,tiempo_respuesta_max_ms,filas_consultadas,filas_renderizadas,repeticiones,unidad_consultas,unidad_tiempo,unidad_filas
+ORM-04,agotados,8,17,17,33.619,15.0,30.952,36.488,8,8,5,cantidad,ms,filas
+ORM-04,criticos,8,17,17,35.803,16.0,34.464,41.81,8,8,5,cantidad,ms,filas
+ORM-04,advertencia,8,17,17,47.352,18.0,33.944,54.512,8,8,5,cantidad,ms,filas
+ORM-04,todos,24,17,17,39.159,15.0,37.854,40.586,24,20,5,cantidad,ms,filas
+ORM-04,categoria CPU,24,17,17,37.12,16.0,36.823,39.04,24,20,5,cantidad,ms,filas
+ORM-04,pagina 2,24,17,17,32.407,14.0,29.998,37.192,24,4,5,cantidad,ms,filas
+ORM-04,volumen 20,20,17,17,33.532,14.0,31.895,34.833,20,20,5,cantidad,ms,filas
+ORM-04,volumen 80,80,17,17,35.815,14.0,34.761,37.241,80,20,5,cantidad,ms,filas

@@ -1,0 +1,3 @@
+BLOQUEADA. No se sustituyó staging por producción ni por la base local de desarrollo.
+No hay reporte HTML, gráfico de p95 y RPS, ni captura.png.
+Para la próxima ventana hace falta el export de Railway: CPU y memoria del servicio de staging durante cada etapa de 45 s.

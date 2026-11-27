@@ -1,0 +1,2 @@
+No se midió la recuperación. No existían la carga de PF-03 ni la línea base de PF-01 contra las cuales comparar p50, p95 o errores.
+El criterio de retorno al nivel inicial quedó sin evidencia. La prueba permanece bloqueada por completo.

@@ -1,0 +1,6 @@
+Fecha y hora: 2026-11-26 20:59:49 -0300
+Commit: 67221998e9053947ff003b7b37eb5bfd3ff7299a
+Base: motor=postgresql host=127.0.0.1 puerto=5432 nombre=test_bd_hardwarehouse usuario=postgres
+Comando: python manage.py test core.test_auditoria_orm.AuditoriaOrmTransacciones --verbosity 1
+Escenarios: A descuento, B insuficiente, C pago, D repetido, E rollback, F dos hilos, G liberación.
+Resultado de calidad: APROBADA

@@ -1,0 +1,1 @@
+Severidad media. Con 100 productos la página renderiza 50 y el catálogo contabiliza 100. LIMIT en el SELECT de procesadores: no. Patrón: sin crecimiento proporcional al tamaño.

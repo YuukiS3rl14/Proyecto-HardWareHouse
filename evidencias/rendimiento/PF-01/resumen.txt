@@ -1,0 +1,2 @@
+No se midieron los cuatro endpoints. Faltaban un staging aislado y Locust, y no se envió tráfico a producción.
+La línea base de p50, p95 y tasa de error quedó sin valores. El criterio de referencia inicial no se cumplió.

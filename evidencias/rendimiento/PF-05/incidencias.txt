@@ -1,0 +1,3 @@
+BLOQUEADA. No hay staging para alojar productos ficticios ni un id de proveedor verificable.
+No se generó reporte.html, gráfico por filtro ni captura.png.
+El escenario H, volúmenes crecientes, tampoco se ejecutó: aumentarlo exigiría escribir el catálogo.

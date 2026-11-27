@@ -1,0 +1,1 @@
+Severidad media. Carrito: N+1 (1.00 consultas extra por elemento). Favoritos: N+1 (1.00 consultas extra por elemento). Las líneas no precargan el producto y el render accede a la relación por elemento.

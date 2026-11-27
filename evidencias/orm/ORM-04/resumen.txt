@@ -1,0 +1,1 @@
+Los filtros ejecutaron entre 17 y 17 consultas, con respuestas de 32.407 a 47.352 ms. Con 20 y 80 productos críticos hubo 17 y 17 consultas; sin crecimiento proporcional al tamaño.

@@ -1,0 +1,8 @@
+PF-06 no comparó releases. Fecha real: 2026-11-26 21:40:40 -0300.
+
+Versión inspeccionada: 67221998e9053947ff003b7b37eb5bfd3ff7299a.
+Segunda versión con la misma carga: no existe.
+Mediciones del 02/11/2026: no se encontró un CSV, un HTML de Locust ni una captura con p50 o p95. El documento docs/qa/ciclo02/evidencias/resultados_ciclo02.md solo marca PF-06 como bloqueada, sin cifras. No se usó como resultado histórico.
+
+No se calculó variación porcentual ni se afirmó significancia.
+El runner rechaza PF-06 hasta que existan dos CSV del mismo protocolo.

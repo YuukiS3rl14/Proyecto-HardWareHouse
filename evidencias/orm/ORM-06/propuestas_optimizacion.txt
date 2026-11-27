@@ -1,0 +1,6 @@
+No se creó ningún índice y no se modificó ningún modelo.
+Planes con algún Seq Scan: A listado, B nombre, C categoria, E stock critico, F historial.
+En estas tablas de prueba un Sequential Scan puede ser la opción más barata. No se propone un índice solo por ver ese nodo.
+La búsqueda por nombre usa ILIKE con comodín inicial. Un índice btree no cubre ese patrón. Solo tendría sentido valorar pg_trgm si el catálogo crece y este plan deja de ser barato. Esta muestra no justifica crearlo.
+El filtro de stock crítico recorrió 60.0 filas reales en 0.041 ms con nodo Seq Scan. No se propone un índice con este volumen.
+La búsqueda por nombre estimó 3 filas y leyó 60. La tabla de prueba no pasó por ANALYZE, así que el costo del planificador no representa un catálogo en producción.

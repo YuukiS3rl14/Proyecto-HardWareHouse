@@ -1,0 +1,10 @@
+caso,escenario,tamano_muestra,consultas_sql,consultas_select,tiempo_respuesta_ms,tiempo_sql_ms,tiempo_respuesta_min_ms,tiempo_respuesta_max_ms,filas_consultadas,filas_renderizadas,repeticiones,unidad_consultas,unidad_tiempo,unidad_filas
+ORM-08,anonimo inicio,,1,1,5.657,1.0,5.539,5.829,,,5,cantidad,ms,filas
+ORM-08,anonimo tienda,,31,31,59.235,30.0,57.825,68.283,6,6,5,cantidad,ms,filas
+ORM-08,anonimo nosotros,,0,0,4.704,0,4.591,5.34,,,5,cantidad,ms,filas
+ORM-08,cliente inicio,,6,6,10.961,3.0,10.195,11.846,,,5,cantidad,ms,filas
+ORM-08,cliente tienda,,37,37,67.373,26.0,66.032,70.256,6,6,5,cantidad,ms,filas
+ORM-08,cliente nosotros,,5,5,10.398,4.0,9.855,12.042,,,5,cantidad,ms,filas
+ORM-08,staff inicio,,16,16,30.165,14.0,28.955,30.834,,,5,cantidad,ms,filas
+ORM-08,staff tienda,,47,47,80.77,37.0,78.644,81.964,6,6,5,cantidad,ms,filas
+ORM-08,staff nosotros,,15,15,31.642,13.0,26.982,32.44,,,5,cantidad,ms,filas

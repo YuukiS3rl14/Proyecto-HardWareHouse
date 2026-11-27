@@ -1,0 +1,1 @@
+Los contadores y el listado de stock deben filtrarse en PostgreSQL y la página no debe recuperar todas las familias afectadas.

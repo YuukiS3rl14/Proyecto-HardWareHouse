@@ -1,0 +1,4 @@
+caso,escenario,tamano_muestra,consultas_sql,consultas_select,tiempo_respuesta_ms,tiempo_sql_ms,tiempo_respuesta_min_ms,tiempo_respuesta_max_ms,filas_consultadas,filas_renderizadas,repeticiones,unidad_consultas,unidad_tiempo,unidad_filas
+ORM-02,detalle individual,1,3,3,10.766,3.0,9.942,11.459,None,None,5,cantidad,ms,filas
+ORM-02,sin select_related,10,11,11,12.231,4.0,11.872,15.2,10,,5,cantidad,ms,filas
+ORM-02,con select_related,10,1,1,2.256,1.0,2.133,2.583,10,,5,cantidad,ms,filas

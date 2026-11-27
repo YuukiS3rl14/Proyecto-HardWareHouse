@@ -1,0 +1,7 @@
+caso,escenario,tamano_muestra,consultas_sql,consultas_select,tiempo_respuesta_ms,tiempo_sql_ms,tiempo_respuesta_min_ms,tiempo_respuesta_max_ms,filas_consultadas,filas_renderizadas,repeticiones,unidad_consultas,unidad_tiempo,unidad_filas
+ORM-01,listado 10,10,31,31,68.381,28.0,58.801,69.871,10,10,5,cantidad,ms,filas
+ORM-01,listado 50,50,31,31,73.087,28.0,65.866,76.84,50,50,5,cantidad,ms,filas
+ORM-01,listado 100,100,31,31,87.07,31.0,76.997,93.677,100,50,5,cantidad,ms,filas
+ORM-01,pagina 2 de 100,100,31,31,93.262,32.0,85.5,94.057,100,50,5,cantidad,ms,filas
+ORM-01,pagina 3 de 100,100,31,31,74.759,30.0,73.399,89.43,100,50,5,cantidad,ms,filas
+ORM-01,tienda autenticada,100,37,37,88.798,33.0,84.054,97.771,100,50,5,cantidad,ms,filas

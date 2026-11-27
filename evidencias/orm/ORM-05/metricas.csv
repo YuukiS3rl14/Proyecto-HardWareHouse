@@ -1,0 +1,7 @@
+caso,escenario,tamano_muestra,consultas_sql,consultas_select,tiempo_respuesta_ms,tiempo_sql_ms,tiempo_respuesta_min_ms,tiempo_respuesta_max_ms,filas_consultadas,filas_renderizadas,repeticiones,unidad_consultas,unidad_tiempo,unidad_filas
+ORM-05,primera,45,19,19,39.127,16.0,37.322,43.08,45,20,5,cantidad,ms,filas
+ORM-05,intermedia,45,19,19,38.603,15.0,38.228,39.768,45,20,5,cantidad,ms,filas
+ORM-05,ultima,45,19,19,33.629,16.0,33.158,34.73,45,5,5,cantidad,ms,filas
+ORM-05,producto,15,19,19,37.8,16.0,35.336,39.741,15,15,5,cantidad,ms,filas
+ORM-05,usuario,45,19,19,37.133,15.0,35.326,41.936,45,20,5,cantidad,ms,filas
+ORM-05,tipo,45,19,19,41.404,17.0,37.91,41.81,45,20,5,cantidad,ms,filas

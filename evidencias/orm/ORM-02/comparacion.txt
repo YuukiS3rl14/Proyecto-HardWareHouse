@@ -1,0 +1,5 @@
+Detalle HTTP 200: 3 consultas, 3 SELECT, respuesta 10.766 ms, SQL 3.0 ms.
+Diez productos y diez proveedores, sin select_related: 11 consultas, SQL 4.0 ms.
+La misma lectura con select_related: 1 consultas, SQL 1.0 ms, JOIN=sí.
+La vista de detalle no se modificó. La comparación de los diez productos usa querysets de medición.
+El detalle de la vista incluye JOIN al proveedor: sí.

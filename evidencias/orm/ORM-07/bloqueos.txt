@@ -1,0 +1,8 @@
+Base confirmada: test_bd_hardwarehouse en 127.0.0.1:5432.
+A descuento normal: stock 4, movimiento 47, 21.880 ms.
+B stock insuficiente: stock permanece 1, movimientos 0, 2.727 ms.
+C pago válido: resultado pagado, stock 3, estado PAGADO, 133.073 ms. Al llegar al aviso el stock era 3 y el estado PAGADO. Otro hilo tomó la fila en 64.30310000723694 ms. Hilo aún bloqueado: False.
+D pago repetido: resultado ya_procesado, stock 3, 7.992 ms.
+E rollback: stock 6, movimientos 0, 5.672 ms.
+F concurrencia: resultados ['insuficiente', 'ok'], stock 0, movimientos 1, 81.875 ms.
+G bloqueo retenido 302.0 ms por la prueba, espera del segundo 304.65029999322724 ms, acceso posterior 2.507 ms.
