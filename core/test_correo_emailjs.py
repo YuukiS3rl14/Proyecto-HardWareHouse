@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 from paypal.standard.ipn.models import PayPalIPN
 
-from core.correo import notificar_pedido_pagado
+from core.correo import _parametros_pedido, notificar_pedido_pagado
 from core.models import ItemPedido, Pedido, Procesador, Proveedor
 from core.payments import clp_a_usd, confirmar_pago_paypal
 
@@ -212,11 +212,84 @@ class CorreoEmailJsTests(TestCase):
         self.assertEqual(parametros['total_clp'], '95.000 CLP')
         self.assertEqual(parametros['detalle_productos'], detalle)
         self.assertEqual(parametros['productos'], detalle)
+        self.assertEqual(parametros['productos_tabla'], [{
+            'nombre': 'CPU Aviso',
+            'tipo': 'CPU',
+            'cantidad': 1,
+            'precio_unitario': '95.000 CLP',
+            'subtotal': '95.000 CLP',
+        }])
         self.assertNotIn('CPU renombrada', parametros['detalle_productos'])
+        self.assertNotIn('<', str(parametros['productos_tabla']))
         self.assertEqual(pedido.pago_boleta.email_comprador, 'cliente@example.com')
         self.assertEqual(parametros['transaccion_id'], 'TXN-MAIL')
         self.assertIsNotNone(aviso.enviado_en)
         self.assertIsNone(aviso.reclamo)
+
+    def test_la_tabla_conserva_cantidades_y_precios_del_pedido(self):
+        pedido = Pedido.objects.create(
+            usuario=self.usuario,
+            estado='PAGADO',
+            total_monto=Decimal('40379.00'),
+            direccion_envio='Calle Ficticia 10',
+        )
+        ItemPedido.objects.create(
+            pedido=pedido,
+            producto_nombre='Placa <ATX>',
+            producto_tipo='Placa Madre',
+            precio_unitario=Decimal('19990.00'),
+            cantidad=2,
+            producto_modelo='placa_madre',
+            producto_pk=1,
+        )
+        ItemPedido.objects.create(
+            pedido=pedido,
+            producto_nombre='RAM kit',
+            producto_tipo='Memoria RAM',
+            precio_unitario=Decimal('133.00'),
+            cantidad=3,
+            producto_modelo='memoria_ram',
+            producto_pk=2,
+        )
+        boleta = type('Boleta', (), {})()
+        boleta.monto_pagado = Decimal('40379.00')
+        boleta.nombre_comprador = 'Ana Soto'
+        boleta.email_comprador = 'cliente@example.com'
+        boleta.transaccion_id = 'TXN-TABLA'
+        boleta.fecha_pago = timezone.now()
+
+        parametros = _parametros_pedido(pedido, boleta)
+
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.total_monto, Decimal('40379.00'))
+        self.assertEqual(parametros['total_clp'], '40.379 CLP')
+        self.assertEqual(parametros['detalle_productos'], (
+            '2 x Placa <ATX> (Placa Madre) — 19.990 CLP c/u — 39.980 CLP\n'
+            '3 x RAM kit (Memoria RAM) — 133 CLP c/u — 399 CLP'
+        ))
+        self.assertEqual(parametros['productos'], parametros['detalle_productos'])
+        self.assertEqual(parametros['items'], parametros['detalle_productos'])
+        self.assertEqual(parametros['detalle'], parametros['detalle_productos'])
+        self.assertEqual(parametros['productos_tabla'], [
+            {
+                'nombre': 'Placa <ATX>',
+                'tipo': 'Placa Madre',
+                'cantidad': 2,
+                'precio_unitario': '19.990 CLP',
+                'subtotal': '39.980 CLP',
+            },
+            {
+                'nombre': 'RAM kit',
+                'tipo': 'Memoria RAM',
+                'cantidad': 3,
+                'precio_unitario': '133 CLP',
+                'subtotal': '399 CLP',
+            },
+        ])
+        self.assertNotIn('<td', str(parametros['productos_tabla']))
+        self.assertNotIn('<tr', str(parametros['productos_tabla']))
+        self.assertIn('to_email', parametros)
+        self.assertIn('cliente_email', parametros)
 
     def test_sin_correo_de_cuenta_el_aviso_usa_el_pagador_verificado(self):
         self.usuario.email = 'sandbox-sin-arroba'

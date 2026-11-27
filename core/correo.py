@@ -128,12 +128,20 @@ def _aviso_bloqueado(pedido):
 
 def _parametros_pedido(pedido, boleta):
     lineas = []
+    tabla = []
     for item in pedido.items_pedido.order_by('id'):
         subtotal = item.precio_unitario * item.cantidad
         lineas.append(
             f'{item.cantidad} x {item.producto_nombre} ({item.producto_tipo}) '
             f'— {_clp(item.precio_unitario)} c/u — {_clp(subtotal)}'
         )
+        tabla.append({
+            'nombre': item.producto_nombre,
+            'tipo': item.producto_tipo,
+            'cantidad': item.cantidad,
+            'precio_unitario': _clp(item.precio_unitario),
+            'subtotal': _clp(subtotal),
+        })
     detalle = '\n'.join(lineas) or 'Sin productos registrados.'
     total = _clp(boleta.monto_pagado)
     destinatario = _correo_destino(pedido, boleta)
@@ -158,6 +166,7 @@ def _parametros_pedido(pedido, boleta):
         'detalle': detalle,
         'items': detalle,
         'detalle_productos': detalle,
+        'productos_tabla': tabla,
     }
 
 
