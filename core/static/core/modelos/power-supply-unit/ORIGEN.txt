@@ -1,0 +1,22 @@
+Fuente de poder usada por el visualizador 3D de HardWareHouse.
+
+Origen
+- Autor: Grab3D
+- Kit: Cozy PC Parts Kit
+- Modelo: Power Supply Unit (slug power-supply-unit)
+- Ficha: https://grab3d.com/models/electronics/power-supply-unit/
+- Publicación: 26 de octubre de 2026
+- Licencia original: LICENSE.txt (CC0 1.0 Universal)
+- Ficha técnica original: manifest.json
+
+La dedicatoria CC0 1.0 permite copiar, modificar y redistribuir el modelo, incluso con uso comercial, sin atribución obligatoria.
+Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Archivo incorporado
+- Peso de power-supply-unit.glb: 1.249.556 bytes
+- El archivo en disco es la descarga original. No se reexportó ni se remodeló.
+- Blender no está instalado en este equipo.
+- La carcasa se oscurece y el ventilador deja el color pastel en pc-modelos.js.
+- Medición de la malla: 151,8 × 89,6 × 148,3 mm. La ficha declara 150 × 140 × 86 mm y el ventilador mira hacia arriba.
+- En el mid-tower, Micro-ATX y ATX, la altura visible se lleva a 86 mm. El archivo GLB no se modifica.
+- sfx-power-supply.glb es un modelo propio de 125 × 63,5 × 100 mm, la medida SFX pedida de 125 × 100 × 63,5 mm. La fuente del catálogo no tiene campo de formato. La malla SFX se elige cuando el nombre del producto indica SFX. La fuente normal conserva power-supply-unit.glb aunque la placa o el gabinete sean Mini-ITX. La corrección de 86 mm solo se aplica a esta malla ATX dentro del mid-tower.

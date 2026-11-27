@@ -363,11 +363,29 @@ class InterpretadorSolicitudTests(TestCase):
             ('Un millón de pesos.', 1_000_000),
             ('$800.000.', 800_000),
             ('No más de 800000.', 800_000),
+            ('1 palo', 1_000_000),
+            ('un palo', 1_000_000),
+            ('2 palos', 2_000_000),
+            ('Un palo y medio', 1_500_000),
+            ('Medio palo', 500_000),
+            ('800 lucas', 800_000),
+            ('500 mil pesos', 500_000),
+            ('1 millón', 1_000_000),
+            ('1,2 millones', 1_200_000),
+            ('1.000.000', 1_000_000),
+            ('Quiero un PC gamer por 1 palo', 1_000_000),
+            ('Quiero un PC gamer por un palo', 1_000_000),
         )
         for frase, monto in casos:
             campo = _campo(interpretar_solicitud(frase), 'presupuesto')
             self.assertEqual(campo['valor'], monto, frase)
             self.assertIsNone(campo.get('candidatos'), frase)
+
+    def test_gamer_por_un_palo_rellena_uso_y_presupuesto(self):
+        borrador = interpretar_solicitud('Quiero un PC gamer por 1 palo')
+        self.assertEqual(_campo(borrador, 'presupuesto')['valor'], 1_000_000)
+        self.assertEqual(_campo(borrador, 'uso')['valor'], 'gaming')
+        self.assertFalse(borrador['requiere_confirmacion'])
 
     def test_palo_sin_contexto_de_dinero_no_es_presupuesto(self):
         for frase in ('Se quebró un palo.', 'Compré un palo de escoba.', 'Hay medio millón de personas.'):
@@ -536,39 +554,37 @@ class InterpretarSolicitudVistaTests(TestCase):
 
     def test_el_formulario_manual_sigue_en_la_pagina(self):
         pagina = self.client.get(reverse('core:armado'))
-        self.assertContains(pagina, 'Describe el PC que necesitas')
-        self.assertContains(pagina, 'Interpretar solicitud')
+        self.assertContains(pagina, 'Arma tu PC con IA')
+        self.assertContains(pagina, 'Recomiéndame un PC')
+        self.assertNotContains(pagina, 'Interpretar solicitud')
+        self.assertNotContains(pagina, 'Aplicar al formulario')
         self.assertContains(pagina, 'Interpretación por reglas')
         self.assertContains(pagina, 'data-interpretar-solicitud-url')
         self.assertContains(pagina, 'id="recomendador-presupuesto"')
         self.assertContains(pagina, 'Generar recomendación')
         self.assertContains(pagina, 'Preferencias avanzadas')
-        self.assertContains(pagina, 'pc-builder.js?v=selector20')
-        self.assertContains(pagina, 'armado.css?v=selector12')
+        self.assertContains(pagina, 'pc-builder.js?v=selector23')
+        self.assertContains(pagina, 'armado.css?v=selector13')
 
     def test_cancelar_no_escribe_el_formulario_y_aplicar_no_recomienda(self):
         js = Path(__file__).resolve().parent.joinpath('static', 'core', 'js', 'pc-builder.js').read_text(encoding='utf-8')
-        cancelar = js.split('function cancelarInterpretacion', 1)[1].split('function aplicarInterpretacion', 1)[0]
-        self.assertNotIn('.value', cancelar)
+        cancelar = js.split('function cancelarInterpretacion', 1)[1].split('function escribirCampo', 1)[0]
+        self.assertNotIn('.value =', cancelar)
         self.assertNotIn('recomendador-presupuesto', cancelar)
-        aplicar = js.split('function aplicarInterpretacion', 1)[1].split('function htmlBorrador', 1)[0]
+        aplicar = js.split('function aplicarInterpretacion', 1)[1].split('async function interpretarSolicitud', 1)[0]
         self.assertNotIn('fetch(', aplicar)
         self.assertNotIn('recomendarPcUrl', aplicar)
         self.assertNotIn('requestSubmit', aplicar)
         interpretar = js.split('async function interpretarSolicitud', 1)[1].split('function cancelarInterpretacion', 1)[0]
         self.assertIn('urls.interpretarSolicitudUrl', interpretar)
         self.assertNotIn('recomendarPcUrl', interpretar)
-        self.assertNotIn('aplicarInterpretacion', interpretar)
-        self.assertEqual(js.count('aplicarInterpretacion()'), 2)
+        self.assertIn('aplicarInterpretacion(cambiosAutomaticos', interpretar)
+        self.assertIn('modal.show()', interpretar)
+        self.assertIn('reiniciarFormularioRecomendador', interpretar)
         self.assertIn(
-            'Requisitos aplicados al formulario. Puedes revisarlos antes de generar tu PC',
+            'Interpretación por reglas aplicada. Revisa los requisitos y genera la recomendación.',
             js,
         )
-        self.assertIn('Revisar interpretación', js)
-        self.assertIn('recomendador-estado', js)
         self.assertIn('campo.aproximado', js)
-        self.assertIn('recomendador-aclaraciones', js)
-        aplicar = js.split('function camposParaAplicar', 1)[1].split('function actualizarBotonAplicar', 1)[0]
-        self.assertNotIn('no_representable', aplicar)
-        self.assertNotIn('text-bg-light', js)
-        self.assertNotIn('class="badge', js[js.index('function htmlBorrador'):js.index('function htmlCandidatos')])
+        self.assertIn('cambiosAutomaticos', js)
+        self.assertIn('limpiarArmado', js)

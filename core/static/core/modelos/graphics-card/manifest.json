@@ -1,0 +1,55 @@
+{
+ "slug": "graphics-card",
+ "triangles": 20272,
+ "texture_px": 2048,
+ "triangles_light": 12644,
+ "texture_px_light": 1024,
+ "files": {
+  "glb": {
+   "name": "graphics-card.glb",
+   "bytes": 1918524
+  },
+  "blend": {
+   "name": "graphics-card.blend",
+   "bytes": 1215182
+  },
+  "fbx": {
+   "name": "graphics-card.fbx",
+   "bytes": 3072940
+  },
+  "obj": {
+   "name": "graphics-card-obj.zip",
+   "bytes": 1511308
+  },
+  "usdz": {
+   "name": "graphics-card.usdz",
+   "bytes": 2975476
+  },
+  "glb_light": {
+   "name": "graphics-card-light.glb",
+   "bytes": 891448
+  },
+  "fbx_light": {
+   "name": "graphics-card-light.fbx",
+   "bytes": 1631820
+  }
+ },
+ "extras": {
+  "license": "CC0-1.0",
+  "source": "grab3d.com",
+  "dimensions_m": "0.309 x 0.135 x 0.051",
+  "triangles": 20272,
+  "textures": "PBR 2048px: base color, roughness, metallic, normal (baked)",
+  "generator": "Created by grab3d",
+  "created": "2026-10-26",
+  "real_size": "triple-fan graphics card (2.5 slot), approx. 300 x 140 x 52 mm",
+  "notes": "lies on its backplate with the fans facing up; PCIe x16 gold contact edge faces +Y, top edge with heat pipe bends, RGB strip and two 8-pin power sockets faces -Y, slot bracket with three DisplayPort and one HDMI socket at +X. Movable: fan rotors 'graphics-card_fan_1_rotor' to '_3_rotor' (origin at each hub, spin around Z). Static part 'graphics-card_fins' = aluminium fin block. No text, no logos",
+  "set": "Cozy PC Parts Kit"
+ },
+ "origin": {
+  "method": "procedural",
+  "detail": "Built procedurally with Blender scripts. The scripts were written with the help of an AI coding assistant. No generative AI model produced the geometry or textures directly.",
+  "ai_content": false,
+  "ai_assisted_code": true
+ }
+}

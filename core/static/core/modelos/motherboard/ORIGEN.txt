@@ -1,0 +1,47 @@
+Placas madre usadas por el visualizador 3D de HardWareHouse.
+
+ATX actual
+- Autor: Innerscene Corp
+- Modelo: ATX motherboard
+- Archivo: atx-motherboard.glb
+- Ficha: https://www.innerscene.com/tools/library/3d-parts/atx-motherboard-7794769f
+- Licencia: CC0 1.0 Universal, declarada en el asset del GLB y en los términos de la biblioteca
+- Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+- El original mide 19.899.016 bytes y ya estaba en metros. La copia de trabajo pesa menos porque se recomprimieron texturas de normales y de chips. El PCB, su reverso y el escudo de E/S conservan su textura.
+- Las ranuras PCIe son nodos propios. Se trasladaron 33,05 mm hacia el borde trasero, sin cambiar su largo ni su paso, para que el bracket de la GPU llegue a la trasera del gabinete.
+- No se redujo la placa para simular otros formatos.
+
+Micro-ATX derivada
+- Archivo: matx-motherboard.glb
+- Sale de la ATX de Innerscene, con la misma licencia CC0. No es una escala del 80 %.
+- El PCB se cortó en el borde inferior para quedar en 244 × 244 mm. El socket, las cuatro DIMM y la PCIe x16 principal conservan sus vértices.
+- Quedaron fuera del rectángulo, y se omitieron, la ranura PCIe inferior, la pila CMOS, los puertos SATA del modelo y el conector M.2 más bajo.
+- Mini-ITX es un modelo propio, mini-itx-motherboard.glb, de 170 × 170 × 1,6 mm. No es un recorte ni una escala de esta ATX.
+- Lleva zócalo de 40 mm, dos DIMM de 133,35 mm, una PCIe x16 de 89 mm, disipadores, 24 pines, 8 pines, dos SATA, M.2 frontal y M.2 en el reverso. Los cuatro orificios están a 6,35 mm y 163,83 mm de los bordes de referencia, el patrón de esquina del formato.
+- El escudo de E/S mide 158 × 44 mm y queda alineado con el borde superior del PCB (X 12–170 mm).
+- La ranura PCIe se trasladó 29,55 mm hacia el borde trasero, sin cambiar su largo, para que el bracket quede a 10,9 mm del PCB, igual que en la ATX.
+- En el mid-tower la placa baja 18,7 mm para alinear la PCIe con la ranura superior; el visualizador sube solo el escudo y los puertos otros 18,7 mm en el modelo para que sigan en la abertura de E/S. El gabinete Mini-ITX no aplica ese descenso.
+
+Respaldo anterior
+
+Origen
+- Autor: Grab3D
+- Kit: Cozy PC Parts Kit
+- Modelo: Motherboard (slug motherboard)
+- Variante incorporada: motherboard-light.glb
+- Ficha: https://grab3d.com/models/electronics/motherboard/
+- Publicación: 26 de octubre de 2026
+- Licencia original: LICENSE.txt (CC0 1.0 Universal)
+- Ficha técnica original: manifest.json
+
+La dedicatoria CC0 1.0 permite copiar, modificar y redistribuir el modelo, incluso con uso comercial, sin atribución obligatoria.
+Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Archivo incorporado
+- Peso de motherboard-light.glb: 1.110.896 bytes
+- El archivo en disco es la descarga original. No se reexportó ni se remodeló.
+- Blender no está instalado en este equipo.
+- El tono grafito, el metal y la iluminación se aplican en pc-modelos.js al cargar el modelo.
+- Mini-ITX y Micro-ATX ya no usan esta malla. Queda como archivo de respaldo del kit.
+
+El manifiesto describe una placa ATX de 305 x 244 mm, con socket, disipadores, condensadores, ranuras DIMM y PCIe. El color azul original de la textura se oscurece en tiempo de ejecución.

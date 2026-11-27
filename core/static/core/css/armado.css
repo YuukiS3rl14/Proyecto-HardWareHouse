@@ -405,6 +405,16 @@
         height: 100%;
     }
 }
+.armado-ia {
+    background: #fff;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 14px;
+}
+
+.armado-ia .card-body {
+    padding: 1.15rem 1.2rem;
+}
+
 .recomendador-solicitud {
     border: 1px solid #e9ecef;
     border-radius: 0.5rem;

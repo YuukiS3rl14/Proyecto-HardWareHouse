@@ -1,0 +1,47 @@
+{
+ "slug": "hard-drive",
+ "triangles": 5992,
+ "texture_px": 2048,
+ "triangles_light": null,
+ "texture_px_light": null,
+ "files": {
+  "glb": {
+   "name": "hard-drive.glb",
+   "bytes": 1123480
+  },
+  "blend": {
+   "name": "hard-drive.blend",
+   "bytes": 605179
+  },
+  "fbx": {
+   "name": "hard-drive.fbx",
+   "bytes": 1792364
+  },
+  "obj": {
+   "name": "hard-drive-obj.zip",
+   "bytes": 735862
+  },
+  "usdz": {
+   "name": "hard-drive.usdz",
+   "bytes": 1731294
+  }
+ },
+ "extras": {
+  "license": "CC0-1.0",
+  "source": "grab3d.com",
+  "dimensions_m": "0.128 x 0.148 x 0.124",
+  "triangles": 5992,
+  "textures": "PBR 2048px: base color, roughness, metallic, normal (baked)",
+  "generator": "Created by grab3d",
+  "created": "2026-10-26",
+  "real_size": "3.5-inch hard disk drive, 101.6 x 147 x 26.1 mm",
+  "notes": "lies flat with the lid open; cast aluminium base with mirror platter, spindle clamp, read/write arm with head, voice coil magnet, parking ramp and flex cable; green PCB with baked traces on the underside, SATA data and power sockets at the rear (+Y). Movable: lid 'hard-drive_cover' (origin on the left hinge edge, opened 105 degrees, rotate +105 degrees around local Y to close) and read/write arm 'hard-drive_arm' (origin on the arm pivot, rotates around Z). No text, no logos",
+  "set": "Cozy PC Parts Kit"
+ },
+ "origin": {
+  "method": "procedural",
+  "detail": "Built procedurally with Blender scripts. The scripts were written with the help of an AI coding assistant. No generative AI model produced the geometry or textures directly.",
+  "ai_content": false,
+  "ai_assisted_code": true
+ }
+}

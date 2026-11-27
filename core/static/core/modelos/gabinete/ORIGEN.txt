@@ -1,0 +1,55 @@
+Gabinete mid tower usado por el visualizador 3D de HardWareHouse.
+
+Origen
+- Autor: Grab3D
+- Kit: Cozy PC Parts Kit
+- Modelo: PC Case (slug pc-case)
+- Ficha: https://grab3d.com/models/electronics/pc-case/
+- Descarga: https://grab3d.com/dl/pc-case/pc-case.glb
+- Publicación: 26 de octubre de 2026
+- Licencia original: LICENSE.txt (CC0 1.0 Universal)
+- Ficha técnica original: manifest.json
+
+La dedicatoria CC0 1.0 permite copiar, modificar y redistribuir el modelo, incluso con uso comercial, sin atribución obligatoria.
+Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Archivo incorporado
+- Peso original del GLB descargado: 1.076.884 bytes
+- Peso final de pc-case.glb: 652.064 bytes
+- El único cambio del archivo fue quitar la textura de color pastel (424.629 bytes), que no se utiliza.
+- La geometría, el mapa de normales y el mapa de rugosidad/metalicidad quedan intactos.
+- Blender no está instalado en este equipo. El GLB no se reexportó ni se remodeló.
+- El color negro, el metal y el vidrio neutro se aplican en pc-visualizer.js al cargar el modelo.
+
+El manifiesto original indica que el gabinete es un mid tower ATX vacío, de unos 215 x 460 x 477 mm, con el frente hacia el eje correspondiente, el vidrio en +X y la bisagra del panel en el borde trasero.
+
+Mid-tower actual para Micro-ATX
+- Autor: Innerscene
+- Modelo: Closed mid-tower PC case
+- Archivo de trabajo: mid-tower.glb
+- Ficha: https://www.innerscene.com/tools/library/3d-parts/closed-mid-tower-pc-case-1374583e
+- Descarga: https://www.innerscene.com/api/library/closed-mid-tower-pc-case-1374583e/download
+- Licencia: CC0 1.0 Universal, declarada en el asset del GLB
+- Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+- Peso original: 20.089.956 bytes
+- Peso de mid-tower.glb: 3.181.212 bytes
+- El original no se conserva en el repositorio. pc-case.glb queda como respaldo cuando no hay placa. ATX usa este mid-tower.
+- Blender no está instalado. La optimización reflejó el eje X para dejar el vidrio en +X y la bandeja en −X, invirtió el orden de los triángulos y redujo las texturas de 2048 a 1024 en JPEG. La geometría no se escaló.
+- El gabinete mide unos 232 × 476 × 492 mm, con frente en +Z, tres ventiladores frontales, uno trasero, cubierta de fuente y siete tapas de ranura. No trae marca.
+- No incluye bandeja ni jaula de discos. La jaula de dos bahías de 3,5 pulgadas y los soportes de SSD de 2,5 pulgadas se agregan en el visualizador, solo en el montaje Micro-ATX y ATX, sin modificar este GLB.
+
+Mini-ITX
+- Autor: Innerscene Corp (innerscene.com)
+- Modelo: Mini-ITX case
+- Archivo: mini-itx.glb
+- Ficha: https://www.innerscene.com/tools/library/3d-parts/mini-itx-case-377f144f
+- Descarga: https://www.innerscene.com/api/library/mini-itx-case-377f144f/download
+- Licencia: CC0 1.0 Universal, declarada en asset.copyright del GLB. No exige atribución.
+- Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+- Peso original: 15.081.500 bytes. Peso de mini-itx.glb: 2.097.080 bytes. El original no se conserva.
+- Blender no está instalado. Se reflejó el eje X para dejar la abertura de E/S hacia el lado de la bandeja, se invirtió el orden de los triángulos y las texturas grandes pasaron a JPEG de 1024. La geometría no se escaló.
+- Medidas del archivo: 185,6 × 292,3 × 377,4 mm, pies incluidos. Frente en +Z, trasera en −Z, arriba en +Y.
+- Interior útil aproximado: 184 mm de ancho, 280 mm de alto y 372 mm de fondo. No hay postes de bandeja, jaula de 3,5" ni sleds de 2,5".
+- Trasera: abertura SFX de 63,5 × 125 mm, tres tapas de ranura de unos 14 × 130 mm con paso de 20,3 mm, y una abertura de E/S vertical de 44,5 × 158,8 mm.
+- El panel del lado de la cámara se puede ocultar con el control de vidrio. El modelo no trae vidrio templado.
+- La ficha de la biblioteca indica que el archivo se conserva unos cuatro años, hasta cerca de 2030.

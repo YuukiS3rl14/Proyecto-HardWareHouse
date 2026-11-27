@@ -1,0 +1,19 @@
+Disco duro usado por el visualizador 3D de HardWareHouse.
+
+Origen
+- Autor: Grab3D
+- Kit: Cozy PC Parts Kit
+- Modelo: Hard Drive (slug hard-drive)
+- Ficha: https://grab3d.com/models/electronics/hard-drive/
+- Publicación: 26 de octubre de 2026
+- Licencia original: LICENSE.txt (CC0 1.0 Universal)
+- Ficha técnica original: manifest.json
+
+La dedicatoria CC0 1.0 permite copiar, modificar y redistribuir el modelo, incluso con uso comercial, sin atribución obligatoria.
+Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Archivo incorporado
+- Peso de hard-drive.glb: 1.123.480 bytes
+- El archivo en disco es la descarga original. No se reexportó ni se remodeló.
+- Blender no está instalado en este equipo.
+- La tapa llega abierta. Al cargar, pc-modelos.js la gira 105 grados en su eje local para dejarla cerrada y oscurece la carcasa.

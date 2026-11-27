@@ -19,6 +19,8 @@ function iniciarArmado() {
     const totalPriceEl = document.getElementById('total-price');
     const addToCartBtn = document.getElementById('add-to-cart-btn');
     const downloadExcelBtn = document.getElementById('download-excel-btn');
+    const limpiarArmadoBtn = document.getElementById('limpiar-armado-btn');
+    const estadoIa = document.getElementById('armado-ia-estado');
 
     // Estado actual de la construcción y de la última consulta vigente.
     let currentBuild = {};
@@ -1273,8 +1275,74 @@ function iniciarArmado() {
 
         totalPriceEl.textContent = pesosClp(total);
 
-        downloadExcelBtn.disabled = componentCount === 0;
+        if (downloadExcelBtn) {
+            downloadExcelBtn.disabled = componentCount === 0;
+        }
         actualizarBotonCarrito(componentCount);
+        publicarVista3d();
+    }
+
+    function limpiarArmado() {
+        currentBuild = {};
+        discos = [];
+        memorias = [];
+        evaluacionActual = null;
+        faltaAlmacenamientoAplicado = false;
+        motivoAlmacenamientoAplicado = '';
+        avisosTarjetaVistos = new Set();
+        const aviso = document.getElementById('armado-carrito-aviso');
+        if (aviso) {
+            aviso.hidden = true;
+            aviso.innerHTML = '';
+        }
+        initializeBuilder();
+        consultarEvaluacion();
+        showToast('Se limpió el armado.');
+    }
+
+    function fichaVista3d(producto, categoria) {
+        if (!producto) {
+            return null;
+        }
+        return {
+            id: String(producto.id),
+            model_name: producto.model_name || '',
+            categoria: categoria,
+            marca: producto.marca || '',
+            nombre: producto.nombre || '',
+            precio: producto.precio,
+            formato: producto.formato || producto.formato_soporte || '',
+            tipo: producto.tipo || '',
+            modulos: producto.modulos_por_producto,
+            cantidad: producto.cantidad || 1,
+            interfaz: producto.interfaz || '',
+            largo: producto.largo_mm,
+            altura: producto.altura_mm,
+            radiador: producto.tamanho_radiador_mm,
+            ranuras: producto.ranuras_ram,
+        };
+    }
+
+    function estadoVista3d() {
+        return {
+            placa: fichaVista3d(currentBuild.placa_madre, 'Placa madre'),
+            cpu: fichaVista3d(currentBuild.procesador, 'Procesador'),
+            rams: memorias.map(function (ram) { return fichaVista3d(ram, 'Memoria RAM'); }),
+            cooler: fichaVista3d(currentBuild.refrigeracion_cooler, 'Refrigeración'),
+            gpu: fichaVista3d(currentBuild.tarjeta_grafica, 'Tarjeta gráfica'),
+            discos: discos.map(function (disco) { return fichaVista3d(disco, 'Almacenamiento'); }),
+            gabinete: fichaVista3d(currentBuild.gabinete, 'Gabinete'),
+            fuente: fichaVista3d(currentBuild.fuente_de_poder, 'Fuente de poder'),
+        };
+    }
+
+    function publicarVista3d() {
+        const estado = estadoVista3d();
+        if (typeof window.hwRecibirArmado === 'function') {
+            window.hwRecibirArmado(estado);
+            return;
+        }
+        window.hwArmadoPendiente = estado;
     }
 
     function servidorBloqueaCarrito() {
@@ -1738,7 +1806,6 @@ function iniciarArmado() {
             select.addEventListener('change', () => sincronizarModoPreferencia(selectId, grupoId));
         });
         const textoSolicitud = document.getElementById('recomendador-texto');
-        const botonInterpretar = document.getElementById('recomendador-interpretar');
         const borradorCaja = document.getElementById('recomendador-borrador');
         const estadoSolicitud = document.getElementById('recomendador-solicitud-estado');
         let borradorActual = null;
@@ -1763,23 +1830,159 @@ function iniciarArmado() {
             gpu: 'recomendador-gpu',
         };
 
+        function escribirEstadoIa(texto) {
+            if (estadoIa) {
+                estadoIa.textContent = texto || '';
+            }
+            if (estadoSolicitud) {
+                estadoSolicitud.textContent = texto || '';
+            }
+        }
+
+        function reiniciarFormularioRecomendador() {
+            const presupuesto = document.getElementById('recomendador-presupuesto');
+            const uso = document.getElementById('recomendador-uso');
+            const resolucion = document.getElementById('recomendador-resolucion');
+            const desdeCero = document.getElementById('recomendador-desde-cero');
+            if (presupuesto) {
+                presupuesto.value = '';
+            }
+            if (uso) {
+                uso.value = 'general';
+            }
+            if (resolucion) {
+                resolucion.value = '';
+            }
+            if (desdeCero) {
+                desdeCero.checked = true;
+            }
+            ['recomendador-ram', 'recomendador-disco-tipo', 'recomendador-disco-gb', 'recomendador-socket'].forEach((id) => {
+                const campo = document.getElementById(id);
+                if (campo) {
+                    campo.value = '';
+                    campo.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            const gpu = document.getElementById('recomendador-gpu');
+            if (gpu) {
+                gpu.value = 'automatica';
+                gpu.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            formulario.querySelectorAll('input[type="radio"][value="preferencia"]').forEach((radio) => {
+                if (radio.name && radio.name.endsWith('_modo')) {
+                    radio.checked = true;
+                }
+            });
+            const preferencias = formulario.querySelector('.recomendador-preferencias');
+            if (preferencias) {
+                preferencias.open = false;
+            }
+        }
+
+        function cambiosAutomaticos(borrador) {
+            if (!borrador) {
+                return [];
+            }
+            const cambios = [];
+            (borrador.campos || []).forEach((campo) => {
+                if (campo.bloqueado || campo.aproximado) {
+                    return;
+                }
+                if (campo.candidatos && campo.candidatos.length) {
+                    return;
+                }
+                if (campo.valor === null || campo.valor === undefined || campo.valor === '') {
+                    return;
+                }
+                let tipo = campo.tipo;
+                if (camposModo[campo.campo] && tipo !== 'preferencia' && tipo !== 'obligatorio') {
+                    tipo = 'preferencia';
+                }
+                cambios.push({ campo: campo.campo, valor: campo.valor, tipo });
+            });
+            return cambios;
+        }
+
+        function resumenPendientes(borrador) {
+            const partes = [];
+            (borrador.advertencias || []).forEach((texto) => partes.push(texto));
+            (borrador.contradicciones || []).forEach((item) => {
+                if (item.mensaje) {
+                    partes.push(item.mensaje);
+                }
+            });
+            (borrador.campos || []).forEach((campo) => {
+                if (campo.bloqueado || (campo.candidatos && campo.candidatos.length) || campo.aproximado) {
+                    partes.push(`${campo.etiqueta || campo.campo}: completa este dato a mano.`);
+                }
+            });
+            (borrador.no_representable || []).forEach((item) => {
+                partes.push(`${item.dato || 'Dato'}: ${item.motivo || 'sin un campo verificable'}`);
+            });
+            return partes;
+        }
+
+        function mostrarAclaraciones(borrador) {
+            if (!borradorCaja) {
+                return;
+            }
+            const pendientes = resumenPendientes(borrador || {});
+            if (!pendientes.length) {
+                borradorCaja.hidden = true;
+                borradorCaja.innerHTML = '';
+                return;
+            }
+            borradorCaja.hidden = false;
+            borradorCaja.classList.remove('recomendador-borrador-contraido');
+            borradorCaja.innerHTML = '<p class="mb-1"><strong>Revisa estos puntos</strong></p><ul class="mb-0">'
+                + pendientes.map((texto) => `<li>${escaparHtml(texto)}</li>`).join('')
+                + '</ul>';
+        }
+
+        function aplicarInterpretacion(cambios) {
+            const lista = Array.isArray(cambios) ? cambios : [];
+            if (!lista.length) {
+                return;
+            }
+            const abrePreferencias = lista.some(cambio => (
+                cambio.campo === 'ram_gb'
+                || cambio.campo === 'disco_tipo'
+                || cambio.campo === 'disco_gb'
+                || cambio.campo === 'socket'
+                || (cambio.campo === 'gpu' && cambio.valor === 'sin_dedicada')
+            ));
+            if (abrePreferencias) {
+                const seccion = formulario.querySelector('.recomendador-preferencias');
+                if (seccion) {
+                    seccion.open = true;
+                }
+            }
+            cambiosAplicados = lista;
+            lista.forEach(escribirCampo);
+            borradorAplicado = true;
+            invalidarRecomendacionesSiCambiaron();
+        }
+
         async function interpretarSolicitud() {
-            if (!textoSolicitud || !botonInterpretar || interpretando) {
+            if (!textoSolicitud || interpretando) {
                 return;
             }
             const texto = textoSolicitud.value.trim();
             if (!texto) {
-                if (estadoSolicitud) {
-                    estadoSolicitud.textContent = 'Escribe qué computador necesitas antes de interpretarlo.';
-                }
+                escribirEstadoIa('Escribe qué computador necesitas antes de pedir la recomendación.');
+                return;
+            }
+            if (!urls.interpretarSolicitudUrl) {
+                escribirEstadoIa('La interpretación no está disponible en esta página.');
                 return;
             }
             interpretando = true;
-            botonInterpretar.disabled = true;
-            botonInterpretar.setAttribute('aria-busy', 'true');
-            if (estadoSolicitud) {
-                estadoSolicitud.textContent = 'Interpretando la descripción...';
-            }
+            abrir.disabled = true;
+            abrir.setAttribute('aria-busy', 'true');
+            escribirEstadoIa('Interpretando la descripción...');
+            salida.innerHTML = '';
+            recomendacionesVigentes = false;
+            firmaRecomendacion = null;
             const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
             try {
                 const response = await fetch(urls.interpretarSolicitudUrl, {
@@ -1793,35 +1996,30 @@ function iniciarArmado() {
                 });
                 const data = await response.json().catch(() => ({}));
                 if (response.status === 403) {
-                    if (estadoSolicitud) {
-                        estadoSolicitud.textContent = 'La verificación de seguridad falló. Recarga la página e inténtalo otra vez.';
-                    }
+                    escribirEstadoIa('La verificación de seguridad falló. Recarga la página e inténtalo otra vez.');
                     return;
                 }
                 if (!response.ok) {
-                    if (estadoSolicitud) {
-                        estadoSolicitud.textContent = data.message || 'No se pudo interpretar la descripción.';
-                    }
+                    escribirEstadoIa(data.message || 'No se pudo interpretar la descripción.');
                     return;
                 }
                 borradorActual = data.borrador || null;
-                mostrarBorrador(borradorActual);
+                reiniciarFormularioRecomendador();
+                aplicarInterpretacion(cambiosAutomaticos(borradorActual));
+                mostrarAclaraciones(borradorActual);
+                escribirEstadoIa('Interpretación por reglas aplicada. Revisa los requisitos y genera la recomendación.');
+                actualizarAvisoInterpretacion();
+                modal.show();
             } catch (error) {
-                if (estadoSolicitud) {
-                    estadoSolicitud.textContent = 'No se pudo interpretar la descripción.';
-                }
+                escribirEstadoIa('No se pudo interpretar la descripción.');
             } finally {
                 interpretando = false;
-                botonInterpretar.disabled = false;
-                botonInterpretar.removeAttribute('aria-busy');
+                abrir.disabled = false;
+                abrir.removeAttribute('aria-busy');
             }
         }
 
         function cancelarInterpretacion() {
-            if (borradorAplicado && borradorActual) {
-                contraerBorradorAplicado();
-                return;
-            }
             borradorActual = null;
             borradorAplicado = false;
             cambiosAplicados = null;
@@ -1830,47 +2028,8 @@ function iniciarArmado() {
                 borradorCaja.innerHTML = '';
                 borradorCaja.classList.remove('recomendador-borrador-contraido');
             }
-            if (estadoSolicitud) {
-                estadoSolicitud.textContent = 'Se canceló la interpretación. El formulario no cambió.';
-            }
+            escribirEstadoIa('');
             actualizarAvisoInterpretacion();
-        }
-
-        function contraerBorradorAplicado() {
-            borradorAplicado = true;
-            if (borradorCaja) {
-                borradorCaja.hidden = false;
-                borradorCaja.classList.add('recomendador-borrador-contraido');
-                borradorCaja.innerHTML = '<button type="button" class="btn btn-link btn-sm p-0" id="recomendador-revisar">Revisar interpretación</button>';
-            }
-            if (estadoSolicitud) {
-                estadoSolicitud.textContent = 'Requisitos aplicados al formulario. Puedes revisarlos antes de generar tu PC.';
-            }
-            actualizarAvisoInterpretacion();
-        }
-
-        function aplicarInterpretacion() {
-            const cambios = camposParaAplicar();
-            if (!cambios) {
-                return;
-            }
-            const abrePreferencias = cambios.some(cambio => (
-                cambio.campo === 'ram_gb'
-                || cambio.campo === 'disco_tipo'
-                || cambio.campo === 'disco_gb'
-                || cambio.campo === 'socket'
-                || (cambio.campo === 'gpu' && cambio.valor === 'sin_dedicada')
-            ));
-            if (abrePreferencias) {
-                const seccion = formulario.querySelector('.recomendador-preferencias');
-                if (seccion) {
-                    seccion.open = true;
-                }
-            }
-            cambiosAplicados = cambios;
-            cambios.forEach(escribirCampo);
-            contraerBorradorAplicado();
-            invalidarRecomendacionesSiCambiaron();
         }
 
         function escribirCampo(cambio) {
@@ -1891,264 +2050,6 @@ function iniciarArmado() {
             }
         }
 
-        function htmlBorrador(borrador) {
-            const partes = [];
-            (borrador.advertencias || []).forEach(texto => {
-                partes.push(`<p class="alert alert-warning py-2 mb-2">${escaparHtml(texto)}</p>`);
-            });
-            const notas = borrador.no_representable || [];
-            if (notas.length) {
-                const items = notas.map(item => (
-                    `<li><strong>${escaparHtml(item.dato)}.</strong> ${escaparHtml(item.motivo)}`
-                    + (item.fragmento ? ` <span class="recomendador-fragmento">En el texto: «${escaparHtml(item.fragmento)}»</span>` : '')
-                    + '</li>'
-                )).join('');
-                partes.push(
-                    '<section class="recomendador-aclaraciones" aria-label="Mencionado, sin un campo verificable">'
-                    + '<p class="mb-1"><strong>Mencionado, sin un campo verificable</strong></p>'
-                    + `<ul>${items}</ul></section>`
-                );
-            }
-            (borrador.contradicciones || []).forEach((contradiccion, indice) => {
-                const alternativas = (contradiccion.alternativas || []).map(alternativa => `
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="borrador-alternativa-${indice}" id="borrador-alternativa-${indice}-${escaparHtml(alternativa.id)}" value="${escaparHtml(alternativa.id)}">
-                        <label class="form-check-label" for="borrador-alternativa-${indice}-${escaparHtml(alternativa.id)}">${escaparHtml(alternativa.etiqueta)}</label>
-                    </div>
-                `).join('');
-                partes.push(
-                    `<div class="alert alert-warning"><p class="mb-2">${escaparHtml(contradiccion.mensaje)}</p>`
-                    + `<div class="d-flex flex-column gap-1" role="radiogroup" aria-label="Alternativa">${alternativas}</div>`
-                    + htmlModosDe(contradiccion)
-                    + '</div>'
-                );
-            });
-            (borrador.campos || []).forEach(campo => {
-                if (campo.bloqueado) {
-                    partes.push(
-                        `<div class="recomendador-campo"><p class="mb-1"><strong>${escaparHtml(campo.etiqueta)}:</strong> ${escaparHtml(campo.valor_etiqueta || 'varios valores')}</p>`
-                        + '<p class="small text-muted mb-0">Queda en pausa hasta que elijas una alternativa.</p></div>'
-                    );
-                    return;
-                }
-                const resumen = campo.candidatos && campo.candidatos.length
-                    ? 'elige un valor'
-                    : escaparHtml(campo.valor_etiqueta || '');
-                const opciones = campo.candidatos && campo.candidatos.length ? htmlCandidatos(campo) : '';
-                const modo = camposModo[campo.campo] ? htmlModo(campo) : '';
-                const incluir = cambiosAplicados
-                    ? cambiosAplicados.some(item => item.campo === campo.campo)
-                    : !(campo.aproximado && !(campo.candidatos && campo.candidatos.length));
-                partes.push(
-                    `<div class="recomendador-campo"><div class="form-check">`
-                    + `<input class="form-check-input" type="checkbox" id="borrador-aplicar-${escaparHtml(campo.campo)}" data-aplicar="${escaparHtml(campo.campo)}" ${incluir ? 'checked' : ''}>`
-                    + `<label class="form-check-label" for="borrador-aplicar-${escaparHtml(campo.campo)}"><strong>${escaparHtml(campo.etiqueta)}:</strong> ${resumen}`
-                    + `${marcaEstado(campo)}</label></div>`
-                    + (campo.fragmento ? `<p class="recomendador-fragmento">En el texto: «${escaparHtml(campo.fragmento)}»</p>` : '')
-                    + opciones
-                    + modo
-                    + '</div>'
-                );
-            });
-            const aplicables = (borrador.campos || []).some(campo => !campo.bloqueado) || (borrador.contradicciones || []).length;
-            if (!aplicables) {
-                partes.push('<p class="mb-2">No hay datos aplicables al formulario. Puedes completar los campos a mano.</p>');
-            }
-            partes.push(
-                '<div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">'
-                + '<button type="button" class="btn btn-outline-secondary" id="recomendador-cancelar">Cancelar</button>'
-                + (aplicables ? '<button type="button" class="btn btn-success" id="recomendador-aplicar" disabled>Aplicar al formulario</button>' : '')
-                + '</div>'
-            );
-            return partes.join('');
-        }
-
-        function htmlCandidatos(campo) {
-            return `<div class="d-flex flex-column gap-1 mt-1" role="radiogroup" aria-label="${escaparHtml(campo.etiqueta)}">`
-                + campo.candidatos.map(candidato => `
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="borrador-valor-${escaparHtml(campo.campo)}" id="borrador-valor-${escaparHtml(campo.campo)}-${escaparHtml(candidato.valor)}" value="${escaparHtml(candidato.valor)}">
-                        <label class="form-check-label" for="borrador-valor-${escaparHtml(campo.campo)}-${escaparHtml(candidato.valor)}">${escaparHtml(candidato.etiqueta)}</label>
-                    </div>
-                `).join('')
-                + '</div>';
-        }
-
-        function tipoEfectivo(campo) {
-            const aplicado = (cambiosAplicados || []).find(item => item.campo === campo.campo);
-            return aplicado ? aplicado.tipo : campo.tipo;
-        }
-
-        function marcaEstado(campo) {
-            const tipo = tipoEfectivo(campo);
-            if (camposModo[campo.campo] && (tipo === 'preferencia' || tipo === 'obligatorio')) {
-                return '';
-            }
-            const texto = {
-                detectado: 'Detectado',
-                pendiente: 'Por confirmar',
-                preferencia: 'Preferencia',
-                obligatorio: 'Obligatorio',
-            }[tipo] || '';
-            if (!texto) {
-                return '';
-            }
-            const pendiente = tipo === 'pendiente' ? ' recomendador-estado-pendiente' : '';
-            return ` <span class="recomendador-estado${pendiente}">${texto}</span>`;
-        }
-
-        function htmlModo(campo) {
-            const tipos = (campo.candidatos || []).map(candidato => candidato.tipo);
-            const compartido = tipos.length && tipos.every(tipo => tipo === tipos[0]) ? tipos[0] : '';
-            const tipo = tipoEfectivo(campo);
-            const propuesto = tipo === 'obligatorio' || tipo === 'preferencia' ? tipo : compartido;
-            const actual = propuesto === 'obligatorio' || propuesto === 'preferencia' ? propuesto : '';
-            return `<div class="recomendador-modos" role="radiogroup" aria-label="Cómo aplicar ${escaparHtml(campo.etiqueta)}">`
-                + ['preferencia', 'obligatorio'].map(valor => `
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="borrador-modo-${escaparHtml(campo.campo)}" id="borrador-modo-${escaparHtml(campo.campo)}-${valor}" value="${valor}" ${actual === valor ? 'checked' : ''}>
-                        <label class="form-check-label" for="borrador-modo-${escaparHtml(campo.campo)}-${valor}">${valor === 'preferencia' ? 'Preferencia' : 'Obligatorio'}</label>
-                    </div>
-                `).join('')
-                + '</div>';
-        }
-
-        function htmlModosDe(contradiccion) {
-            const vistos = new Set();
-            let html = '';
-            (contradiccion.alternativas || []).forEach(alternativa => {
-                (alternativa.campos || []).forEach(cambio => {
-                    if (!camposModo[cambio.campo] || cambio.tipo !== 'pendiente' || vistos.has(cambio.campo)) {
-                        return;
-                    }
-                    vistos.add(cambio.campo);
-                    html += `<p class="small mb-0 mt-2">Si la alternativa sigue pendiente, confirma cómo aplicarla.</p>${htmlModo(cambio)}`;
-                });
-            });
-            return html;
-        }
-
-        function pintarBorrador(borrador) {
-            if (!borradorCaja || !borrador) {
-                return;
-            }
-            borradorCaja.classList.remove('recomendador-borrador-contraido');
-            borradorCaja.innerHTML = htmlBorrador(borrador);
-            borradorCaja.hidden = false;
-            actualizarBotonAplicar();
-        }
-
-        function mostrarBorrador(borrador) {
-            borradorAplicado = false;
-            cambiosAplicados = null;
-            pintarBorrador(borrador);
-            if (estadoSolicitud) {
-                estadoSolicitud.textContent = 'Revisa el borrador. Confirmarlo solo completa el formulario; no genera una recomendación.';
-            }
-            actualizarAvisoInterpretacion();
-        }
-
-        function revisarInterpretacion() {
-            if (!borradorActual) {
-                return;
-            }
-            pintarBorrador(borradorActual);
-            if (estadoSolicitud) {
-                estadoSolicitud.textContent = 'Puedes revisar la interpretación. El formulario no cambia hasta que vuelvas a aplicar.';
-            }
-        }
-
-        function camposParaAplicar() {
-            if (!borradorActual || !borradorCaja) {
-                return null;
-            }
-            const cambios = [];
-            const contradicciones = borradorActual.contradicciones || [];
-            for (let indice = 0; indice < contradicciones.length; indice += 1) {
-                const contradiccion = contradicciones[indice];
-                const elegida = borradorCaja.querySelector(`input[name="borrador-alternativa-${indice}"]:checked`);
-                if (!elegida) {
-                    return null;
-                }
-                const alternativa = (contradiccion.alternativas || []).find(item => item.id === elegida.value);
-                if (!alternativa) {
-                    return null;
-                }
-                for (const cambio of alternativa.campos || []) {
-                    let tipo = cambio.tipo;
-                    if (camposModo[cambio.campo] && tipo === 'pendiente') {
-                        const modo = borradorCaja.querySelector(`input[name="borrador-modo-${cambio.campo}"]:checked`);
-                        if (!modo) {
-                            return null;
-                        }
-                        tipo = modo.value;
-                    }
-                    cambios.push({ campo: cambio.campo, valor: cambio.valor, tipo });
-                }
-            }
-            for (const campo of borradorActual.campos || []) {
-                if (campo.bloqueado) {
-                    continue;
-                }
-                const casilla = borradorCaja.querySelector(`[data-aplicar="${campo.campo}"]`);
-                if (casilla && !casilla.checked) {
-                    continue;
-                }
-                let valor = campo.valor;
-                let tipo = campo.tipo;
-                if (campo.candidatos && campo.candidatos.length) {
-                    const elegido = borradorCaja.querySelector(`input[name="borrador-valor-${campo.campo}"]:checked`);
-                    if (!elegido) {
-                        return null;
-                    }
-                    const candidato = campo.candidatos.find(item => String(item.valor) === elegido.value);
-                    if (!candidato) {
-                        return null;
-                    }
-                    valor = candidato.valor;
-                    tipo = candidato.tipo || tipo;
-                }
-                if (camposModo[campo.campo]) {
-                    const modo = borradorCaja.querySelector(`input[name="borrador-modo-${campo.campo}"]:checked`);
-                    if (modo) {
-                        tipo = modo.value;
-                    } else if (tipo === 'pendiente') {
-                        return null;
-                    }
-                }
-                if (valor === null || valor === undefined || valor === '') {
-                    return null;
-                }
-                cambios.push({ campo: campo.campo, valor, tipo });
-            }
-            return cambios.length ? cambios : null;
-        }
-
-        function actualizarBotonAplicar() {
-            const boton = document.getElementById('recomendador-aplicar');
-            if (!boton) {
-                return;
-            }
-            boton.disabled = !camposParaAplicar();
-        }
-
-        if (botonInterpretar && textoSolicitud && borradorCaja && urls.interpretarSolicitudUrl) {
-            botonInterpretar.addEventListener('click', interpretarSolicitud);
-            borradorCaja.addEventListener('click', (evento) => {
-                if (evento.target.closest('#recomendador-revisar')) {
-                    revisarInterpretacion();
-                    return;
-                }
-                if (evento.target.closest('#recomendador-cancelar')) {
-                    cancelarInterpretacion();
-                    return;
-                }
-                if (evento.target.closest('#recomendador-aplicar')) {
-                    aplicarInterpretacion();
-                }
-            });
-            borradorCaja.addEventListener('change', actualizarBotonAplicar);
-        }
         let propuestas = [];
         let firmaRecomendacion = null;
         let recomendacionesVigentes = false;
@@ -2158,7 +2059,9 @@ function iniciarArmado() {
         let trasCerrarPrincipal = null;
         let trasCerrarDetalle = null;
         let cambiandoModal = false;
-        abrir.addEventListener('click', () => modal.show());
+        abrir.addEventListener('click', () => {
+            interpretarSolicitud();
+        });
 
         function cuandoEsteQuieto(elemento, instancia, callback) {
             if (!instancia._isTransitioning) {
@@ -2784,7 +2687,12 @@ function iniciarArmado() {
     // --- 6. INICIAR TODO ---
     iniciarRecomendador();
     addToCartBtn.addEventListener('click', addAllToCart);
-    downloadExcelBtn.addEventListener('click', downloadAsExcel);
+    if (downloadExcelBtn) {
+        downloadExcelBtn.addEventListener('click', downloadAsExcel);
+    }
+    if (limpiarArmadoBtn) {
+        limpiarArmadoBtn.addEventListener('click', limpiarArmado);
+    }
     initializeBuilder();
     const pendiente = leerPropuestaPendienteLocal();
     const aplicarAlEntrar = new URLSearchParams(window.location.search).get('aplicar') === '1';

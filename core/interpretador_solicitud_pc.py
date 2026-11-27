@@ -182,24 +182,26 @@ _RANGO_PESOS = re.compile(
     r'\$?\s*(\d{1,3}(?:\.\d{3})+|\d{5,9})\b'
 )
 _RANGO_UNIDAD = re.compile(
-    r'\bentre\s+(\d+(?:[.,]\d+)?)\s*(lucas?|mil|millones?)?\s+y\s+'
-    r'(\d+(?:[.,]\d+)?)\s*(lucas?|mil|millones?)\b'
+    r'\bentre\s+(\d+(?:[.,]\d+)?)\s*(lucas?|mil|millon(?:es)?)?\s+y\s+'
+    r'(\d+(?:[.,]\d+)?)\s*(lucas?|mil|millon(?:es)?)\b'
 )
 _RANGO_DE_A = re.compile(
-    r'\bde\s+(\d+(?:[.,]\d+)?)\s+a\s+(\d+(?:[.,]\d+)?)\s+(lucas?|mil|millones?)\b'
+    r'\bde\s+(\d+(?:[.,]\d+)?)\s+a\s+(\d+(?:[.,]\d+)?)\s+(lucas?|mil|millon(?:es)?)\b'
 )
 _RANGO_K = re.compile(r'\bentre\s+(\d{2,4})k\s+y\s+(\d{2,4})k\b')
 _MONTO_K = re.compile(r'(?<![\d.])(\d{2,4})k\b')
 _PALO = re.compile(
-    r'\b(?:(?P<n>\d+)|un|una)\s+palo(?P<medio>\s+y\s+medio)?\b(?!\s+de\b)'
+    r'\b(?:(?P<n>\d+)|un|una)\s+palos?(?P<medio>\s+y\s+medio)?\b(?!\s+de\b)'
 )
+_MEDIO_PALO = re.compile(r'\bmedio\s+palo\b(?!\s+de\b)')
 _MEDIO_MILLON = re.compile(
     r'\bmedio\s+millon(?:es)?(?:\s+de\s+pesos)?\b(?!\s+de\s+(?!pesos\b))'
 )
 _CONTEXTO_DINERO = re.compile(
     r'\b(?:tengo|presupuesto|maximo|hasta|alrededor|cerca|aproximadamente|aprox|'
     r'unas|unos|como|entre|gastar|pesos|lucas|luca|dispongo|cuento|poseo|'
-    r'no\s+mas\s+de)\b'
+    r'no\s+mas\s+de|por|vale|cuesta|plata|clp|armar|pc|computador(?:a|es)?|'
+    r'gamer|gaming)\b'
 )
 _MOD_PRINCIPAL = re.compile(r'\b(?:principalmente|sobre todo)\b')
 _MOD_OCASIONAL = re.compile(r'\b(?:ocasionalmente|a veces|de vez en cuando|a ratos)\b')
@@ -732,7 +734,16 @@ def _marcar_necesidades(texto, original, hallazgos, aparte):
 
 
 def _habla_de_dinero(texto, coincidencia):
-    return _CONTEXTO_DINERO.search(_clausula_de(texto, coincidencia.start())) is not None
+    if _CONTEXTO_DINERO.search(_clausula_de(texto, coincidencia.start())) is not None:
+        return True
+    return _es_expresion_monetaria_aislada(texto, coincidencia)
+
+
+def _es_expresion_monetaria_aislada(texto, coincidencia):
+    """Acepta «1 palo» o «medio palo» cuando no hay más requisitos en el texto."""
+    resto = f'{texto[:coincidencia.start()]} {texto[coincidencia.end():]}'
+    resto = re.sub(r'[\s.,;:¡!¿?\-–—]+', ' ', resto).strip()
+    return resto == ''
 
 
 def _clausula_de(texto, posicion):
@@ -923,6 +934,10 @@ def _marcar_presupuesto(texto, original, hallazgos, avisos):
         if not _habla_de_dinero(texto, coincidencia):
             continue
         registrar(coincidencia, [_monto_palo(coincidencia)])
+    for coincidencia in _MEDIO_PALO.finditer(texto):
+        if not _habla_de_dinero(texto, coincidencia):
+            continue
+        registrar(coincidencia, [500_000])
     for coincidencia in _MEDIO_MILLON.finditer(texto):
         registrar(coincidencia, [500_000])
 
@@ -930,7 +945,7 @@ def _marcar_presupuesto(texto, original, hallazgos, avisos):
         re.compile(r'(?<![\d.])(\d+)\s+lucas?\b'),
         re.compile(r'(?<![\d.])(\d+)\s+mil\b'),
         re.compile(r'\b(?:un|una)\s+millon(?:es)?(?:\s+de\s+pesos)?\b'),
-        re.compile(r'\b(\d+(?:[.,]\d+)?)\s+millones?(?:\s+de\s+pesos)?\b'),
+        re.compile(r'\b(\d+(?:[.,]\d+)?)\s+millon(?:es)?(?:\s+de\s+pesos)?\b'),
         re.compile(r'\$\s*(\d{1,3}(?:\.\d{3})+|\d{4,9})\b'),
         re.compile(r'\b(\d{1,3}(?:\.\d{3})+)\s*(?:pesos|clp)?\b'),
         re.compile(

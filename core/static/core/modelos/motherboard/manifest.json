@@ -1,0 +1,55 @@
+{
+ "slug": "motherboard",
+ "triangles": 27880,
+ "texture_px": 4096,
+ "triangles_light": 13940,
+ "texture_px_light": 1024,
+ "files": {
+  "glb": {
+   "name": "motherboard.glb",
+   "bytes": 3329100
+  },
+  "blend": {
+   "name": "motherboard.blend",
+   "bytes": 2003199
+  },
+  "fbx": {
+   "name": "motherboard.fbx",
+   "bytes": 5027996
+  },
+  "obj": {
+   "name": "motherboard-obj.zip",
+   "bytes": 2946918
+  },
+  "usdz": {
+   "name": "motherboard.usdz",
+   "bytes": 5201183
+  },
+  "glb_light": {
+   "name": "motherboard-light.glb",
+   "bytes": 1110896
+  },
+  "fbx_light": {
+   "name": "motherboard-light.fbx",
+   "bytes": 1581148
+  }
+ },
+ "extras": {
+  "license": "CC0-1.0",
+  "source": "grab3d.com",
+  "dimensions_m": "0.305 x 0.247 x 0.043",
+  "triangles": 27880,
+  "textures": "PBR 4096px: base color, roughness, metallic, normal (baked)",
+  "generator": "Created by grab3d",
+  "created": "2026-10-26",
+  "real_size": "ATX motherboard, 305 x 244 mm",
+  "notes": "lies flat; top edge (-X) holds the CPU socket area, rear edge (+Y) the I/O cover with USB, LAN, display and five colour-ringed audio jacks; blue PCB with baked traces, vias, mounting holes and silkscreen outlines (no text); CPU socket with gold contact field, load plate and lever, L-shaped white VRM heat sinks with aluminium fins, chokes and capacitors, four DIMM slots, 24-pin and 8-pin power connectors, four PCIe slots (two with aluminium armour), two M.2 heat sinks, chipset heat sink, SATA ports, coin cell, audio capacitors, pin headers and fan headers; no logos, no moving parts",
+  "set": "Cozy PC Parts Kit"
+ },
+ "origin": {
+  "method": "procedural",
+  "detail": "Built procedurally with Blender scripts. The scripts were written with the help of an AI coding assistant. No generative AI model produced the geometry or textures directly.",
+  "ai_content": false,
+  "ai_assisted_code": true
+ }
+}

@@ -1,0 +1,47 @@
+{
+ "slug": "ssd",
+ "triangles": 2884,
+ "texture_px": 4096,
+ "triangles_light": null,
+ "texture_px_light": null,
+ "files": {
+  "glb": {
+   "name": "ssd.glb",
+   "bytes": 1421672
+  },
+  "blend": {
+   "name": "ssd.blend",
+   "bytes": 632925
+  },
+  "fbx": {
+   "name": "ssd.fbx",
+   "bytes": 2110316
+  },
+  "obj": {
+   "name": "ssd-obj.zip",
+   "bytes": 846372
+  },
+  "usdz": {
+   "name": "ssd.usdz",
+   "bytes": 2149743
+  }
+ },
+ "extras": {
+  "license": "CC0-1.0",
+  "source": "grab3d.com",
+  "dimensions_m": "0.116 x 0.101 x 0.007",
+  "triangles": 2884,
+  "textures": "PBR 4096px: base color, roughness, metallic, normal (baked)",
+  "generator": "Created by grab3d",
+  "created": "2026-10-26",
+  "real_size": "2.5-inch SATA SSD 100 x 70 x 7 mm and M.2 2280 NVMe SSD 22 x 80 mm",
+  "notes": "two common SSD form factors lying side by side, connectors face -Y: 2.5-inch drive with brushed aluminium base, sky blue cover with a brushed aluminium panel at the connector end, SATA data and power sockets; M.2 2280 stick with green PCB, baked traces, controller with metal lid, DRAM, two NAND chips, SMD parts, gold contacts with M-key notch and screw notch; no text, no logos, no moving parts",
+  "set": "Cozy PC Parts Kit"
+ },
+ "origin": {
+  "method": "procedural",
+  "detail": "Built procedurally with Blender scripts. The scripts were written with the help of an AI coding assistant. No generative AI model produced the geometry or textures directly.",
+  "ai_content": false,
+  "ai_assisted_code": true
+ }
+}

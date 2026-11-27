@@ -1,0 +1,50 @@
+Tarjeta gráfica de tres ventiladores usada por el visualizador 3D de HardWareHouse.
+
+Origen
+- Autor: Grab3D
+- Kit: Cozy PC Parts Kit
+- Modelo: Graphics Card (slug graphics-card)
+- Variante incorporada: graphics-card-light.glb
+- Ficha: https://grab3d.com/models/electronics/graphics-card/
+- Publicación: 26 de octubre de 2026
+- Licencia original: LICENSE.txt (CC0 1.0 Universal)
+- Ficha técnica original: manifest.json
+
+La dedicatoria CC0 1.0 permite copiar, modificar y redistribuir el modelo, incluso con uso comercial, sin atribución obligatoria.
+Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Archivo incorporado
+- Peso de graphics-card-light.glb: 891.448 bytes
+- El archivo en disco es la descarga original. No se reexportó ni se remodeló.
+- Blender no está instalado en este equipo.
+- El kit no incluye una variante de dos ventiladores. La de tres ventiladores sigue en graphics-card-light.glb para las tarjetas de 280 mm o más. La corta de ATX y Micro-ATX, y cualquier tarjeta de largo conocido entre 171 y 279 mm, es gpu-dual-190.glb. gpu-mini-itx-170.glb se usa cuando el largo del producto es de hasta 170 mm.
+- La carcasa se oscurece y los ventiladores dejan el color pastel en pc-modelos.js. La franja luminosa se conserva con intensidad reducida.
+
+Tarjeta de dos ventiladores para la GPU de 190 mm en Micro-ATX
+- Autor: Innerscene Corp (innerscene.com)
+- Modelo de partida: Graphics card, dual fan, 2-slot, 240 mm
+- Ficha: https://www.innerscene.com/tools/library/3d-parts/graphics-card-dual-fan-2-slot-240-mm-da71e99c
+- Descarga: https://www.innerscene.com/api/library/graphics-card-dual-fan-2-slot-240-mm-da71e99c/download
+- Archivo original: graphics-card-dual-fan-2-slot-240-mm.glb, 707.960 bytes
+- Licencia: CC0 1.0 Universal, declarada en asset.copyright del GLB. No exige atribución.
+- Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+- No existe en la biblioteca una variante dual más corta. La de 170 mm es de un solo ventilador.
+- Archivo incorporado: gpu-dual-190.glb
+- La longitud original, de la cara de la ranura a la punta, es 240 mm y el conjunto con el bracket mide 252 mm.
+- No se escaló el modelo completo. El conector PCIe x16 conserva sus 89 mm y el bracket no cambia de tamaño.
+- Los ventiladores pasan de 93 mm a 80 mm, siguen siendo circulares y quedan separados por 4 mm.
+- La cubierta, la PCB, el disipador y el backplate terminan a 190 mm del plano de la ranura.
+- Cada aleta se trasladó sin aplastarla. La carcasa queda negro mate, el backplate gris oscuro y las aletas en aluminio, sin el metal pulido que se veía verdoso. Una línea violeta fina recorre el borde de la carcasa.
+- Orientación horneada: ventiladores hacia -Y, bracket en el extremo -Z, dedos PCIe en el borde X = 0.
+- Blender no está instalado. La adaptación se hizo sobre los vértices del GLB.
+
+Tarjeta de un ventilador, 170 mm
+- Autor: Innerscene Corp (innerscene.com)
+- Modelo: Graphics card, mini-ITX single fan, 170 mm
+- Ficha: https://www.innerscene.com/tools/library/3d-parts/graphics-card-mini-itx-single-fan-170-mm-ecada592
+- Descarga: https://www.innerscene.com/api/library/graphics-card-mini-itx-single-fan-170-mm-ecada592/download
+- Licencia: CC0 1.0 Universal, declarada en asset.copyright del GLB.
+- Archivo: gpu-mini-itx-170.glb. El original pesa 641.888 bytes.
+- No se escaló. Se permutaron los ejes para dejar el bracket en −Z, el largo hacia +Z y los dedos en X = 0, igual que la de 190 mm.
+- Conjunto medido: 182,0 mm de largo, 151,2 mm desde el borde de los dedos y 45,1 mm de espesor. La PCB mide 170 mm desde el plano del bracket. Un ventilador de 90 mm, dos slots, alimentación de 8 pines y salidas DP/HDMI.
+- La ficha de la biblioteca indica que el archivo se conserva hasta cerca de 2031.

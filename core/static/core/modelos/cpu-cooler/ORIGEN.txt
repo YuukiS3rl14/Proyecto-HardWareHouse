@@ -1,0 +1,26 @@
+Refrigeración por aire usada por el visualizador 3D de HardWareHouse.
+
+Origen
+- Autor: Grab3D
+- Kit: Cozy PC Parts Kit
+- Modelo: CPU Cooler (slug cpu-cooler)
+- Ficha: https://grab3d.com/models/electronics/cpu-cooler/
+- Publicación: 26 de octubre de 2026
+- Licencia original: LICENSE.txt (CC0 1.0 Universal)
+- Ficha técnica original: manifest.json
+
+La dedicatoria CC0 1.0 permite copiar, modificar y redistribuir el modelo, incluso con uso comercial, sin atribución obligatoria.
+Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Archivo incorporado
+- Peso de cpu-cooler.glb: 978.384 bytes
+- El archivo en disco es la descarga original. No se reexportó ni se remodeló.
+- Blender no está instalado en este equipo.
+- Es un disipador de torre con aletas, tubos y un ventilador. El cuerpo se oscurece y las aspas dejan el color pastel en pc-modelos.js.
+- El kit no trae un enfriador líquido separado. Esa representación sigue siendo procedural.
+
+Modelo propio de bajo perfil
+- Archivo: cooler-bajo-58.glb. No reemplaza cpu-cooler.glb.
+- Alto: 58 mm. La base queda en y = 0 y el ventilador, horizontal sobre el disipador, cierra en y = 0,058.
+- Se usa cuando la altura del producto es un número de hasta 80 mm. El de 150 mm sigue en el modelo de torre Grab3D.
+- Geometría original del visualizador. Blender no está instalado.

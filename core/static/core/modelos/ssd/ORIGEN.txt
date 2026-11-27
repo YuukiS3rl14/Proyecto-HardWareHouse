@@ -1,0 +1,19 @@
+Almacenamiento SSD usado por el visualizador 3D de HardWareHouse.
+
+Origen
+- Autor: Grab3D
+- Kit: Cozy PC Parts Kit
+- Modelo: SSD (slug ssd)
+- Ficha: https://grab3d.com/models/electronics/ssd/
+- Publicación: 26 de octubre de 2026
+- Licencia original: LICENSE.txt (CC0 1.0 Universal)
+- Ficha técnica original: manifest.json
+
+La dedicatoria CC0 1.0 permite copiar, modificar y redistribuir el modelo, incluso con uso comercial, sin atribución obligatoria.
+Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Archivo incorporado
+- Peso de ssd.glb: 1.421.672 bytes
+- El archivo en disco es la descarga original. No se reexportó ni se remodeló.
+- Blender no está instalado en este equipo.
+- La malla trae un SSD de 2,5 pulgadas y un módulo M.2 juntos. Al cargar, pc-modelos.js separa cada formato y oscurece el cuerpo.

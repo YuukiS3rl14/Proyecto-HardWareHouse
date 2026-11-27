@@ -1,0 +1,47 @@
+{
+ "slug": "pc-case",
+ "triangles": 9696,
+ "texture_px": 2048,
+ "triangles_light": null,
+ "texture_px_light": null,
+ "files": {
+  "glb": {
+   "name": "pc-case.glb",
+   "bytes": 1076884
+  },
+  "blend": {
+   "name": "pc-case.blend",
+   "bytes": 907964
+  },
+  "fbx": {
+   "name": "pc-case.fbx",
+   "bytes": 1595916
+  },
+  "obj": {
+   "name": "pc-case-obj.zip",
+   "bytes": 905810
+  },
+  "usdz": {
+   "name": "pc-case.usdz",
+   "bytes": 1533451
+  }
+ },
+ "extras": {
+  "license": "CC0-1.0",
+  "source": "grab3d.com",
+  "dimensions_m": "0.224 x 0.471 x 0.480",
+  "triangles": 9696,
+  "textures": "PBR 2048px: base color, roughness, metallic, normal (baked)",
+  "generator": "Created by grab3d",
+  "created": "2026-10-26",
+  "real_size": "ATX mid tower PC case, approx. 215 x 460 x 477 mm",
+  "notes": "empty case, front faces -Y; white steel body with rounded edges on four feet, honeycomb mesh front with sky blue trim, top dust filter and front panel (power button, two USB ports, audio jack), rear I/O cut-out, 120 mm fan grille, seven slot covers, PSU opening; inside: motherboard tray with brass standoffs, CPU cut-out, cable grommets and PSU shroud. Movable: tempered glass side panel 'pc-case_side_panel' on +X (origin on the rear hinge edge, rotates around Z, positive angle opens outward). No text, no logos",
+  "set": "Cozy PC Parts Kit"
+ },
+ "origin": {
+  "method": "procedural",
+  "detail": "Built procedurally with Blender scripts. The scripts were written with the help of an AI coding assistant. No generative AI model produced the geometry or textures directly.",
+  "ai_content": false,
+  "ai_assisted_code": true
+ }
+}

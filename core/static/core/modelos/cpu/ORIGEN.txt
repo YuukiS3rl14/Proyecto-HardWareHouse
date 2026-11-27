@@ -1,0 +1,20 @@
+Procesador genérico usado por el visualizador 3D de HardWareHouse.
+
+Origen
+- Autor: Grab3D
+- Kit: Cozy PC Parts Kit
+- Modelo: CPU (slug cpu)
+- Ficha: https://grab3d.com/models/electronics/cpu/
+- Publicación: 26 de octubre de 2026
+- Licencia original: LICENSE.txt (CC0 1.0 Universal)
+- Ficha técnica original: manifest.json
+
+La dedicatoria CC0 1.0 permite copiar, modificar y redistribuir el modelo, incluso con uso comercial, sin atribución obligatoria.
+Texto legal: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Archivo incorporado
+- Peso de cpu.glb: 2.072.600 bytes
+- El archivo en disco es la descarga original. No se reexportó ni se remodeló.
+- Blender no está instalado en este equipo.
+- La malla trae dos procesadores juntos. Al cargar, pc-modelos.js conserva solo el chip con el disipador hacia arriba.
+- El tono metálico se aplica en tiempo de ejecución.

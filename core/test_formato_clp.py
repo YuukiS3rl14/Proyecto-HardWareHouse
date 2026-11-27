@@ -92,4 +92,4 @@ class PaginasConPreciosTests(TestCase):
 
         pagina = self.client.get(reverse('core:armado'))
         self.assertContains(pagina, 'formato-clp.js?v=20261108o')
-        self.assertContains(pagina, 'pc-builder.js?v=selector20')
+        self.assertContains(pagina, 'pc-builder.js?v=selector23')

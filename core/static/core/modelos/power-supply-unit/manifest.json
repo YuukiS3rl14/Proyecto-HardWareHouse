@@ -1,0 +1,47 @@
+{
+ "slug": "power-supply-unit",
+ "triangles": 14332,
+ "texture_px": 2048,
+ "triangles_light": null,
+ "texture_px_light": null,
+ "files": {
+  "glb": {
+   "name": "power-supply-unit.glb",
+   "bytes": 1249556
+  },
+  "blend": {
+   "name": "power-supply-unit.blend",
+   "bytes": 940257
+  },
+  "fbx": {
+   "name": "power-supply-unit.fbx",
+   "bytes": 1910988
+  },
+  "obj": {
+   "name": "power-supply-unit-obj.zip",
+   "bytes": 1034095
+  },
+  "usdz": {
+   "name": "power-supply-unit.usdz",
+   "bytes": 1888791
+  }
+ },
+ "extras": {
+  "license": "CC0-1.0",
+  "source": "grab3d.com",
+  "dimensions_m": "0.152 x 0.148 x 0.090",
+  "triangles": 14332,
+  "textures": "PBR 2048px: base color, roughness, metallic, normal (baked)",
+  "generator": "Created by grab3d",
+  "created": "2026-10-26",
+  "real_size": "fully modular ATX power supply unit, 150 x 140 x 86 mm",
+  "notes": "lies with the 120 mm fan facing up; white sheet metal housing, fan grille, rear (-Y) honeycomb vent with mains inlet and rocker switch, front (+Y) modular cable panel with sockets, mint side trims, rubber feet. Movable: fan rotor 'power-supply-unit_fan_rotor' (origin at the hub, spins around Z). No text, no symbols, no logos",
+  "set": "Cozy PC Parts Kit"
+ },
+ "origin": {
+  "method": "procedural",
+  "detail": "Built procedurally with Blender scripts. The scripts were written with the help of an AI coding assistant. No generative AI model produced the geometry or textures directly.",
+  "ai_content": false,
+  "ai_assisted_code": true
+ }
+}

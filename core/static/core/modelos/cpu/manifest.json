@@ -1,0 +1,47 @@
+{
+ "slug": "cpu",
+ "triangles": 4032,
+ "texture_px": 4096,
+ "triangles_light": null,
+ "texture_px_light": null,
+ "files": {
+  "glb": {
+   "name": "cpu.glb",
+   "bytes": 2072600
+  },
+  "blend": {
+   "name": "cpu.blend",
+   "bytes": 1101900
+  },
+  "fbx": {
+   "name": "cpu.fbx",
+   "bytes": 3718348
+  },
+  "obj": {
+   "name": "cpu-obj.zip",
+   "bytes": 2354894
+  },
+  "usdz": {
+   "name": "cpu.usdz",
+   "bytes": 3758909
+  }
+ },
+ "extras": {
+  "license": "CC0-1.0",
+  "source": "grab3d.com",
+  "dimensions_m": "0.087 x 0.050 x 0.004",
+  "triangles": 4032,
+  "textures": "PBR 4096px: base color, roughness, metallic, normal (baked)",
+  "generator": "Created by grab3d",
+  "created": "2026-10-26",
+  "real_size": "desktop CPU in LGA package, 37.5 x 45 mm, shown as a pair (top and bottom)",
+  "notes": "two identical processors: left one with the nickel heat spreader up, right one flipped to show the gold land grid contact field (baked texture) with the capacitor island; green substrate with orientation notches, gold pin-one triangle and SMD capacitors; no text, no logos, no moving parts",
+  "set": "Cozy PC Parts Kit"
+ },
+ "origin": {
+  "method": "procedural",
+  "detail": "Built procedurally with Blender scripts. The scripts were written with the help of an AI coding assistant. No generative AI model produced the geometry or textures directly.",
+  "ai_content": false,
+  "ai_assisted_code": true
+ }
+}
